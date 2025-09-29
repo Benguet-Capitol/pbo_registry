@@ -4,7 +4,7 @@
     class="flex flex-col flex-1 gap-3 px-3">
 
 
-<!-- Administrator | Developer roles -->
+    <!-- Administrator | Developer roles -->
     @role('Administrator|Developer')
     <x-sidebar.link
         title="Dashboard | Balances"
@@ -52,26 +52,24 @@
             <i class="fas fa-exchange-alt text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
-    <x-sidebar.link
+    <!-- <x-sidebar.link
         title="Forward Capital Outlay"
         href="">
         <x-slot name="icon">
             <i class="fas fa-share-from-square text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
-    </x-sidebar.link>
+    </x-sidebar.link> -->
 
     <x-sidebar.dropdown
         title="Auxiliary"
-        :active="request()->routeIs('account_codes.index') || request()->routeIs('offices.index') || request()->routeIs('allotment_classes.index') || request()->routeIs('funds.index') || request()->routeIs('fund_sources.index') || request()->routeIs('sectors.index') || request()->routeIs('programs.index')"
-    >
+        :active="request()->routeIs('account_codes.index') || request()->routeIs('offices.index') || request()->routeIs('allotment_classes.index') || request()->routeIs('funds.index') || request()->routeIs('fund_sources.index') || request()->routeIs('sectors.index') || request()->routeIs('programs.index')">
         <x-slot name="icon">
             <i class="fas fa-toolbox text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
         <x-sidebar.sublink
             title="Account"
             href="{{ route('account_codes.index') }}"
-            :active="request()->routeIs('account_codes.index')"
-        >
+            :active="request()->routeIs('account_codes.index')">
             <x-slot name="icon">
                 <i class="fas fa-stream text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -79,8 +77,7 @@
         <x-sidebar.sublink
             title="Allotment Class"
             href="{{ route('allotment_classes.index') }}"
-            :active="request()->routeIs('allotment_classes.index')"
-        >
+            :active="request()->routeIs('allotment_classes.index')">
             <x-slot name="icon">
                 <i class="fas fa-server text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -88,8 +85,7 @@
         <x-sidebar.sublink
             title="Fund"
             href="{{ route('funds.index') }}"
-            :active="request()->routeIs('funds.index')"
-        >
+            :active="request()->routeIs('funds.index')">
             <x-slot name="icon">
                 <i class="fas fa-sliders-h text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -97,8 +93,7 @@
         <x-sidebar.sublink
             title="Fund Source"
             href="{{ route('fund_sources.index') }}"
-            :active="request()->routeIs('fund_sources.index')"
-        >
+            :active="request()->routeIs('fund_sources.index')">
             <x-slot name="icon">
                 <i class="fas fa-landmark text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -106,8 +101,7 @@
         <x-sidebar.sublink
             title="Office"
             href="{{ route('offices.index') }}"
-            :active="request()->routeIs('offices.index')"
-        >
+            :active="request()->routeIs('offices.index')">
             <x-slot name="icon">
                 <i class="fas fa-qrcode text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -115,8 +109,7 @@
         <x-sidebar.sublink
             title="Program"
             href="{{ route('programs.index') }}"
-            :active="request()->routeIs('programs.index')"
-        >
+            :active="request()->routeIs('programs.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-alt text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -124,8 +117,7 @@
         <x-sidebar.sublink
             title="Sector"
             href="{{ route('sectors.index') }}"
-            :active="request()->routeIs('sectors.index')"
-        >
+            :active="request()->routeIs('sectors.index')">
             <x-slot name="icon">
                 <i class="fas fa-vector-square text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -139,11 +131,10 @@
         Reports / Summaries
     </div>
 
-      <x-sidebar.dropdown
+    <x-sidebar.dropdown
         title="SAAOB"
         :active="request()->routeIs('saaob.index') || request()->routeIs('saaobco.index') || request()->routeIs('saaobfundsector.index') || 
-                    request()->routeIs('saaobgfcurrent.index') || request()->routeIs('saaobfundsource.index') || request()->routeIs('saaobgfcurrentsummary.index')"
-    >
+                    request()->routeIs('saaobgfcurrent.index') || request()->routeIs('saaobfundsource.index') || request()->routeIs('saaobgfcurrentsummary.index')">
         <x-slot name="icon">
             <i class="fas fa-paste text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
@@ -151,8 +142,7 @@
         <x-sidebar.sublink
             title="GF | BeGH & SEF"
             href="{{ route('saaobfundsector.index') }}"
-            :active="request()->routeIs('saaobfundsector.index')"
-        >
+            :active="request()->routeIs('saaobfundsector.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-alt text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -160,8 +150,7 @@
         <x-sidebar.sublink
             title="Offices (Current)"
             href="{{ route('saaob.index') }}"
-            :active="request()->routeIs('saaob.index')"
-        >
+            :active="request()->routeIs('saaob.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-contract text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -169,8 +158,7 @@
         <x-sidebar.sublink
             title="Offices (Continuing)"
             href="{{ route('saaobco.index') }}"
-            :active="request()->routeIs('saaobco.index')"
-        >
+            :active="request()->routeIs('saaobco.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-signature text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -178,8 +166,7 @@
         <x-sidebar.sublink
             title="Current | Continuing"
             href="{{ route('saaobfundsource.index') }}"
-            :active="request()->routeIs('saaobfundsource.index')"
-        >
+            :active="request()->routeIs('saaobfundsource.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-invoice text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -187,8 +174,7 @@
         <x-sidebar.sublink
             title="GF per Sector (Current)"
             href="{{ route('saaobgfcurrent.index') }}"
-            :active="request()->routeIs('saaobgfcurrent.index')"
-        >
+            :active="request()->routeIs('saaobgfcurrent.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-code text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -196,8 +182,7 @@
         <x-sidebar.sublink
             title="GF (Current)"
             href="{{ route('saaobgfcurrentsummary.index') }}"
-            :active="request()->routeIs('saaobgfcurrentsummary.index')"
-        >
+            :active="request()->routeIs('saaobgfcurrentsummary.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-excel text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -206,16 +191,14 @@
     </x-sidebar.dropdown>
     <x-sidebar.dropdown
         title="SAAODB"
-        :active="request()->routeIs('saaodboffice.index')"
-    >
-    <x-slot name="icon">
-        <i class="fas fa-copy text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
-    </x-slot>
+        :active="request()->routeIs('saaodboffice.index')">
+        <x-slot name="icon">
+            <i class="fas fa-copy text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
         <x-sidebar.sublink
             title="Offices"
             href="{{ route('saaodboffice.index') }}"
-            :active="request()->routeIs('saaodboffice.index')"
-        >
+            :active="request()->routeIs('saaodboffice.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-contract text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -245,7 +228,7 @@
         </x-slot>
     </x-sidebar.link>
 
-<!-- User | Obligation | Payment roles -->
+    <!-- User | Obligation | Payment roles -->
     @elserole('User|Obligation|Payment')
     <x-sidebar.link
         title="Dashboard | Balances"
@@ -287,16 +270,14 @@
     </x-sidebar.link>
     <x-sidebar.dropdown
         title="Auxiliary"
-        :active="request()->routeIs('account_codes.index') || request()->routeIs('offices.index') || request()->routeIs('allotment_classes.index') || request()->routeIs('funds.index') || request()->routeIs('fund_sources.index') || request()->routeIs('sectors.index') || request()->routeIs('programs.index')"
-    >
+        :active="request()->routeIs('account_codes.index') || request()->routeIs('offices.index') || request()->routeIs('allotment_classes.index') || request()->routeIs('funds.index') || request()->routeIs('fund_sources.index') || request()->routeIs('sectors.index') || request()->routeIs('programs.index')">
         <x-slot name="icon">
             <i class="fas fa-toolbox text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
         <x-sidebar.sublink
             title="Account"
             href="{{ route('account_codes.index') }}"
-            :active="request()->routeIs('account_codes.index')"
-        >
+            :active="request()->routeIs('account_codes.index')">
             <x-slot name="icon">
                 <i class="fas fa-stream text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -304,8 +285,7 @@
         <x-sidebar.sublink
             title="Allotment Class"
             href="{{ route('allotment_classes.index') }}"
-            :active="request()->routeIs('allotment_classes.index')"
-        >
+            :active="request()->routeIs('allotment_classes.index')">
             <x-slot name="icon">
                 <i class="fas fa-server text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -313,8 +293,7 @@
         <x-sidebar.sublink
             title="Fund"
             href="{{ route('funds.index') }}"
-            :active="request()->routeIs('funds.index')"
-        >
+            :active="request()->routeIs('funds.index')">
             <x-slot name="icon">
                 <i class="fas fa-sliders-h text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -322,8 +301,7 @@
         <x-sidebar.sublink
             title="Fund Source"
             href="{{ route('fund_sources.index') }}"
-            :active="request()->routeIs('fund_sources.index')"
-        >
+            :active="request()->routeIs('fund_sources.index')">
             <x-slot name="icon">
                 <i class="fas fa-landmark text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -331,8 +309,7 @@
         <x-sidebar.sublink
             title="Office"
             href="{{ route('offices.index') }}"
-            :active="request()->routeIs('offices.index')"
-        >
+            :active="request()->routeIs('offices.index')">
             <x-slot name="icon">
                 <i class="fas fa-qrcode text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -340,8 +317,7 @@
         <x-sidebar.sublink
             title="Program"
             href="{{ route('programs.index') }}"
-            :active="request()->routeIs('programs.index')"
-        >
+            :active="request()->routeIs('programs.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-alt text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
@@ -349,8 +325,7 @@
         <x-sidebar.sublink
             title="Sector"
             href="{{ route('sectors.index') }}"
-            :active="request()->routeIs('sectors.index')"
-        >
+            :active="request()->routeIs('sectors.index')">
             <x-slot name="icon">
                 <i class="fas fa-vector-square text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>

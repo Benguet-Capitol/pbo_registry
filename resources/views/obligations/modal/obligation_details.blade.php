@@ -6,7 +6,7 @@
             <!-- Modal header -->
             <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
                 <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
-                    Obligation Request Details
+                    {{ __('Obligation Details') }}
                 </h3>
                 <button type="button" onclick="closeModal()" class="text-black hover:text-gray-600 dark:text-white">
                     <i class="fas fa-times text-xl mr-2"></i>
@@ -37,7 +37,7 @@
      * @param {number} obligationId - The ID of the obligation to retrieve and display.
      */
     function openModal(obligationId) {
-        closeAllDropdowns(); // Hide other UI dropdowns if openw
+        closeAllDropdowns(); // Hide other UI dropdowns if open
         const modal = document.getElementById('obligationModal');
         modal.classList.remove('hidden'); // Show modal
 
@@ -262,7 +262,8 @@
                                             `;
                                         }).join('');
                                     })()
-                                    : `<tr><td colspan="7" class="px-3 py-3 text-center text-gray-500">No adjustments found.</td></tr>`
+                                    : ` < tr > < td colspan = "7"
+                class = "px-3 py-3 text-center text-gray-500" > No adjustments found. < /td></tr > `
                             }</tbody>
                             <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
                                 <td colspan="6" class="text-right px-3 py-2">Total Adjustment:</td>

@@ -24,10 +24,10 @@
         <div class="flex justify-between items-center">
             <!-- Left: Obligations Title -->
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                {{ __('Accounts') }} | 
+                {{ __('Accounts') }} |
                 <span class="text-blue-800 dark:text-blue-400">
-                {{ $officeAllotmentClass->offices->office_abbreviation }} - {{ $officeAllotmentClass->allotmentClass->class}} 
-                (CY {{ $officeAllotmentClass->year }})
+                    {{ $officeAllotmentClass->offices->office_name }} - {{ $officeAllotmentClass->allotmentClass->class}}
+                    (CY {{ $officeAllotmentClass->year }})
                 </span>
             </h3>
 
@@ -53,9 +53,9 @@
         </div>
         @if ($officeAllotmentClass && $officeAllotmentClass->offices)
         @php
-            // Determine grid columns: 2 if import is visible, 1 if not
-            $showImport = auth()->user() && auth()->user()->can('import appropriations');
-            $gridCols = $showImport ? 'md:grid-cols-2' : 'md:grid-cols-1';
+        // Determine grid columns: 2 if import is visible, 1 if not
+        $showImport = auth()->user() && auth()->user()->can('import appropriations');
+        $gridCols = $showImport ? 'md:grid-cols-2' : 'md:grid-cols-1';
         @endphp
         <div class="p-4 bg-white shadow-md rounded-md mt-6 text-gray-600 text-xs grid grid-cols-1 {{ $gridCols }} gap-4 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700">
             <div>
@@ -274,7 +274,7 @@
                         <td class="px-4 py-1 border-b border-gray-300">
                             @canany(['edit appropriations', 'delete appropriations'])
                             <div class="relative inline-block text-left">
-                                <button onclick="toggleDropdown(this)" 
+                                <button onclick="toggleDropdown(this)"
                                     class="relative text-xs group px-2 py-1.5">
                                     <span class="fas fa-ellipsis-v"></span>
                                     <!-- Tooltip -->

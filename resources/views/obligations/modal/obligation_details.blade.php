@@ -262,8 +262,7 @@
                                             `;
                                         }).join('');
                                     })()
-                                    : ` < tr > < td colspan = "7"
-                class = "px-3 py-3 text-center text-gray-500" > No adjustments found. < /td></tr > `
+                                    : ` <tr><td colspan = "7" class = "px-3 py-3 text-center text-gray-500"> No adjustments found. </td></tr> `
                             }</tbody>
                             <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
                                 <td colspan="6" class="text-right px-3 py-2">Total Adjustment:</td>

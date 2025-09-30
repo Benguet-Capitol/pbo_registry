@@ -110,10 +110,12 @@
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
                 <div>
+                    @can('create supplementals')
                     <button onclick="openCreateSupplementalsModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                         <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Create Supplemental Appropriation | Reversion') }}
                     </button>
+                    @endcan
                 </div>
                 <div class="flex items-center">
                     <form method="GET" action="{{ route('supplementals.index') }}" class="flex items-center">
@@ -122,7 +124,7 @@
                     </form>
                 </div>
             </div>
-            <table id="supplementalTable" class="text-center w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <table id="supplementalTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
@@ -245,12 +247,16 @@
                                             </span>
                                         </button>
                                     <div class="absolute right-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
+                                        @can('edit supplementals')
                                         <button onclick='openEditSupplementalModal(@json($supplemental))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
                                             <i class="fas fa-edit mr-2"></i>Edit
                                         </button>
+                                        @endcan
+                                        @can('delete supplementals')
                                         <button onclick="openDeleteSupplementalModal({{ $supplemental->id }}, '{{ $supplemental->supplemental_no }}', '{{ $supplemental->type }}', '{{ $supplemental->amount }}', '{{ $supplemental->appropriations_id }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
                                             <i class="fas fa-trash mr-2"></i>Delete
                                         </button>
+                                        @endcan
                                     </div>
                                 </div>
                             </td>

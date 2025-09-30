@@ -56,7 +56,7 @@
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Supplemental
+                        Supplemental Appropriations
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold break-words
                         {{ $officeAllotmentClasses->supplemental_sum > 0 
@@ -171,7 +171,7 @@
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Authorized Appropriations Accomplishment
+                        Obligations / Authorized Appropriations
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->appropriation_accomplishment, 2) }}%
@@ -197,7 +197,7 @@
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Allotments Accomplishment
+                       Obligations / Allotments
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->allotment_accomplishment, 2) }}%
@@ -279,7 +279,7 @@
                 <table id="accountsTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left border-collapse">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
-                            <th class="px-2 py-2 w-[70px] text-center">View Details</th>
+                            <!-- <th class="px-2 py-2 w-[70px] text-center">View Details</th> -->
                             <th class="px-2 py-2 w-[120px] text-center">Programs</th>
                             <th class="px-2 py-2 w-[130px] text-center">Description</th>
                             <th class="px-2 py-2 w-[120px] text-center">Account Code</th>
@@ -305,15 +305,15 @@
                     <tbody>
                         @foreach ($officeAllotmentClasses->appropriations as $appropriation)
                         <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td class="px-1 py-3 text-center">
+                            <!-- <td class="px-1 py-3 text-center">
                                 <div class="relative inline-block text-left">
-                                    <!-- Dropdown Button -->
+                                    
                                     <button onclick="toggleDropdown(this)"
                                         class="relative text-xs group px-2 py-1.5">
                                         <span class="fas fa-forward"></span>
                                     </button>
 
-                                    <!-- Dropdown Menu -->
+                                    
                                     <div class="absolute top-full left-0 mt-1 w-48 z-50 hidden dropdown-menu bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-md origin-top-right">
                                         <a href="#" class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                             <i class="fas fa-list-check mr-2"></i>Obligations
@@ -323,7 +323,7 @@
                                         </a>
                                     </div>
                                 </div>
-                            </td>
+                            </td> -->
                             <td class="px-1 py-3 text-center">{{ $appropriation->programs }}</td>
                             <td class="px-1 py-3 text-center">{{ $appropriation->description }}</td>
                             <td class="px-1 py-3 text-center">{{ $appropriation->account_code }}</td>

@@ -443,12 +443,12 @@
                                         <a href="{{ route('dashboard.accounts', $class->id) }}" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 group">
                                             <i class="fas fa-stream mr-2"></i> Accounts
                                         </a>
-                                        <a href="#" class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
+                                        <!-- <a href="#" class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                             <i class="fas fa-list-check mr-2"></i>Obligations
                                         </a>
                                         <a href="#" class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                             <i class="fas fa-file-contract mr-2"></i>Purchase Orders
-                                        </a>
+                                        </a> -->
                                     </div>
                                 </div>
                             </td>

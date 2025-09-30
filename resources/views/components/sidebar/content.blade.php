@@ -3,7 +3,6 @@
     aria-label="main"
     class="flex flex-col flex-1 gap-3 px-3">
 
-
     <!-- Administrator | Developer roles -->
     @role('Administrator|Developer')
     <x-sidebar.link
@@ -52,13 +51,6 @@
             <i class="fas fa-exchange-alt text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
-    <!-- <x-sidebar.link
-        title="Forward Capital Outlay"
-        href="">
-        <x-slot name="icon">
-            <i class="fas fa-share-from-square text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
-        </x-slot>
-    </x-sidebar.link> -->
 
     <x-sidebar.dropdown
         title="Auxiliary"
@@ -187,8 +179,8 @@
                 <i class="fas fa-file-excel text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
         </x-sidebar.sublink>
-
     </x-sidebar.dropdown>
+
     <x-sidebar.dropdown
         title="SAAODB"
         :active="request()->routeIs('saaodboffice.index')">
@@ -228,8 +220,8 @@
         </x-slot>
     </x-sidebar.link>
 
-    <!-- User | Obligation | Payment roles -->
-    @elserole('User|Obligation|Payment')
+    <!-- Obligation Role -->
+    @elserole('Obligation')
     <x-sidebar.link
         title="Dashboard | Balances"
         href="{{ route('dashboard') }}"
@@ -266,6 +258,14 @@
         :isActive="request()->routeIs('realignments.index')">
         <x-slot name="icon">
             <i class="fas fa-random text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
+    <x-sidebar.link
+        title="Supplemental | Reversion"
+        href="{{ route('supplementals.index') }}"
+        :isActive="request()->routeIs('supplementals.index')">
+        <x-slot name="icon">
+            <i class="fas fa-exchange-alt text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
     <x-sidebar.dropdown
@@ -331,38 +331,133 @@
             </x-slot>
         </x-sidebar.sublink>
     </x-sidebar.dropdown>
-    @endrole
 
-    <!-- <div
+    <div
         x-transition
         x-show="isSidebarOpen || isSidebarHovered"
-        class="text-sm text-gray-900 dark:text-gray-100"
-    >
-        Dummy Link
+        class="text-sm text-gray-900 dark:text-gray-100">
+        Reports / Summaries
     </div>
+
     <x-sidebar.dropdown
-        title="Buttons"
-        :active="Str::startsWith(request()->route()->uri(), 'buttons')"
-    >
+        title="SAAOB"
+        :active="request()->routeIs('saaob.index') || request()->routeIs('saaobco.index') || request()->routeIs('saaobfundsector.index') || 
+                    request()->routeIs('saaobgfcurrent.index') || request()->routeIs('saaobfundsource.index') || request()->routeIs('saaobgfcurrentsummary.index')">
         <x-slot name="icon">
-        <i class="fas fa-th-large text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+            <i class="fas fa-paste text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
 
         <x-sidebar.sublink
-            title="Text button"
-            href="{{ route('buttons.text') }}"
-            :active="request()->routeIs('buttons.text')"
-        />
+            title="GF | BeGH & SEF"
+            href="{{ route('saaobfundsector.index') }}"
+            :active="request()->routeIs('saaobfundsector.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-alt text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
         <x-sidebar.sublink
-            title="Icon button"
-            href="{{ route('buttons.icon') }}"
-            :active="request()->routeIs('buttons.icon')"
-        />
+            title="Offices (Current)"
+            href="{{ route('saaob.index') }}"
+            :active="request()->routeIs('saaob.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-contract text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
         <x-sidebar.sublink
-            title="Text with icon"
-            href="{{ route('buttons.text-icon') }}"
-            :active="request()->routeIs('buttons.text-icon')"
-        />
-    </x-sidebar.dropdown> -->
+            title="Offices (Continuing)"
+            href="{{ route('saaobco.index') }}"
+            :active="request()->routeIs('saaobco.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-signature text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
+        <x-sidebar.sublink
+            title="Current | Continuing"
+            href="{{ route('saaobfundsource.index') }}"
+            :active="request()->routeIs('saaobfundsource.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-invoice text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
+        <x-sidebar.sublink
+            title="GF per Sector (Current)"
+            href="{{ route('saaobgfcurrent.index') }}"
+            :active="request()->routeIs('saaobgfcurrent.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-code text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
+        <x-sidebar.sublink
+            title="GF (Current)"
+            href="{{ route('saaobgfcurrentsummary.index') }}"
+            :active="request()->routeIs('saaobgfcurrentsummary.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-excel text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
+    </x-sidebar.dropdown>
+
+    <!-- Disbursement Role -->
+    @elserole('Disbursement')
+        <x-sidebar.link
+            title="Dashboard | Balances"
+            href="{{ route('dashboard') }}"
+            :isActive="request()->routeIs('dashboard')">
+            <x-slot name="icon">
+                <i class="fas fa-tachometer-alt text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+            </x-slot>
+        </x-sidebar.link>
+        <div
+            x-transition
+            x-show="isSidebarOpen || isSidebarHovered"
+            class="text-sm text-gray-900 dark:text-gray-100">
+            Registry
+        </div>
+
+        <x-sidebar.link
+            title="Obligation"
+            href="{{ route('obligations.index') }}"
+            :isActive="request()->routeIs('obligations.index')">
+            <x-slot name="icon">
+                <i class="fas fa-list-check text-xl flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.link>
+
+        <div
+            x-transition
+            x-show="isSidebarOpen || isSidebarHovered"
+            class="text-sm text-gray-900 dark:text-gray-100">
+            Reports / Summaries
+        </div>
+
+        <x-sidebar.dropdown
+            title="SAAODB"
+            :active="request()->routeIs('saaodboffice.index')">
+            <x-slot name="icon">
+                <i class="fas fa-copy text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+            </x-slot>
+            <x-sidebar.sublink
+                title="Offices"
+                href="{{ route('saaodboffice.index') }}"
+                :active="request()->routeIs('saaodboffice.index')">
+                <x-slot name="icon">
+                    <i class="fas fa-file-contract text-base flex-shrink-0 dark:text-gray-100"></i>
+                </x-slot>
+            </x-sidebar.sublink>
+        </x-sidebar.dropdown>
+        
+    <!-- User or Guest Role -->
+    @elserole('Guest')
+        {{-- User Role: Dashboard only --}}
+        <x-sidebar.link
+            title="Dashboard | Balances"
+            href="{{ route('dashboard') }}"
+            :isActive="request()->routeIs('dashboard')">
+            <x-slot name="icon">
+                <i class="fas fa-tachometer-alt text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+            </x-slot>
+        </x-sidebar.link>
+    @endrole
+
 
 </x-perfect-scrollbar>

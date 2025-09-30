@@ -78,7 +78,7 @@
                     <x-form.select 
                     name="office_allotment_class_id" 
                     id="officeAllotmentClass" 
-                    class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
+                    class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
                     data-default=""
                     onchange="this.form.submit()">
                         <option value="">All Allotment Classes per Office</option>
@@ -96,7 +96,7 @@
                     <x-form.select 
                     name="realignment_type_filter" 
                     id="realignment_type_filter" 
-                    class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
+                    class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
                     data-default=""
                     onchange="this.form.submit()">
                         <option value="">All Types</option>
@@ -128,10 +128,12 @@
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
                 <div>
+                    @can('create realignments')
                     <button onclick="openCreateRealignmentModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                         <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Create Realignment | Augmentation') }}
                     </button>
+                    @endcan
                 </div>
                 <div class="flex items-center">
                     <form method="GET" action="{{ route('realignments.index') }}" class="flex items-center">
@@ -263,12 +265,16 @@
                                             </span>
                                         </button>
                                     <div class="absolute right-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
+                                        @can('edit realignments')
                                         <button onclick='openEditRealignmentModal(@json($realignment))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
                                             <i class="fas fa-edit mr-2"></i>Edit
                                         </button>
+                                        @endcan
+                                        @can('delete realignments')
                                         <button onclick="openDeleteRealignmentModal({{ $realignment->id }}, '{{ $realignment->realignment_no }}', '{{ $realignment->type }}', '{{ $realignment->amount }}', '{{ $realignment->appropriations_id }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
                                             <i class="fas fa-trash mr-2"></i>Delete
                                         </button>
+                                        @endcan
                                     </div>
                                 </div>
                             </td>

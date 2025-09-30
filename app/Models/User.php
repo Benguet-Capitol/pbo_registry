@@ -52,8 +52,8 @@ class User extends Authenticatable
     protected static function booted()
     {
         static::saved(function ($user) {
-            if ($user->user_type) {
-                $user->syncRoles([$user->user_type]);
+            if ($user->usertype) {
+                $user->syncRoles([$user->usertype]);
             }
         });
     }

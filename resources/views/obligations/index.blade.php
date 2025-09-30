@@ -204,29 +204,37 @@
                                 <td class="px-3 py-3 text-right obligation-amount">
                                     <div class="relative inline-block group">
                                         @if ($obligation->obr_amount == 0.00)
-                                        <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 px-2 py-1 rounded font-semibold">Cancelled</span>
+                                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 px-2 py-1 rounded font-semibold">Cancelled</span>
                                         @elseif ($obligation->obligationAdjustments->isNotEmpty())
-                                        <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
-                                            type="button"
-                                            class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 hover:underline rounded font-semibold">
-                                            {{ number_format($obligation->obr_amount, 2) }}
-                                        </button>
-
-                                        <!-- Tooltip -->
-                                        <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                            Add Obligation Adjustment
-                                        </span>
+                                            @unlessrole('Payment')
+                                                <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
+                                                    type="button"
+                                                    class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 hover:underline rounded font-semibold">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </button>
+                                                <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                                    Add Obligation Adjustment
+                                                </span>
+                                            @else
+                                                <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </span>
+                                            @endunlessrole
                                         @else
-                                        <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
-                                            type="button"
-                                            class="text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
-                                            {{ number_format($obligation->obr_amount, 2) }}
-                                        </button>
-
-                                        <!-- Tooltip -->
-                                        <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                            Add Obligation Adjustment
-                                        </span>
+                                            @unlessrole('Payment')
+                                                <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
+                                                    type="button"
+                                                    class="text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </button>
+                                                <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                                    Add Obligation Adjustment
+                                                </span>
+                                            @else
+                                                <span class="text-gray-700 dark:text-gray-400 px-2 py-1">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </span>
+                                            @endunlessrole
                                         @endif
                                     </div>
                                 </td>
@@ -234,53 +242,80 @@
                                 <td class="px-3 py-3 text-right po-amount">
                                     @php $poAmount = $obligation->purchaseOrders->sum('po_amount'); @endphp
                                     @if ($obligation->obr_type === 'Purchase Request')
-                                    <div class="relative inline-block group">
-                                        @if ($poAmount > 0)
-                                        <button onclick="openCreatePOModal({{ $obligation->id }})"
-                                            type="button"
-                                            class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold hover:underline">
-                                            {{ number_format($poAmount, 2) }}
-                                        </button>
-                                        @else
-                                        <button onclick="openCreatePOModal({{ $obligation->id }})"
-                                            type="button"
-                                            class="text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
-                                            {{ number_format($poAmount, 2) }}
-                                        </button>
-                                        @endif
-
-                                        <!-- Tooltip -->
-                                        <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                            Add Purchase Order
-                                        </span>
-                                    </div>
+                                        <div class="relative inline-block group">
+                                            @if ($poAmount > 0)
+                                                @unlessrole('Payment')
+                                                    <button onclick="openCreatePOModal({{ $obligation->id }})"
+                                                        type="button"
+                                                        class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold hover:underline">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </button>
+                                                    <!-- Tooltip -->
+                                                    <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                                        Add Purchase Order
+                                                    </span>
+                                                @else
+                                                    <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </span>
+                                                @endunlessrole
+                                            @else
+                                                @unlessrole('Payment')
+                                                    <button onclick="openCreatePOModal({{ $obligation->id }})"
+                                                        type="button"
+                                                        class="text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </button>
+                                                    <!-- Tooltip -->
+                                                    <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                                        Add Purchase Order
+                                                    </span>
+                                                @else
+                                                    <span class="text-blue-700 dark:text-blue-400 px-2 py-1">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </span>
+                                                @endunlessrole
+                                            @endif
+                                        </div>
                                     @else
-                                    N/A
+                                        N/A
                                     @endif
                                 </td>
+
                                 <td class="px-3 py-3 text-right dv-amount">
                                     @php
-                                    $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
+                                        $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
                                     @endphp
                                     <div class="relative inline-block group">
-                                        @if ($disbursementAmount > 0)
-                                        <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
-                                            type="button"
-                                            class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold hover:underline px-2 py-1">
-                                            {{ number_format($disbursementAmount, 2) }}
-                                        </button>
-                                        @else
-                                        <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
-                                            type="button"
-                                            class="text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
-                                            {{ number_format($disbursementAmount, 2) }}
-                                        </button>
-                                        @endif
 
-                                        <!-- Tooltip -->
-                                        <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                            Add Disbursement
-                                        </span>
+                                        @role('Obligation')
+                                            {{-- Disabled button for Obligation role --}}
+                                            <button type="button" disabled
+                                                class="px-2 py-1">
+                                                {{ number_format($disbursementAmount, 2) }}
+                                            </button>
+                                        @else
+                                            {{-- Active button for other roles --}}
+                                            @if ($disbursementAmount > 0)
+                                                <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
+                                                    type="button"
+                                                    class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold hover:underline px-2 py-1">
+                                                    {{ number_format($disbursementAmount, 2) }}
+                                                </button>
+                                            @else
+                                                <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
+                                                    type="button"
+                                                    class="text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
+                                                    {{ number_format($disbursementAmount, 2) }}
+                                                </button>
+                                            @endif
+
+                                            <!-- Tooltip (only for non-Obligation roles) -->
+                                            <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                                Add Disbursement
+                                            </span>
+                                        @endrole
+
                                     </div>
                                 </td>
 
@@ -299,21 +334,26 @@
                                                 class="w-full px-4 py-2 text-left text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                                 <i class="fas fa-eye mr-2"></i>View Details
                                             </button>
+                                            @can('view obligation adjustment adjustments')
                                             <a href="{{ route('obligation_adjustments.index', ['obligation_id' => $obligation->id]) }}"
                                                 class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                                 <i class="fas fa-file-edit mr-2"></i>Adjustments
                                             </a>
+                                            @endcan
+                                            @can('view purchase orders')
                                             @if ($obligation->obr_type === 'Purchase Request')
                                             <a href="{{ route('purchase_orders.index', ['obligation_id' => $obligation->id]) }}"
                                                 class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                                 <i class="fas fa-file-invoice mr-2"></i>Purchase Order
                                             </a>
                                             @endif
-
+                                            @endcan
+                                            @can('view disbursement')
                                             <a href="{{ route('disbursements.index', ['obligation_id' => $obligation->id]) }}"
                                                 class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                                 <i class="fas fa-file-medical-alt mr-2"></i>Disbursement
                                             </a>
+                                            @endcan
 
                                             @can('cancel obligations')
                                             <button onclick="openCancellationModal(this.dataset.id, JSON.parse(this.dataset.obligation))"

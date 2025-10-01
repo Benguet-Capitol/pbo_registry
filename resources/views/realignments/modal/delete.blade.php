@@ -14,6 +14,11 @@
                 <form id="deleteRealignmentForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
+                    <input type="hidden" name="year1" value="{{ request('year1') }}">
+                    <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
+                    <input type="hidden" name="realignment_type_filter" value="{{ request('realignment_type_filter') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+                    <input type="hidden" name="search" value="{{ request('search') }}">
                     <button type="submit" class="mr-1 text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
                         <i class="fas fa-trash mr-1 -ml-1"></i>
                         {{ __('Delete') }}

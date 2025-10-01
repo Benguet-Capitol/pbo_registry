@@ -178,13 +178,28 @@
                                     </a>
                                 </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    Obligation
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_amount', 'sort_order' => $sortBy == 'obr_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        Obligation
+                                        @if($sortBy == 'obr_amount')
+                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
                                 </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    Purchase Order
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'po_amount', 'sort_order' => $sortBy == 'po_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        Purchase Order
+                                        @if($sortBy == 'po_amount')
+                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
                                 </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    Disbursement
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'dv_amount', 'sort_order' => $sortBy == 'dv_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        Disbursement
+                                        @if($sortBy == 'dv_amount')
+                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
                                 </th>
                                 <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     Actions
@@ -206,7 +221,7 @@
                                         @if ($obligation->obr_amount == 0.00)
                                             <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 px-2 py-1 rounded font-semibold">Cancelled</span>
                                         @elseif ($obligation->obligationAdjustments->isNotEmpty())
-                                            @unlessrole('Payment')
+                                            @unlessrole('Disbursement')
                                                 <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
                                                     type="button"
                                                     class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 hover:underline rounded font-semibold">
@@ -221,7 +236,7 @@
                                                 </span>
                                             @endunlessrole
                                         @else
-                                            @unlessrole('Payment')
+                                            @unlessrole('Disbursement')
                                                 <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
                                                     type="button"
                                                     class="text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
@@ -244,7 +259,7 @@
                                     @if ($obligation->obr_type === 'Purchase Request')
                                         <div class="relative inline-block group">
                                             @if ($poAmount > 0)
-                                                @unlessrole('Payment')
+                                                @unlessrole('Disbursement')
                                                     <button onclick="openCreatePOModal({{ $obligation->id }})"
                                                         type="button"
                                                         class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold hover:underline">
@@ -260,7 +275,7 @@
                                                     </span>
                                                 @endunlessrole
                                             @else
-                                                @unlessrole('Payment')
+                                                @unlessrole('Disbursement')
                                                     <button onclick="openCreatePOModal({{ $obligation->id }})"
                                                         type="button"
                                                         class="text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
@@ -289,11 +304,17 @@
                                     <div class="relative inline-block group">
 
                                         @role('Obligation')
-                                            {{-- Disabled button for Obligation role --}}
-                                            <button type="button" disabled
-                                                class="px-2 py-1">
-                                                {{ number_format($disbursementAmount, 2) }}
-                                            </button>
+                                            @if ($disbursementAmount > 0)
+                                                <span 
+                                                    class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold px-2 py-1">
+                                                    {{ number_format($disbursementAmount, 2) }}
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="text-gray-700 dark:text-gray-400 px-2 py-1">
+                                                    {{ number_format($disbursementAmount, 2) }}
+                                                </span>
+                                            @endif
                                         @else
                                             {{-- Active button for other roles --}}
                                             @if ($disbursementAmount > 0)
@@ -334,7 +355,7 @@
                                                 class="w-full px-4 py-2 text-left text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                                 <i class="fas fa-eye mr-2"></i>View Details
                                             </button>
-                                            @can('view obligation adjustment adjustments')
+                                            @can('view obligation adjustments')
                                             <a href="{{ route('obligation_adjustments.index', ['obligation_id' => $obligation->id]) }}"
                                                 class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                                 <i class="fas fa-file-edit mr-2"></i>Adjustments

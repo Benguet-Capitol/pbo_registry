@@ -177,9 +177,11 @@
                                         <button onclick='openEditDisbursementModal(@json($disbursement))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
                                             <i class="fas fa-edit mr-2"></i>Edit
                                         </button>
+                                        @can('delete disbursement')
                                         <button onclick="openDeleteDisbursementModal({{ $disbursement->id }}, '{{ $disbursement->dv_no }}', '{{ $disbursement->disbursement_date }}', '{{ $disbursement->obligationAmount->appropriation->account_code }}', '{{ $disbursement->disbursement_amount }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
                                             <i class="fas fa-trash mr-2"></i>Delete
                                         </button>
+                                        @endcan
                                     </div>                          
                             </div>
                         </td> 

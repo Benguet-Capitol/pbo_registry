@@ -1,3 +1,4 @@
+    
 <?php
 
 use App\Http\Controllers\OfficeController;
@@ -104,11 +105,15 @@ Route::middleware('auth')->group(function () {
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);
 
-    //Purchase Order Routes
+    // Purchase Order Routes
     Route::resource('purchase_orders', PurchaseOrderController::class);
+    // Unified Purchase Order module view
+    Route::get('purchase-orders/all', [PurchaseOrderController::class, 'all'])->name('purchase_orders.all');
 
     // Disbursement Routes
     Route::resource('disbursements', DisbursementController::class);
+    // Unified Disbursement module view
+    Route::get('disbursements/all', [DisbursementController::class, 'all'])->name('disbursements.all');
 
     // Realignments Routes
     Route::resource('realignments', RealignmentController::class);

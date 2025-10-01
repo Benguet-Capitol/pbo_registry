@@ -2,6 +2,11 @@
 <form id="createRealignmentForm" method="POST" action="">
     @csrf
     
+    <input type="hidden" name="year1" value="{{ request('year1') }}">
+    <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
+    <input type="hidden" name="realignment_type_filter" value="{{ request('realignment_type_filter') }}">
+    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
     <div id="createRealignmentModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->
@@ -364,7 +369,7 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center p-4 flex items-center border-t border-gray-200 rounded-b dark:border-gray-600">
+                <div class="justify-center items-center p-4 flex border-t border-gray-200 rounded-b dark:border-gray-600">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
                     <button type="button" onclick="validateCreateRealignmentForm()" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
                         <i class="fas fa-save mr-2 ml-1"></i> {{ __('Save') }}
@@ -379,7 +384,7 @@
 </form>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+<div id="deleteConfirmModal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md p-6">
         <h2 class="text-lg font-semibold text-red-600 mb-4">Confirm Deletion</h2>
         <p class="text-sm text-gray-700 dark:text-gray-300 mb-6">

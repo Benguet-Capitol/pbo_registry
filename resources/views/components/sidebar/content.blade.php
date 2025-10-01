@@ -51,6 +51,22 @@
             <i class="fas fa-exchange-alt text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
+    <x-sidebar.link
+        title="Purchase Order"
+        href="{{ route('purchase_orders.all') }}"
+        :isActive="request()->routeIs('purchase_orders.all')">
+        <x-slot name="icon">
+            <i class="fas fa-file-invoice text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
+    <x-sidebar.link
+        title="Disbursement"
+        href="{{ route('disbursements.all') }}"
+        :isActive="request()->routeIs('disbursements.all')">
+        <x-slot name="icon">
+            <i class="fas fa-file-signature text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
 
     <x-sidebar.dropdown
         title="Auxiliary"

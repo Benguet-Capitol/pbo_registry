@@ -72,23 +72,30 @@ class ObligationController extends Controller
         }
 
         // Apply sorting and pagination
-        if ($sortBy === 'office_abbreviation' || $sortBy === 'class') {
-            $query->join('office_allotment_classes', 'obligations.office_allotment_class_id', '=', 'office_allotment_classes.id');
-
-            if ($sortBy === 'office_abbreviation') {
-                $query->join('offices', 'offices.id', '=', 'office_allotment_classes.office')
-                    ->orderBy('offices.office_abbreviation', $sortOrder);
-            }
-
-            if ($sortBy === 'class') {
-                $query->join('allotment_classes', 'allotment_classes.class', '=', 'office_allotment_classes.class')
-                    ->orderBy('allotment_classes.class', $sortOrder);
-            }
+       if ($sortBy === 'office_allotment_class') {
+        $query->join('office_allotment_classes', 'obligations.office_allotment_class_id', '=', 'office_allotment_classes.id')
+            ->join('offices', 'offices.id', '=', 'office_allotment_classes.office')
+            ->join('allotment_classes', 'allotment_classes.class', '=', 'office_allotment_classes.class')
+            ->orderBy(
+                DB::raw("CONCAT(offices.office_abbreviation, ' - ', allotment_classes.class)"),
+                $sortOrder
+            )
+        ->select('obligations.*'); // prevent ambiguous column issues
+        } elseif ($sortBy === 'obr_amount') {
+            $query->withSum('obligationAmounts as obr_amount_sum', 'obr_amount')
+                ->orderBy('obr_amount_sum', $sortOrder);
+        } elseif ($sortBy === 'po_amount') {
+            $query->withSum('purchaseOrders as po_amount_sum', 'po_amount')
+                ->orderBy('po_amount_sum', $sortOrder);
+        } elseif ($sortBy === 'dv_amount') {
+            $query->withSum('disbursements as dv_amount_sum', 'disbursement_amount')
+                ->orderBy('dv_amount_sum', $sortOrder);
         } else {
             $query->orderBy($sortBy, $sortOrder);
         }
 
-        $query->orderBy('id', 'desc');
+        // Always fallback order by ID DESC for tie-breaking
+        $query->orderBy('obr_date', 'desc');
 
         if ($perPage == 'all') {
             $obligations = $query->get();
@@ -292,6 +299,21 @@ class ObligationController extends Controller
         $totalObligationAmount = $obligationAmounts->sum(fn($item) => $item['obr_amount'] + $item['adjustments']);
         $totalPOAmount = $obligationAmounts->sum('po_total');
 
+        // Prepare disbursements for the modal
+        $disbursements = $obligation->disbursements->map(function ($disb) {
+            $appropriation = optional(optional($disb->obligationAmount)->appropriation);
+            return [
+                'dv_no' => $disb->dv_no,
+                'disbursement_date' => $disb->disbursement_date,
+                'status' => $disb->status,
+                'programs' => $appropriation->programs ?? '-',
+                'account_code' => $appropriation->account_code ?? '-',
+                'description' => $appropriation->description ?? '-',
+                'disbursement_amount' => $disb->disbursement_amount,
+            ];
+        });
+        $totalDisbursementAmount = $disbursements->sum('disbursement_amount');
+
         return response()->json([
             'obligation' => [
                 'obr_date' => $obligation->obr_date,
@@ -309,7 +331,6 @@ class ObligationController extends Controller
             'total_po_amount' => $totalPOAmount,
             'purchase_orders' => $obligation->purchaseOrders->map(function ($po) {
                 $appropriation = optional(optional($po->obligationAmount)->appropriation);
-
                 return [
                     'po_number' => $po->po_number,
                     'po_date' => $po->po_date,
@@ -322,6 +343,8 @@ class ObligationController extends Controller
                     'description' => $appropriation->description ?? '',
                 ];
             }),
+            'disbursements' => $disbursements,
+            'total_disbursement_amount' => $totalDisbursementAmount,
         ]);
         
     }
@@ -384,7 +407,8 @@ class ObligationController extends Controller
             $officeAbbreviation = $officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
             $class = $officeAllotmentClass->allotmentClass->class ?? 'N/A';
 
-            return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter']))
+            return redirect()
+                ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
                 ->with('status', "Obligation Request No. <strong>{$validated['obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been created successfully!");
         } catch (\Exception $e) {
             // Log the error for debugging
@@ -564,8 +588,9 @@ class ObligationController extends Controller
         // Delete the selected obligation
         $obligation->delete();
 
-        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_id', 'obr_type_filter']))
-        ->with('status', [
+        return redirect()
+            ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
+            ->with('status', [
             'type' => 'delete',
             'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been deleted successfully!"
         ]);
@@ -603,7 +628,7 @@ class ObligationController extends Controller
             $class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
             $totalObrAmount = $obligation->obr_amount;
 
-            return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_id', 'obr_type_filter']))
+            return redirect()->to(url()->previous())
             ->with('status', [
                 'type' => 'edit',
                 'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!"
@@ -722,7 +747,7 @@ class ObligationController extends Controller
 
         $accountCodesMessage = count($accountCodes) > 1 ? implode(', ', $accountCodes) : ($accountCodes[0] ?? 'N/A');
 
-        return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_id', 'obr_type_filter']))
+        return redirect()->to(url()->previous())
             ->with('status', [
                 'type' => 'default',
                 'message' => "Purchase Order No: <strong>{$validated['po_number']}</strong> with Date: <strong>{$validated['po_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"
@@ -825,7 +850,7 @@ class ObligationController extends Controller
         $obr = Obligation::find($validated['obligation_id']);
         $obrNo = $obr ? $obr->obr_no : '';
         // Redirect back to the index page with a success message
-        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_id', 'obr_type_filter']))
+        return redirect()->to(url()->previous())
             ->with('status', [
                 'type' => 'default',
                 'message' => "<strong>$adjustmentsSaved Obligation Adjustments</strong> for OBR No.: <strong>{$obrNo}</strong> has been created successfully. <strong>Details: Adjustment Date:</strong> {$validated['adjustment_date']} with <strong>Account Code(s):</strong> {$accountCodesMessage}"
@@ -861,7 +886,7 @@ class ObligationController extends Controller
         ));
     }
 
-    public function storeDisbursement(Request $request)
+    public function storeDisbursement(Request $request, Obligation $obligation) : RedirectResponse
     {
         // Validate the request data
         $validated = $request->validate([
@@ -928,7 +953,7 @@ class ObligationController extends Controller
 
         $accountCodesMessage = count($accountCodes) > 1 ? implode(', ', $accountCodes) : ($accountCodes[0] ?? 'N/A');
 
-        return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_id', 'obr_type_filter']))
+        return redirect()->to(url()->previous())
             ->with('status', [
                 'type' => 'default',
                 'message' => "DV / Check No: <strong>{$validated['dv_no']}</strong> with Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"

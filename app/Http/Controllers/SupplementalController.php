@@ -234,7 +234,8 @@ class SupplementalController extends Controller
                 Supplemental::create($dataToInsert);
             }
 
-            return redirect()->route('supplementals.index')->with('status', "<strong>{$validated['type']}</strong> No. <strong>{$validated['supplemental_no']}</strong> has been created successfully!");
+            return redirect()->route('supplementals.index', $request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
+            ->with('status', "<strong>{$validated['type']}</strong> No. <strong>{$validated['supplemental_no']}</strong> has been created successfully!");
         } catch (\Exception $e) {
             Log::error('Error saving supplemental: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -288,7 +289,8 @@ class SupplementalController extends Controller
                 'quarter4' => $validated['edit_quarter_4'] ?? '0.00',
             ]);
 
-            return redirect()->route('supplementals.index')->with('status', "<strong>{$validated['edit_type']}</strong> No. <strong>{$validated['edit_supplemental_no']}</strong> with Account Code: <strong>{$validated['edit_account_code']} - {$validated['edit_description']}</strong>  has been updated successfully!");
+            return redirect()->route('supplementals.index', $request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
+            ->with('status', "<strong>{$validated['edit_type']}</strong> No. <strong>{$validated['edit_supplemental_no']}</strong> with Account Code: <strong>{$validated['edit_account_code']} - {$validated['edit_description']}</strong>  has been updated successfully!");
         } catch (\Exception $e) {
             Log::error('Error updating supplemental: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -308,7 +310,8 @@ class SupplementalController extends Controller
 
             $supplemental->delete();
 
-            return redirect()->route('supplementals.index')->with('status',
+            return redirect()->route('supplementals.index', request()->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
+            ->with('status',
                 '<strong>' . $supplemental->type . '</strong> No.: <strong>' . $supplemental->supplemental_no . '</strong> with Account Code: <strong>' . $accountCode . '</strong> - <strong>' . $description . '</strong> has been deleted successfully!'
             );
         } catch (\Throwable $e) {

@@ -33,4 +33,9 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(ObligationAmount::class, 'obligation_amounts_id');
     }
+
+    public function obligation()
+    {
+        return $this->belongsTo(Obligation::class, 'obligation_id');
+    }
 }

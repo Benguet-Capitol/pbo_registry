@@ -1,5 +1,10 @@
 <!-- Cancellation Modal -->
 <form id="cancelObligationForm" method="POST">
+    <input type="hidden" name="year1" value="{{ request('year1') }}">
+    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+    <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
+    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
     <div id="cancellationModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->

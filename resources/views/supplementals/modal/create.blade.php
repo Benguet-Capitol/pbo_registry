@@ -1,6 +1,11 @@
 <!-- Create Supplemental Appropriations / Reversions Modal -->
 <form id="createSupplementalsForm" method="POST" action="{{ route('supplementals.store') }}">
     @csrf
+    <input type="hidden" name="year1" value="{{ request('year1') }}">
+    <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
+    <input type="hidden" name="supplemental_type_filter" value="{{ request('supplemental_type_filter') }}">
+    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
     <div id="createSupplementalsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->

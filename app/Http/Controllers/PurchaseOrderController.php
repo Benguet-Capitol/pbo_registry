@@ -75,6 +75,93 @@ class PurchaseOrderController extends Controller
     }
 
     /**
+     * Display all purchase orders in a single view with edit capability.
+     */
+    public function all(Request $request)
+    {
+        // Get the per page value from the request
+        $perPage = $request->input('per_page', 'all');
+        $search = $request->input('search');
+        // Get the sort by and sort order values from the request
+        $sortBy = $request->query('sort_by', 'obr_date');
+        $sortOrder = $request->query('sort_order', 'desc');
+
+        // Get the selected year or default to the current year
+        $currentYear = date('Y');
+        $selectedYear = $request->input('year1', $currentYear);
+
+        $query = PurchaseOrder::with([
+                'obligation.obligationAmounts.appropriation',
+                'obligation.officeAllotmentClass.offices',
+                'obligation.officeAllotmentClass.allotmentClass',
+                ])
+            ->whereHas('obligation.officeAllotmentClass', function ($q) use ($selectedYear) {
+                $q->where('year', $selectedYear);
+            });
+
+        // Apply filter for office_allotment_class_filter
+        if ($request->filled('office_allotment_class_filter')) {
+            $query->whereHas('obligation.officeAllotmentClass', function ($q) use ($request) {
+                $q->where('id', $request->input('office_allotment_class_filter'));
+            });
+        }
+
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('po_number', 'like', '%' . $search . '%')
+                  ->orWhere('pr_no', 'like', '%' . $search . '%')
+                  ->orWhere('supplier', 'like', '%' . $search . '%')
+                  ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
+                      $q2->where('account_code', 'like', '%' . $search . '%')
+                         ->orWhere('description', 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
+                      $q3->where('office_abbreviation', 'like', '%' . $search . '%');
+                  })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
+                      $q4->where('class', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        // Apply sorting and pagination
+        if ($sortBy && in_array($sortBy, ['po_date', 'po_number', 'pr_no', 'supplier', 'po_amount'])) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            // Default sorting by obr_date descending
+            $query->orderBy('po_date', 'desc');
+        }
+
+        if ($perPage === 'all') {
+            $purchaseOrders = $query->get();
+        } else {
+            $perPage = is_numeric($perPage) ? (int)$perPage : 10; // Default to 10 if invalid
+            $purchaseOrders = $query->paginate($perPage)->appends($request->query());
+        }
+
+        // Fetch distinct years from the database
+        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
+        // Get the list of office allotment classes filtered by the selected year
+        $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
+            ->where('year', $selectedYear)
+            ->orderBy('office', 'asc')
+            ->get();
+        // Get the list of office allotment classes filtered by the selected year
+        $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
+            ->select('id', 'office_abbreviation', 'class', 'fund')
+            ->where('year', $currentYear) // Filter by the current year 
+            ->get();
+
+        $breadcrumb = [
+            ['label' => 'Dashboard', 'route' => route('dashboard')],
+            ['label' => 'Purchase Orders']
+        ];
+
+            
+        return view('purchase_orders.index_all', compact('purchaseOrders', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes'));
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
@@ -170,6 +257,7 @@ class PurchaseOrderController extends Controller
     {
         //
     }
+
 
     /**
      * Show the form for editing the specified resource.

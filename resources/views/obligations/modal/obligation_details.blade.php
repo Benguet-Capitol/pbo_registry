@@ -51,8 +51,20 @@
                     obligation_amounts,
                     obligation_adjustments,
                     total_po_amount,
-                    purchase_orders
+                    purchase_orders,
+                    disbursements = [],
+                    total_disbursement_amount = 0
                 } = data;
+                // Fields configuration for the Disbursement table
+                const disbursementTableFields = [
+                    { class: 'px-2 py-2 text-center', render: r => r.dv_no || '' },
+                    { class: 'px-2 py-2 text-center', render: r => r.disbursement_date || '' },
+                    { class: 'px-2 py-2 text-center', render: r => r.status || '' },
+                    { class: 'px-2 py-2 text-center', render: r => r.programs || '-' },
+                    { class: 'px-2 py-2 text-center', render: r => r.account_code || '-' },
+                    { class: 'px-2 py-2 text-center', render: r => r.description || '-' },
+                    { class: 'px-3 py-2 text-right', render: r => formatCurrency(r.disbursement_amount) }
+                ];
 
                 /**
                  * Utility function to format numbers as currency
@@ -229,9 +241,9 @@
 
                     <!-- Adjustments Table -->
                     <div class="mt-4">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Adjustment:</h3>
-                        <table class="w-full text-xs text-center border-t mt-3 dark:text-gray-400">
-                            <thead class="text-xs text-gray-700 bg-gray-100 dark:bg-gray-900 border-b dark:text-gray-300">
+                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Adjustments:</h3>
+                        <table class="w-full text-xs text-center border-t mt-3 text-gray-600 dark:text-gray-400">
+                            <thead class="text-xs text-gray-600 bg-gray-100 dark:bg-gray-900 border-b dark:text-gray-300">
                                 <tr>
                                     <th scope="col" class="px-4 py-2 text-center">Date</th>
                                     <th scope="col" class="px-4 py-2 text-center">Remarks</th>
@@ -274,9 +286,9 @@
                     ${showPO ? `
                     <!-- Purchase Orders Table -->
                     <div class="mt-4">
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-300">Purchase Order:</h3>
-                        <table class="w-full text-xs text-center border-t mt-3 dark:text-gray-400">
-                            <thead class="text-xs text-gray-700 bg-gray-100 dark:bg-gray-900 border-b dark:text-gray-300">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-300">Purchase Orders:</h3>
+                        <table class="w-full text-xs text-center border-t mt-3 text-gray-600 dark:text-gray-400">
+                            <thead class="text-xs text-gray-600 bg-gray-100 dark:bg-gray-900 border-b dark:text-gray-300">
                                 <tr>
                                     <th class="px-3 py-2">PO Number</th>
                                     <th class="px-3 py-2">PO Date</th>
@@ -341,6 +353,34 @@
                         </table>
                     </div>
                     ` : ''}
+                    <!-- Disbursement Table -->
+                    <div class="mt-4">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-300">Disbursements:</h3>
+                        <table class="w-full text-xs text-center border-t mt-3 text-gray-600 dark:text-gray-400">
+                            <thead class="text-xs text-gray-600 bg-gray-100 dark:bg-gray-900 border-b dark:text-gray-300">
+                                <tr>
+                                    <th class="px-2 py-2 text-center">DV / Check No.</th>
+                                    <th class="px-2 py-2 text-center">Date</th>
+                                    <th class="px-2 py-2 text-center">Status</th>
+                                    <th class="px-2 py-2 text-center">Program</th>
+                                    <th class="px-2 py-2 text-center">Account Code</th>
+                                    <th class="px-2 py-2 text-center">Description</th>
+                                    <th class="px-3 py-2 text-center">DV / Check Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${disbursements.length
+                                    ? buildRows(disbursements, disbursementTableFields)
+                                    : `<tr><td colspan="7" class="px-3 py-3 text-center text-gray-500">No disbursements found.</td></tr>`}
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
+                                    <td colspan="6" class="text-right px-3 py-2">Total Disbursement Amount:</td>
+                                    <td class="text-right px-3 py-2">${formatCurrency(total_disbursement_amount)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 `;
             })
             .catch(error => {

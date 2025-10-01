@@ -266,7 +266,8 @@ class RealignmentController extends Controller
                 }
             }
 
-            return redirect()->route('realignments.index')->with('status', 'Realignment No.: <strong>' . $request->realignment_no . '</strong> has been created successfully!');
+            return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
+            ->with('status', 'Realignment No.: <strong>' . $request->realignment_no . '</strong> has been created successfully!');
         } catch (\Throwable $e) {
             Log::error('Realignment Store Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -362,7 +363,8 @@ class RealignmentController extends Controller
                     }
                 }
             }
-            return redirect()->route('realignments.index')->with('status', 'Realignment No.: <strong>' . $request->input('edit_realignment_no') . '</strong> with Type: <strong>' . $realignment->type . '</strong> has been updated successfully!');
+            return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
+            ->with('status', 'Realignment No.: <strong>' . $request->input('edit_realignment_no') . '</strong> with Type: <strong>' . $realignment->type . '</strong> has been updated successfully!');
         } catch (\Throwable $e) {
             Log::error('Realignment Update Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -382,7 +384,8 @@ class RealignmentController extends Controller
 
             $realignment->delete();
 
-            return redirect()->route('realignments.index')->with('status',
+            return redirect()->route('realignments.index', request()->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
+                ->with('status',
                 'Realignment No.: <strong>' . $realignment->realignment_no . '</strong> with Type: <strong>' . $realignment->type . '</strong>, Account Code: <strong>' . $accountCode . '</strong> - <strong>' . $description . '</strong> and Amount: <strong>' . number_format($realignment->amount, 2) . '</strong> has been deleted successfully!'
             );
         } catch (\Throwable $e) {

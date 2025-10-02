@@ -213,21 +213,39 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($office_allotment_classes as $office_allotment_class)
+                    @forelse ($office_allotment_classes as $office_allotment_class)
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office_allotment_class->offices->office_abbreviation }}</td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office_allotment_class->allotmentClass->description ?? 'N/A' }}</td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office_allotment_class->fund_source }}</td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office_allotment_class->fund }}</td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office_allotment_class->fpp_code }}</td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office_allotment_class->responsibility_code }}</td>
+                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            {{ $office_allotment_class->offices->office_abbreviation }}
+                        </td>
+                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            {{ $office_allotment_class->allotmentClass->description ?? 'N/A' }}
+                        </td>
+                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            {{ $office_allotment_class->fund_source }}
+                        </td>
+                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            {{ $office_allotment_class->fund }}
+                        </td>
+                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            {{ $office_allotment_class->fpp_code }}
+                        </td>
+                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            {{ $office_allotment_class->responsibility_code }}
+                        </td>
                         <td class="px-1 py-2 border-b border-gray-300 text-right">
                             @if($office_allotment_class->total_appropriation > 0)
-                                <span class="px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold">{{ number_format($office_allotment_class->total_appropriation, 2) }}</span>
+                                <span class="px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold">
+                                    {{ number_format($office_allotment_class->total_appropriation, 2) }}
+                                </span>
                             @elseif($office_allotment_class->total_appropriation == 0)
-                                <span class="px-2 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-semibold">{{ number_format($office_allotment_class->total_appropriation, 2) }}</span>
+                                <span class="px-2 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-semibold">
+                                    {{ number_format($office_allotment_class->total_appropriation, 2) }}
+                                </span>
                             @else
-                                <span class="text-gray-600 dark:text-gray-300">{{ number_format($office_allotment_class->total_appropriation, 2) }}</span>
+                                <span class="text-gray-600 dark:text-gray-300">
+                                    {{ number_format($office_allotment_class->total_appropriation, 2) }}
+                                </span>
                             @endif
                         </td>
                         <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
@@ -241,16 +259,19 @@
                                     </span>
                                 </button>
                                 <div class="absolute right-0 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
-                                    <a href="{{ route('appropriations.index', ['office_allotment_class_id' => $office_allotment_class->id]) }}" class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+                                    <a href="{{ route('appropriations.index', ['office_allotment_class_id' => $office_allotment_class->id]) }}" 
+                                    class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
                                         <i class="fas fa-stream mr-2"></i>Accounts
                                     </a>
                                     @can('edit office allotment classes')
-                                    <button onclick='openEditOfficeAllotmentClassModal(@json($office_allotment_class))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
+                                    <button onclick='openEditOfficeAllotmentClassModal(@json($office_allotment_class))' 
+                                            class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
                                         <i class="fas fa-edit mr-2"></i>Edit
                                     </button>
                                     @endcan
                                     @can('delete office allotment classes')
-                                    <button onclick="openDeleteModal({{ $office_allotment_class->id }}, '{{ $office_allotment_class->office_abbreviation }}', '{{ $office_allotment_class->class }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
+                                    <button onclick="openDeleteModal({{ $office_allotment_class->id }}, '{{ $office_allotment_class->office_abbreviation }}', '{{ $office_allotment_class->class }}')" 
+                                            class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
                                         <i class="fas fa-trash mr-2"></i>Delete
                                     </button>
                                     @endcan
@@ -258,7 +279,13 @@
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                @empty
+                    <tr>
+                        <td colspan="8" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                            No Office Allotment Classes found
+                        </td>
+                    </tr>
+                @endforelse
                 <tfoot class="bg-gray-200 dark:bg-gray-800 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
                     <tr>
                         <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">Total Appropriation:</td>

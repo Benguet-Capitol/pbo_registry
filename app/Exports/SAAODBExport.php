@@ -51,7 +51,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                 $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 10);
 
                 // Hide specific columns
-                foreach (['C', 'J', 'N', 'O'] as $col) {
+                foreach (['C', 'I', 'J', 'N', 'O'] as $col) {
                     $sheet->getColumnDimension($col)->setVisible(false);
                 }
 
@@ -68,11 +68,12 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                 // Default to 2 rows above certified correct row, or fallback to highestRow
                 $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
 
-                // Format number columns
+               // Format number columns as Accounting without currency symbol
                 foreach (range('D', 'S') as $column) {
                     if (!in_array($column, ['M', 'O', 'Q', 'R'])) {
                         $sheet->getStyle("{$column}13:{$column}{$highestRow}")
-                            ->getNumberFormat()->setFormatCode('#,##0.00');
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
 

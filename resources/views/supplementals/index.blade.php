@@ -128,6 +128,14 @@
                 <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                            <a href="{{ route('supplementals.index', ['sort_by' => 'supplemental_date', 'sort_order' => $sortBy == 'supplemental_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                Date
+                                @if($sortBy == 'supplemental_date')
+                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                @endif
+                            </a>
+                        </th>
+                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                             <a href="{{ route('supplementals.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                 Office & Class
                                 @if($sortBy == 'office_allotment_class')
@@ -151,13 +159,14 @@
                                 @endif
                             </a>
                         </th>
+                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                Programs
+                        </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('supplementals.index', ['sort_by' => 'supplemental_date', 'sort_order' => $sortBy == 'supplemental_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Date
-                                @if($sortBy == 'supplemental_date')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
+                                Account Code
+                        </th>
+                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                Description
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                             <a href="{{ route('supplementals.index', ['sort_by' => 'basis', 'sort_order' => $sortBy == 'basis' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
@@ -166,15 +175,6 @@
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
                             </a>
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                Programs
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                Account Code
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                Description
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                 Amount
@@ -195,8 +195,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($supplementals as $supplemental)
+                    @forelse($supplementals as $supplemental)
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_date }}</td>
                             <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
                             </td>
@@ -214,11 +215,10 @@
                                 @endif
                             </td>
                             <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_no }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_date }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->basis }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->programs ?? '-' }}</td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->programs ?? '-' }}</td>
                             <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->account_code ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->description ?? '-' }}</td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->description ?? '-' }}</td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->basis }}</td>
                             <td class="px-3 py-3 border-b border-gray-300">
                                 @if($supplemental->type === 'Supplemental')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
@@ -240,12 +240,12 @@
                                 <div class="relative inline-block text-left">
                                     <button onclick="toggleDropdown(this)" 
                                             class="relative text-xs group px-2 py-1.5">
-                                            <span class="fas fa-ellipsis-v"></span>
-                                            <!-- Tooltip -->
-                                            <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }} | {{ $supplemental->supplemental_no }} | {{ number_format($supplemental->amount, 2) }}
-                                            </span>
-                                        </button>
+                                        <span class="fas fa-ellipsis-v"></span>
+                                        <!-- Tooltip -->
+                                        <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                            {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }} | {{ $supplemental->supplemental_no }} | {{ number_format($supplemental->amount, 2) }}
+                                        </span>
+                                    </button>
                                     <div class="absolute right-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
                                         @can('edit supplementals')
                                         <button onclick='openEditSupplementalModal(@json($supplemental))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
@@ -261,7 +261,13 @@
                                 </div>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="14" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
+                                No Supplemental Appropriations or Reversions found
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
                 <tfoot>
                     <tr id="realignmentsFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
@@ -350,7 +356,7 @@
         let totalRecipient = 0;
         for (let i = 0; i < tr.length; i++) {
             if (tr[i].style.display === "none") continue;
-            let typeCell = tr[i].getElementsByTagName("td")[1];
+            let typeCell = tr[i].getElementsByTagName("td")[2];
             let amountCell = tr[i].getElementsByTagName("td")[8];
             if (!typeCell || !amountCell) continue;
             let type = typeCell.textContent.trim();

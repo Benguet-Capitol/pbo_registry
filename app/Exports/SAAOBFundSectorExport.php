@@ -69,10 +69,11 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
 
 
                 // Format number columns
-                foreach (range('B', 'O') as $column) {
-                    if (!in_array($column, ['B', 'O'])) {
+                foreach (range('C', 'N') as $column) {
+                    if (!in_array($column, ['L', 'N'])) {
                         $sheet->getStyle("{$column}14:{$column}{$highestRow}")
-                            ->getNumberFormat()->setFormatCode('#,##0.00');
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
 

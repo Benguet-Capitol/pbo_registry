@@ -159,8 +159,8 @@
                             <td colspan="15" class="px-2 py-3">{{ $fund->fund_type }}</td>
                         </tr>
                         @foreach ($fund->matchedSectorsByCategory as $category => $sectors)
-                        <tr id="fundSourceRow" class="bg-gray-600 text-white dark:bg-gray-200 dark:text-gray-800 font-bold text-xs border-t border-b border-gray-700 dark:border-gray-100 uppercase">
-                            <td colspan="15" class="px-4 py-2"> {{ $category }} APPROPRIATIONS </td>
+                        <tr id="fundSourceRow" class="bg-gray-600 text-white dark:bg-gray-200 dark:text-gray-800 font-bold text-xs border-t border-b border-gray-700 dark:border-gray-100">
+                            <td colspan="15" class="px-4 py-2"> {{ $category }} Appropriations </td>
                         </tr>
                         @foreach($sectors as $sector)
                         @if ($sector->sector_code !== '' && $sector->present_allotment_classes->isNotEmpty())
@@ -187,7 +187,7 @@
                         </tr>
                         @endforeach
                         <tr class="bg-gray-500 text-white dark:bg-gray-600 dark:text-white font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
-                            <td colspan="2" class="px-1 py-2 text-right">TOTAL:</td>
+                            <td colspan="2" class="px-1 py-2 text-right">Total:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($sector->totals->approved_appropriation, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($sector->totals->supplemental, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($sector->totals->reversion, 2) }}</td>
@@ -210,7 +210,7 @@
                         @endphp
                         @if ($hasValidSector)
                         <tr class="bg-gray-100 text-gray-700 dark:bg-gray-200 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
-                            <td colspan="2" class="px-1 py-2 text-right uppercase">TOTAL {{ $category }} APPROPRIATIONS:</td>
+                            <td colspan="2" class="px-1 py-2 text-right">Total {{ $category }} Appropriations:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($fund->categoryTotals[$category]->approved_appropriation, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($fund->categoryTotals[$category]->supplemental, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($fund->categoryTotals[$category]->reversion, 2) }}</td>
@@ -231,13 +231,13 @@
                         $sectors->filter(fn($sector) => $sector->present_allotment_classes->isNotEmpty())->isNotEmpty()
                         && $fund->categoryClassStats[$category]?->isNotEmpty()
                         )
-                        <tr id="fundSourceRow" class="bg-gray-700 text-white font-bold uppercase border-t border-b border-gray-600">
+                        <tr id="fundSourceRow" class="bg-gray-700 text-white text-xs font-bold border-t border-b border-gray-600">
                             <td colspan="15" class="px-2 py-2 text-left">{{ $category }} Appropriations by Allotment Class</td>
                         </tr>
 
                         @foreach ($fund->categoryClassStats[$category] as $classCode => $row)
                         <tr class="bg-white text-gray-800 border-b dark:bg-gray-900 dark:text-gray-200">
-                            <td colspan="2" class="px-1 py-2 text-left uppercase">{{ $row->description }}</td>
+                            <td colspan="2" class="px-1 py-2 text-left">{{ $row->description }}</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($row->approved_appropriation, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($row->supplemental, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($row->reversion, 2) }}</td>
@@ -254,7 +254,7 @@
                         @endforeach
                         {{-- Totals per Category after Allotment Class Totals --}}
                         <tr class="bg-gray-100 text-gray-700 dark:bg-gray-200 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
-                            <td colspan="2" class="px-1 py-2 text-right uppercase">TOTAL {{ $category }} Appropriations:</td>
+                            <td colspan="2" class="px-1 py-2 text-right">Total {{ $category }} Appropriations:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($fund->categoryTotals[$category]->approved_appropriation ?? 0, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($fund->categoryTotals[$category]->supplemental ?? 0, 2) }}</td>
                             <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($fund->categoryTotals[$category]->reversion ?? 0, 2) }}</td>
@@ -270,8 +270,8 @@
                         </tr>
                         @endif
                         @endforeach
-                        <tr class="bg-gray-700 text-white dark:bg-gray-700 font-bold text-right uppercase border-t-2 border-b-2 border-white dark:border-gray-100">
-                            <td colspan="2" class="px-1 py-4 text-right">GRAND TOTAL {{ $fund->fund_type }}:</td>
+                        <tr class="bg-gray-700 text-white dark:bg-gray-700 font-bold text-right border-t-2 border-b-2 border-white dark:border-gray-100">
+                            <td colspan="2" class="px-1 py-4 text-right">Grand Total {{ $fund->fund_type }}:</td>
                             <td class="px-1 py-4" data-key="appropriation">{{ number_format($fund->grandTotal->approved_appropriation, 2) }}</td>
                             <td class="px-1 py-4" data-key="sb_appropriation">{{ number_format($fund->grandTotal->supplemental, 2) }}</td>
                             <td class="px-1 py-4" data-key="reversion">{{ number_format($fund->grandTotal->reversion, 2) }}</td>
@@ -402,10 +402,10 @@
 
             // Get selected fund
             const fundSelect = document.getElementById('fund_filter');
-            let fundText = 'ALL FUNDS';
+            let fundText = 'All Funds';
             if (fundSelect && fundSelect.selectedIndex > 0) {
                 const selectedOption = fundSelect.options[fundSelect.selectedIndex];
-                fundText = (selectedOption.getAttribute('data-fund-name') || selectedOption.text).toUpperCase();
+                fundText = (selectedOption.getAttribute('data-fund-name') || selectedOption.text);
             }
 
             // Format As of date
@@ -441,8 +441,8 @@
                 <div style="font-size:12px;">La Trinidad, Benguet</div>
                 <div style="font-size:12px;">Provincial Budget Office</div>
                 <div style="font-size:12px; font-weight:bold; text-transform:uppercase;">STATEMENT OF APPROPRIATIONS, ALLOTMENTS, OBLIGATIONS AND BALANCES</div>
-                <div style="font-size:12px; text-transform:uppercase;">(CURRENT LEGISLATIVE APPROPRIATION)</div>
-                <div style="font-size:12px; text-transform:uppercase;">${fundText}</div>
+                <div style="font-size:12px; ">(Current Legislative Appropriation)</div>
+                <div style="font-size:12px; ">${fundText}</div>
                 <div style="font-size:12px;">As of ${asOfDate}</div>
             </div>
         `);

@@ -1,6 +1,6 @@
 <!-- Obligation Details Modal -->
 <div id="obligationModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-    <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+    <div class="relative top-20 mx-auto p-4 border w-full max-w-6xl shadow-lg rounded-md bg-white dark:bg-gray-800">
         <!-- Modal content -->
         <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
             <!-- Modal header -->
@@ -165,7 +165,11 @@
                     ...(showPO ? [{
                         class: 'px-3 py-2 text-right',
                         render: r => formatCurrency(r.po_total)
-                    }] : [])
+                    }] : []),
+                    {
+                        class: 'px-3 py-2 text-right',
+                        render: r => formatCurrency(r.disbursement_total)
+                    }
                 ];
 
                 // Obligation summary rows
@@ -220,6 +224,7 @@
                                     <th scope="col" class="px-4 py-2 text-center">Adjustment</th>
                                     <th scope="col" class="px-4 py-2 text-center">Adjusted Obligation</th>
                                     ${showPO ? '<th scope="col" class="px-4 py-2 text-center">Purchase Order</th>' : ''}
+                                    <th scope="col" class="px-4 py-2 text-center">Disbursement</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -234,6 +239,7 @@
                                             : formatCurrency(obligation_amounts.reduce((sum, r) => sum + parseFloat(r.obr_amount || 0) + parseFloat(r.adjustments || 0), 0))
                                     }</td>
                                     ${showPO ? `<td class="text-right px-3 py-2">${formatCurrency(total_po_amount)}</td>` : ''}
+                                    <td class="text-right px-3 py-2">${formatCurrency(total_disbursement_amount)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -375,7 +381,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
-                                    <td colspan="6" class="text-right px-3 py-2">Total Disbursement Amount:</td>
+                                    <td colspan="6" class="text-right px-3 py-2">Total DV / Check Amount:</td>
                                     <td class="text-right px-3 py-2">${formatCurrency(total_disbursement_amount)}</td>
                                 </tr>
                             </tfoot>
@@ -396,7 +402,7 @@
         printWindow.document.write(`
             <html>
             <head>
-                <title>Obligation Request Details</title>
+                <title>Obligation Details</title>
                 <style>
                     body { font-family: Arial, sans-serif; font-size: 12px; color: #000; }
                     table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }

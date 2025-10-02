@@ -104,35 +104,176 @@
     <!-- Purchase Orders Table -->
      <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <!-- <div class="flex justify-between items-center mb-4">
-                @can('create purchase orders')
+            <div class="flex justify-between items-center mb-4">
+                <!-- @can('create purchase orders')
                 <button onclick="openCreateModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Add Purchase Order') }}
                 </button>
-                @endcan
-            </div> -->
-            <table id="adjustmentsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
-                <thead class="text-center text-xs border-b-2 border-gray-400 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400">
+                @endcan -->
+                <!-- Search Input -->
+                <div class="flex items-center space-x-2">
+                    <form method="GET" action="{{ route('purchase_orders.all') }}" class="flex items-center">
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    </form>
+                </div>
+            </div>
+            <table id="purchaseOrdersTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
+                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Office & Class</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">OBR No.</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Program</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Account Code</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Description</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">PO Number</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Date</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Supplier</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">PR Number</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Delivery Period</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Remarks</th>
-                        <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">PO Amount</th>
-                        @canany(['edit purchase orders', 'delete purchase orders'])<th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">Actions</th>@endcanany
+                        @php
+                            $columns = [
+                                'po_date' => 'PO Date',
+                                'office_class' => 'Office & Class',
+                                'obr_no' => 'OBR No.',
+                                'program' => 'Program',
+                                'account_code' => 'Account Code',
+                                'description' => 'Description',
+                                'po_number' => 'PO Number',
+                                'pr_no' => 'PR Number',
+                                'supplier' => 'Supplier',
+                                'delivery_period' => 'Delivery Period',
+                                'po_amount' => 'PO Amount',
+                                'remarks' => 'Remarks',
+                            ];
+                            $sortable = ['po_date', 'po_number', 'pr_no', 'supplier', 'delivery_period', 'po_amount', 'remarks'];
+                        @endphp
+                        @foreach($columns as $key => $label)
+                            <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">
+                                @if(in_array($key, $sortable))
+                                    @php
+                                        $isCurrent = request('sort_by') === $key;
+                                        $sortOrder = $isCurrent && request('sort_order', 'desc') === 'asc' ? 'desc' : 'asc';
+                                        $icon = $isCurrent ? (request('sort_order', 'desc') === 'asc' ? '▲' : '▼') : '';
+                                        $query = array_merge(request()->except(['page', 'sort_by', 'sort_order']), ['sort_by' => $key, 'sort_order' => $sortOrder]);
+                                    @endphp
+                                    <a href="?{{ http_build_query($query) }}" class="flex items-center justify-center">
+                                        {{ $label }}
+                                        <span class="ml-1">{!! $icon !!}</span>
+                                    </a>
+                                @else
+                                    {{ $label }}
+                                @endif
+                            </th>
+                        @endforeach
                     </tr>
                 </thead>
+                <tbody>
+                    @forelse($purchaseOrders as $purchaseOrder)
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_date ?? '-' }}</td>
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
+                                {{ optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
+                                {{ optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
+                            </td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
+                                @php
+                                    $programs = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.programs')->unique()->filter()->implode(', ');
+                                @endphp
+                                {{ $programs ?: '-' }}
+                            </td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
+                                @php
+                                    $accountCodes = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.account_code')->unique()->filter()->implode(', ');
+                                @endphp
+                                {{ $accountCodes ?: '-' }}
+                            </td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
+                                @php
+                                    $descriptions = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.description')->unique()->filter()->implode(', ');
+                                @endphp
+                                {{ $descriptions ?: '-' }}
+                            </td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_number }}</td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->pr_no ?? '-' }}</td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
+                            <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">{{ number_format($purchaseOrder->po_amount, 2) }}</td>
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->po_remarks ?? '-' }}</td>
+                            <!-- @canany(['edit purchase orders', 'delete purchase orders'])
+                                <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
+                                </td>
+                            @endcanany -->
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="13" class="py-4 text-center text-gray-500">No purchase orders found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+                <tfoot>
+                    <tr id="purchaseOrdersFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
+                        <td colspan="8" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+
+                        </td>
+                        <td colspan="3" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                            Total Purchase Order Amount:
+                            <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">
+                                0.00
+                            </span>
+                        </td>
+                        <td colspan="2" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+
+                        </td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
+
+    <script>
+        function updatePurchaseOrdersFooterTotal() {
+            let table = document.getElementById("purchaseOrdersTable");
+            let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+            let totalPO = 0;
+            for (let i = 0; i < tr.length; i++) {
+                if (tr[i].style.display === "none") continue;
+                let amountCell = tr[i].getElementsByTagName("td")[10]; // 10th column is DV / Check Amount
+                if (!amountCell) continue;
+                let amountText = amountCell.textContent.replace(/[^\d.-]/g, '');
+                let amount = parseFloat(amountText);
+                if (isNaN(amount)) amount = 0;
+                totalPO += amount;
+            }
+            document.getElementById('totalPOAmountFooter').textContent = totalPO.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            // Always show the footer
+            document.getElementById('purchaseOrdersFooter').style.display = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePurchaseOrdersFooterTotal();
+        });
+        function filterTable() {
+            // Declare variables
+            var input, filter, table, tr, td, i, j, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toLowerCase();
+            table = document.getElementById("purchaseOrdersTable");
+            tr = table.getElementsByTagName("tr");
+
+            // Loop through all table rows, and hide those who don't match the search query
+            for (i = 1; i < tr.length; i++) {
+                tr[i].style.display = "none";
+                td = tr[i].getElementsByTagName("td");
+                for (j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add event listener for input event to filter table as you type
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterTable();
+            updatePurchaseOrdersFooterTotal();
+        });
+    </script>
 
 
 

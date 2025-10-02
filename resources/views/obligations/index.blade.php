@@ -138,6 +138,14 @@
                             class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                             <tr>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_date', 'sort_order' => $sortBy == 'obr_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        OBR Date
+                                        @if($sortBy == 'obr_date')
+                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
+                                </th>
+                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     <a href="{{ route('obligations.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                         Office & Class
                                         @if($sortBy == 'office_allotment_class')
@@ -154,14 +162,6 @@
                                     </a>
                                 </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_date', 'sort_order' => $sortBy == 'obr_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        OBR Date
-                                        @if($sortBy == 'obr_date')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     <a href="{{ route('obligations.index', ['sort_by' => 'obr_no', 'sort_order' => $sortBy == 'obr_no' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                         OBR No.
                                         @if($sortBy == 'obr_no')
@@ -173,6 +173,14 @@
                                     <a href="{{ route('obligations.index', ['sort_by' => 'particulars', 'sort_order' => $sortBy == 'particulars' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                         Particulars
                                         @if($sortBy == 'particulars')
+                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
+                                </th>
+                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'remarks', 'sort_order' => $sortBy == 'remarks' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        Remarks
+                                        @if($sortBy == 'remarks')
                                         {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                         @endif
                                     </a>
@@ -208,13 +216,14 @@
                         </thead>
 
                         <tbody>
-                            @foreach ($obligations as $obligation)
+                            @forelse ($obligations as $obligation)
                             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <td class="px-3 py-3">{{ $obligation->obr_date }}</td>
                                 <td class="px-3 py-3">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
                                 <td class="px-3 py-3">{{ $obligation->obr_type }}</td>
-                                <td class="px-3 py-3">{{ $obligation->obr_date }}</td>
                                 <td class="px-3 py-3">{{ $obligation->obr_no }}</td>
                                 <td class="px-3 py-3 text-center max-w-sm">{{ $obligation->particulars }}</td>
+                                <td class="px-3 py-3 max-w-xs">{{ $obligation->remarks ?? '-'}}</td>
 
                                 <td class="px-3 py-3 text-right obligation-amount">
                                     <div class="relative inline-block group">
@@ -296,7 +305,6 @@
                                         N/A
                                     @endif
                                 </td>
-
                                 <td class="px-3 py-3 text-right dv-amount">
                                     @php
                                         $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
@@ -339,6 +347,7 @@
 
                                     </div>
                                 </td>
+                                
 
                                 <td class="px-3 py-3">
                                     <div class="relative inline-block text-left">
@@ -402,7 +411,13 @@
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                                        No Obligations found
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                     <!-- Sticky footer table for totals -->

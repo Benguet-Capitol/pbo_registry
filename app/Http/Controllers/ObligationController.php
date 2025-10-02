@@ -254,7 +254,8 @@ class ObligationController extends Controller
         $obligation->load([
             'obligationAmounts.obligationAdjustments',
             'obligationAmounts.appropriation',
-            'obligationAmounts.purchaseOrders', // Add this relationship if not already
+            'obligationAmounts.purchaseOrders',
+            'obligationAmounts.disbursements',
             'officeAllotmentClass.offices',
             'officeAllotmentClass.allotmentClass',
             'obligationAdjustments.obligationAmount.appropriation',
@@ -265,6 +266,7 @@ class ObligationController extends Controller
             $obrAmount = $amount->obr_amount ?? 0;
             $adjustments = $amount->obligationAdjustments->sum('adjustment_amount');
             $poTotal = $amount->purchaseOrders->sum('po_amount');
+            $disbursementTotal = $amount->disbursements->sum('disbursement_amount');
             $appropriation = $amount->appropriation;
 
             return [
@@ -274,6 +276,7 @@ class ObligationController extends Controller
                 'obr_amount' => $obrAmount,
                 'adjustments' => $adjustments,
                 'po_total' => $poTotal,
+                'disbursement_total' => $disbursementTotal,
             ];
         });
 

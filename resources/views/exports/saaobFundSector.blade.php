@@ -19,7 +19,7 @@
         </tr>
         <tr>
             <th colspan="14" style="text-align:center; font-size: 14px; margin-top:10px; text-transform: uppercase; font-weight: bold;">
-                (CURRENT LEGISLATIVE APPROPRIATION)
+                (Current Legislative Appropriation)
             </th>
         </tr>
         <tr>
@@ -27,7 +27,7 @@
                 {{
                     $selectedFund === 'others'
                         ? 'Benguet General Hospital Economic Enterprise and Special Education Fund'
-                        : ($selectedFund ?: 'ALL FUNDS')
+                        : ($selectedFund ?: 'All Funds')
                 }}
             </th>
         </tr>
@@ -51,9 +51,9 @@
             <th style="padding: 4px; width: 100px; text-align: center;">For Later Release</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Obligations</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Authorized Appropriation Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
         </tr>
         <tr>
             <th colspan="14"> </th>
@@ -67,7 +67,7 @@
         </tr>
         @foreach ($fund->matchedSectorsByCategory as $category => $sectors)
         <tr>
-            <td colspan="14" style="padding: 8px 4px; font-weight: bold; border: 1px solid #ccc;"> {{ strtoupper($category) }} APPROPRIATIONS </td>
+            <td colspan="14" style="padding: 8px 4px; font-weight: bold; border: 1px solid #ccc;"> {{ $category }} Appropriations </td>
         </tr>
         @foreach($sectors as $sector)
         @if ($sector->sector_code !== '' && $sector->present_allotment_classes->isNotEmpty())
@@ -105,11 +105,11 @@
             </td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 %</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 %</td>
         </tr>
         @endforeach
@@ -124,9 +124,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="display: none;">subtotal</td>
         </tr>
         @endif
@@ -148,9 +148,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="display: none;">total-subtotal</td>
         </tr>
         <tr>
@@ -160,7 +160,7 @@
         {{-- Display Allotment Class Totals Right After Category Totals --}}
         @if ($fund->categoryClassStats[$category]?->isNotEmpty())
         <tr>
-            <td colspan="14" style="padding: 8px 4px; font-weight: bold; border: 1px solid #ccc;">{{ strtoupper($category) }} APPROPRIATIONS BY ALLOTMENT CLASS</td>
+            <td colspan="14" style="padding: 8px 4px; font-weight: bold; border: 1px solid #ccc;">{{ $category }} Appropriations by Allotment Class</td>
         </tr>
 
         @foreach ($fund->categoryClassStats[$category] as $classCode => $row)
@@ -192,11 +192,11 @@
             </td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 %</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 %</td>
         </tr>
 
@@ -213,9 +213,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="display: none;">total-by-class</td>
         </tr>
         <tr>
@@ -234,9 +234,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="display: none;">grand-total</td>
         </tr>
         <tr>

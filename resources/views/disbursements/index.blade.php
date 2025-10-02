@@ -133,7 +133,7 @@
                     {{ __('Add Disbursement') }}
                 </button>
             </div>
-            <table id="adjustmentsTable" class="text-center w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
+            <table id="adjustmentsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
                 <thead class="text-center text-xs border-b-2 border-gray-400 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">DV / Check Number</th>

@@ -424,7 +424,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($officeAllotmentClasses as $class)
+                        @forelse ($officeAllotmentClasses as $class)
                         <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             <td class="px-1 py-3 text-center">
                                 <div class="relative inline-block text-left">
@@ -476,7 +476,13 @@
                             <td class="px-1 py-3 text-center">{{ number_format($class->disbursements_to_obligations, 2) }}%</td>
                             <td class="px-1 py-3 text-center">{{ number_format($class->disbursements_to_appropriations, 2) }}%</td>
                         </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="21" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                                    No Office Allotment Classes found
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

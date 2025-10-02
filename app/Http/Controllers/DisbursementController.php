@@ -144,6 +144,9 @@ class DisbursementController extends Controller
             $disbursements = $query->paginate($perPage)->appends($request->query());
         }
 
+        // If paginated, use links for pagination in the view
+        $isPaginated = $perPage !== 'all';
+
         // Fetch distinct years from the database
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
         // Get the list of office allotment classes filtered by the selected year
@@ -163,7 +166,7 @@ class DisbursementController extends Controller
         ];
 
             
-        return view('disbursements.index_all', compact('disbursements', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes'));
+    return view('disbursements.index_all', compact('disbursements', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'isPaginated'));
     }
 
     /**

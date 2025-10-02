@@ -146,17 +146,17 @@
                 <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Office & Class
-                                @if($sortBy == 'office_allotment_class')
+                            <a href="{{ route('realignments.index', ['sort_by' => 'realignment_date', 'sort_order' => $sortBy == 'realignment_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                Realignment Date
+                                @if($sortBy == 'realignment_date')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
                             </a>
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'type', 'sort_order' => $sortBy == 'type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Type
-                                @if($sortBy == 'type')
+                            <a href="{{ route('realignments.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                Office & Class
+                                @if($sortBy == 'office_allotment_class')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
                             </a>
@@ -170,17 +170,9 @@
                             </a>
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'realignment_date', 'sort_order' => $sortBy == 'realignment_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Realignment Date
-                                @if($sortBy == 'realignment_date')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'basis', 'sort_order' => $sortBy == 'basis' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Basis
-                                @if($sortBy == 'basis')
+                            <a href="{{ route('realignments.index', ['sort_by' => 'type', 'sort_order' => $sortBy == 'type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                Type
+                                @if($sortBy == 'type')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
                             </a>
@@ -193,6 +185,14 @@
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                 Description
+                        </th>
+                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                            <a href="{{ route('realignments.index', ['sort_by' => 'basis', 'sort_order' => $sortBy == 'basis' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                Basis
+                                @if($sortBy == 'basis')
+                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                @endif
+                            </a>
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                             <a href="{{ route('realignments.index', ['sort_by' => 'amount', 'sort_order' => $sortBy == 'amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
@@ -210,7 +210,7 @@
                         $totalSource = 0;
                         $totalRecipient = 0;
                     @endphp
-                    @foreach ($realignments as $realignment)
+                    @forelse ($realignments as $realignment)
                         @php
                             if ($realignment->type === 'Source') {
                                 $totalSource += $realignment->amount;
@@ -219,9 +219,11 @@
                             }
                         @endphp
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_date }}</td>
                             <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
                             </td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_no }}</td>
                             <td class="px-3 py-3 border-b border-gray-300">
                                 @if($realignment->type === 'Recipient')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
@@ -235,12 +237,10 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ ucfirst($realignment->type) }}</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_no }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_date }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->basis }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->appropriation->programs ?? '-' }}</td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->programs ?? '-' }}</td>
                             <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->appropriation->account_code ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->appropriation->description ?? '-' }}</td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->description ?? '-' }}</td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-md">{{ $realignment->basis }}</td>
                             <td class="px-3 py-3 border-b border-gray-300">
                                 @if($realignment->type === 'Recipient')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
@@ -279,7 +279,13 @@
                                 </div>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="10" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
+                                No Realignments found
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
                 <tfoot>
                     <tr id="realignmentsFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600" style="display: none;">
@@ -378,7 +384,7 @@
         let totalRecipient = 0;
         for (let i = 0; i < tr.length; i++) {
             if (tr[i].style.display === "none") continue;
-            let typeCell = tr[i].getElementsByTagName("td")[1];
+            let typeCell = tr[i].getElementsByTagName("td")[3];
             let amountCell = tr[i].getElementsByTagName("td")[8];
             if (!typeCell || !amountCell) continue;
             let type = typeCell.textContent.trim();

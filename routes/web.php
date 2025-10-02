@@ -113,7 +113,7 @@ Route::middleware('auth')->group(function () {
     // Disbursement Routes
     Route::resource('disbursements', DisbursementController::class);
     // Unified Disbursement module view
-    Route::get('disbursements/all', [DisbursementController::class, 'all'])->name('disbursements.all');
+    Route::get('disbursement/all', [DisbursementController::class, 'all'])->name('disbursements.all');
 
     // Realignments Routes
     Route::resource('realignments', RealignmentController::class);

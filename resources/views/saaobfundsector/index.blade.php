@@ -172,34 +172,164 @@
                         <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <td class="px-1 py-2"></td>
                             <td class="px-1 py-2 text-left">{{ $aClass->description }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($aClass->approved_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($aClass->supplemental, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($aClass->reversion, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($aClass->realignment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($aClass->authorized_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($aClass->allotment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($aClass->for_later_release, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($aClass->obligations, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($aClass->appropriation_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($aClass->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($aClass->allotment_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($aClass->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                @if (is_null($aClass->approved_appropriation) || $aClass->approved_appropriation == 0)
+                                    -
+                                @elseif ($aClass->approved_appropriation < 0)
+                                    ({{ number_format(abs($aClass->approved_appropriation), 2) }})
+                                @else
+                                    {{ number_format($aClass->approved_appropriation, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                @if (is_null($aClass->supplemental) || $aClass->supplemental == 0)
+                                    -
+                                @elseif ($aClass->supplemental < 0)
+                                    ({{ number_format(abs($aClass->supplemental), 2) }})
+                                @else
+                                    {{ number_format($aClass->supplemental, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                @if (is_null($aClass->reversion) || $aClass->reversion == 0)
+                                    -
+                                @elseif ($aClass->reversion < 0)
+                                    ({{ number_format(abs($aClass->reversion), 2) }})
+                                @else
+                                    {{ number_format($aClass->reversion, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                @if (is_null($aClass->realignment) || $aClass->realignment == 0)
+                                    -
+                                @elseif ($aClass->realignment < 0)
+                                    ({{ number_format(abs($aClass->realignment), 2) }})
+                                @else
+                                    {{ number_format($aClass->realignment, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @if (is_null($aClass->authorized_appropriation) || $aClass->authorized_appropriation == 0)
+                                    -
+                                @elseif ($aClass->authorized_appropriation < 0)
+                                    ({{ number_format(abs($aClass->authorized_appropriation), 2) }})
+                                @else
+                                    {{ number_format($aClass->authorized_appropriation, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @if (is_null($aClass->allotment) || $aClass->allotment == 0)
+                                    -
+                                @elseif ($aClass->allotment < 0)
+                                    ({{ number_format(abs($aClass->allotment), 2) }})
+                                @else
+                                    {{ number_format($aClass->allotment, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @if (is_null($aClass->for_later_release) || $aClass->for_later_release == 0)
+                                    -
+                                @elseif ($aClass->for_later_release < 0)
+                                    ({{ number_format(abs($aClass->for_later_release), 2) }})
+                                @else
+                                    {{ number_format($aClass->for_later_release, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @if (is_null($aClass->obligations) || $aClass->obligations == 0)
+                                    -
+                                @elseif ($aClass->obligations < 0)
+                                    ({{ number_format(abs($aClass->obligations), 2) }})
+                                @else
+                                    {{ number_format($aClass->obligations, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                @if (is_null($aClass->appropriation_balance) || $aClass->appropriation_balance == 0)
+                                    -
+                                @elseif ($aClass->appropriation_balance < 0)
+                                    ({{ number_format(abs($aClass->appropriation_balance), 2) }})
+                                @else
+                                    {{ number_format($aClass->appropriation_balance, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($aClass->appropriation_accomplishment, 2) }}%
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @if (is_null($aClass->allotment_balance) || $aClass->allotment_balance == 0)
+                                    -
+                                @elseif ($aClass->allotment_balance < 0)
+                                    ({{ number_format(abs($aClass->allotment_balance), 2) }})
+                                @else
+                                    {{ number_format($aClass->allotment_balance, 2) }}
+                                @endif
+                            </td>
+
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($aClass->allotment_accomplishment, 2) }}%
+                            </td>
                         </tr>
                         @endforeach
                         <tr class="bg-gray-500 text-white dark:bg-gray-600 dark:text-white font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
                             <td colspan="2" class="px-1 py-2 text-right">Total:</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($sector->totals->approved_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($sector->totals->supplemental, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($sector->totals->reversion, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($sector->totals->realignment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($sector->totals->authorized_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($sector->totals->allotment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($sector->totals->for_later_release, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($sector->totals->obligations, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($sector->totals->appropriation_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($sector->totals->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($sector->totals->allotment_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($sector->totals->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                {{ $sector->totals->approved_appropriation == 0 ? '-' : ($sector->totals->approved_appropriation < 0 ? '(' . number_format(abs($sector->totals->approved_appropriation), 2) . ')' : number_format($sector->totals->approved_appropriation, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                {{ $sector->totals->supplemental == 0 ? '-' : ($sector->totals->supplemental < 0 ? '(' . number_format(abs($sector->totals->supplemental), 2) . ')' : number_format($sector->totals->supplemental, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                {{ $sector->totals->reversion == 0 ? '-' : ($sector->totals->reversion < 0 ? '(' . number_format(abs($sector->totals->reversion), 2) . ')' : number_format($sector->totals->reversion, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                {{ $sector->totals->realignment == 0 ? '-' : ($sector->totals->realignment < 0 ? '(' . number_format(abs($sector->totals->realignment), 2) . ')' : number_format($sector->totals->realignment, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $sector->totals->authorized_appropriation == 0 ? '-' : ($sector->totals->authorized_appropriation < 0 ? '(' . number_format(abs($sector->totals->authorized_appropriation), 2) . ')' : number_format($sector->totals->authorized_appropriation, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $sector->totals->allotment == 0 ? '-' : ($sector->totals->allotment < 0 ? '(' . number_format(abs($sector->totals->allotment), 2) . ')' : number_format($sector->totals->allotment, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $sector->totals->for_later_release == 0 ? '-' : ($sector->totals->for_later_release < 0 ? '(' . number_format(abs($sector->totals->for_later_release), 2) . ')' : number_format($sector->totals->for_later_release, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $sector->totals->obligations == 0 ? '-' : ($sector->totals->obligations < 0 ? '(' . number_format(abs($sector->totals->obligations), 2) . ')' : number_format($sector->totals->obligations, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                {{ $sector->totals->appropriation_balance == 0 ? '-' : ($sector->totals->appropriation_balance < 0 ? '(' . number_format(abs($sector->totals->appropriation_balance), 2) . ')' : number_format($sector->totals->appropriation_balance, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($sector->totals->appropriation_accomplishment, 2) }}%
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $sector->totals->allotment_balance == 0 ? '-' : ($sector->totals->allotment_balance < 0 ? '(' . number_format(abs($sector->totals->allotment_balance), 2) . ')' : number_format($sector->totals->allotment_balance, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($sector->totals->allotment_accomplishment, 2) }}%
+                            </td>
                         </tr>
                         @endif
                         @endforeach
@@ -211,18 +341,53 @@
                         @if ($hasValidSector)
                         <tr class="bg-gray-100 text-gray-700 dark:bg-gray-200 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
                             <td colspan="2" class="px-1 py-2 text-right">Total {{ $category }} Appropriations:</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($fund->categoryTotals[$category]->approved_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($fund->categoryTotals[$category]->supplemental, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($fund->categoryTotals[$category]->reversion, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($fund->categoryTotals[$category]->realignment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->authorized_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->allotment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->for_later_release, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->obligations, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($fund->categoryTotals[$category]->appropriation_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($fund->categoryTotals[$category]->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->allotment_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                {{ $fund->categoryTotals[$category]->approved_appropriation == 0 ? '-' : ($fund->categoryTotals[$category]->approved_appropriation < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->approved_appropriation), 2) . ')' : number_format($fund->categoryTotals[$category]->approved_appropriation, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                {{ $fund->categoryTotals[$category]->supplemental == 0 ? '-' : ($fund->categoryTotals[$category]->supplemental < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->supplemental), 2) . ')' : number_format($fund->categoryTotals[$category]->supplemental, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                {{ $fund->categoryTotals[$category]->reversion == 0 ? '-' : ($fund->categoryTotals[$category]->reversion < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->reversion), 2) . ')' : number_format($fund->categoryTotals[$category]->reversion, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                {{ $fund->categoryTotals[$category]->realignment == 0 ? '-' : ($fund->categoryTotals[$category]->realignment < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->realignment), 2) . ')' : number_format($fund->categoryTotals[$category]->realignment, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund->categoryTotals[$category]->authorized_appropriation == 0 ? '-' : ($fund->categoryTotals[$category]->authorized_appropriation < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->authorized_appropriation), 2) . ')' : number_format($fund->categoryTotals[$category]->authorized_appropriation, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund->categoryTotals[$category]->allotment == 0 ? '-' : ($fund->categoryTotals[$category]->allotment < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->allotment), 2) . ')' : number_format($fund->categoryTotals[$category]->allotment, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund->categoryTotals[$category]->for_later_release == 0 ? '-' : ($fund->categoryTotals[$category]->for_later_release < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->for_later_release), 2) . ')' : number_format($fund->categoryTotals[$category]->for_later_release, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund->categoryTotals[$category]->obligations == 0 ? '-' : ($fund->categoryTotals[$category]->obligations < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->obligations), 2) . ')' : number_format($fund->categoryTotals[$category]->obligations, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                {{ $fund->categoryTotals[$category]->appropriation_balance == 0 ? '-' : ($fund->categoryTotals[$category]->appropriation_balance < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->appropriation_balance), 2) . ')' : number_format($fund->categoryTotals[$category]->appropriation_balance, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($fund->categoryTotals[$category]->appropriation_accomplishment, 2) }}%
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund->categoryTotals[$category]->allotment_balance == 0 ? '-' : ($fund->categoryTotals[$category]->allotment_balance < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->allotment_balance), 2) . ')' : number_format($fund->categoryTotals[$category]->allotment_balance, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($fund->categoryTotals[$category]->allotment_accomplishment, 2) }}%
+                            </td>
                         </tr>
                         @endif
 
@@ -238,52 +403,178 @@
                         @foreach ($fund->categoryClassStats[$category] as $classCode => $row)
                         <tr class="bg-white text-gray-800 border-b dark:bg-gray-900 dark:text-gray-200">
                             <td colspan="2" class="px-1 py-2 text-left">{{ $row->description }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($row->approved_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($row->supplemental, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($row->reversion, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($row->realignment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($row->authorized_appropriation, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($row->allotment, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($row->for_later_release, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($row->obligations, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($row->appropriation_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($row->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($row->allotment_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($row->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                {{ $row->approved_appropriation == 0 || is_null($row->approved_appropriation) ? '-' : ($row->approved_appropriation < 0 ? '(' . number_format(abs($row->approved_appropriation), 2) . ')' : number_format($row->approved_appropriation, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                {{ $row->supplemental == 0 || is_null($row->supplemental) ? '-' : ($row->supplemental < 0 ? '(' . number_format(abs($row->supplemental), 2) . ')' : number_format($row->supplemental, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                {{ $row->reversion == 0 || is_null($row->reversion) ? '-' : ($row->reversion < 0 ? '(' . number_format(abs($row->reversion), 2) . ')' : number_format($row->reversion, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                {{ $row->realignment == 0 || is_null($row->realignment) ? '-' : ($row->realignment < 0 ? '(' . number_format(abs($row->realignment), 2) . ')' : number_format($row->realignment, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $row->authorized_appropriation == 0 || is_null($row->authorized_appropriation) ? '-' : ($row->authorized_appropriation < 0 ? '(' . number_format(abs($row->authorized_appropriation), 2) . ')' : number_format($row->authorized_appropriation, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $row->allotment == 0 || is_null($row->allotment) ? '-' : ($row->allotment < 0 ? '(' . number_format(abs($row->allotment), 2) . ')' : number_format($row->allotment, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $row->for_later_release == 0 || is_null($row->for_later_release) ? '-' : ($row->for_later_release < 0 ? '(' . number_format(abs($row->for_later_release), 2) . ')' : number_format($row->for_later_release, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $row->obligations == 0 || is_null($row->obligations) ? '-' : ($row->obligations < 0 ? '(' . number_format(abs($row->obligations), 2) . ')' : number_format($row->obligations, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                {{ $row->appropriation_balance == 0 || is_null($row->appropriation_balance) ? '-' : ($row->appropriation_balance < 0 ? '(' . number_format(abs($row->appropriation_balance), 2) . ')' : number_format($row->appropriation_balance, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($row->appropriation_accomplishment, 2) }}%
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $row->allotment_balance == 0 || is_null($row->allotment_balance) ? '-' : ($row->allotment_balance < 0 ? '(' . number_format(abs($row->allotment_balance), 2) . ')' : number_format($row->allotment_balance, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($row->allotment_accomplishment, 2) }}%
+                            </td>
                         </tr>
                         @endforeach
                         {{-- Totals per Category after Allotment Class Totals --}}
                         <tr class="bg-gray-100 text-gray-700 dark:bg-gray-200 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
                             <td colspan="2" class="px-1 py-2 text-right">Total {{ $category }} Appropriations:</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($fund->categoryTotals[$category]->approved_appropriation ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($fund->categoryTotals[$category]->supplemental ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($fund->categoryTotals[$category]->reversion ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($fund->categoryTotals[$category]->realignment ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->authorized_appropriation ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->allotment ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->for_later_release ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->obligations ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($fund->categoryTotals[$category]->appropriation_balance ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($fund->categoryTotals[$category]->appropriation_accomplishment ?? 0, 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->allotment_balance ?? 0, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund->categoryTotals[$category]->allotment_accomplishment ?? 0, 2) }}%</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                @php $val = $fund->categoryTotals[$category]->approved_appropriation ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                @php $val = $fund->categoryTotals[$category]->supplemental ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                @php $val = $fund->categoryTotals[$category]->reversion ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                @php $val = $fund->categoryTotals[$category]->realignment ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @php $val = $fund->categoryTotals[$category]->authorized_appropriation ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @php $val = $fund->categoryTotals[$category]->allotment ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @php $val = $fund->categoryTotals[$category]->for_later_release ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @php $val = $fund->categoryTotals[$category]->obligations ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                @php $val = $fund->categoryTotals[$category]->appropriation_balance ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($fund->categoryTotals[$category]->appropriation_accomplishment ?? 0, 2) }}%
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                @php $val = $fund->categoryTotals[$category]->allotment_balance ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($fund->categoryTotals[$category]->allotment_accomplishment ?? 0, 2) }}%
+                            </td>
                         </tr>
                         @endif
                         @endforeach
                         <tr class="bg-gray-700 text-white dark:bg-gray-700 font-bold text-right border-t-2 border-b-2 border-white dark:border-gray-100">
                             <td colspan="2" class="px-1 py-4 text-right">Grand Total {{ $fund->fund_type }}:</td>
-                            <td class="px-1 py-4" data-key="appropriation">{{ number_format($fund->grandTotal->approved_appropriation, 2) }}</td>
-                            <td class="px-1 py-4" data-key="sb_appropriation">{{ number_format($fund->grandTotal->supplemental, 2) }}</td>
-                            <td class="px-1 py-4" data-key="reversion">{{ number_format($fund->grandTotal->reversion, 2) }}</td>
-                            <td class="px-1 py-4" data-key="realignment">{{ number_format($fund->grandTotal->realignment, 2) }}</td>
-                            <td class="px-1 py-4">{{ number_format($fund->grandTotal->authorized_appropriation, 2) }}</td>
-                            <td class="px-1 py-4">{{ number_format($fund->grandTotal->allotment, 2) }}</td>
-                            <td class="px-1 py-4">{{ number_format($fund->grandTotal->for_later_release, 2) }}</td>
-                            <td class="px-1 py-4">{{ number_format($fund->grandTotal->obligations, 2) }}</td>
-                            <td class="px-1 py-4" data-key="appropriation_balance">{{ number_format($fund->grandTotal->appropriation_balance, 2) }}</td>
-                            <td class="px-1 py-4" data-key="appropriation_accomplishment">{{ number_format($fund->grandTotal->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-4">{{ number_format($fund->grandTotal->allotment_balance, 2) }}</td>
-                            <td class="px-1 py-4">{{ number_format($fund->grandTotal->allotment_accomplishment, 2) }}%</td>
+                           <td class="px-1 py-4 text-right" data-key="appropriation">
+                                @php $val = $fund->grandTotal->approved_appropriation ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right" data-key="sb_appropriation">
+                                @php $val = $fund->grandTotal->supplemental ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right" data-key="reversion">
+                                @php $val = $fund->grandTotal->reversion ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right" data-key="realignment">
+                                @php $val = $fund->grandTotal->realignment ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right">
+                                @php $val = $fund->grandTotal->authorized_appropriation ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right">
+                                @php $val = $fund->grandTotal->allotment ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right">
+                                @php $val = $fund->grandTotal->for_later_release ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right">
+                                @php $val = $fund->grandTotal->obligations ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-right" data-key="appropriation_balance">
+                                @php $val = $fund->grandTotal->appropriation_balance ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            {{-- Percentages stay as-is --}}
+                            <td class="px-1 py-4 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($fund->grandTotal->appropriation_accomplishment ?? 0, 2) }}%
+                            </td>
+
+                            <td class="px-1 py-4 text-right">
+                                @php $val = $fund->grandTotal->allotment_balance ?? null; @endphp
+                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                            </td>
+
+                            <td class="px-1 py-4 text-center">
+                                {{ number_format($fund->grandTotal->allotment_accomplishment ?? 0, 2) }}%
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>

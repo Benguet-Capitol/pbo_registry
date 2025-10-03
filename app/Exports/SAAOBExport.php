@@ -68,7 +68,8 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
                 foreach (range('D', 'O') as $column) {
                     if (!in_array($column, ['M', 'O'])) {
                         $sheet->getStyle("{$column}13:{$column}{$highestRow}")
-                            ->getNumberFormat()->setFormatCode('#,##0.00');
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
 

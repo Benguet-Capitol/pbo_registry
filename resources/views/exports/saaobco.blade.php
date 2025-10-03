@@ -43,13 +43,13 @@
             <th style="padding: 4px; width: 100px; text-align: center;">Reversions</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Realignments</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Authorized Appropriations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Allotment</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Allotments</th>
             <th style="padding: 4px; width: 100px; text-align: center;">For Later Release</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Obligations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Authorized Appropriation Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Balances from Authorized Appropriations</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Balances from Allotments</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
         </tr>
         <tr>
             <th colspan="16"> </th>

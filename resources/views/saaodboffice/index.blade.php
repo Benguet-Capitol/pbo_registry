@@ -294,7 +294,7 @@
                                 @endif
                             </td>
 
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
                                 {{ number_format($appropriation->appropriation_accomplishment, 2) }}%
                             </td>
 
@@ -308,11 +308,11 @@
                                 @endif
                             </td>
 
-                            <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">
+                            <td class="px-1 py-2 text-center" data-key="disbursement_to_obligation">
                                 {{ number_format($appropriation->disbursement_to_obligation, 2) }}%
                             </td>
 
-                            <td class="px-1 py-2 text-right" data-key="disbursement_to_appropriation">
+                            <td class="px-1 py-2 text-center" data-key="disbursement_to_appropriation">
                                 {{ number_format($appropriation->disbursement_to_appropriation, 2) }}%
                             </td>
 
@@ -343,13 +343,26 @@
                         <tr class="bg-gray-500 text-gray-100 dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right">Subtotal:</td>
                             @foreach ($noProgramTotals as $key => $val)
-                            <td class="px-2 py-2 text-right" data-key="{{ $key }}">
+                            <td class="px-2 py-2 
+                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                    text-center 
+                                @else 
+                                    text-right 
+                                @endif" 
+                                data-key="{{ $key }}">
+                                
                                 @if ($key === 'appropriation_accomplishment')
-                                {{ $noProgramTotals['authorized_appropriation'] > 0 ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $noProgramTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_obligation')
-                                {{ $noProgramTotals['obligation'] > 0 ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['obligation']) * 100, 2) : '0.00' }}%
+                                    {{ $noProgramTotals['obligation'] > 0 
+                                        ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['obligation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_appropriation')
-                                {{ $noProgramTotals['obligation'] > 0 ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $noProgramTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -462,7 +475,7 @@
                                 @endif
                             </td>
 
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
                                 {{ number_format($appropriation->appropriation_accomplishment, 2) }}%
                             </td>
 
@@ -476,11 +489,11 @@
                                 @endif
                             </td>
 
-                            <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">
+                            <td class="px-1 py-2 text-center" data-key="disbursement_to_obligation">
                                 {{ number_format($appropriation->disbursement_to_obligation, 2) }}%
                             </td>
 
-                            <td class="px-1 py-2 text-right" data-key="disbursement_to_appropriation">
+                            <td class="px-1 py-2 text-center" data-key="disbursement_to_appropriation">
                                 {{ number_format($appropriation->disbursement_to_appropriation, 2) }}%
                             </td>
 
@@ -511,13 +524,26 @@
                         <tr class="bg-gray-500 text-white dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right italic">Subtotal ({{ $program }}): </td>
                             @foreach ($programTotals as $key => $val)
-                            <td class="px-2 py-2 text-right" data-key="{{ $key }}">
+                            <td class="px-2 py-2 
+                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                    text-center 
+                                @else 
+                                    text-right 
+                                @endif" 
+                                data-key="{{ $key }}">
+                                
                                 @if ($key === 'appropriation_accomplishment')
-                                {{ $programTotals['authorized_appropriation'] > 0 ? number_format(($programTotals['obligation'] / $programTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $programTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($programTotals['obligation'] / $programTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_obligation')
-                                {{ $programTotals['obligation'] > 0 ? number_format(($programTotals['disbursement'] / $programTotals['obligation']) * 100, 2) : '0.00' }}%
+                                    {{ $programTotals['obligation'] > 0 
+                                        ? number_format(($programTotals['disbursement'] / $programTotals['obligation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_appropriation')
-                                {{ $programTotals['authorized_appropriation'] > 0 ? number_format(($programTotals['disbursement'] / $programTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $programTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($programTotals['disbursement'] / $programTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -536,13 +562,26 @@
                         <tr class="bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-white font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right">Total {{ $oac->allotmentClass->description }} ({{ $oac->allotmentClass->class }}): </td>
                             @foreach ($classTotals as $key => $val)
-                            <td class="px-2 py-2 text-right" data-key="{{ $key }}">
+                            <td class="px-2 py-2 
+                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                    text-center 
+                                @else 
+                                    text-right 
+                                @endif" 
+                                data-key="{{ $key }}">
+                                
                                 @if ($key === 'appropriation_accomplishment')
-                                {{ $classTotals['authorized_appropriation'] > 0 ? number_format(($classTotals['obligation'] / $classTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $classTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($classTotals['obligation'] / $classTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_obligation')
-                                {{ $classTotals['obligation'] > 0 ? number_format(($classTotals['disbursement'] / $classTotals['obligation']) * 100, 2) : '0.00' }}%
+                                    {{ $classTotals['obligation'] > 0 
+                                        ? number_format(($classTotals['disbursement'] / $classTotals['obligation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_appropriation')
-                                {{ $classTotals['disbursement'] > 0 ? number_format(($classTotals['disbursement'] / $classTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $classTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($classTotals['disbursement'] / $classTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -578,19 +617,26 @@
                         <tr class="bg-blue-200 dark:bg-blue-800 font-bold border-t-2 border-b-2 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right">Total Current Operating Expenditure (COE):</td>
                             @foreach ($office->officeCOETotals as $key => $val)
-                            <td class="px-2 py-2 text-right" data-key="{{ $key }}">
+                            <td class="px-2 py-2 
+                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                    text-center 
+                                @else 
+                                    text-right 
+                                @endif" 
+                                data-key="{{ $key }}">
+                                
                                 @if ($key === 'appropriation_accomplishment')
-                                {{ $office->officeCOETotals['authorized_appropriation'] > 0 
-                                                    ? number_format(($office->officeCOETotals['obligation'] / $office->officeCOETotals['authorized_appropriation']) * 100, 2) 
-                                                    : '0.00' }}%
+                                    {{ $office->officeCOETotals['authorized_appropriation'] > 0 
+                                        ? number_format(($office->officeCOETotals['obligation'] / $office->officeCOETotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_obligation')
-                                {{ $office->officeCOETotals['obligation'] > 0 
-                                                    ? number_format(($office->officeCOETotals['disbursement'] / $office->officeCOETotals['obligation']) * 100, 2) 
-                                                    : '0.00' }}%
+                                    {{ $office->officeCOETotals['obligation'] > 0 
+                                        ? number_format(($office->officeCOETotals['disbursement'] / $office->officeCOETotals['obligation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_appropriation')
-                                {{ $office->officeCOETotals['authorized_appropriation'] > 0 
-                                                    ? number_format(($office->officeCOETotals['disbursement'] / $office->officeCOETotals['authorized_appropriation']) * 100, 2) 
-                                                    : '0.00' }}%
+                                    {{ $office->officeCOETotals['authorized_appropriation'] > 0 
+                                        ? number_format(($office->officeCOETotals['disbursement'] / $office->officeCOETotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -609,19 +655,26 @@
                         <tr class="bg-green-200 dark:bg-green-800 font-bold border-t-2 border-b-2 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right">Total COE and CO:</td>
                             @foreach ($office->officeCOECoTotals as $key => $val)
-                            <td class="px-2 py-2 text-right" data-key="{{ $key }}">
+                           <td class="px-2 py-2 
+                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                    text-center 
+                                @else 
+                                    text-right 
+                                @endif" 
+                                data-key="{{ $key }}">
+                                
                                 @if ($key === 'appropriation_accomplishment')
-                                {{ $office->officeCOECoTotals['authorized_appropriation'] > 0 
-                                                    ? number_format(($office->officeCOECoTotals['obligation'] / $office->officeCOECoTotals['authorized_appropriation']) * 100, 2) 
-                                                    : '0.00' }}%
+                                    {{ $office->officeCOECoTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($office->officeCOECoTotals['obligation'] / $office->officeCOECoTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_obligation')
-                                {{ $office->officeCOECoTotals['obligation'] > 0 
-                                                    ? number_format(($office->officeCOECoTotals['disbursement'] / $office->officeCOECoTotals['obligation']) * 100, 2) 
-                                                    : '0.00' }}%
+                                    {{ $office->officeCOECoTotals['obligation'] > 0 
+                                        ? number_format(($office->officeCOECoTotals['disbursement'] / $office->officeCOECoTotals['obligation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_appropriation')
-                                {{ $office->officeCOECoTotals['authorized_appropriation'] > 0 
-                                                    ? number_format(($office->officeCOECoTotals['disbursement'] / $office->officeCOECoTotals['authorized_appropriation']) * 100, 2) 
-                                                    : '0.00' }}%
+                                    {{ $office->officeCOECoTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($office->officeCOECoTotals['disbursement'] / $office->officeCOECoTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -641,13 +694,26 @@
                         <tr class="bg-gray-800 dark:bg-gray-200 text-gray-200 dark:text-gray-700 font-bold border-t-2 border-b-2 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right">GRAND TOTAL: </td>
                             @foreach ($officeTotals as $key => $val)
-                            <td class="px-2 py-2 text-right" data-key="{{ $key }}">
+                            <td class="px-2 py-2 
+                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                    text-center 
+                                @else 
+                                    text-right 
+                                @endif" 
+                                data-key="{{ $key }}">
+                                
                                 @if ($key === 'appropriation_accomplishment')
-                                {{ $officeTotals['authorized_appropriation'] > 0 ? number_format(($officeTotals['obligation'] / $officeTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $officeTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($officeTotals['obligation'] / $officeTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_obligation')
-                                {{ $officeTotals['obligation'] > 0 ? number_format(($officeTotals['disbursement'] / $officeTotals['obligation']) * 100, 2) : '0.00' }}%
+                                    {{ $officeTotals['obligation'] > 0 
+                                        ? number_format(($officeTotals['disbursement'] / $officeTotals['obligation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @elseif ($key === 'disbursement_to_appropriation')
-                                {{ $officeTotals['authorized_appropriation'] > 0 ? number_format(($officeTotals['disbursement'] / $officeTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    {{ $officeTotals['authorized_appropriation'] > 0 
+                                        ? number_format(($officeTotals['disbursement'] / $officeTotals['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -

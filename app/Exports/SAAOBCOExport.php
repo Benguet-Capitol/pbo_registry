@@ -71,7 +71,8 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                 foreach (range('E', 'P') as $column) {
                     if (!in_array($column, ['N', 'P'])) {
                         $sheet->getStyle("{$column}13:{$column}{$highestRow}")
-                            ->getNumberFormat()->setFormatCode('#,##0.00');
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
 

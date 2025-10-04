@@ -286,6 +286,11 @@
                     </tr>
                 </tfoot>
             </table>
+            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
+                @if ($perPage != 'all')
+                {{ $supplementals->appends(request()->query())->links() }}
+                @endif
+            </div>
         </div>
     </div>
 

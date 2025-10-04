@@ -74,7 +74,8 @@ class SAAOBGFCurrentSummaryExport implements FromView, WithStyles, WithEvents
                 foreach (range('A', 'M') as $column) {
                     if (!in_array($column, ['A', 'M'])) {
                         $sheet->getStyle("{$column}11:{$column}{$highestRow}")
-                            ->getNumberFormat()->setFormatCode('#,##0.00');
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
 
@@ -317,10 +318,13 @@ class SAAOBGFCurrentSummaryExport implements FromView, WithStyles, WithEvents
                 // Allotment
                 $allotmentClass->allotment = $allotmentClass->authorized_appropriation - $allotmentClass->for_later_release;
 
-                // Obligations
+                /// Obligations
                 $obligationBase = $oacAppropriations
                     ->flatMap->obligationAmounts
-                    ->filter(fn($oa) => $asOfDate ? $oa->obligation->obr_date <= $asOfDate : true)
+                    ->filter(fn($oa) => $asOfDate 
+                        ? ($oa->obligation && $oa->obligation->obr_date <= $asOfDate) 
+                        : true
+                    )
                     ->sum('obr_amount');
 
                 $obligationAdjustments = $oacAppropriations
@@ -634,7 +638,7 @@ class SAAOBGFCurrentSummaryExport implements FromView, WithStyles, WithEvents
             // Obligations (filter by obligation date)
             $obligationBase = $oacAppropriations
                 ->flatMap->obligationAmounts
-                ->filter(fn($oa) => $asOfDate ? $oa->obligation->obr_date <= $asOfDate : true)
+                ->filter(fn($oa) => $oa->obligation && ($asOfDate ? $oa->obligation->obr_date <= $asOfDate : true))
                 ->sum('obr_amount');
 
             $obligationAdjustments = $oacAppropriations

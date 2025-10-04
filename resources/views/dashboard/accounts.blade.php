@@ -275,7 +275,7 @@
                     </form>
                 </div>
             </div>
-            <div class="overflow-x-auto max-h-[620px] border border-gray-300 dark:border-gray-700 rounded-lg">
+            <div class="overflow-x-auto max-h-[720px] border border-gray-300 dark:border-gray-700 rounded-lg">
                 <table id="accountsTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left border-collapse">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
@@ -297,7 +297,7 @@
                             <th class="px-2 py-2 w-[100px] text-center">Allotments Balance</th>
                             <th class="px-2 py-2 w-[100px] text-center">Allotments Accomp.</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Disbursement Balance</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Obligations Balance</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Oblgations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Approp.</th>
                         </tr>

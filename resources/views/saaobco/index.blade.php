@@ -217,7 +217,7 @@
                         </tr>
                         @endforeach
                         <tr class="bg-gray-300 text-gray-700 dark:bg-gray-900 dark:text-white font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                            <td colspan="4" class="px-1 py-2 text-right">TOTAL CY {{ $year }}:</td>
+                            <td colspan="4" class="px-1 py-2 text-right">Total CY {{ $year }}:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">
                                 {{ $office->yearlyTotals[$year]['appropriation'] > 0 
                                     ? number_format($office->yearlyTotals[$year]['appropriation'], 2) 
@@ -308,7 +308,7 @@
                         </tr>
                         @endforeach
                         <tr class="bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-100 font-bold border-t-4 border-gray-800 text-[10px]">
-                            <td colspan="4" class="px-1 py-2 text-right">GRAND TOTAL CONTINUING CAPITAL OUTLAY:</td>
+                            <td colspan="4" class="px-1 py-2 text-right">Grand Total Continuing Capital Outlay:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">
                                 {{ $office->grandTotal['appropriation'] > 0 
                                     ? number_format($office->grandTotal['appropriation'], 2) 
@@ -470,7 +470,6 @@
                 });
                 // Style allotment class rows
                 table.querySelectorAll('[id^="CCOYear"]').forEach(tr => {
-                    tr.style.textTransform = 'uppercase';
                     tr.style.fontWeight = 'bold';
                     tr.style.fontSize = '10px';
                     tr.style.paddingLeft = '12px'; // Indent the row
@@ -482,7 +481,6 @@
                 });
                 // Style program rows
                 table.querySelectorAll('[id^="programRow-"]').forEach(tr => {
-                    tr.style.textTransform = 'uppercase';
                     tr.style.fontWeight = 'bold';
                     tr.style.fontStyle = 'italic';
                     tr.style.fontSize = '10px';

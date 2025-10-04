@@ -235,7 +235,7 @@
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Disbursements Balance
+                        Obligations Balance
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($disbursementBalance, 2) }}
@@ -396,7 +396,7 @@
                     </form>
                 </div>
             </div>
-            <div class="overflow-auto max-h-[620px] rounded-lg border border-gray-300 dark:border-gray-700">
+            <div class="overflow-auto max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
@@ -418,7 +418,7 @@
                             <th class="px-2 py-2 w-[100px] text-center">Allotments Balance</th>
                             <th class="px-2 py-2 w-[100px] text-center">Allotments Accomp.</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Disbursements Balance</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Obligations Balance</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Oblgations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Approp.</th>
                         </tr>

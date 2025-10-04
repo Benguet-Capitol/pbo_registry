@@ -157,7 +157,7 @@ class SAAOBFundSourceController extends Controller
                         });
 
                         $totals = [
-                            'fund' => 'TOTAL',
+                            'fund' => 'Total',
                             'approved_appropriation' => $fundData->sum('approved_appropriation'),
                             'sb_appropriation' => $fundData->sum('sb_appropriation'),
                             'reversion' => $fundData->sum('reversion'),

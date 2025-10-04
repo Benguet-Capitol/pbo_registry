@@ -113,7 +113,10 @@ class SAAOBGFCurrentSummaryController extends Controller
                 // Obligations
                 $obligationBase = $oacAppropriations
                     ->flatMap->obligationAmounts
-                    ->filter(fn($oa) => $asOfDate ? $oa->obligation->obr_date <= $asOfDate : true)
+                    ->filter(fn($oa) => $asOfDate 
+                        ? ($oa->obligation && $oa->obligation->obr_date <= $asOfDate) 
+                        : true
+                    )
                     ->sum('obr_amount');
 
                 $obligationAdjustments = $oacAppropriations
@@ -429,7 +432,7 @@ class SAAOBGFCurrentSummaryController extends Controller
             // Obligations (filter by obligation date)
             $obligationBase = $oacAppropriations
                 ->flatMap->obligationAmounts
-                ->filter(fn($oa) => $asOfDate ? $oa->obligation->obr_date <= $asOfDate : true)
+                ->filter(fn($oa) => $oa->obligation && ($asOfDate ? $oa->obligation->obr_date <= $asOfDate : true))
                 ->sum('obr_amount');
 
             $obligationAdjustments = $oacAppropriations

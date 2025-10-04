@@ -143,7 +143,7 @@
                             <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="realignment">Realignments</th>
                             <th class="px-1 py-1 w-[100px] text-center">Authorized Appropriations</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Allotment</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Allotments</th>
                             <th class="px-1 py-1 w-[100px] text-center">For Later Release</th>
                             <th class="px-1 py-1 w-[100px] text-center">Obligations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Authorized Appropriation Balance</th>
@@ -646,7 +646,6 @@
                 tr.style.textAlign = 'center';
             });
             table.querySelectorAll('[id^="fundSourceRow"]').forEach(tr => {
-                tr.style.textTransform = 'uppercase';
                 tr.style.fontWeight = 'bold';
                 tr.style.fontSize = '10px';
             });
@@ -679,7 +678,7 @@
                         cells[1].style.textAlign = 'right';
                         cells[2].style.textAlign = 'right';
                         cells.forEach(cell => {
-                            cell.textContent = cell.textContent.toUpperCase();
+                            cell.textContent = cell.textContent;
                         });
                     }
                 }

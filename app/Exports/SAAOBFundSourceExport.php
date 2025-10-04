@@ -46,7 +46,7 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                 $highestRow = $sheet->getHighestRow();
 
                 // Freeze rows above row 11
-                $sheet->freezePane('A10');
+                $sheet->freezePane('A11');
 
                 // Set rows 6 to 10 to repeat on printed pages
                 $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 10);
@@ -72,9 +72,10 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
 
                 // Format number columns
                 foreach (range('A', 'M') as $column) {
-                    if (!in_array($column, ['A', 'M'])) {
+                    if (!in_array($column, ['K', 'M'])) {
                         $sheet->getStyle("{$column}11:{$column}{$highestRow}")
-                            ->getNumberFormat()->setFormatCode('#,##0.00');
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
 
@@ -121,13 +122,13 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                 }
 
                 // Loop through all rows to apply formulas
-                for ($row = 11; $row <= $lastDataRow; $row++) {
+                for ($row = 13; $row <= $lastDataRow; $row++) {
                     $label = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
 
                     // === TOTAL ROW ===
                     if (str_starts_with($label, 'TOTAL')) {
                         $startRow = $row - 1;
-                        while ($startRow > 11) {
+                        while ($startRow > 13) {
                             $prevLabel = strtoupper(trim((string) $sheet->getCell("A{$startRow}")->getValue()));
                             if (
                                 str_starts_with($prevLabel, 'TOTAL') ||
@@ -139,7 +140,7 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                             }
                             $startRow--;
                         }
-                        if ($startRow < 11) $startRow = 11;
+                        if ($startRow < 13) $startRow = 13;
 
                         foreach (range('B', 'M') as $col) {
                             $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");

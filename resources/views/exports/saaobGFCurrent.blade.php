@@ -41,13 +41,13 @@
             <th style="padding: 4px; width: 100px; text-align: center;">Reversions</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Realignments</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Authorized Appropriations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Allotment</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Allotments</th>
             <th style="padding: 4px; width: 100px; text-align: center;">For Later Release</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Obligations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Authorized Appropriation Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Allotment Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Balance from Authorized Appropriation</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Balance from Allotment</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
         </tr>
         <tr>
             <th colspan="14"> </th>
@@ -101,11 +101,11 @@
             </td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 %</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 %</td>
         </tr>
         @endforeach
@@ -120,9 +120,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
         @endforeach
         <tr class="sector-total-row" data-rowtype="sector-total">
@@ -136,9 +136,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
         <tr>
             <td colspan="14"></td> {{-- spacing --}}
@@ -155,9 +155,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
 
         <tr>

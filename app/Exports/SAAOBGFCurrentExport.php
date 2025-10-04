@@ -71,9 +71,10 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
 
                 // Format number columns
                 foreach (range('B', 'N') as $column) {
-                    if (!in_array($column, ['B', 'N'])) {
+                    if (!in_array($column, ['L', 'N'])) {
                         $sheet->getStyle("{$column}11:{$column}{$highestRow}")
-                            ->getNumberFormat()->setFormatCode('#,##0.00');
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
 

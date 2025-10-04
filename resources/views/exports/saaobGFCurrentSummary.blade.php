@@ -22,7 +22,7 @@
         </tr>
         <tr>
             <th colspan="13" style="text-align:center; font-size: 11px; margin-top:5px; font-weight: bold;">
-                GENERAL FUND (Current)
+                General Fund (Current)
             </th>
         </tr>
         <tr>
@@ -40,13 +40,13 @@
             <th style="padding: 4px; width: 100px; text-align: center;">Reversions</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Realignments</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Authorized Appropriations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Allotment</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Allotments</th>
             <th style="padding: 4px; width: 100px; text-align: center;">For Later Release</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Obligations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Authorized Appropriation Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Allotment Balance</th>
-            <th style="padding: 4px; width: 60px; text-align: center;">% of Utilization</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Balance from Authorized Appropriations</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Balance from Allotments</th>
+            <th style="padding: 4px; width: 80px; text-align: center;">Percent of Utilization</th>
         </tr>
         <tr>
             <th colspan="13"> </th>
@@ -90,13 +90,13 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 {{ $allotmentClass->appropriation_balance }}
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 {{ $allotmentClass->appropriation_accomplishment }}%
             </td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 {{ $allotmentClass->allotment_balance }}
             </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
                 {{ $allotmentClass->allotment_accomplishment }}%
             </td>
         </tr>
@@ -112,9 +112,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
         @endforeach
         <tr class="grandtotal" data-rowtype="grandtotal">
@@ -128,9 +128,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
         <tr>
             <td colspan="13" style="padding: 4px; text-align: right; vertical-align: middle;"></td>
@@ -154,9 +154,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->for_later_release }}</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->obligation }}</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->appropriation_balance }}</td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->appropriation_accomplishment }}%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->appropriation_accomplishment }}%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->allotment_balance }}</td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->allotment_accomplishment }}%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->allotment_accomplishment }}%</td>
         </tr>
         @endforeach
         <tr class="total" data-rowtype="total">
@@ -170,9 +170,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
         @endforeach
         <tr class="grandtotal" data-rowtype="grandtotal">
@@ -186,9 +186,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
         <tr>
             <td colspan="13" style="padding: 4px; text-align: right; vertical-align: middle;"></td>
@@ -208,9 +208,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->for_later_release }}</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->obligation }}</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->appropriation_balance }}</td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->appropriation_accomplishment }}</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->appropriation_accomplishment }}</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->allotment_balance }}</td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->allotment_accomplishment }}</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">{{ $allotmentClass->allotment_accomplishment }}</td>
         </tr>
         @endforeach
         <tr class="grandtotal" data-rowtype="grandtotal">
@@ -224,9 +224,9 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;">%</td>
         </tr>
 
         <tr>

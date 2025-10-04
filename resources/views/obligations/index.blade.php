@@ -113,7 +113,7 @@
             </div>
         </form>
     </div>
-    <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
+    <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-2 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
                 <!-- Left: Action Button -->
@@ -132,7 +132,7 @@
             </div>
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
-                <div class="max-h-[640px] overflow-y-auto">
+                <div class="max-h-[720px] overflow-y-auto">
                     <table id="obligationsTable" class="mb-20 min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
                         <thead id="obligationTableHead"
                             class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
@@ -437,13 +437,14 @@
                     </div>
                 </div>
             </div>
+            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
+                @if ($perPage != 'all')
+                {{ $obligations->appends(request()->query())->links() }}
+                @endif
+            </div>
         </div>
     </div>
-    <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
-        @if ($perPage != 'all')
-        {{ $obligations->appends(request()->query())->links() }}
-        @endif
-    </div>
+    
 
     @include('obligations.modal.obligation_details')
     @include('obligations.modal.cancellation')

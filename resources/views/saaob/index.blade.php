@@ -242,7 +242,7 @@
                         @endforeach
 
                         <tr class="bg-gray-500 text-gray-100 dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                            <td colspan="3" class="px-2 py-2 text-right">SUBTOTAL:</td>
+                            <td colspan="3" class="px-2 py-2 text-right">Subtotal:</td>
                             @foreach ($noProgramTotals as $key => $val)
                             <td class="px-2 py-2 
                                 @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
@@ -359,7 +359,7 @@
                         @endforeach
 
                         <tr class="bg-gray-500 text-white dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                            <td colspan="3" class="px-2 py-2 text-right italic">SUBTOTAL ({{ $program }}): </td>
+                            <td colspan="3" class="px-2 py-2 text-right italic">Subtotal {{ $program }}: </td>
                             @foreach ($programTotals as $key => $val)
                             <td class="px-2 py-2 
                                 @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
@@ -389,7 +389,7 @@
                         @endforeach
 
                         <tr class="bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-white font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                            <td colspan="3" class="px-2 py-2 text-right">TOTAL ({{ $oac->allotmentClass->description }}): </td>
+                            <td colspan="3" class="px-2 py-2 text-right">Total {{ $oac->allotmentClass->description }}: </td>
                             @foreach ($classTotals as $key => $val)
                             <td class="px-2 py-2 
                                 @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
@@ -418,7 +418,7 @@
                         @endforeach
 
                         <tr class="bg-gray-800 dark:bg-gray-200 text-gray-200 dark:text-gray-700 font-bold border-t-2 border-b-2 text-[10px]">
-                            <td colspan="3" class="px-2 py-2 text-right">GRAND TOTAL CURRENT OPERATING EXPENDITURES: </td>
+                            <td colspan="3" class="px-2 py-2 text-right">Grand Total Current Operating Expentiture: </td>
                             @foreach ($officeTotals as $key => $val)
                             <td class="px-2 py-2 
                                 @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
@@ -546,7 +546,6 @@
             });
             // Style allotment class rows
             table.querySelectorAll('[id^="allotmentClassRow-"]').forEach(tr => {
-                tr.style.textTransform = 'uppercase';
                 tr.style.fontWeight = 'bold';
                 tr.style.fontSize = '10px';
                 tr.style.paddingLeft = '12px'; // Indent the row
@@ -558,7 +557,6 @@
             });
             // Style program rows
             table.querySelectorAll('[id^="programRow-"]').forEach(tr => {
-                tr.style.textTransform = 'uppercase';
                 tr.style.fontWeight = 'bold';
                 tr.style.fontStyle = 'italic';
                 tr.style.fontSize = '10px';
@@ -589,7 +587,7 @@
                     if (
                         text.startsWith('SUBTOTAL') ||
                         text.startsWith('TOTAL') ||
-                        text.startsWith('GRAND TOTAL CURRENT OPERATING EXPENDITURES')
+                        text.startsWith('GRAND TOTAL')
                     ) {
                         tr.style.fontWeight = 'bold';
                         cells[0].style.textAlign = 'right';

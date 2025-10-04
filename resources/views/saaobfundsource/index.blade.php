@@ -129,7 +129,7 @@
                             <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="realignment">Realignments</th>
                             <th class="px-1 py-1 w-[100px] text-center">Authorized Appropriations</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Allotment</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Allotments</th>
                             <th class="px-1 py-1 w-[100px] text-center">For Later Release</th>
                             <th class="px-1 py-1 w-[100px] text-center">Obligations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Authorized Appropriation Balance</th>
@@ -147,50 +147,264 @@
                         @foreach($fundType['funds'] as $fund)
                         <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <td class="px-1 py-2 text-left">{{ $fund['fund'] }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($fund['approved_appropriation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($fund['sb_appropriation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($fund['reversion'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($fund['realignment'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund['authorized'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund['allotment'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund['for_later_release'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund['obligation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($fund['appropriation_balance'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($fund['appropriation_accomplishment'], 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund['allotment_balance'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fund['allotment_accomplishment'], 2) }}%</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                {{ $fund['approved_appropriation'] > 0 
+                                    ? number_format($fund['approved_appropriation'], 2) 
+                                    : ($fund['approved_appropriation'] < 0 
+                                        ? '(' . number_format(abs($fund['approved_appropriation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                {{ $fund['sb_appropriation'] > 0 
+                                    ? number_format($fund['sb_appropriation'], 2) 
+                                    : ($fund['sb_appropriation'] < 0 
+                                        ? '(' . number_format(abs($fund['sb_appropriation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                {{ $fund['reversion'] > 0 
+                                    ? number_format($fund['reversion'], 2) 
+                                    : ($fund['reversion'] < 0 
+                                        ? '(' . number_format(abs($fund['reversion']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                {{ $fund['realignment'] > 0 
+                                    ? number_format($fund['realignment'], 2) 
+                                    : ($fund['realignment'] < 0 
+                                        ? '(' . number_format(abs($fund['realignment']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund['authorized'] > 0 
+                                    ? number_format($fund['authorized'], 2) 
+                                    : ($fund['authorized'] < 0 
+                                        ? '(' . number_format(abs($fund['authorized']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund['allotment'] > 0 
+                                    ? number_format($fund['allotment'], 2) 
+                                    : ($fund['allotment'] < 0 
+                                        ? '(' . number_format(abs($fund['allotment']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund['for_later_release'] > 0 
+                                    ? number_format($fund['for_later_release'], 2) 
+                                    : ($fund['for_later_release'] < 0 
+                                        ? '(' . number_format(abs($fund['for_later_release']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund['obligation'] > 0 
+                                    ? number_format($fund['obligation'], 2) 
+                                    : ($fund['obligation'] < 0 
+                                        ? '(' . number_format(abs($fund['obligation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                {{ $fund['appropriation_balance'] > 0 
+                                    ? number_format($fund['appropriation_balance'], 2) 
+                                    : ($fund['appropriation_balance'] < 0 
+                                        ? '(' . number_format(abs($fund['appropriation_balance']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($fund['appropriation_accomplishment'], 2) }}%
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fund['allotment_balance'] > 0 
+                                    ? number_format($fund['allotment_balance'], 2) 
+                                    : ($fund['allotment_balance'] < 0 
+                                        ? '(' . number_format(abs($fund['allotment_balance']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($fund['allotment_accomplishment'], 2) }}%
+                            </td>
                         </tr>
                         @endforeach
                         <tr class="bg-gray-300 text-gray-700 dark:bg-gray-900 dark:text-white font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
                             <td class="px-1 py-2 text-right">{{ $fundType['totals']['fund'] }}:</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($fundType['totals']['approved_appropriation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($fundType['totals']['sb_appropriation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($fundType['totals']['reversion'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($fundType['totals']['realignment'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundType['totals']['authorized'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundType['totals']['allotment'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundType['totals']['for_later_release'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundType['totals']['obligation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($fundType['totals']['appropriation_balance'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($fundType['totals']['appropriation_accomplishment'], 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundType['totals']['allotment_balance'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundType['totals']['allotment_accomplishment'], 2) }}%</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                {{ $fundType['totals']['approved_appropriation'] > 0 
+                                    ? number_format($fundType['totals']['approved_appropriation'], 2) 
+                                    : ($fundType['totals']['approved_appropriation'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['approved_appropriation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                {{ $fundType['totals']['sb_appropriation'] > 0 
+                                    ? number_format($fundType['totals']['sb_appropriation'], 2) 
+                                    : ($fundType['totals']['sb_appropriation'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['sb_appropriation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                {{ $fundType['totals']['reversion'] > 0 
+                                    ? number_format($fundType['totals']['reversion'], 2) 
+                                    : ($fundType['totals']['reversion'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['reversion']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                {{ $fundType['totals']['realignment'] > 0 
+                                    ? number_format($fundType['totals']['realignment'], 2) 
+                                    : ($fundType['totals']['realignment'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['realignment']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundType['totals']['authorized'] > 0 
+                                    ? number_format($fundType['totals']['authorized'], 2) 
+                                    : ($fundType['totals']['authorized'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['authorized']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundType['totals']['allotment'] > 0 
+                                    ? number_format($fundType['totals']['allotment'], 2) 
+                                    : ($fundType['totals']['allotment'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['allotment']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundType['totals']['for_later_release'] > 0 
+                                    ? number_format($fundType['totals']['for_later_release'], 2) 
+                                    : ($fundType['totals']['for_later_release'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['for_later_release']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundType['totals']['obligation'] > 0 
+                                    ? number_format($fundType['totals']['obligation'], 2) 
+                                    : ($fundType['totals']['obligation'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['obligation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                {{ $fundType['totals']['appropriation_balance'] > 0 
+                                    ? number_format($fundType['totals']['appropriation_balance'], 2) 
+                                    : ($fundType['totals']['appropriation_balance'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['appropriation_balance']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($fundType['totals']['appropriation_accomplishment'], 2) }}%
+                            </td>
+
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundType['totals']['allotment_balance'] > 0 
+                                    ? number_format($fundType['totals']['allotment_balance'], 2) 
+                                    : ($fundType['totals']['allotment_balance'] < 0 
+                                        ? '(' . number_format(abs($fundType['totals']['allotment_balance']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($fundType['totals']['allotment_accomplishment'], 2) }}%
+                            </td>
                         </tr>
                         @endforeach
                         <tr class="bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-100 font-bold border-t-4 border-gray-800 text-[10px]">
-                            <td class="px-1 py-2 text-right">GRAND TOTAL ({{ $fundSource['category'] }}):</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($fundSource['grand_totals']['approved_appropriation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($fundSource['grand_totals']['sb_appropriation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($fundSource['grand_totals']['reversion'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($fundSource['grand_totals']['realignment'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundSource['grand_totals']['authorized'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundSource['grand_totals']['allotment'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundSource['grand_totals']['for_later_release'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundSource['grand_totals']['obligation'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($fundSource['grand_totals']['appropriation_balance'], 2) }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($fundSource['grand_totals']['appropriation_accomplishment'], 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundSource['grand_totals']['allotment_balance'], 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($fundSource['grand_totals']['allotment_accomplishment'], 2) }}%</td>
+                            <td class="px-1 py-2 text-right">Grand Total ({{ $fundSource['category'] }}):</td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation">
+                                {{ $fundSource['grand_totals']['approved_appropriation'] > 0 
+                                    ? number_format($fundSource['grand_totals']['approved_appropriation'], 2) 
+                                    : ($fundSource['grand_totals']['approved_appropriation'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['approved_appropriation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                {{ $fundSource['grand_totals']['sb_appropriation'] > 0 
+                                    ? number_format($fundSource['grand_totals']['sb_appropriation'], 2) 
+                                    : ($fundSource['grand_totals']['sb_appropriation'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['sb_appropriation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right" data-key="reversion">
+                                {{ $fundSource['grand_totals']['reversion'] > 0 
+                                    ? number_format($fundSource['grand_totals']['reversion'], 2) 
+                                    : ($fundSource['grand_totals']['reversion'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['reversion']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right" data-key="realignment">
+                                {{ $fundSource['grand_totals']['realignment'] > 0 
+                                    ? number_format($fundSource['grand_totals']['realignment'], 2) 
+                                    : ($fundSource['grand_totals']['realignment'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['realignment']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundSource['grand_totals']['authorized'] > 0 
+                                    ? number_format($fundSource['grand_totals']['authorized'], 2) 
+                                    : ($fundSource['grand_totals']['authorized'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['authorized']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundSource['grand_totals']['allotment'] > 0 
+                                    ? number_format($fundSource['grand_totals']['allotment'], 2) 
+                                    : ($fundSource['grand_totals']['allotment'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['allotment']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundSource['grand_totals']['for_later_release'] > 0 
+                                    ? number_format($fundSource['grand_totals']['for_later_release'], 2) 
+                                    : ($fundSource['grand_totals']['for_later_release'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['for_later_release']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundSource['grand_totals']['obligation'] > 0 
+                                    ? number_format($fundSource['grand_totals']['obligation'], 2) 
+                                    : ($fundSource['grand_totals']['obligation'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['obligation']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                {{ $fundSource['grand_totals']['appropriation_balance'] > 0 
+                                    ? number_format($fundSource['grand_totals']['appropriation_balance'], 2) 
+                                    : ($fundSource['grand_totals']['appropriation_balance'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['appropriation_balance']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                {{ number_format($fundSource['grand_totals']['appropriation_accomplishment'], 2) }}%
+                            </td>
+                            <td class="px-1 py-2 text-right">
+                                {{ $fundSource['grand_totals']['allotment_balance'] > 0 
+                                    ? number_format($fundSource['grand_totals']['allotment_balance'], 2) 
+                                    : ($fundSource['grand_totals']['allotment_balance'] < 0 
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['allotment_balance']), 2) . ')' 
+                                        : '-') }}
+                            </td>
+                            <td class="px-1 py-2 text-center">
+                                {{ number_format($fundSource['grand_totals']['allotment_accomplishment'], 2) }}%
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -339,7 +553,7 @@
                 let fundSourceText = 'Current and Continuing';
                 if (fundSourceSelect && fundSourceSelect.selectedIndex > 0) {
                     const selectedOption = fundSourceSelect.options[fundSourceSelect.selectedIndex];
-                    fundSourceText = (selectedOption.getAttribute('data-fund-source-name') || selectedOption.text).toUpperCase();
+                    fundSourceText = (selectedOption.getAttribute('data-fund-source-name') || selectedOption.text);
                 }
                 // Get as of date and format it
                 const asOfInput = document.getElementById('as_of_filter');
@@ -389,7 +603,7 @@
                     STATEMENT OF APPROPRIATIONS, ALLOTMENTS, OBLIGATIONS AND BALANCES
                 </div>
                 <div style="font-size:12px;">Summary of Appropriations, Allotments, Obligations and Balances - CY ${selectedYear}</div>
-                <div style="font-size:12px;">ALL FUNDS (${fundSourceText})</div>
+                <div style="font-size:12px;">${fundSourceText}</div>
                 <div style="font-size:12px;">As of ${asOfDate}</div>
             </div>
         `);

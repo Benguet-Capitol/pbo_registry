@@ -28,7 +28,7 @@
                             <input type="hidden" name="obligation_id" id="obligation_id" value="{{ $obligation->id }}">
                             <!-- Office and Allotment Class -->
                             <div class="sm:col-span-3 relative">
-                                <x-form.label for="office_allotment_class" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
+                                <x-form.label for="edit_office_allotment_class" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -40,7 +40,7 @@
                                             name="edit_office_allotment_class"
                                             id="edit_office_allotment_class"
                                             placeholder="{{ __('Office and Allotment Class') }}"
-                                            class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
+                                            class="block w-full bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-200"
                                             oninput="filterEditOfficeAllotmentClasses()"
                                             autocomplete="off" />
                                     </x-form.input-with-icon-wrapper>
@@ -148,39 +148,100 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 ">
-                                            <tr>
-                                                <td class="px-1 py-2">
-                                                    <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodesEdit(this)" autocomplete="off" />
-                                                    <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.input type="text" name="edit_balance_from_allotment[]" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                                                </td>
-                                                <td class="px-1 py-2 text-center">
-                                                    <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                           @if(isset($obligation_amounts) && count($obligation_amounts) > 0)
+                                                @foreach($obligation_amounts as $amount)
+                                                <tr>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.input
+                                                            name="edit_account_code[]"
+                                                            placeholder="{{ __('Account Code') }}"
+                                                            value="{{ $amount['account_code'] ?? '' }}"
+                                                            class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
+                                                            oninput="filterAccountCodes(this)"
+                                                            autocomplete="off" />
+                                                        <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                                            <!-- Suggestions will appear here -->
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.textarea
+                                                            name="edit_description[]"
+                                                            placeholder="{{ __('Description') }}"
+                                                            class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
+                                                            autocomplete="off">{{ $amount['description'] ?? '' }}</x-form.textarea>
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.textarea
+                                                            name="edit_programs[]"
+                                                            placeholder="{{ __('Program') }}"
+                                                            class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
+                                                            autocomplete="off">{{ $amount['program'] ?? '' }}</x-form.textarea>
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.input
+                                                            type="text"
+                                                            name="edit_balance_from_allotment[]"
+                                                            value="{{ number_format($amount['obr_amount'] ?? 0, 2) }}"
+                                                            placeholder="{{ __('Balance') }}"
+                                                            autocomplete="off"
+                                                            class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
+                                                            readonly />
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.input
+                                                            type="text"
+                                                            name="edit_amount_of_obligation[]"
+                                                            value="{{ number_format($amount['amount'] ?? 0, 2) }}"
+                                                            oninput="validateAmount(this); calculateTotalObligation();"
+                                                            onblur="calculateTotalObligation();"
+                                                            placeholder="{{ __('Amount') }}"
+                                                            autocomplete="off"
+                                                            class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                                                    </td>
+                                                    <td class="px-1 py-2 text-center">
+                                                        <button type="button" onclick="deleteRow(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            @else
+                                                <tr>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.input name="edit_account_code[]" placeholder="{{ __('Account Code') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodes(this)" autocomplete="off" />
+                                                        <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                                            <!-- Suggestions will appear here -->
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.textarea name="edit_description[]" placeholder="{{ __('Description') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.textarea name="edit_programs[]" placeholder="{{ __('Program') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.input type="text" name="edit_balance_from_allotment[]" placeholder="{{ __('Balance') }}" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                                                    </td>
+                                                    <td class="px-1 py-2">
+                                                        <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmount(this); calculateTotalObligation();" onblur="calculateTotalObligation();" placeholder="{{ __('Amount') }}" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                                                    </td>
+                                                    <td class="px-1 py-2 text-center">
+                                                        <button type="button" onclick="deleteRow(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endif
                                             <!-- Additional rows can be dynamically added using JavaScript -->
                                         </tbody>
                                         <!-- Fixed Total Row -->
                                         <tfoot class="bg-gray-50 dark:bg-gray-800">
                                             <tr>
                                                 <td colspan="4" class="px-2 py-2 text-right text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                    {{ __('Total Obligation') }}
+                                                    {{ __('Total Obligation:') }}
                                                 </td>
-                                                <td class="px-2 py-2 text-left text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                    <span id="totalObligationEdit" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs">0.00</span>
+                                                <td class="px-2 py-2 text-right text-xs font-bold text-green-700 dark:text-green-400">
+                                                    <span id="totalObligationEdit" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-right text-xs">0.00</span>
                                                 </td>
                                                 <td></td>
                                             </tr>
@@ -240,44 +301,101 @@
 
         document.getElementById('editObligationsForm').action = `/obligations/${obligation.id}`;
 
-        // Populate basic obligation fields
-        document.getElementById('edit_office_allotment_class').value = obligation.office_allotment_class?.name || obligation.office_allotment_class || '';
-        document.getElementById('edit_office_allotment_class_id').value = obligation.office_allotment_class_id || '';
-        document.getElementById('edit_obr_date').value = obligation.obr_date || '';
-        document.getElementById('edit_obr_type').value = obligation.obr_type || '';
-        document.getElementById('edit_obr_no').value = obligation.obr_no || '';
-        document.getElementById('edit_particulars').value = obligation.particulars || '';
-        document.getElementById('edit_remarks').value = obligation.remarks || '';
+        // Fields to populate
+        const fields = {
+            edit_office_allotment_class: obligation.office_allotment_class?.name || obligation.office_allotment_class || '',
+            edit_office_allotment_class_id: obligation.office_allotment_class_id || '',
+            edit_obr_date: obligation.obr_date || '',
+            edit_obr_type: obligation.obr_type || '',
+            edit_obr_no: obligation.obr_no || '',
+            edit_particulars: obligation.particulars || '',
+            edit_remarks: obligation.remarks || ''
+        };
+
+        // Populate and colorize text fields
+        Object.entries(fields).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = value;
+                el.classList.toggle('text-gray-900', !!value);
+                el.classList.toggle('text-gray-400', !value);
+            }
+        });
 
         // Show abbreviation + class if available
         if (obligation.office_allotment_class && typeof obligation.office_allotment_class === 'object') {
-            document.getElementById('edit_office_allotment_class').value =
-                `${obligation.office_allotment_class.office_abbreviation} - ${obligation.office_allotment_class.class}`;
+            const el = document.getElementById('edit_office_allotment_class');
+            el.value = `${obligation.office_allotment_class.office_abbreviation} - ${obligation.office_allotment_class.class}`;
+            el.classList.add('text-gray-900');
+            el.classList.remove('text-gray-400');
         }
 
-        // Use data directly from obligation_amounts
-        const amountData = obligation.obligation_amounts?.[0];
-        if (amountData) {
-            document.querySelector('[name="edit_account_code[]"]').value = amountData.account_code || '';
-            document.querySelector('[name="edit_description[]"]').value = amountData.description || '';
-            document.querySelector('[name="edit_programs[]"]').value = amountData.program || '';
-            document.querySelector('[name="edit_amount_of_obligation[]"]').value = amountData.obr_amount || '';
-
-            // ✅ Populate balance from allotment automatically
-            const balanceField = document.querySelector('[name="edit_balance_from_allotment[]"]');
-                if (balanceField) {
-                    const balance = parseFloat(amountData.balance_from_allotment || 0);
-                    balanceField.value = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-
+        // Handle obligation amounts: render all as table rows
+        const tableBody = document.querySelector('#edit_programs_table tbody');
+        tableBody.innerHTML = '';
+        if (Array.isArray(obligation.obligation_amounts) && obligation.obligation_amounts.length > 0) {
+            obligation.obligation_amounts.forEach(amount => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-1 py-2">
+                        <x-form.input name="edit_account_code[]" placeholder="Account Code" value="${amount.account_code || ''}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
+                        <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${amount.description || ''}</x-form.textarea>
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${amount.program || ''}</x-form.textarea>
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.input type="text" name="edit_balance_from_allotment[]" value="${Number(amount.balance_from_allotment || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.input type="text" name="edit_amount_of_obligation[]" value="${Number(amount.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                    </td>
+                    <td class="px-1 py-2 text-center">
+                        <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
         } else {
-            document.querySelector('[name="edit_account_code[]"]').value = '';
-            document.querySelector('[name="edit_description[]"]').value = '';
-            document.querySelector('[name="edit_programs[]"]').value = '';
-            document.querySelector('[name="edit_amount_of_obligation[]"]').value = '';
-            const balanceField = document.querySelector('[name="edit_balance_from_allotment[]"]');
-            if (balanceField) balanceField.value = '';
+            // If no amounts, add a blank row
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-1 py-2">
+                    <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
+                    <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.input type="text" name="edit_balance_from_allotment[]" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                </td>
+                <td class="px-1 py-2 text-center">
+                    <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
         }
+
+        // Colorize all editable input fields
+        document.querySelectorAll('#editObligationsModal input, #editObligationsModal textarea, #editObligationsModal select').forEach(el => {
+            const hasValue = el.value && el.value.trim() !== '';
+            el.classList.toggle('text-gray-900', hasValue);
+            el.classList.toggle('text-gray-400', !hasValue);
+        });
 
         calculateTotalObligationEdit();
 
@@ -525,15 +643,19 @@
         }
         document.getElementById('deleteConfirmEditModal').classList.add('hidden');
     });
+    document.getElementById('cancelEditDeleteBtn').addEventListener('click', function() {
+        rowToDeleteEdit = null;
+        document.getElementById('deleteConfirmEditModal').classList.add('hidden');
+    });
        
     function validateEditObligationsForm() {
         const form = document.getElementById('editObligationsForm');
         let isValid = true;
         document.querySelectorAll('#editObligationsModal .text-red-500').forEach(error => error.textContent = '');
         const officeAllotmentClass = document.getElementById('edit_office_allotment_class');
-        const officeAllotmentClassId = document.getElementById('office_allotment_class_id');
+        const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id');
         if (!officeAllotmentClass.value.trim() || !officeAllotmentClassId.value.trim()) {
-            document.getElementById('OfficeAllotmentClassError').textContent = 'Office and Allotment Class is required.';
+            document.getElementById('edit_OfficeAllotmentClassError').textContent = 'Office and Allotment Class is required.';
             isValid = false;
         }
         const obrDate = document.getElementById('edit_obr_date');
@@ -547,7 +669,7 @@
         }
         const obrType = document.getElementById('edit_obr_type');
         if (!obrType.value.trim()) {
-            document.getElementById('obrTypeError').textContent = 'Obligation Type is required.';
+            document.getElementById('edit_obrTypeError').textContent = 'Obligation Type is required.';
             isValid = false;
         }
         const obrNo = document.getElementById('edit_obr_no');
@@ -561,7 +683,7 @@
         }
         const particulars = document.getElementById('edit_particulars');
         if (!particulars.value.trim()) {
-            document.getElementById('particularsError').textContent = 'Particulars field is required.';
+            document.getElementById('edit_particularsError').textContent = 'Particulars field is required.';
             isValid = false;
         } else {
             particulars.classList.remove('border-red-500');
@@ -574,7 +696,7 @@
             tableMessage.classList.remove('hidden');
             isValid = false;
         }
-        const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
+        const amountFields = document.querySelectorAll('[name="edit_amount_of_obligation[]"]');
         amountFields.forEach((field, index) => {
             const value = parseFloat(field.value || 0);
             if (value <= 0) {
@@ -593,7 +715,7 @@
         });
 
         // Validate if the total balance from allotment is exhausted
-        const balanceFields = document.querySelectorAll('[name="balance_from_allotment[]"]');
+        const balanceFields = document.querySelectorAll('[name="edit_balance_from_allotment[]"]');
         let totalBalance = 0;
 
         balanceFields.forEach(field => {

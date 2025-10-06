@@ -51,7 +51,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                 $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 10);
 
                 // Hide specific columns
-                foreach (['C', 'I', 'J', 'N', 'O'] as $col) {
+                foreach (['C', 'J', 'N', 'O'] as $col) {
                     $sheet->getColumnDimension($col)->setVisible(false);
                 }
 

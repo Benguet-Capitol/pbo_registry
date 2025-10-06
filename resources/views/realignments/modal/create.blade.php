@@ -384,7 +384,7 @@
 </form>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteConfirmModal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+<div id="deleteConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md p-6">
         <h2 class="text-lg font-semibold text-red-600 mb-4">Confirm Deletion</h2>
         <p class="text-sm text-gray-700 dark:text-gray-300 mb-6">

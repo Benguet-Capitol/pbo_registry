@@ -400,6 +400,12 @@
                                                 <i class="fas fa-edit mr-2"></i>Edit
                                             </a>
                                             @endcan
+                                            
+                                            @can('edit obligations')
+                                            <button onclick='openEditObligationsModal(@json($obligation))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
+                                            <i class="fas fa-edit mr-2"></i>Edit Modal
+                                            </button>
+                                            @endcan
 
                                             @can('delete obligations')
                                             <button onclick="openDeleteModal({{ $obligation->id }}, '{{ $obligation->obr_no }}', '{{ $obligation->officeAllotmentClass->offices->office_abbreviation }}', '{{ $obligation->officeAllotmentClass->allotmentClass->class }}', '{{ $obligation->obr_amount }}')"
@@ -413,7 +419,7 @@
                             </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                                    <td colspan="10" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
                                         No Obligations found
                                     </td>
                                 </tr>
@@ -450,6 +456,7 @@
     @include('obligations.modal.cancellation')
     @include('obligations.modal.delete')
     @include('obligations.modal.create')
+    @include('obligations.modal.edit')
     <div id="createPOModalContainer"></div>
     <div id="createObligationAdjustmentModalContainer"></div>.
     <div id="createDisbursementModalContainer"></div>

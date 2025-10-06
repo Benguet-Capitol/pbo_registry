@@ -204,13 +204,20 @@ class ObligationController extends Controller
             $obligationAmounts = ObligationAmount::with('appropriation')
                 ->where('obligation_id', $obligation->id)
                 ->get()
-                ->map(function ($amount) {
+                ->map(function ($amount) use ($appropriations) {
+                    // 🔍 Find the appropriation that matches this obligation_amount
+                    $relatedAppropriation = $appropriations->firstWhere('id', $amount->appropriation_id);
+
+                    // ✅ Use the computed balance as balance_from_allotment
+                    $balance = $relatedAppropriation ? $relatedAppropriation->balance : 0;
+
                     return [
                         'account_code' => $amount->account_code,
                         'description' => $amount->appropriation->description ?? '',
                         'program' => $amount->appropriation->programs ?? '',
                         'obr_amount' => $amount->obr_amount,
-                        'amount' => $amount->obr_amount, // If you have a separate 'amount' field, use it
+                        'amount' => $amount->obr_amount,
+                        'balance_from_allotment' => $balance + $amount->obr_amount, // ✅ add this field
                     ];
                 });
             $obligation->obligation_amounts = $obligationAmounts;

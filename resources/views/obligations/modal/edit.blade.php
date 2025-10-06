@@ -2,6 +2,11 @@
 <form id="editObligationsForm" method="POST" action="">
     @csrf
     @method('PUT')
+    <input type="hidden" name="year1" value="{{ request('year1') }}">
+    <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
+    <input type="hidden" name="supplemental_type_filter" value="{{ request('supplemental_type_filter') }}">
+    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+    <input type="hidden" name="search" value="{{ request('search') }}">
     <div id="editObligationsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->
@@ -40,16 +45,16 @@
                                             autocomplete="off" />
                                     </x-form.input-with-icon-wrapper>
                                     <!-- Hidden input to store the selected ID -->
-                                    <input type="hidden" name="office_allotment_class_id" id="office_allotment_class_id" />
-                                    <div id="EditOfficeAllotmentClassDropdown" class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                    <input type="hidden" name="edit_office_allotment_class_id" id="edit_office_allotment_class_id" />
+                                    <div id="editOfficeAllotmentClassDropdown" class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                         <!-- Suggestions appear here -->
                                     </div>
-                                    <span id="OfficeAllotmentClassError" class="text-red-500 text-sm"></span>
+                                    <span id="edit_OfficeAllotmentClassError" class="text-red-500 text-sm"></span>
                                 </div>
                             </div>
                             <!-- Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="obr_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
+                                <x-form.label for="edit_obr_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -61,13 +66,13 @@
                             </div>
                             <!-- Obligation Type -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="obr_type" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Type')" />
+                                <x-form.label for="edit_obr_type" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Type')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-arrow-up-right-dots"></i>
                                         </x-slot>
-                                        <x-form.select withicon id="edit_obr_type" class="block w-full" type="text" name="edit_obr_type" :value="old('obr_type')" placeholder="{{ __('Obligation Type') }}">
+                                        <x-form.select withicon id="edit_obr_type" class="block w-full text-gray-900" type="text" name="edit_obr_type" :value="old('obr_type')" placeholder="{{ __('Obligation Type') }}">
                                             <option value="">{{ __('Select Obligation Type') }}</option>
                                             <option value="Regular">{{ __('Regular') }}</option>
                                             <option value="Purchase Request">{{ __('Purchase Request') }}</option>
@@ -79,38 +84,38 @@
                             </div>
                             <!-- Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="obr_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Number')" />
+                                <x-form.label for="edit_obr_no" class="block text-sm/6 font-medium dark:text-gray-200" :value="__('Number')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-list-ol"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='text' name="edit_obr_no" autocomplete="off" id="edit_obr_no" placeholder="{{ __('Number') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='text' name="edit_obr_no" autocomplete="off" id="edit_obr_no" placeholder="{{ __('Number') }}" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Particulars -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="particulars" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Particulars')" />
+                                <x-form.label for="edit_particulars" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Particulars')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-align-justify"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="edit_particulars" autocomplete="off" id="edit_particulars" placeholder="{{ __('Particulars') }}" :value="old('particulars')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="edit_particulars" autocomplete="off" id="edit_particulars" placeholder="{{ __('Particulars') }}" :value="old('particulars')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                     <span id="particularsError" class="text-red-500 text-sm"></span>
                                 </div>
                             </div>
                             <!-- Remarks -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
+                                <x-form.label for="edit_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-circle-info"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="edit_remarks" autocomplete="off" id="edit_remarks" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="edit_remarks" autocomplete="off" id="edit_remarks" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
@@ -143,57 +148,29 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 ">
-                                            @if(isset($obligation_amounts) && count($obligation_amounts) > 0)
-                                                @foreach($obligation_amounts as $amount)
-                                                <tr>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.input name="account_code[]" value="{{ $amount['account_code'] ?? '' }}" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodesEdit(this)" autocomplete="off" />
-                                                        <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.textarea name="description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">{{ $amount['description'] ?? '' }}</x-form.textarea>
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.textarea name="programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">{{ $amount['program'] ?? '' }}</x-form.textarea>
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.input type="text" name="balance_from_allotment[]" value="{{ number_format($amount['obr_amount'] ?? 0, 2) }}" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.input type="text" name="amount_of_obligation[]" value="{{ number_format($amount['amount'] ?? 0, 2) }}" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                                                    </td>
-                                                    <td class="px-1 py-2 text-center">
-                                                        <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                                @endforeach
-                                            @else
-                                                <tr>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.input name="account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodesEdit(this)" autocomplete="off" />
-                                                        <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.textarea name="description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.textarea name="programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.input type="text" name="balance_from_allotment[]" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                                                    </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.input type="text" name="amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                                                    </td>
-                                                    <td class="px-1 py-2 text-center">
-                                                        <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endif
+                                            <tr>
+                                                <td class="px-1 py-2">
+                                                    <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodesEdit(this)" autocomplete="off" />
+                                                    <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
+                                                </td>
+                                                <td class="px-1 py-2">
+                                                    <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                                                </td>
+                                                <td class="px-1 py-2">
+                                                    <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                                                </td>
+                                                <td class="px-1 py-2">
+                                                    <x-form.input type="text" name="edit_balance_from_allotment[]" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                                                </td>
+                                                <td class="px-1 py-2">
+                                                    <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                                                </td>
+                                                <td class="px-1 py-2 text-center">
+                                                    <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
                                             <!-- Additional rows can be dynamically added using JavaScript -->
                                         </tbody>
                                         <!-- Fixed Total Row -->
@@ -203,7 +180,7 @@
                                                     {{ __('Total Obligation') }}
                                                 </td>
                                                 <td class="px-2 py-2 text-left text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                    <span id="totalObligation" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs">0.00</span>
+                                                    <span id="totalObligationEdit" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs">0.00</span>
                                                 </td>
                                                 <td></td>
                                             </tr>
@@ -239,7 +216,7 @@
 </form>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteConfirmEditModal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+<div id="deleteConfirmEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md p-6">
         <h2 class="text-lg font-semibold text-red-600 mb-4">Confirm Deletion</h2>
         <p class="text-sm text-gray-700 dark:text-gray-300 mb-6">
@@ -260,333 +237,295 @@
     //Open Edit Modal
     function openEditObligationsModal(obligation) {
         closeAllDropdowns();
-        // Populate the form fields with the obligation data
-        document.querySelector("input[name='obligation_id']").value = obligation.id;
 
-        // Fix: handle object or string for office_allotment_class
-        let officeAllotmentClassValue = '';
-        if (typeof obligation.office_allotment_class === 'object' && obligation.office_allotment_class !== null) {
-            officeAllotmentClassValue = (obligation.office_allotment_class.office_abbreviation || '') + ' - ' + (obligation.office_allotment_class.class || '');
-        } else if (obligation.office_allotment_class_name) {
-            officeAllotmentClassValue = obligation.office_allotment_class_name;
-        } else {
-            officeAllotmentClassValue = obligation.office_allotment_class || '';
+        document.getElementById('editObligationsForm').action = `/obligations/${obligation.id}`;
+
+        // Populate basic obligation fields
+        document.getElementById('edit_office_allotment_class').value = obligation.office_allotment_class?.name || obligation.office_allotment_class || '';
+        document.getElementById('edit_office_allotment_class_id').value = obligation.office_allotment_class_id || '';
+        document.getElementById('edit_obr_date').value = obligation.obr_date || '';
+        document.getElementById('edit_obr_type').value = obligation.obr_type || '';
+        document.getElementById('edit_obr_no').value = obligation.obr_no || '';
+        document.getElementById('edit_particulars').value = obligation.particulars || '';
+        document.getElementById('edit_remarks').value = obligation.remarks || '';
+
+        // Show abbreviation + class if available
+        if (obligation.office_allotment_class && typeof obligation.office_allotment_class === 'object') {
+            document.getElementById('edit_office_allotment_class').value =
+                `${obligation.office_allotment_class.office_abbreviation} - ${obligation.office_allotment_class.class}`;
         }
-        document.getElementById('edit_office_allotment_class').value = officeAllotmentClassValue;
 
-        document.getElementById('edit_obr_no').value = obligation.obr_no;
-        document.getElementById('edit_obr_date').value = obligation.obr_date;
-        document.getElementById('edit_obr_type').value = obligation.obr_type;
-        document.getElementById('edit_particulars').value = obligation.particulars;
-        document.getElementById('edit_remarks').value = obligation.remarks;
+        // Use data directly from obligation_amounts
+        const amountData = obligation.obligation_amounts?.[0];
+        if (amountData) {
+            document.querySelector('[name="edit_account_code[]"]').value = amountData.account_code || '';
+            document.querySelector('[name="edit_description[]"]').value = amountData.description || '';
+            document.querySelector('[name="edit_programs[]"]').value = amountData.program || '';
+            document.querySelector('[name="edit_amount_of_obligation[]"]').value = amountData.obr_amount || '';
 
-        // Populate programs_table tbody with ObligationAmounts
-        const tbody = document.querySelector('#edit_programs_table tbody');
-        tbody.innerHTML = '';
-        if (obligation.obligation_amounts && Array.isArray(obligation.obligation_amounts) && obligation.obligation_amounts.length > 0) {
-            obligation.obligation_amounts.forEach(function(amount, idx) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-1 py-2">
-                        <x-form.input name="account_code[]" value="${amount.account_code || ''}" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodesEdit(this)" autocomplete="off" />
-                        <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.textarea name="description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${amount.description || ''}</x-form.textarea>
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.textarea name="programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${amount.program || ''}</x-form.textarea>
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.input type="text" name="balance_from_allotment[]" value="${parseFloat(amount.obr_amount || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.input type="text" name="amount_of_obligation[]" value="${parseFloat(amount.amount || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                    </td>
-                    <td class="px-1 py-2 text-center">
-                        <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+            // ✅ Populate balance from allotment automatically
+            const balanceField = document.querySelector('[name="edit_balance_from_allotment[]"]');
+                if (balanceField) {
+                    const balance = parseFloat(amountData.balance_from_allotment || 0);
+                    balanceField.value = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+
         } else {
-            // If no amounts, add a single empty row
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="px-1 py-2">
-                    <x-form.input name="account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodesEdit(this)" autocomplete="off" />
-                    <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.textarea name="description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.textarea name="programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.input type="text" name="balance_from_allotment[]" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.input type="text" name="amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                </td>
-                <td class="px-1 py-2 text-center">
-                    <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
+            document.querySelector('[name="edit_account_code[]"]').value = '';
+            document.querySelector('[name="edit_description[]"]').value = '';
+            document.querySelector('[name="edit_programs[]"]').value = '';
+            document.querySelector('[name="edit_amount_of_obligation[]"]').value = '';
+            const balanceField = document.querySelector('[name="edit_balance_from_allotment[]"]');
+            if (balanceField) balanceField.value = '';
         }
+
         calculateTotalObligationEdit();
+
         document.getElementById('editObligationsModal').classList.remove('hidden');
     }
-    //Close Edit Modal
+
+    // Close Edit Modal
     function closeEditObligationsModal() {
         document.getElementById('editObligationsModal').classList.add('hidden');
     }
 
-
-    // List of appropriations passed from the backend
-    const editAppropriations = [
-    @foreach($appropriations as $appropriation)
-        {
-            id: "{{ $appropriation->id }}",
-            account_code: "{{ $appropriation->account_code }}",
-            program: "{{ $appropriation->programs }}",
-            description: "{{ $appropriation->description }}",
-            office_allotment_class_id: "{{ $appropriation->office_allotment_class_id }}",
-            balance: "{{ $appropriation->balance }}"
-        }@if(!$loop->last),@endif
-    @endforeach
+    const editOfficeAllotmentClasses = [
+        @foreach($office_allotment_classes as $i => $office_allotment_class)
+            {
+                id: "{{ $office_allotment_class->id }}",
+                name: "{{ $office_allotment_class->office_abbreviation }} - {{ $office_allotment_class->allotmentClass->class }}",
+                fund: "{{ $office_allotment_class->fund ?? 'General Fund' }}"
+            }@if(!$loop->last),@endif
+        @endforeach
     ];
 
-    // Filter account codes and display suggestions with description and program (Edit Modal)
-    function filterAccountCodesEdit(inputElement) {
-        const officeAllotmentClassId = document.getElementById('office_allotment_class_id').value;
-        const dropdown = inputElement.nextElementSibling;
-        const filter = inputElement.value.toLowerCase();
+    //Filter Edit Office and Allotment Classes
+    function filterEditOfficeAllotmentClasses() {
+        const input = document.getElementById('edit_office_allotment_class');
+        const filter = input.value.toLowerCase();
+        const dropdown = document.getElementById('editOfficeAllotmentClassDropdown');
 
-        dropdown.innerHTML = ''; // Clear previous results
+        // Clear previous suggestions
+        dropdown.innerHTML = '';
 
-        if (!filter || !officeAllotmentClassId) {
+        if (!filter) {
             dropdown.classList.add('hidden');
             return;
         }
 
-        // Filter account codes based on the input and matching office_allotment_class_id
-        const filteredCodes = editAppropriations.filter(item =>
-            item.office_allotment_class_id === officeAllotmentClassId && // Match office_allotment_class_id
-            item.account_code.toLowerCase().includes(filter) // Match account code
-        );
-
-        console.log('Filtered Account Codes:', filteredCodes);
-
-        if (filteredCodes.length === 0) {
+        const filterClasses = editOfficeAllotmentClasses.filter(item => item.name.toLowerCase().includes(filter));
+        if (filterClasses.length === 0) {
             dropdown.classList.add('hidden');
             return;
         }
-
-        // Populate the dropdown with filtered account codes, descriptions, and programs
-        filteredCodes.forEach(item => {
+        filterClasses.forEach(item => {
             const option = document.createElement('div');
-            option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
-            option.innerHTML = `
-            <strong>${item.account_code}</strong><br>
-            <span class="text-gray-500 dark:text-gray-400">${item.description || 'No description'}</span><br>
-            <span class="text-gray-500 dark:text-gray-400">${item.program || 'No program'}</span>
-        `;
+            option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer';
+            option.textContent = `${item.name}`;
             option.onclick = function() {
-                inputElement.value = item.account_code;
-                populateFieldsEdit(inputElement, item);
-                calculateBalanceEdit(inputElement, item);
+                input.value = `${item.name}`;
+                document.getElementById('edit_office_allotment_class_id').value = item.id; // Set the hidden input value
+                // Reset all account code fields when OfficeAllotmentClass is selected
+                document.querySelectorAll('[name="account_code[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="description[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="programs[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
                 dropdown.classList.add('hidden');
             };
             dropdown.appendChild(option);
         });
+        dropdown.classList.remove('hidden');
+    }
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('editOfficeAllotmentClassDropdown');
+        const input = document.getElementById('edit_office_allotment_class');
+        if (!event.target.closest('#editOfficeAllotmentClassDropdown')) {
+            dropdown.classList.add('hidden');
+        }
+    });
+    // Attach to input event
+    if (document.getElementById('edit_office_allotment_class')) {
+        document.getElementById('edit_office_allotment_class').addEventListener('input', filterEditOfficeAllotmentClasses);
+    }
 
+    // Generate the OBR number in the format 00000-mm-yy-000
+    function generateObrNumber(fund) {
+        const obrNoField = document.getElementById('edit_obr_no');
+        const date = new Date();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const year = String(date.getFullYear()).slice(-2); // Get last two digits of year
+
+        const fundToSequence = {
+            'General Fund' : '100',
+            'Special Education Fund' : '200',
+            'Benguet General Hospital Economic Enterprise' : '109',
+            'Provincial Development Fund' : '107',
+        }
+    }
+
+    // Call the function to set the initial value
+    document.addEventListener('DOMContentLoaded', generateObrNumber);
+
+    const editAppropriations = [
+        @foreach($appropriations as $i => $appropriation) 
+        {
+            id: "{{ $appropriation->id }}",
+            account_code: "{{ $appropriation->account_code }}",
+            description: `{{ $appropriation->description }}`,
+            program: `{{ $appropriation->programs }}`,
+            office_allotment_class_id: "{{ $appropriation->office_allotment_class_id }}",
+            balance: "{{ number_format($appropriation->balance, 2) }}"
+        }@if(!$loop->last),@endif
+        @endforeach
+    ];
+
+    // Filter account codes and display suggstions with description and program
+    function filterEditAccountCodes(inputElement) {
+        const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id').value;
+        const dropdown = inputElement.nextElementSibling; // Assuming the dropdown is the next sibling
+        const filter = inputElement.value.toLowerCase();
+        dropdown.innerHTML = ''; // Clear previous suggestions
+        if (!filter || !officeAllotmentClassId) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        const filteredCodes = appropriations.filter(item =>
+            String(item.office_allotment_class_id) === String(officeAllotmentClassId) &&
+            item.account_code.toLowerCase().includes(filter)
+        );
+        if (filteredCodes.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        filteredCodes.forEach(item => {
+            const option = document.createElement('div');
+            option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+            option.innerHTML = `
+                <strong>${item.account_code}</strong><br/>
+                <span class="text-gray-600 dark:text-gray-400">${item.description || 'No Description'}</span><br/>
+                <span class="text-blue-600 dark:text-blue-400">${item.program || 'No Program'}</span>`;
+            option.onclick = function() {
+                inputElement.value = item.account_code;
+                populateEditFields(inputElement, item);
+                calculateEditBalance(inputElement, item);
+                dropdown.classList.add('hidden');
+            };
+            dropdown.appendChild(option);
+        });
         dropdown.classList.remove('hidden');
     }
 
-    // Populate related fields (description and program) based on the selected account code (Edit Modal)
-    function populateFieldsEdit(inputElement, item) {
+    // Populate related fields (description and program) based on selected account code (edit modal)
+    function populateEditFields(inputElement, item) {
         const row = inputElement.closest('tr');
-        const programField = row.querySelector('[name="programs[]"]');
-        const descriptionField = row.querySelector('[name="description[]"]');
-
-        // Populate the program and description fields
+        const programField = row.querySelector('textarea[name="edit_programs[]"]');
+        const descriptionField = row.querySelector('textarea[name="edit_description[]"]');
         if (programField) programField.value = item.program ? item.program.trim() : '';
         if (descriptionField) descriptionField.value = item.description ? item.description.trim() : '';
     }
-
-    function calculateBalanceEdit(inputElement, item) {
+    // Calculate and populate the balance for the selected account code (edit modal)
+    function calculateEditBalance(inputElement, item) {
         const row = inputElement.closest('tr');
-        const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
-
-        // Use the pre-calculated balance from the appropriations data
+        const balanceField = row.querySelector('input[name="edit_balance_from_allotment[]"]');
         const balance = parseFloat(item.balance || 0);
-        const formattedBalance = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        if (balanceField) balanceField.value = formattedBalance;
+        const formatBalance = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (balanceField) balanceField.value = formatBalance;
     }
 
-    // Hide account code dropdowns for edit modal only
-    function hideAccountCodeDropdownsEdit(event) {
-        const dropdowns = document.querySelectorAll('#AccountCodeDropdown');
+    // Hide dropdown when clicking outside (edit modal)
+    document.addEventListener('click', function(event) {
+        const dropdowns = document.querySelectorAll('#AccountCodeDropdown, #editOfficeAllotmentClassDropdown');
         dropdowns.forEach(dropdown => {
-            if (!event.target.closest('[name="account_code[]"]')) {
+            if (!event.target.closest('.absolute') && !event.target.closest('input[name="edit_account_code[]"]')) {
                 dropdown.classList.add('hidden');
             }
         });
-    }
-    document.addEventListener('click', hideAccountCodeDropdownsEdit);
+    });
 
+    // Attach filterEditAccountCode to edit_account_code inputs (edit modal)
+    document.querySelectorAll('input[name="edit_account_code[]"]').forEach(input => {
+        input.addEventListener('input', function() {
+            filterEditAccountCodes(this);
+        });
+    });
+
+    // Validate Amount of Obligation (edit modal)
     function validateAmountEdit(inputElement) {
-        const row = inputElement.closest('tr'); // Get the current row
-        const balanceField = row.querySelector('[name="balance_from_allotment[]"]'); // Get the balance field
+        const row = inputElement.closest('tr');
+        const balanceField = row.querySelector('input[name="edit_balance_from_allotment[]"]');
 
         if (balanceField) {
-            const maxBalance = parseFloat((balanceField.value || 0).replace(/,/g, ''));
-            const currentValue = parseFloat((inputElement.value || 0).replace(/,/g, ''));
+            const maxBalance = parseFloat((balanceField.value || '0').replace(/,/g, ''));
+            const currentValue = parseFloat((inputElement.value || '0').replace(/,/g, ''));
+
             if (currentValue > maxBalance) {
                 inputElement.value = maxBalance.toFixed(2);
             }
         }
     }
 
+    // Calculate Total Obligation (edit modal)
     function calculateTotalObligationEdit() {
-        const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
+        const amountFields = document.querySelectorAll('input[name="edit_amount_of_obligation[]"]');
         let total = 0;
         amountFields.forEach(field => {
-            const value = parseFloat(field.value.replace(/,/g, '') || 0);
-            total += value;
-        });
-        const totalObligationElement = document.getElementById('totalObligation');
-        totalObligationElement.textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function addRowEdit() {
-        const tableBody = document.querySelector('#edit_programs_table tbody');
-        const lastRow = tableBody.querySelector('tr:last-child');
-        const newRow = lastRow.cloneNode(true);
-        newRow.querySelectorAll('input, textarea').forEach(input => { input.value = ''; });
-        tableBody.appendChild(newRow);
-        calculateTotalObligationEdit();
-    }
-
-    let editRowToDelete = null;
-
-    function deleteRowEdit(button) {
-        editRowToDelete = button.closest('tr'); // Store the row for deletion
-        document.getElementById('deleteConfirmEditModal').classList.remove('hidden'); // Show the modal
-    }
-
-    // Confirm delete
-    document.getElementById('confirmEditDeleteBtn').addEventListener('click', function() {
-        const tableBody = editRowToDelete.parentNode;
-        const messageDiv = document.getElementById('tableMessage');
-
-        if (tableBody.rows.length > 1) {
-            tableBody.removeChild(editRowToDelete);
-            messageDiv.classList.add('hidden');
-        } else {
-            messageDiv.textContent = "At least one row must remain in the table.";
-            messageDiv.classList.remove('hidden');
-        }
-
-        editRowToDelete = null;
-        document.getElementById('deleteConfirmEditModal').classList.add('hidden');
-        calculateTotalObligationEdit();
-    });
-
-    // Cancel delete
-    document.getElementById('cancelEditDeleteBtn').addEventListener('click', function() {
-        editRowToDelete = null;
-        document.getElementById('deleteConfirmEditModal').classList.add('hidden');
-    });
-
-    // Autocomplete for Office and Allotment Class (Edit Modal)
-    const editOfficeAllotmentClasses = [
-        @foreach($office_allotment_classes as $office_allotment_class) {
-            id: "{{ $office_allotment_class->id }}",
-            name: "{{ $office_allotment_class->office_abbreviation }} - {{ $office_allotment_class->class }}",
-            fund: "{{ $office_allotment_class->fund ?? 'General Fund' }}"
-        },
-        @endforeach
-    ];
-    function filterEditOfficeAllotmentClasses() {
-        const input = document.getElementById("edit_office_allotment_class");
-        const dropdown = document.getElementById("EditOfficeAllotmentClassDropdown");
-        const filter = input.value.toLowerCase();
-        dropdown.innerHTML = "";
-        if (!filter) {
-            dropdown.classList.add("hidden");
-            return;
-        }
-        const filteredClasses = editOfficeAllotmentClasses.filter(item => item.name.toLowerCase().includes(filter));
-        if (filteredClasses.length === 0) {
-            dropdown.classList.add("hidden");
-            return;
-        }
-        filteredClasses.forEach(item => {
-            const option = document.createElement("div");
-            option.className = "p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer";
-            option.innerHTML = `${item.name}`;
-            option.onclick = function() {
-                input.value = item.name;
-                document.getElementById("office_allotment_class_id").value = item.id;
-                // Reset all account code, description, program, balance, and amount fields in the edit table
-                document.querySelectorAll('#edit_programs_table [name="account_code[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('#edit_programs_table [name="description[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('#edit_programs_table [name="programs[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('#edit_programs_table [name="balance_from_allotment[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('#edit_programs_table [name="amount_of_obligation[]"]').forEach(field => field.value = '');
-                dropdown.classList.add("hidden");
-            };
-            dropdown.appendChild(option);
-        });
-        dropdown.classList.remove("hidden");
-    }
-    // Hide dropdown when clicking outside the edit input
-    function hideEditOfficeAllotmentClassDropdown(event) {
-        const dropdown = document.getElementById("EditOfficeAllotmentClassDropdown");
-        if (!event.target.closest("#edit_office_allotment_class")) {
-            dropdown.classList.add("hidden");
-        }
-    }
-    document.addEventListener("click", hideEditOfficeAllotmentClassDropdown);
-
-    // Update text color for edit modal fields
-    function updateTextColorEdit(element) {
-        if (element.value.trim() !== "") {
-            element.classList.remove("text-gray-500");
-            element.classList.add("text-gray-900", "dark:text-gray-100");
-        } else {
-            element.classList.remove("text-gray-900", "dark:text-gray-100");
-            element.classList.add("text-gray-500");
-        }
-        if (element.hasAttribute("readonly")) {
-            element.classList.add("text-gray-900", "dark:text-gray-400");
-        }
-        if (element.tagName === "SELECT" && element.disabled) {
-            element.classList.add("text-gray-700", "dark:text-gray-500");
-        }
-    }
-    document.addEventListener("DOMContentLoaded", function() {
-        const inputsAndSelects = document.querySelectorAll("#editObligationsModal input, #editObligationsModal select");
-        inputsAndSelects.forEach(element => {
-            updateTextColorEdit(element);
-            element.addEventListener("input", function() {
-                updateTextColorEdit(this);
-            });
-            if (element.tagName === "SELECT") {
-                element.addEventListener("change", function() {
-                    updateTextColorEdit(this);
-                });
+            const value = parseFloat((field.value || '0').replace(/,/g, ''));
+            if (!isNaN(value)) {
+                total += value;
             }
         });
+        document.getElementById('totalObligationEdit').textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    
+    function addRowEdit() {
+        const tableBody = document.querySelector('#edit_programs_table tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td class="px-1 py-2">
+                <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
+                <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
+            </td>
+            <td class="px-1 py-2">
+                <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+            </td>
+            <td class="px-1 py-2">
+                <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+            </td>
+            <td class="px-1 py-2">
+                <x-form.input type="text" name="edit_balance_from_allotment[]" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+            </td>
+            <td class="px-1 py-2">
+                <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+            </td>
+            <td class="px-1 py-2 text-center">
+                <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tableBody.appendChild(newRow);
+        // Re-attach event listeners to the new input fields
+        newRow.querySelector('input[name="edit_account_code[]"]').addEventListener('input', function() {
+            filterEditAccountCodes(this);
+        });
+        calculateTotalObligationEdit();
+    }
+    // Delete Row with Confirmation (edit modal)
+    let rowToDeleteEdit = null;
+    function deleteRowEdit(button) {
+        rowToDeleteEdit = button.closest('tr');
+        document.getElementById('deleteConfirmEditModal').classList.remove('hidden');
+    }
+    document.getElementById('confirmEditDeleteBtn').addEventListener('click', function() {
+        if (rowToDeleteEdit) {
+            rowToDeleteEdit.remove();
+            rowToDeleteEdit = null;
+            calculateTotalObligationEdit();
+        }
+        document.getElementById('deleteConfirmEditModal').classList.add('hidden');
     });
-
+       
     function validateEditObligationsForm() {
         const form = document.getElementById('editObligationsForm');
         let isValid = true;

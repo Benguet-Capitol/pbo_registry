@@ -512,26 +512,26 @@ class ObligationController extends Controller
         try {
             // Validate the request data
             $validated = $request->validate([
-                'office_allotment_class_id' => 'required|integer|exists:office_allotment_classes,id',
-                'obr_date' => 'required|date',
-                'obr_no' => 'required|string|max:255',
-                'obr_type' => 'required|string|max:255',
-                'particulars' => 'required|string|max:255',
-                'remarks' => 'nullable|string|max:255',
-                'account_code' => 'required|array',
-                'account_code.*' => 'required|string|exists:appropriations,account_code',
-                'amount_of_obligation' => 'required|array',
-                'amount_of_obligation.*' => 'required|numeric|min:0',
+                'edit_office_allotment_class_id' => 'required|integer|exists:office_allotment_classes,id',
+                'edit_obr_date' => 'required|date',
+                'edit_obr_no' => 'required|string|max:255',
+                'edit_obr_type' => 'required|string|max:255',
+                'edit_particulars' => 'required|string|max:255',
+                'edit_remarks' => 'nullable|string|max:255',
+                'edit_account_code' => 'required|array',
+                'edit_account_code.*' => 'required|string|exists:appropriations,account_code',
+                'edit_amount_of_obligation' => 'required|array',
+                'edit_amount_of_obligation.*' => 'required|numeric|min:0',
             ]);
 
             // Update the obligation
             $obligation->update([
-                'office_allotment_class_id' => $validated['office_allotment_class_id'],
-                'obr_date' => $validated['obr_date'],
-                'obr_no' => $validated['obr_no'],
-                'obr_type' => $validated['obr_type'],
-                'particulars' => $validated['particulars'],
-                'remarks' => $validated['remarks'],
+                'office_allotment_class_id' => $validated['edit_office_allotment_class_id'],
+                'obr_date' => $validated['edit_obr_date'],
+                'obr_no' => $validated['edit_obr_no'],
+                'obr_type' => $validated['edit_obr_type'],
+                'particulars' => $validated['edit_particulars'],
+                'remarks' => $validated['edit_remarks'],
                 'processed_by' => Auth::user()->name ?? 'Unknown User',
             ]);
 
@@ -539,10 +539,10 @@ class ObligationController extends Controller
             ObligationAmount::where('obligation_id', $obligation->id)->delete();
 
             // Save updated ObligationAmount records
-            foreach ($validated['account_code'] as $index => $accountCode) {
+            foreach ($validated['edit_account_code'] as $index => $accountCode) {
                 // Fetch the appropriation ID based on the account code and office_allotment_class_id
                 $appropriation = Appropriation::where('account_code', $accountCode)
-                    ->where('office_allotment_class_id', $validated['office_allotment_class_id'])
+                    ->where('office_allotment_class_id', $validated['edit_office_allotment_class_id'])
                     ->first();
 
                 if ($appropriation) {
@@ -550,14 +550,14 @@ class ObligationController extends Controller
                         'appropriation_id' => $appropriation->id,
                         'obligation_id' => $obligation->id,
                         'account_code' => $accountCode,
-                        'obr_amount' => $validated['amount_of_obligation'][$index],
+                        'obr_amount' => $validated['edit_amount_of_obligation'][$index],
                     ]);
                 }
             }
 
             // Fetch related office abbreviation and class
             $officeAllotmentClass = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
-                ->find($validated['office_allotment_class_id']);
+                ->find($validated['edit_office_allotment_class_id']);
 
             $officeAbbreviation = $officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
             $class = $officeAllotmentClass->allotmentClass->class ?? 'N/A';
@@ -565,7 +565,7 @@ class ObligationController extends Controller
             return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
                 ->with('status', [
                     'type' => 'update',
-                    'message' => "Obligation Request No. <strong>{$validated['obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
+                    'message' => "Obligation Request No. <strong>{$validated['edit_obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
                 ]);
         } catch (\Exception $e) {
             // Log the error for debugging

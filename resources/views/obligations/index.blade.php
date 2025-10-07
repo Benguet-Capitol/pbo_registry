@@ -120,7 +120,7 @@
                 @can('create obligations')
                 <button onclick="openCreateModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
-                    {{ __('Create Obligation Request') }}
+                    {{ __('Create Obligation') }}
                 </button>
                 @endcan
                 <!-- Search Input -->
@@ -393,17 +393,10 @@
                                                 <i class="fas fa-window-close mr-2"></i>Cancellation
                                             </button>
                                             @endcan
-
-                                            @can('edit obligations')
-                                            <a href="{{ route('obligations.edit', $obligation->id) }}"
-                                                class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                <i class="fas fa-edit mr-2"></i>Edit
-                                            </a>
-                                            @endcan
                                             
                                             @can('edit obligations')
                                             <button onclick='openEditObligationsModal(@json($obligation))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
-                                            <i class="fas fa-edit mr-2"></i>Edit Modal
+                                            <i class="fas fa-edit mr-2"></i>Edit
                                             </button>
                                             @endcan
 

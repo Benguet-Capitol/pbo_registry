@@ -14,7 +14,7 @@
                 <!-- Modal header -->
                 <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
                     <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
-                        {{ __('Edit Obligation Request') }}
+                        {{ __('Edit Obligation') }}
                     </h3>
                     <button type="button" onclick="closeEditObligationsModal()" class="text-black hover:text-gray-600 dark:text-white">
                         <i class="fas fa-times text-xl mr-2"></i>
@@ -351,7 +351,7 @@
                         <x-form.input type="text" name="edit_balance_from_allotment[]" value="${Number(amount.balance_from_allotment || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
                     </td>
                     <td class="px-1 py-2">
-                        <x-form.input type="text" name="edit_amount_of_obligation[]" value="${Number(amount.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                        <x-form.input type="text" name="edit_amount_of_obligation[]" value="${parseFloat(amount.amount || 0).toFixed(2)}" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
                     </td>
                     <td class="px-1 py-2 text-center">
                         <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">

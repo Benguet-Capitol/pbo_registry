@@ -30,6 +30,7 @@ use App\Http\Controllers\SAAOBCOController;
 use App\Http\Controllers\SAAOBGFCurrentController;
 use App\Http\Controllers\SAAOBGFCurrentSummaryController;
 use App\Http\Controllers\SAAODBOfficeController;
+use App\Http\Controllers\SAAODBAllFundsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -149,6 +150,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/saaodboffices', [SAAODBOfficeController::class, 'index'])->name('saaodboffice.index');
     // SAAODB Offices Excel Export
     Route::get('saaodb/export-excel', [SAAODBOfficeController::class, 'exportExcel'])->name('saaodb.exportExcel');
+    // SAAODB All Funds Report Routes
+    Route::get('/saaodballfunds', [SAAODBAllFundsController::class, 'index'])->name('saaodballfunds.index');
 });
 
 // useless routes

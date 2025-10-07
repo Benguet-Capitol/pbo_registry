@@ -13,7 +13,7 @@
                 <!-- Modal header -->
                 <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
                     <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
-                        {{ __('Create Obligation Request') }}
+                        {{ __('Create Obligation') }}
                     </h3>
                     <button type="button" onclick="closeCreateModal()" class="text-black hover:text-gray-600 dark:text-white">
                         <i class="fas fa-times text-xl mr-2"></i>

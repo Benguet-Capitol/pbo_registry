@@ -199,7 +199,7 @@
 
     <x-sidebar.dropdown
         title="SAAODB"
-        :active="request()->routeIs('saaodboffice.index')">
+        :active="request()->routeIs('saaodboffice.index') || request()->routeIs('saaodballfunds.index')">
         <x-slot name="icon">
             <i class="fas fa-copy text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
@@ -209,6 +209,14 @@
             :active="request()->routeIs('saaodboffice.index')">
             <x-slot name="icon">
                 <i class="fas fa-file-contract text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
+        <x-sidebar.sublink
+            title="All Funds"
+            href="{{ route('saaodballfunds.index') }}"
+            :active="request()->routeIs('saaodballfunds.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-archive text-base flex-shrink-0 dark:text-gray-100"></i>
             </x-slot>
         </x-sidebar.sublink>
     </x-sidebar.dropdown>
@@ -476,6 +484,14 @@
                     <i class="fas fa-file-contract text-base flex-shrink-0 dark:text-gray-100"></i>
                 </x-slot>
             </x-sidebar.sublink>
+            <x-sidebar.sublink
+            title="All Funds"
+            href="{{ route('saaodballfunds.index') }}"
+            :active="request()->routeIs('saaodballfunds.index')">
+            <x-slot name="icon">
+                <i class="fas fa-file-archive text-base flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.sublink>
         </x-sidebar.dropdown>
         
     <!-- User or Guest Role -->

@@ -273,8 +273,10 @@
             document.querySelector('[name="edit_description"]').value = '';
             document.querySelector('[name="edit_programs"]').value = '';
         }
-        //Populate the balance from allotment
-        document.querySelector('[name="edit_balance_from_allotment"]').value = Appropriation.balance || '';
+        // Populate the balance from allotment (formatted with commas)
+        document.querySelector('[name="edit_balance_from_allotment"]').value =  Appropriation.balance 
+                ? parseFloat(Appropriation.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                : '';
         //Populate the edit amount
         document.querySelector('[name="edit_amount_of_obligation"]').value = supplemental.amount || '';
 
@@ -483,7 +485,7 @@ const editAppropriations = [
         program: "{{ $appropriation->programs }}",
         description: "{{ $appropriation->description }}",
         office_allotment_class_id: "{{ $appropriation->office_allotment_class_id }}",
-        balance: "{{ $appropriation->balance }}"
+        balance: "{{ $appropriation->balance_from_allotment }}"
     }@if(!$loop->last),@endif
     @endforeach
 ];

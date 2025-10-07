@@ -152,6 +152,7 @@ class SupplementalController extends Controller
             }
             // Calculate the balance
             $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+            $appropriation->balance_from_allotment = ($totalAppropriation + $realignmentTotal) - $totalObrAmount;
 
             return $appropriation;
         });

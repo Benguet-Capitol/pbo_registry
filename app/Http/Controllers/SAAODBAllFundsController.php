@@ -25,8 +25,7 @@ class SAAODBAllFundsController extends Controller
 
         $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
         $sectors = Sector::all();
-        $fundsQuery = Fund::whereNot('id', 3)
-            ->orderBy('fund');
+        $fundsQuery = Fund::orderBy('id');
         $allotmentClasses = AllotmentClass::all()->keyBy('class');
 
         $month = Carbon::parse($asOfDate)->month;
@@ -38,42 +37,131 @@ class SAAODBAllFundsController extends Controller
             };
 
         $funds = $fundsQuery->with([
-            'officeAllotmentClasses' => fn($query) => $query->where('year', $selectedYear),
-            'officeAllotmentClasses.allotmentClass',
-            'officeAllotmentClasses.fundSourceRelation',
-            'officeAllotmentClasses.appropriations',
-            'officeAllotmentClasses.appropriations.supplementals',
-            'officeAllotmentClasses.appropriations.realignments',
-            'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
+            'officeAllotmentClasses' => function ($query) use ($selectedYear) {
+                $query->where('year', $selectedYear)
+                    ->with([
+                        'allotmentClass',
+                        'fundSourceRelation',
+                        'appropriations.supplementals',
+                        'appropriations.realignments',
+                        'appropriations.obligationAmounts.obligation.obligationAdjustments',
+                    ]);
+            }
         ])->get();
 
         foreach ($funds as $fund) {
-            // Get all related office allotment classes of this fund
-            $officeAllotmentClasses = $fund->officeAllotmentClasses;
+    // 🔹 Filter OACs that truly belong to this fund
+    $officeAllotmentClasses = $fund->officeAllotmentClasses
+        ->filter(fn($oac) => $oac->fund === $fund->fund)
+        ->reject(fn($oac) => optional($oac->allotmentClass)->class === 'CCO'); // exclude CCO
 
-            // Get unique allotment classes (excluding ID 5)
-            $uniqueAllotmentClasses = $officeAllotmentClasses
-                ->pluck('allotmentClass')
-                ->filter()
-                ->unique('id')
-                ->reject(fn($ac) => $ac->id == 5)
-                ->values();
+    // 🔹 Group by allotment class (not by id, since some may be null)
+    $groupedByAllotmentClass = $officeAllotmentClasses->groupBy(fn($oac) => $oac->allotmentClass->class ?? 'Unknown');
 
-            $fund->uniqueAllotmentClasses = $uniqueAllotmentClasses;
+    $uniqueAllotmentClasses = collect();
 
-            foreach ($uniqueAllotmentClasses as $allotmentClass) {
-                // Gather all appropriations under this fund and this allotment class
-                $appropriations = $officeAllotmentClasses
-                    ->where('allotment_class_id', $allotmentClass->id)
-                    ->flatMap->appropriations;
+    foreach ($groupedByAllotmentClass as $className => $oacGroup) {
+        $allotmentClass = $oacGroup->first()->allotmentClass;
+        if (!$allotmentClass) continue;
 
-                // ✅ Get total approved appropriations
-                $approvedAppropriation = $appropriations->sum('appropriation');
+        // --- Approved Appropriation ---
+        $approvedAppropriation = $oacGroup
+            ->flatMap->appropriations
+            ->sum('appropriation');
 
-                // Store it for Blade
-                $allotmentClass->approved_appropriation = $approvedAppropriation;
-            }
-        }
+        // --- Supplementals ---
+        $supplemental = $oacGroup
+            ->flatMap->appropriations
+            ->flatMap->supplementals
+            ->where('type', 'Supplemental')
+            ->where('supplemental_date', '<=', $asOfDate)
+            ->sum('amount');
+
+        // --- Reversions ---
+        $reversion = $oacGroup
+            ->flatMap->appropriations
+            ->flatMap->supplementals
+            ->where('type', 'Reversion')
+            ->where('supplemental_date', '<=', $asOfDate)
+            ->sum('amount') * -1;
+
+        // --- Realignments ---
+        $realignment = $oacGroup
+            ->flatMap->appropriations
+            ->flatMap->realignments
+            ->where('realignment_date', '<=', $asOfDate)
+            ->sum(fn($r) => $r->type === 'Source' ? -$r->amount : $r->amount);
+
+        // --- Authorized Appropriation ---
+        $authorizedAppropriation = $approvedAppropriation + $supplemental + $reversion + $realignment;
+
+        // --- Allotment ---
+        $allotment = $oacGroup
+            ->flatMap->appropriations
+            ->sum(function ($appropriation) {
+                return ($appropriation->quarter1 ?? 0)
+                    + ($appropriation->quarter2 ?? 0)
+                    + ($appropriation->quarter3 ?? 0)
+                    + ($appropriation->quarter4 ?? 0);
+            })
+            + $supplemental + $reversion + $realignment;
+
+        // --- For Later Release ---
+        $forLaterRelease = $oacGroup
+            ->flatMap->appropriations
+            ->sum(function ($appropriation) use ($currentQuarter) {
+                return $appropriation->for_later_release ?? (
+                    ($currentQuarter < 2 ? ($appropriation->quarter2 ?? 0) : 0) +
+                    ($currentQuarter < 3 ? ($appropriation->quarter3 ?? 0) : 0) +
+                    ($currentQuarter < 4 ? ($appropriation->quarter4 ?? 0) : 0)
+                );
+            });
+
+        $allotment -= $forLaterRelease;
+
+        // --- Obligations (filter by obr_date) ---
+        $obligationBase = $oacGroup
+            ->flatMap->appropriations
+            ->flatMap->obligationAmounts
+            ->filter(fn($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
+            ->sum('obr_amount');
+        
+        // --- Obligation Adjustments (filter by adjustment_date) ---
+        $obligationAdjustments = $oacGroup
+            ->flatMap->appropriations
+            ->flatMap->obligationAmounts
+            ->flatMap(fn($oa) =>
+                $oa->obligation
+                    ? $oa->obligation->obligationAdjustments
+                        ->where('adjustment_date', '<=', $asOfDate)
+                        ->where('obligation_amounts_id', $oa->id) // restrict per obligation_amount
+                    : collect()
+            )
+            ->sum('adjustment_amount');
+        
+        // Obligation
+        $obligation = $obligationBase + $obligationAdjustments;
+
+
+        // --- Assign computed fields ---
+        $uniqueAllotmentClasses->push((object)[
+            'id' => $allotmentClass->id,
+            'class' => $allotmentClass->class,
+            'approved_appropriation' => $approvedAppropriation,
+            'supplemental' => $supplemental,
+            'reversion' => $reversion,
+            'realignment' => $realignment,
+            'authorized_appropriation' => $authorizedAppropriation,
+            'allotment' => $allotment,
+            'for_later_release' => $forLaterRelease,
+            'obligationBase' => $obligationBase,
+            'obligationAdjustments' => $obligationAdjustments,
+            'obligation' => $obligation,
+        ]);
+    }
+
+    $fund->uniqueAllotmentClasses = $uniqueAllotmentClasses->values();
+}
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
@@ -85,9 +173,6 @@ class SAAODBAllFundsController extends Controller
             'funds',
         ))->with('status', session('status'));
     }
-
-    
-
 
     public function exportExcel(Request $request)
         {

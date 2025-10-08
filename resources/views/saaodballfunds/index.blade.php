@@ -153,8 +153,7 @@
                 <table id="saaobFundSectorTable" class="w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900">
                         <tr>
-                            <th class="px-1 py-1 w-[70px] text-center">Fund</th>
-                            <th class="px-1 py-1 w-[130px] text-center">Allotment Class</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Allotment Class</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved Appropriations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental Appropriations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
@@ -179,11 +178,17 @@
                         <tr class="bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-white text-xs font-semibold italic border-t border-b border-gray-400 dark:border-gray-100">
                             <td colspan="15" class="px-1 py-2">Regular Budget</td>
                         </tr>
-                            @foreach($fund->uniqueAllotmentClasses as $allotmentClass)
+                            @foreach($fund->uniqueAllotmentClasses as $class)
                             <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <td class="px-1 py-2"></td>
-                                <td class="px-1 py-2 text-left">{{ $allotmentClass->description }}</td>
-                                <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($allotmentClass->approved_appropriation, 2) }}</td>
+                                <td class="px-1 py-2 text-center">{{ $class->class }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($class->approved_appropriation, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($class->supplemental, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($class->reversion, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($class->realignment, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="authorized_appropriation">{{ number_format($class->authorized_appropriation, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="allotment">{{ number_format($class->allotment, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="obligation">{{ number_format($class->obligation, 2) }}</td>
+
                             </tr>
                             @endforeach
                         @endforeach

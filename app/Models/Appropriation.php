@@ -35,7 +35,7 @@ class Appropriation extends Model
      */
     public function officeAllotmentClass()
     {
-        return $this->belongsTo(OfficeAllotmentClass::class);
+        return $this->belongsTo(OfficeAllotmentClass::class, 'office_allotment_class_id');
     }
 
     /**

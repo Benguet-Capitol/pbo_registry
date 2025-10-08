@@ -25,7 +25,6 @@
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
-                            <input type="hidden" name="obligation_id" id="obligation_id" value="{{ $obligation->id }}">
                             <!-- Office and Allotment Class -->
                             <div class="sm:col-span-3 relative">
                                 <x-form.label for="edit_office_allotment_class" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />

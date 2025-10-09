@@ -49,119 +49,191 @@ class SAAODBAllFundsController extends Controller
             }
         ])->get();
 
+        // --- Helper function (must be defined before it's used)
+        function computeTotals($classes)
+        {
+            $totals = [
+                'approved_appropriation' => 0,
+                'supplemental' => 0,
+                'reversion' => 0,
+                'realignment' => 0,
+                'authorized_appropriation' => 0,
+                'allotment' => 0,
+                'obligation' => 0,
+                'authorized_appropriation_balance' => 0,
+                'percent_obligated_to_authorized' => 0,
+                'disbursement' => 0,
+                'percent_disbursed_to_obligated' => 0,
+                'percent_disbursed_to_authorized' => 0,
+                'obligation_balance' => 0,
+            ];
+
+            foreach ($classes as $class) {
+                $totals['approved_appropriation'] += $class->approved_appropriation;
+                $totals['supplemental'] += $class->supplemental;
+                $totals['reversion'] += $class->reversion;
+                $totals['realignment'] += $class->realignment;
+                $totals['authorized_appropriation'] += $class->authorized_appropriation;
+                $totals['allotment'] += $class->allotment;
+                $totals['obligation'] += $class->obligation;
+                $totals['authorized_appropriation_balance'] += $class->authorized_appropriation_balance;
+                $totals['disbursement'] += $class->disbursement;
+                $totals['obligation_balance'] += $class->obligation_balance;
+            }
+
+            // Derived % fields
+            $totals['percent_obligated_to_authorized'] =
+                $totals['authorized_appropriation'] > 0
+                    ? ($totals['obligation'] / $totals['authorized_appropriation']) * 100
+                    : 0;
+
+            $totals['percent_disbursed_to_obligated'] =
+                $totals['obligation'] > 0
+                    ? ($totals['disbursement'] / $totals['obligation']) * 100
+                    : 0;
+
+            $totals['percent_disbursed_to_authorized'] =
+                $totals['authorized_appropriation'] > 0
+                    ? ($totals['disbursement'] / $totals['authorized_appropriation']) * 100
+                    : 0;
+
+            return $totals;
+        }
+
+        // --- Main computation
         foreach ($funds as $fund) {
-    // 🔹 Filter OACs that truly belong to this fund
-    $officeAllotmentClasses = $fund->officeAllotmentClasses
-        ->filter(fn($oac) => $oac->fund === $fund->fund)
-        ->reject(fn($oac) => optional($oac->allotmentClass)->class === 'CCO'); // exclude CCO
+            $officeAllotmentClasses = $fund->officeAllotmentClasses
+                ->filter(fn($oac) => $oac->fund === $fund->fund)
+                ->reject(fn($oac) => optional($oac->allotmentClass)->class === 'CCO');
 
-    // 🔹 Group by allotment class (not by id, since some may be null)
-    $groupedByAllotmentClass = $officeAllotmentClasses->groupBy(fn($oac) => $oac->allotmentClass->class ?? 'Unknown');
+            $groupedByAllotmentClass = $officeAllotmentClasses->groupBy(fn($oac) => $oac->allotmentClass->class ?? 'Unknown');
 
-    $uniqueAllotmentClasses = collect();
+            $uniqueAllotmentClasses = collect();
+            $supplementalClasses = collect();
 
-    foreach ($groupedByAllotmentClass as $className => $oacGroup) {
-        $allotmentClass = $oacGroup->first()->allotmentClass;
-        if (!$allotmentClass) continue;
+            foreach ($groupedByAllotmentClass as $className => $oacGroup) {
+                $allotmentClass = $oacGroup->first()->allotmentClass;
+                if (!$allotmentClass) continue;
 
-        // --- Approved Appropriation ---
-        $approvedAppropriation = $oacGroup
-            ->flatMap->appropriations
-            ->sum('appropriation');
+                // --- Approved Appropriation ---
+                $approvedAppropriation = $oacGroup->flatMap->appropriations->sum('appropriation');
 
-        // --- Supplementals ---
-        $supplemental = $oacGroup
-            ->flatMap->appropriations
-            ->flatMap->supplementals
-            ->where('type', 'Supplemental')
-            ->where('supplemental_date', '<=', $asOfDate)
-            ->sum('amount');
+                // --- Supplementals ---
+                $supplemental = $oacGroup
+                    ->flatMap->appropriations
+                    ->flatMap->supplementals
+                    ->where('type', 'Supplemental')
+                    ->where('supplemental_date', '<=', $asOfDate)
+                    ->sum('amount');
 
-        // --- Reversions ---
-        $reversion = $oacGroup
-            ->flatMap->appropriations
-            ->flatMap->supplementals
-            ->where('type', 'Reversion')
-            ->where('supplemental_date', '<=', $asOfDate)
-            ->sum('amount') * -1;
+                // --- Reversions ---
+                $reversion = $oacGroup
+                    ->flatMap->appropriations
+                    ->flatMap->supplementals
+                    ->where('type', 'Reversion')
+                    ->where('supplemental_date', '<=', $asOfDate)
+                    ->sum('amount') * -1;
 
-        // --- Realignments ---
-        $realignment = $oacGroup
-            ->flatMap->appropriations
-            ->flatMap->realignments
-            ->where('realignment_date', '<=', $asOfDate)
-            ->sum(fn($r) => $r->type === 'Source' ? -$r->amount : $r->amount);
+                // --- Realignments ---
+                $realignment = $oacGroup
+                    ->flatMap->appropriations
+                    ->flatMap->realignments
+                    ->where('realignment_date', '<=', $asOfDate)
+                    ->sum(fn($r) => $r->type === 'Source' ? -$r->amount : $r->amount);
 
-        // --- Authorized Appropriation ---
-        $authorizedAppropriation = $approvedAppropriation + $supplemental + $reversion + $realignment;
+                // --- Authorized Appropriation ---
+                $authorizedAppropriation = $approvedAppropriation + $supplemental + $reversion + $realignment;
 
-        // --- Allotment ---
-        $allotment = $oacGroup
-            ->flatMap->appropriations
-            ->sum(function ($appropriation) {
-                return ($appropriation->quarter1 ?? 0)
-                    + ($appropriation->quarter2 ?? 0)
-                    + ($appropriation->quarter3 ?? 0)
-                    + ($appropriation->quarter4 ?? 0);
-            })
-            + $supplemental + $reversion + $realignment;
+                // --- Allotment ---
+                $allotment = $oacGroup
+                    ->flatMap->appropriations
+                    ->sum(fn($a) => ($a->quarter1 ?? 0) + ($a->quarter2 ?? 0) + ($a->quarter3 ?? 0) + ($a->quarter4 ?? 0))
+                    + $supplemental + $reversion + $realignment;
 
-        // --- For Later Release ---
-        $forLaterRelease = $oacGroup
-            ->flatMap->appropriations
-            ->sum(function ($appropriation) use ($currentQuarter) {
-                return $appropriation->for_later_release ?? (
-                    ($currentQuarter < 2 ? ($appropriation->quarter2 ?? 0) : 0) +
-                    ($currentQuarter < 3 ? ($appropriation->quarter3 ?? 0) : 0) +
-                    ($currentQuarter < 4 ? ($appropriation->quarter4 ?? 0) : 0)
-                );
-            });
+                // --- For Later Release ---
+                $forLaterRelease = $oacGroup
+                    ->flatMap->appropriations
+                    ->sum(fn($a) => $a->for_later_release ?? 0);
 
-        $allotment -= $forLaterRelease;
+                $allotment -= $forLaterRelease;
 
-        // --- Obligations (filter by obr_date) ---
-        $obligationBase = $oacGroup
-            ->flatMap->appropriations
-            ->flatMap->obligationAmounts
-            ->filter(fn($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
-            ->sum('obr_amount');
-        
-        // --- Obligation Adjustments (filter by adjustment_date) ---
-        $obligationAdjustments = $oacGroup
-            ->flatMap->appropriations
-            ->flatMap->obligationAmounts
-            ->flatMap(fn($oa) =>
-                $oa->obligation
-                    ? $oa->obligation->obligationAdjustments
-                        ->where('adjustment_date', '<=', $asOfDate)
-                        ->where('obligation_amounts_id', $oa->id) // restrict per obligation_amount
-                    : collect()
-            )
-            ->sum('adjustment_amount');
-        
-        // Obligation
-        $obligation = $obligationBase + $obligationAdjustments;
+                // --- Obligations ---
+                $obligationBase = $oacGroup
+                    ->flatMap->appropriations
+                    ->flatMap->obligationAmounts
+                    ->filter(fn($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
+                    ->sum('obr_amount');
 
+                // --- Obligation Adjustments ---
+                $obligationAdjustments = $oacGroup
+                    ->flatMap->appropriations
+                    ->flatMap->obligationAmounts
+                    ->flatMap(fn($oa) =>
+                        $oa->obligation
+                            ? $oa->obligation->obligationAdjustments
+                                ->where('adjustment_date', '<=', $asOfDate)
+                                ->where('obligation_amounts_id', $oa->id)
+                            : collect()
+                    )
+                    ->sum('adjustment_amount');
 
-        // --- Assign computed fields ---
-        $uniqueAllotmentClasses->push((object)[
-            'id' => $allotmentClass->id,
-            'class' => $allotmentClass->class,
-            'approved_appropriation' => $approvedAppropriation,
-            'supplemental' => $supplemental,
-            'reversion' => $reversion,
-            'realignment' => $realignment,
-            'authorized_appropriation' => $authorizedAppropriation,
-            'allotment' => $allotment,
-            'for_later_release' => $forLaterRelease,
-            'obligationBase' => $obligationBase,
-            'obligationAdjustments' => $obligationAdjustments,
-            'obligation' => $obligation,
-        ]);
-    }
+                $obligation = $obligationBase + $obligationAdjustments;
 
-    $fund->uniqueAllotmentClasses = $uniqueAllotmentClasses->values();
-}
+                // --- Balances and percentages ---
+                $authorizedAppropriationBalance = $authorizedAppropriation - $obligation;
+
+                $percentObligatedToAuthorized = $authorizedAppropriation > 0
+                    ? ($obligation / $authorizedAppropriation) * 100
+                    : 0;
+
+                $disbursement = $oacGroup
+                    ->flatMap->appropriations
+                    ->flatMap->obligationAmounts
+                    ->filter(fn($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
+                    ->sum('disbursement_amount');
+
+                $percentDisbursedToObligated = $obligation > 0
+                    ? ($disbursement / $obligation) * 100
+                    : 0;
+
+                $percentDisbursedToAuthorized = $authorizedAppropriation > 0
+                    ? ($disbursement / $authorizedAppropriation) * 100
+                    : 0;
+
+                $obligationBalance = $obligation - $disbursement;
+
+                $classObject = (object)[
+                    'id' => $allotmentClass->id,
+                    'class' => $allotmentClass->class,
+                    'approved_appropriation' => $approvedAppropriation,
+                    'supplemental' => $supplemental,
+                    'reversion' => $reversion,
+                    'realignment' => $realignment,
+                    'authorized_appropriation' => $authorizedAppropriation,
+                    'allotment' => $allotment,
+                    'for_later_release' => $forLaterRelease,
+                    'obligation' => $obligation,
+                    'authorized_appropriation_balance' => $authorizedAppropriationBalance,
+                    'percent_obligated_to_authorized' => $percentObligatedToAuthorized,
+                    'disbursement' => $disbursement,
+                    'percent_disbursed_to_obligated' => $percentDisbursedToObligated,
+                    'percent_disbursed_to_authorized' => $percentDisbursedToAuthorized,
+                    'obligation_balance' => $obligationBalance,
+                ];
+
+                $uniqueAllotmentClasses->push($classObject);
+
+                if ($supplemental > 0) {
+                    $supplementalClasses->push($classObject);
+                }
+            }
+
+            // Assign computed totals to the fund
+            $fund->uniqueAllotmentClasses = $uniqueAllotmentClasses->values();
+            $fund->uniqueSupplementalAllotmentClasses = $supplementalClasses->values();
+            $fund->regularBudgetTotals = (object) computeTotals($uniqueAllotmentClasses);
+            $fund->supplementalBudgetTotals = (object) computeTotals($supplementalClasses);
+        }
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 

@@ -182,13 +182,55 @@
                             <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <td class="px-1 py-2 text-center">{{ $class->class }}</td>
                                 <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format($class->approved_appropriation, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format(0, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($class->reversion, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($class->realignment, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="authorized_appropriation">{{ number_format($class->authorized_appropriation, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="allotment">{{ number_format($class->allotment, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="obligation">{{ number_format($class->obligation, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($class->authorized_appropriation_balance, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($class->percent_obligated_to_authorized, 2) }}%</td>
+                                <td class="px-1 py-2 text-right" data-key="disbursement">{{ number_format($class->disbursement, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">{{ number_format($class->percent_disbursed_to_obligated, 2) }}%</td>
+                                <td class="px-1 py-2 text-right" data-key="disbursement_to_appropriation">{{ number_format($class->percent_disbursed_to_authorized, 2) }}%</td>
+                                <td class="px-1 py-2 text-right" data-key="obligation_balance">{{ number_format($class->obligation_balance, 2) }}</td>
+                            </tr>
+                            @endforeach
+                            <tr class="bg-gray-100 dark:bg-gray-700 font-bold border-t border-b border-gray-400 dark:border-gray-500">
+                                <td class="px-1 py-2 text-right">Total Regular Budget</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->approved_appropriation, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format(0, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->reversion, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->realignment, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->authorized_appropriation, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->allotment, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->obligation, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->authorized_appropriation_balance, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->percent_obligated_to_authorized, 2) }}%</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->disbursement, 2) }}</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->percent_disbursed_to_obligated, 2) }}%</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->percent_disbursed_to_authorized, 2) }}%</td>
+                                <td class="px-1 py-2 text-right">{{ number_format($fund->regularBudgetTotals->obligation_balance, 2) }}</td>
+                            </tr>
+                        <tr class="bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-white text-xs font-semibold italic border-t border-b border-gray-400 dark:border-gray-100">
+                            <td colspan="15" class="px-1 py-2">Supplemental Budget</td>
+                        </tr>
+                            @foreach($fund->uniqueSupplementalAllotmentClasses as $class)
+                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <td class="px-1 py-2 text-center">{{ $class->class }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation">{{ number_format(0, 2) }}</td>
                                 <td class="px-1 py-2 text-right" data-key="sb_appropriation">{{ number_format($class->supplemental, 2) }}</td>
                                 <td class="px-1 py-2 text-right" data-key="reversion">{{ number_format($class->reversion, 2) }}</td>
                                 <td class="px-1 py-2 text-right" data-key="realignment">{{ number_format($class->realignment, 2) }}</td>
                                 <td class="px-1 py-2 text-right" data-key="authorized_appropriation">{{ number_format($class->authorized_appropriation, 2) }}</td>
                                 <td class="px-1 py-2 text-right" data-key="allotment">{{ number_format($class->allotment, 2) }}</td>
                                 <td class="px-1 py-2 text-right" data-key="obligation">{{ number_format($class->obligation, 2) }}</td>
-
+                                <td class="px-1 py-2 text-right" data-key="appropriation_balance">{{ number_format($class->authorized_appropriation_balance, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">{{ number_format($class->percent_obligated_to_authorized, 2) }}%</td>
+                                <td class="px-1 py-2 text-right" data-key="disbursement">{{ number_format($class->disbursement, 2) }}</td>
+                                <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">{{ number_format($class->percent_disbursed_to_obligated, 2) }}%</td>
+                                <td class="px-1 py-2 text-right" data-key="disbursement_to_appropriation">{{ number_format($class->percent_disbursed_to_authorized, 2) }}%</td>
+                                <td class="px-1 py-2 text-right" data-key="obligation_balance">{{ number_format($class->obligation_balance, 2) }}</td>
                             </tr>
                             @endforeach
                         @endforeach

@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Testing\Fluent\Concerns\Has;
+use App\Traits\LogsActivity;
 
 class Obligation extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'office_allotment_class_id',
@@ -17,10 +18,71 @@ class Obligation extends Model
         'obr_type',
         'obr_date',
         'particulars',
-        'obr_amount',
         'remarks',
         'processed_by',
     ];
+
+    // Add custom attributes to be included in activity log
+    protected $logAttributes = [
+        'office_allotment_class_id',
+        'appropriation_id',
+        'obr_no',
+        'obr_type',
+        'obr_date',
+        'particulars',
+        'remarks',
+        'processed_by'
+    ];
+
+    /**
+     * Get the total OBR amount from all obligation amounts
+     *
+     * @return float
+     */
+    public function getTotalObrAmount()
+    {
+        return $this->obligationAmounts()->sum('obr_amount');
+    }
+
+    /**
+     * Get the total adjustments amount
+     *
+     * @return float
+     */
+    public function getTotalAdjustments()
+    {
+        return $this->obligationAdjustments()->sum('adjustment_amount');
+    }
+
+    /**
+     * Get the total amount including adjustments
+     *
+     * @return float
+     */
+    public function getTotalAmount()
+    {
+        return $this->getTotalObrAmount() + $this->getTotalAdjustments();
+    }
+
+    /**
+     * Get total Purchase Orders amount
+     *
+     * @return float
+     */
+    public function getTotalPurchaseOrders()
+    {
+        return $this->purchaseOrders()->sum('po_amount');
+    }
+
+    /**
+     * Get the remaining balance after Purchase Orders
+     *
+     * @return float
+     */
+    public function getRemainingBalance()
+    {
+        return $this->getTotalAmount() - $this->getTotalPurchaseOrders();
+    }
 
     public function officeAllotmentClass()
     {

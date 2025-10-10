@@ -379,50 +379,79 @@ class ObligationController extends Controller
                 'amount_of_obligation.*' => 'required|numeric|min:0.01',
             ]);
 
-            // Create the obligation
-            $obligation = Obligation::create([
-                'office_allotment_class_id' => $validated['office_allotment_class_id'],
-                'obr_date' => $validated['obr_date'],
-                'obr_no' => $validated['obr_no'],
-                'obr_type' => $validated['obr_type'],
-                'particulars' => $validated['particulars'],
-                'remarks' => $validated['remarks'],
-                'processed_by' => Auth::user()->name ?? 'Unknown User',
-            ]);
+            // Start a database transaction
+            DB::beginTransaction();
 
-            // Save ObligationAmount records
-            $totalObrAmount = 0;
-            foreach ($validated['account_code'] as $index => $accountCode) {
-                // Fetch the appropriation ID based on the account code and office_allotment_class_id
-                $appropriation = Appropriation::where('account_code', $accountCode)
-                    ->where('office_allotment_class_id', $validated['office_allotment_class_id'])
-                    ->first();
-
-                if ($appropriation) {
-                    $obrAmount = $validated['amount_of_obligation'][$index];
-                    ObligationAmount::create([
-                        'appropriation_id' => $appropriation->id,
-                        'obligation_id' => $obligation->id,
-                        'account_code' => $accountCode,
-                        'obr_amount' => $obrAmount,
+            try {
+                // Create the obligation without triggering events
+                $obligation = Obligation::withoutEvents(function () use ($validated) {
+                    return Obligation::create([
+                        'office_allotment_class_id' => $validated['office_allotment_class_id'],
+                        'obr_date' => $validated['obr_date'],
+                        'obr_no' => $validated['obr_no'],
+                        'obr_type' => $validated['obr_type'],
+                        'particulars' => $validated['particulars'],
+                        'remarks' => $validated['remarks'],
+                        'processed_by' => Auth::user()->name ?? 'Unknown User',
                     ]);
-                    $totalObrAmount += $obrAmount;
+                });
+
+                // Save ObligationAmount records
+                $totalObrAmount = 0;
+                foreach ($validated['account_code'] as $index => $accountCode) {
+                    // Fetch the appropriation ID based on the account code and office_allotment_class_id
+                    $appropriation = Appropriation::where('account_code', $accountCode)
+                        ->where('office_allotment_class_id', $validated['office_allotment_class_id'])
+                        ->first();
+
+                    if ($appropriation) {
+                        $obrAmount = $validated['amount_of_obligation'][$index];
+                        ObligationAmount::create([
+                            'appropriation_id' => $appropriation->id,
+                            'obligation_id' => $obligation->id,
+                            'account_code' => $accountCode,
+                            'obr_amount' => $obrAmount,
+                        ]);
+                        $totalObrAmount += $obrAmount;
+                    }
                 }
+
+                // Refresh the obligation to include the ObligationAmounts
+                $obligation->refresh();
+                
+                // Now trigger the created event manually
+                event('eloquent.created: ' . get_class($obligation), [$obligation]);
+
+                DB::commit();
+
+                // Fetch related office abbreviation and class
+                $officeAllotmentClass = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
+                    ->find($validated['office_allotment_class_id']);
+
+                $officeAbbreviation = $officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
+                $class = $officeAllotmentClass->allotmentClass->class ?? 'N/A';
+
+                return redirect()
+                    ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
+                    ->with('status', "Obligation Request No. <strong>{$validated['obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been created successfully!");
+            } catch (\Exception $e) {
+                DB::rollBack();
+                
+                // Log the error for debugging
+                Log::error('Error storing obligation:', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                // Redirect back with input and an error message
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'An error occurred while saving the obligation: ' . $e->getMessage())
+                    ->with($request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']));
             }
-
-            // Fetch related office abbreviation and class
-            $officeAllotmentClass = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
-                ->find($validated['office_allotment_class_id']);
-
-            $officeAbbreviation = $officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
-            $class = $officeAllotmentClass->allotmentClass->class ?? 'N/A';
-
-            return redirect()
-                ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
-                ->with('status', "Obligation Request No. <strong>{$validated['obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been created successfully!");
         } catch (\Exception $e) {
             // Log the error for debugging
-            Log::error('Error storing obligation:', [
+            Log::error('Error in validation:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -430,11 +459,13 @@ class ObligationController extends Controller
             // Redirect back with input and an error message
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'An error occurred while saving the obligation: ' . $e->getMessage())
-                ->with($request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']));
+                ->with('error', 'An error occurred while validating the obligation: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Show form for editing an obligation
+     */
     public function edit($obligation_id)
     {
         $currentYear = date('Y');
@@ -524,16 +555,28 @@ class ObligationController extends Controller
                 'edit_amount_of_obligation.*' => 'required|numeric|min:0',
             ]);
 
-            // Update the obligation
-            $obligation->update([
-                'office_allotment_class_id' => $validated['edit_office_allotment_class_id'],
-                'obr_date' => $validated['edit_obr_date'],
-                'obr_no' => $validated['edit_obr_no'],
-                'obr_type' => $validated['edit_obr_type'],
-                'particulars' => $validated['edit_particulars'],
-                'remarks' => $validated['edit_remarks'],
-                'processed_by' => Auth::user()->name ?? 'Unknown User',
-            ]);
+            // Start database transaction
+            DB::beginTransaction();
+            
+            try {
+                // Update the obligation
+                $obligation->fill([
+                    'office_allotment_class_id' => $validated['edit_office_allotment_class_id'],
+                    'obr_date' => $validated['edit_obr_date'],
+                    'obr_no' => $validated['edit_obr_no'],
+                    'obr_type' => $validated['edit_obr_type'],
+                    'particulars' => $validated['edit_particulars'],
+                    'remarks' => $validated['edit_remarks'],
+                    'processed_by' => Auth::user()->name ?? 'Unknown User',
+                ]);
+                
+                $obligation->save();
+                
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
 
             // Delete existing ObligationAmount records for this obligation
             ObligationAmount::where('obligation_id', $obligation->id)->delete();
@@ -640,7 +683,7 @@ class ObligationController extends Controller
 
             return redirect()->to(url()->previous())
             ->with('status', [
-                'type' => 'edit',
+                'type' => 'delete',
                 'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!"
             ]);
         } catch (\Exception $e) {

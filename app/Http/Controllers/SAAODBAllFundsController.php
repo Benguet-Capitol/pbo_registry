@@ -23,10 +23,16 @@ class SAAODBAllFundsController extends Controller
         $selectedYear = request('year1', date('Y'));
         $asOfDate = request('as_of_filter', now()->toDateString());
 
-        $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
+        // Get all employees for signatory filter
+        $employees = Employee::where('office', 'PAccO')
+            ->orderBy('employee_id')
+            ->get(['employee_id', 'name', 'designation']);
+
         $sectors = Sector::all();
         $fundsQuery = Fund::orderBy('id');
         $allotmentClasses = AllotmentClass::all()->keyBy('class');
+
+        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
         $month = Carbon::parse($asOfDate)->month;
             $currentQuarter = match(true) {
@@ -36,7 +42,7 @@ class SAAODBAllFundsController extends Controller
                 default => 4,
             };
 
-        $funds = $fundsQuery->with([
+       $funds = $fundsQuery->with([
             'officeAllotmentClasses' => function ($query) use ($selectedYear) {
                 $query->where('year', $selectedYear)
                     ->with([
@@ -49,7 +55,7 @@ class SAAODBAllFundsController extends Controller
             }
         ])->get();
 
-        // --- Helper function (must be defined before it's used)
+        // --- Helper function for totals
         function computeTotals($classes)
         {
             $totals = [
@@ -69,19 +75,14 @@ class SAAODBAllFundsController extends Controller
             ];
 
             foreach ($classes as $class) {
-                $totals['approved_appropriation'] += $class->approved_appropriation;
-                $totals['supplemental'] += $class->supplemental;
-                $totals['reversion'] += $class->reversion;
-                $totals['realignment'] += $class->realignment;
-                $totals['authorized_appropriation'] += $class->authorized_appropriation;
-                $totals['allotment'] += $class->allotment;
-                $totals['obligation'] += $class->obligation;
-                $totals['authorized_appropriation_balance'] += $class->authorized_appropriation_balance;
-                $totals['disbursement'] += $class->disbursement;
-                $totals['obligation_balance'] += $class->obligation_balance;
+                foreach ($totals as $key => $value) {
+                    if (isset($class->$key)) {
+                        $totals[$key] += $class->$key;
+                    }
+                }
             }
 
-            // Derived % fields
+            // Derived percentages
             $totals['percent_obligated_to_authorized'] =
                 $totals['authorized_appropriation'] > 0
                     ? ($totals['obligation'] / $totals['authorized_appropriation']) * 100
@@ -103,13 +104,14 @@ class SAAODBAllFundsController extends Controller
         // --- Main computation
         foreach ($funds as $fund) {
             $officeAllotmentClasses = $fund->officeAllotmentClasses
-                ->filter(fn($oac) => $oac->fund === $fund->fund)
-                ->reject(fn($oac) => optional($oac->allotmentClass)->class === 'CCO');
+                ->filter(fn($oac) => $oac->fund === $fund->fund);
 
-            $groupedByAllotmentClass = $officeAllotmentClasses->groupBy(fn($oac) => $oac->allotmentClass->class ?? 'Unknown');
+            // Group by allotment class
+            $groupedByAllotmentClass = $officeAllotmentClasses->groupBy(
+                fn($oac) => $oac->allotmentClass->class ?? 'Unknown'
+            );
 
-            $uniqueAllotmentClasses = collect();
-            $supplementalClasses = collect();
+            $allotmentClasses = collect();
 
             foreach ($groupedByAllotmentClass as $className => $oacGroup) {
                 $allotmentClass = $oacGroup->first()->allotmentClass;
@@ -179,18 +181,20 @@ class SAAODBAllFundsController extends Controller
 
                 $obligation = $obligationBase + $obligationAdjustments;
 
-                // --- Balances and percentages ---
-                $authorizedAppropriationBalance = $authorizedAppropriation - $obligation;
-
-                $percentObligatedToAuthorized = $authorizedAppropriation > 0
-                    ? ($obligation / $authorizedAppropriation) * 100
-                    : 0;
-
+                // --- Disbursements ---
                 $disbursement = $oacGroup
                     ->flatMap->appropriations
                     ->flatMap->obligationAmounts
                     ->filter(fn($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
                     ->sum('disbursement_amount');
+
+                // --- Balances and percentages ---
+                $authorizedAppropriationBalance = $authorizedAppropriation - $obligation;
+                $obligationBalance = $obligation - $disbursement;
+
+                $percentObligatedToAuthorized = $authorizedAppropriation > 0
+                    ? ($obligation / $authorizedAppropriation) * 100
+                    : 0;
 
                 $percentDisbursedToObligated = $obligation > 0
                     ? ($disbursement / $obligation) * 100
@@ -200,9 +204,8 @@ class SAAODBAllFundsController extends Controller
                     ? ($disbursement / $authorizedAppropriation) * 100
                     : 0;
 
-                $obligationBalance = $obligation - $disbursement;
-
-                $classObject = (object)[
+                // --- Collect final class summary ---
+                $allotmentClasses->push((object)[
                     'id' => $allotmentClass->id,
                     'class' => $allotmentClass->class,
                     'approved_appropriation' => $approvedAppropriation,
@@ -219,23 +222,86 @@ class SAAODBAllFundsController extends Controller
                     'percent_disbursed_to_obligated' => $percentDisbursedToObligated,
                     'percent_disbursed_to_authorized' => $percentDisbursedToAuthorized,
                     'obligation_balance' => $obligationBalance,
-                ];
-
-                $uniqueAllotmentClasses->push($classObject);
-
-                if ($supplemental > 0) {
-                    $supplementalClasses->push($classObject);
-                }
+                ]);
             }
 
-            // Assign computed totals to the fund
-            $fund->uniqueAllotmentClasses = $uniqueAllotmentClasses->values();
-            $fund->uniqueSupplementalAllotmentClasses = $supplementalClasses->values();
-            $fund->regularBudgetTotals = (object) computeTotals($uniqueAllotmentClasses);
-            $fund->supplementalBudgetTotals = (object) computeTotals($supplementalClasses);
+            // Assign computed results under each fund
+            $fund->allotmentClasses = $allotmentClasses->values();
+            $fund->totals = (object) computeTotals($allotmentClasses);
+
+            // --- Group totals by category ---
+            $currentClasses = $allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
+            $continuingClasses = $allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
+
+            $fund->total_current = (object) computeTotals($currentClasses);
+            $fund->total_continuing = (object) computeTotals($continuingClasses);
+
+            // Combine all for grand total
+            $fund->total_overall = (object) computeTotals($allotmentClasses);
+
+            // Ensure default totals always exist even if empty
+            foreach (['total_current', 'total_continuing', 'total_overall'] as $key) {
+                if (!isset($fund->$key) || !$fund->$key) {
+                    $fund->$key = (object)[
+                        'approved_appropriation' => 0,
+                        'supplemental' => 0,
+                        'reversion' => 0,
+                        'realignment' => 0,
+                        'authorized_appropriation' => 0,
+                        'allotment' => 0,
+                        'obligation' => 0,
+                        'authorized_appropriation_balance' => 0,
+                        'percent_obligated_to_authorized' => 0,
+                        'disbursement' => 0,
+                        'percent_disbursed_to_obligated' => 0,
+                        'percent_disbursed_to_authorized' => 0,
+                        'obligation_balance' => 0,
+                    ];
+                }
+            }
         }
 
-        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
+        // Grand Total
+        $grandTotal = (object)[
+            'approved_appropriation' => 0,
+            'supplemental' => 0,
+            'reversion' => 0,
+            'realignment' => 0,
+            'authorized_appropriation' => 0,
+            'allotment' => 0,
+            'obligation' => 0,
+            'authorized_appropriation_balance' => 0,
+            'percent_obligated_to_authorized' => 0, // will compute later
+            'disbursement' => 0,
+            'percent_disbursed_to_obligated' => 0, // will compute later
+            'percent_disbursed_to_authorized' => 0, // will compute later
+            'obligation_balance' => 0,
+        ];
+
+        // Sum up totals from each fund
+        foreach ($funds as $fund) {
+            foreach ($grandTotal as $key => $value) {
+                if (property_exists($fund->total_overall, $key) && !str_starts_with($key, 'percent')) {
+                    $grandTotal->$key += $fund->total_overall->$key ?? 0;
+                }
+            }
+        }
+
+        // Compute percentage-based fields
+        $grandTotal->percent_obligated_to_authorized = $grandTotal->authorized_appropriation > 0
+            ? ($grandTotal->obligation / $grandTotal->authorized_appropriation) * 100
+            : 0;
+
+        $grandTotal->percent_disbursed_to_obligated = $grandTotal->obligation > 0
+            ? ($grandTotal->disbursement / $grandTotal->obligation) * 100
+            : 0;
+
+        $grandTotal->percent_disbursed_to_authorized = $grandTotal->authorized_appropriation > 0
+            ? ($grandTotal->disbursement / $grandTotal->authorized_appropriation) * 100
+            : 0;
+
+        // Now attach it (optional)
+        $grandTotals = $grandTotal;
 
         return view('saaodballfunds.index', compact(
             'availableYears',
@@ -243,6 +309,7 @@ class SAAODBAllFundsController extends Controller
             'asOfDate',
             'employees',
             'funds',
+            'grandTotals',
         ))->with('status', session('status'));
     }
 

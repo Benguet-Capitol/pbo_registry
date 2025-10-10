@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
@@ -45,6 +46,11 @@ use App\Http\Controllers\SAAODBAllFundsController;
 
 Route::get('/', function () {
     return view('auth.login');
+});
+
+Route::middleware(['auth'])->group(function() {
+    Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('activity-logs/data', [ActivityLogController::class, 'data'])->name('activity-logs.data');
 });
 
 Route::middleware('auth')->group(function () {

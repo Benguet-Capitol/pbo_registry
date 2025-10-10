@@ -244,6 +244,15 @@
         </x-slot>
     </x-sidebar.link>
 
+    <x-sidebar.link
+        title="Activity Log"
+        href="{{ route('activity-logs.index') }}"
+        :isActive="request()->routeIs('activity-logs.index')">
+        <x-slot name="icon">
+            <i class="fas fa-history text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
+
     <!-- Obligation Role -->
     @elserole('Obligation')
     <x-sidebar.link
@@ -472,7 +481,7 @@
 
         <x-sidebar.dropdown
             title="SAAODB"
-            :active="request()->routeIs('saaodboffice.index')">
+            :active="request()->routeIs('saaodboffice.index') || request()->routeIs('saaodballfunds.index')">
             <x-slot name="icon">
                 <i class="fas fa-copy text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
             </x-slot>

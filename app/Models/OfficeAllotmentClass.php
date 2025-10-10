@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Traits\LogsActivity;
 
 class OfficeAllotmentClass extends Model
 {
+    use LogsActivity;
     use HasFactory;
 
     // Define the fillable attributes

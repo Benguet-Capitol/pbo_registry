@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Realignment extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'office_allotment_classes_id',
         'appropriations_id',

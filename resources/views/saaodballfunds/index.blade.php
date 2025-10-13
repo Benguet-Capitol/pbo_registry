@@ -132,7 +132,7 @@
             </button>
     </form>
 
-    <form method="GET" action="{{ route('saaodb.exportExcel') }}" style="display:inline;">
+    <form method="GET" action="{{ route('saaodbAllFunds.exportExcel') }}" style="display:inline;">
         <input type="hidden" name="year1" value="{{ request('year1') }}">
         <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
         <input type="hidden" name="as_of_filter" value="{{ request('as_of_filter') }}">

@@ -9,7 +9,7 @@ use App\Models\Appropriation;
 use App\Models\Office;
 use App\Models\AllotmentClass;
 use Carbon\Carbon;
-use App\Exports\SAAOBFundSectorExport;
+use App\Exports\SAAODBAllFundsExport;
 use App\Models\Employee;
 use App\Models\ObligationAdjustment;
 use App\Models\Fund;
@@ -153,9 +153,10 @@ class SAAODBAllFundsController extends Controller
                     + $supplemental + $reversion + $realignment;
 
                 // --- For Later Release ---
-                $forLaterRelease = $oacGroup
-                    ->flatMap->appropriations
-                    ->sum(fn($a) => $a->for_later_release ?? 0);
+                $forLaterRelease = 0;
+                if ($currentQuarter < 2) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter2 ?? 0));
+                if ($currentQuarter < 3) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter3 ?? 0));
+                if ($currentQuarter < 4) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter4 ?? 0));
 
                 $allotment -= $forLaterRelease;
 
@@ -313,33 +314,24 @@ class SAAODBAllFundsController extends Controller
         ))->with('status', session('status'));
     }
 
-    public function exportExcel(Request $request)
-        {
-            $year = $request->input('year1');
-            $fund = $request->input('fund_filter');
-            $asOf = $request->input('as_of_filter');
-            $signatoryName = $request->input('signatory_name');
-            $signatoryDesignation = $request->input('signatory_designation');
+public function exportExcel(Request $request)
+    {
+        $year = $request->input('year1');
+        $asOf = $request->input('as_of_filter');
+        $preparedSignatoryName = $request->input('prepared_signatory_name');
+        $preparedSignatoryDesignation = $request->input('prepared_signatory_designation');
+        $certifiedSignatoryName = $request->input('certified_signatory_name');
+        $certifiedSignatoryDesignation = $request->input('certified_signatory_designation');
 
-           // Sanitize fund name for filename
-            $fundName = 'All_Funds';
+        $fileName = 'SAAODB_' . '_' . $year . '.xlsx';
 
-            if (!empty($fund)) {
-                if ($fund === 'others') {
-                    $fundName = 'BEGHEE_SEF';
-                } else {
-                    $fundName = preg_replace('/[^A-Za-z0-9_]/', '_', $fund);
-                }
-            }
-
-            $fileName = 'SAAOB_' . $fundName . '_' . $year . '.xlsx';
-
-            return Excel::download(new SAAOBFundSectorExport(
-                $year,
-                $fund,
-                $asOf,
-                $signatoryName,
-                $signatoryDesignation
-            ), $fileName);
-        }
+         return Excel::download(new SAAODBAllFundsExport(
+            $year,
+            $asOf,
+            $preparedSignatoryName,
+            $preparedSignatoryDesignation,
+            $certifiedSignatoryName,
+            $certifiedSignatoryDesignation
+        ), $fileName);
+    }
 }

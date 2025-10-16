@@ -103,7 +103,7 @@
                         </button>
                     </div>
                     <div class="mt-2 flex justify-center">
-                        <a href="{{ asset('storage/sample/Appropriations.xlsx') }}" download class="text-xs text-gray-600 dark:text-gray-300 hover:underline">
+                        <a href="{{ asset('storage/sample/Accounts.xlsx') }}" download class="text-xs text-gray-600 dark:text-gray-300 hover:underline">
                             📄 Download Sample Format (Excel)
                         </a>
                     </div>

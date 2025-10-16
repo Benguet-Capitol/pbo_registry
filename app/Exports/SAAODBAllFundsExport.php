@@ -43,223 +43,185 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                 $sheet = $event->sheet->getDelegate();
                 $highestRow = $sheet->getHighestRow();
 
-                // Freeze rows above row 11
+                // Freeze and repeat header rows
                 $sheet->freezePane('A11');
-
-                // Set rows 5 to 9 to repeat on printed pages
                 $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 11);
 
-                // Identify the certified correct row
+                // Hide specific columns
+                    foreach (['E', 'H', 'L', 'M'] as $col) {
+                        $sheet->getColumnDimension($col)->setVisible(false);
+                    }
+
+                // detect signature area
                 $certifiedRow = null;
-                for ($row = 13; $row <= $highestRow; $row++) {
-                    $cellValue = strtoupper(trim((string) $sheet->getCell("D{$row}")->getValue()));
-                    if (str_contains($cellValue, 'PREPARED BY')) {
-                        $certifiedRow = $row;
+                for ($r = 13; $r <= $highestRow; $r++) {
+                    $v = strtoupper(trim((string) $sheet->getCell("D{$r}")->getValue()));
+                    if (str_contains($v, 'PREPARED BY')) {
+                        $certifiedRow = $r;
                         break;
                     }
                 }
-
-                // Default to 2 rows above certified correct row, or fallback to highestRow
                 $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
 
-               // Format number columns as Accounting without currency symbol
-                foreach (range('B', 'Q') as $column) {
-                    if (!in_array($column, ['K', 'M', 'O', 'P'])) {
-                        $sheet->getStyle("{$column}13:{$column}{$highestRow}")
+                // numeric and percent formats
+                foreach (range('B', 'Q') as $col) {
+                    if (!in_array($col, ['J','M','O','Q'])) {
+                        $sheet->getStyle("{$col}13:{$col}{$highestRow}")
                             ->getNumberFormat()
                             ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
                     }
                 }
-
-                // Format percentage columns
-                foreach (['K', 'M', 'O', 'P'] as $column) {
-                    $sheet->getStyle("{$column}13:{$column}{$highestRow}")
+                foreach (['J','M','O','Q'] as $col) {
+                    $sheet->getStyle("{$col}13:{$col}{$highestRow}")
                         ->getNumberFormat()->setFormatCode('0.00%');
                 }
 
-                // Classify rows based on Z column
-                $contentRows = [];
-                $subtotalRows = [];
+                // content-row formulas
+                for ($r = 13; $r <= $lastDataRow; $r++) {
+                    $a = strtolower(trim((string) $sheet->getCell("A{$r}")->getValue()));
+
+                    if (
+                        str_contains($a, 'total current appropriation') ||
+                        str_contains($a, 'total continuing capital outlay') ||
+                        str_contains($a, 'total current and continuing') ||
+                        str_contains($a, 'grand total') ||
+                        str_contains($a, 'prepared by')
+                    ) {
+                        continue;
+                    }
+
+                    $sheet->setCellValue("F{$r}", "=B{$r}+C{$r}-D{$r}+E{$r}");
+                    $sheet->setCellValue("G{$r}", "=F{$r}-H{$r}");
+                    $sheet->setCellValue("K{$r}", "=F{$r}-I{$r}");
+                    $sheet->setCellValue("J{$r}", "=IF(F{$r}=0,0,I{$r}/F{$r})");
+                    $sheet->setCellValue("L{$r}", "=G{$r}-I{$r}");
+                    $sheet->setCellValue("M{$r}", "=IF(G{$r}=0,0,I{$r}/G{$r})");
+                    $sheet->setCellValue("O{$r}", "=IF(I{$r}=0,0,N{$r}/I{$r})");
+                    $sheet->setCellValue("Q{$r}", "=IF(F{$r}=0,0,N{$r}/F{$r})");
+                    $sheet->setCellValue("P{$r}", "=I{$r}-N{$r}");
+                }
+
+                $subtotalCurrentRows = [];
+                $subtotalContinuingRows = [];
                 $totalRows = [];
                 $grandTotalRow = null;
 
-                for ($row = 13; $row <= $lastDataRow; $row++) {
-                    $firstCellValue = trim((string) $sheet->getCell("A{$row}")->getValue());
-                    $secondCellValue = trim((string) $sheet->getCell("B{$row}")->getValue());
+                // detect subtotal and total markers
+                for ($r = 13; $r <= $lastDataRow; $r++) {
+                    $cellA = strtolower(trim((string) $sheet->getCell("A{$r}")->getValue()));
 
-                    if (
-                        str_starts_with(strtolower($firstCellValue), 'subtotal') ||
-                        str_starts_with(strtolower($firstCellValue), 'total') ||
-                        str_contains(strtolower($firstCellValue), 'grand total') ||
-                        str_contains(strtolower($secondCellValue), 'prepared by')
-                    ) {
-                        continue; // Skip subtotal/total/certified rows
+                    // ---------- SUBTOTAL CURRENT ----------
+                    if (str_contains($cellA, 'total current appropriation')) {
+                        $start = $r - 1;
+                        while ($start >= 13 && trim((string)$sheet->getCell("B{$start}")->getValue()) !== '') {
+                            $start--;
+                        }
+                        $start = max(13, $start + 1);
+
+                        foreach (range('B','Q') as $col) {
+                            if (in_array($col, ['J','M','O','Q'])) continue;
+                            $sheet->setCellValue("{$col}{$r}", "=SUM({$col}{$start}:{$col}" . ($r - 1) . ")");
+                        }
+
+                        $sheet->setCellValue("G{$r}", "=F{$r}-H{$r}");
+                        $sheet->setCellValue("K{$r}", "=F{$r}-I{$r}");
+                        $sheet->setCellValue("L{$r}", "=G{$r}-I{$r}");
+                        $sheet->setCellValue("J{$r}", "=IF(F{$r}=0,0,I{$r}/F{$r})");
+                        $sheet->setCellValue("M{$r}", "=IF(G{$r}=0,0,I{$r}/G{$r})");
+                        $sheet->setCellValue("O{$r}", "=IF(I{$r}=0,0,N{$r}/I{$r})");
+                        $sheet->setCellValue("Q{$r}", "=IF(F{$r}=0,0,N{$r}/F{$r})");
+
+                        $subtotalCurrentRows[] = $r;
                     }
 
-                    // Apply formulas to content rows
-                    $sheet->setCellValue("H{$row}", "=D{$row}+E{$row}+F{$row}+G{$row}");
-                    $sheet->setCellValue("I{$row}", "=H{$row}-J{$row}");
-                    $sheet->setCellValue("L{$row}", "=H{$row}-K{$row}");
-                    $sheet->setCellValue("M{$row}", "=IF(H{$row}>0,K{$row}/H{$row},0.00)");
-                    $sheet->setCellValue("N{$row}", "=I{$row}-K{$row}");
-                    $sheet->setCellValue("O{$row}", "=IF(I{$row}>0,K{$row}/I{$row},0.00)");
-                    $sheet->setCellValue("Q{$row}", "=IF(K{$row}>0,P{$row}/K{$row},0.00)");
-                    $sheet->setCellValue("R{$row}", "=IF(H{$row}>0,P{$row}/H{$row},0.00)");
-                    $sheet->setCellValue("S{$row}", "=K{$row}-P{$row}");
-                }
-
-                // Utility: Apply percentage formulas for columns M and O
-                function applyPercentageFormulas($sheet, $row)
-                {
-                    $h = "H{$row}";
-                    $i = "I{$row}";
-                    $k = "K{$row}";
-                    $p = "P{$row}";
-
-                    $sheet->setCellValue("M{$row}", "=IF($h>0,$k/$h,0)");
-                    $sheet->setCellValue("O{$row}", "=IF($i>0,$k/$i,0)");
-                    $sheet->setCellValue("Q{$row}", "=IF($k>0,$p/$k,0)");
-                    $sheet->setCellValue("R{$row}", "=IF($h>0,$p/$h,0)");
-                }
-
-                // Loop through all rows to apply formulas
-                for ($row = 13; $row <= $lastDataRow; $row++) {
-                    $label = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
-
-                    // === SUBTOTAL ROW ===
-                    if (str_starts_with($label, 'SUBTOTAL')) {
-                        $startRow = $row - 1;
-                        while ($startRow > 13) {
-                            $prevLabel = strtoupper(trim((string) $sheet->getCell("A{$startRow}")->getValue()));
-                            if (
-                                str_starts_with($prevLabel, 'SUBTOTAL') ||
-                                str_starts_with($prevLabel, 'TOTAL') ||
-                                str_contains($prevLabel, 'GRAND TOTAL') ||
-                                str_contains($prevLabel, 'CERTIFIED CORRECT')
-                            ) {
-                                $startRow++;
+                    // ---------- SUBTOTAL CONTINUING (fixed) ----------
+                    if (str_contains($cellA, 'total continuing capital outlay')) {
+                        $start = $r - 1;
+                        // stop scanning upward once we hit “Total Current Appropriation”
+                        while ($start >= 13) {
+                            $upperText = strtolower(trim((string)$sheet->getCell("A{$start}")->getValue()));
+                            if (str_contains($upperText, 'total current appropriation')) {
+                                $start++; // start one row below that
                                 break;
                             }
-                            $startRow--;
+                            if (trim((string)$sheet->getCell("B{$start}")->getValue()) === '') break;
+                            $start--;
                         }
-                        if ($startRow < 13) $startRow = 13;
+                        $start = max(13, $start);
 
-                        foreach (range('D', 'S') as $col) {
-                            $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
+                        foreach (range('B','Q') as $col) {
+                            if (in_array($col, ['J','M','O','Q'])) continue;
+                            $sheet->setCellValue("{$col}{$r}", "=SUM({$col}{$start}:{$col}" . ($r - 1) . ")");
                         }
-                        applyPercentageFormulas($sheet, $row);
+
+                        $sheet->setCellValue("G{$r}", "=F{$r}-H{$r}");
+                        $sheet->setCellValue("K{$r}", "=F{$r}-I{$r}");
+                        $sheet->setCellValue("L{$r}", "=G{$r}-I{$r}");
+                        $sheet->setCellValue("J{$r}", "=IF(F{$r}=0,0,I{$r}/F{$r})");
+                        $sheet->setCellValue("M{$r}", "=IF(G{$r}=0,0,I{$r}/G{$r})");
+                        $sheet->setCellValue("O{$r}", "=IF(I{$r}=0,0,N{$r}/I{$r})");
+                        $sheet->setCellValue("Q{$r}", "=IF(F{$r}=0,0,N{$r}/F{$r})");
+
+                        $subtotalContinuingRows[] = $r;
                     }
 
-                    // === TOTAL ROW ===
-                    elseif (str_starts_with($label, 'TOTAL')) {
-                        $subtotalRows = [];
-                        for ($i = $row - 1; $i >= 13; $i--) {
-                            $check = strtoupper(trim((string) $sheet->getCell("A{$i}")->getValue()));
-                            if (
-                                str_starts_with($check, 'TOTAL') ||
-                                str_contains($check, 'GRAND TOTAL') ||
-                                str_contains($check, 'CERTIFIED CORRECT')
-                            ) break;
-                            if (str_starts_with($check, 'SUBTOTAL')) $subtotalRows[] = $i;
-                        }
-                        if (!empty($subtotalRows)) {
-                            foreach (range('D', 'S') as $col) {
-                                $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($subtotalRows)));
-                                $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
-                            }
-                            applyPercentageFormulas($sheet, $row);
-                        }
+                    if (str_contains($cellA, 'total current and continuing')) {
+                        $totalRows[] = $r;
                     }
 
-                    // === GRAND TOTAL ROW ===
-                    elseif (str_contains($label, 'GRAND TOTAL')) {
-                        $totalRows = [];
-                        for ($i = $row - 1; $i >= 13; $i--) {
-                            $check = strtoupper(trim((string) $sheet->getCell("A{$i}")->getValue()));
-                            if (
-                                str_contains($check, 'GRAND TOTAL') ||
-                                str_contains($check, 'CERTIFIED CORRECT')
-                            ) break;
-                            if (str_starts_with($check, 'TOTAL')) $totalRows[] = $i;
-                        }
-                        if (!empty($totalRows)) {
-                            foreach (range('D', 'S') as $col) {
-                                $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalRows)));
-                                $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
-                            }
-                            applyPercentageFormulas($sheet, $row);
-                        }
+                    if (str_contains($cellA, 'grand total')) {
+                        $grandTotalRow = $r;
                     }
                 }
 
-                // === ADD TOTAL COE & TOTAL COE + CO ROWS ===
-                $totalsMap = [];
-                for ($row = 13; $row <= $lastDataRow; $row++) {
-                    $label = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
-                    if (str_starts_with($label, 'TOTAL')) {
-                        $totalsMap[$label] = $row;
+                // ---------- TOTAL CURRENT + CONTINUING ----------
+                foreach ($totalRows as $totalRow) {
+                    $scan = $totalRow - 1;
+                    $foundCurrent = null;
+                    $foundContinuing = null;
+                    while ($scan >= 13 && trim((string)$sheet->getCell("B{$scan}")->getValue()) !== '') {
+                        $txt = strtolower(trim((string)$sheet->getCell("A{$scan}")->getValue()));
+                        if ($foundCurrent === null && str_contains($txt, 'total current appropriation')) $foundCurrent = $scan;
+                        if ($foundContinuing === null && str_contains($txt, 'total continuing capital outlay')) $foundContinuing = $scan;
+                        if ($foundCurrent && $foundContinuing) break;
+                        $scan--;
                     }
+
+                    foreach (range('B','Q') as $col) {
+                        if (in_array($col, ['J','M','O','Q'])) continue;
+                        if ($foundCurrent && $foundContinuing) {
+                            $sheet->setCellValue("{$col}{$totalRow}", "=SUM({$col}{$foundCurrent},{$col}{$foundContinuing})");
+                        } elseif ($foundCurrent) {
+                            $sheet->setCellValue("{$col}{$totalRow}", "={$col}{$foundCurrent}");
+                        } elseif ($foundContinuing) {
+                            $sheet->setCellValue("{$col}{$totalRow}", "={$col}{$foundContinuing}");
+                        }
+                    }
+
+                    $sheet->setCellValue("G{$totalRow}", "=F{$totalRow}-H{$totalRow}");
+                    $sheet->setCellValue("K{$totalRow}", "=F{$totalRow}-I{$totalRow}");
+                    $sheet->setCellValue("L{$totalRow}", "=G{$totalRow}-I{$totalRow}");
+                    $sheet->setCellValue("J{$totalRow}", "=IF(F{$totalRow}=0,0,I{$totalRow}/F{$totalRow})");
+                    $sheet->setCellValue("M{$totalRow}", "=IF(G{$totalRow}=0,0,I{$totalRow}/G{$totalRow})");
+                    $sheet->setCellValue("O{$totalRow}", "=IF(I{$totalRow}=0,0,N{$totalRow}/I{$totalRow})");
+                    $sheet->setCellValue("Q{$totalRow}", "=IF(F{$totalRow}=0,0,N{$totalRow}/F{$totalRow})");
                 }
 
-                // Collect COE components (PS + MOOE + FE)
-                $coeComponents = [];
-                foreach ($totalsMap as $label => $rowNum) {
-                    if (
-                        str_contains($label, 'PERSONAL SERVICES') ||
-                        str_contains($label, 'MAINTENANCE AND OTHER OPERATING EXPENDITURES') ||
-                        str_contains($label, 'FINANCIAL EXPENSES')
-                    ) {
-                        $coeComponents[] = $rowNum;
-                    }
-                }
-
-                $totalCOERow = null;
-                if (!empty($coeComponents)) {
-                    $lastCOERow = max($coeComponents);
-                    $insertRow = $lastCOERow + 1;
-
-                    // Insert TOTAL COE row
-                    $sheet->insertNewRowBefore($insertRow, 1);
-                    $sheet->setCellValue("A{$insertRow}", 'Total Current Operating Expenditure (COE):');
-                    $sheet->mergeCells("A{$insertRow}:B{$insertRow}");
-
-                    foreach (range('D', 'S') as $col) {
-                        $refs = implode(',', array_map(fn($r) => "{$col}{$r}", $coeComponents));
-                        $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
+                // ---------- GRAND TOTAL ----------
+                if ($grandTotalRow !== null && count($totalRows) > 0) {
+                    foreach (range('B','Q') as $col) {
+                        if (in_array($col, ['J','M','O','Q'])) continue;
+                        $refs = array_map(fn($r) => "{$col}{$r}", $totalRows);
+                        $sheet->setCellValue("{$col}{$grandTotalRow}", '=' . 'SUM(' . implode(',', $refs) . ')');
                     }
 
-                    applyPercentageFormulas($sheet, $insertRow);
-
-                    $totalCOERow = $insertRow;
-                }
-
-                // === Find the TOTAL CAPITAL OUTLAY (CO) row (excluding CONTINUING) ===
-                $totalCORow = null;
-                foreach ($totalsMap as $label => $rowNum) {
-                    $cleanLabel = strtoupper(trim($label, " :"));
-
-                    if ($cleanLabel === 'TOTAL CAPITAL OUTLAY (CO)' && !str_contains($cleanLabel, 'CONTINUING')) {
-                        $totalCORow = $rowNum;
-                        break;
-                    }
-                }
-
-                // === Insert TOTAL COE + CO row right after Total Capital Outlay ===
-                if ($totalCOERow && $totalCORow) {
-                    $insertRow = $totalCORow + 2;
-
-                    $sheet->insertNewRowBefore($insertRow, 1);
-                    $sheet->setCellValue("A{$insertRow}", 'Total COE and CO:');
-                    $sheet->mergeCells("A{$insertRow}:B{$insertRow}");
-
-                    $totalCOValuesRow = $totalCORow + 1;
-
-                    foreach (range('D', 'S') as $col) {
-                        $refs = "{$col}{$totalCOERow},{$col}{$totalCOValuesRow}";
-                        $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
-                    }
-
-                    applyPercentageFormulas($sheet, $insertRow);
+                    $sheet->setCellValue("G{$grandTotalRow}", "=F{$grandTotalRow}-H{$grandTotalRow}");
+                    $sheet->setCellValue("K{$grandTotalRow}", "=F{$grandTotalRow}-I{$grandTotalRow}");
+                    $sheet->setCellValue("L{$grandTotalRow}", "=G{$grandTotalRow}-I{$grandTotalRow}");
+                    $sheet->setCellValue("J{$grandTotalRow}", "=IF(F{$grandTotalRow}=0,0,I{$grandTotalRow}/F{$grandTotalRow})");
+                    $sheet->setCellValue("M{$grandTotalRow}", "=IF(G{$grandTotalRow}=0,0,I{$grandTotalRow}/G{$grandTotalRow})");
+                    $sheet->setCellValue("O{$grandTotalRow}", "=IF(I{$grandTotalRow}=0,0,N{$grandTotalRow}/I{$grandTotalRow})");
+                    $sheet->setCellValue("Q{$grandTotalRow}", "=IF(F{$grandTotalRow}=0,0,N{$grandTotalRow}/F{$grandTotalRow})");
                 }
             },
         ];
@@ -274,7 +236,7 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                     'size' => 10,
                 ],
             ],
-            'A10:S10' => [
+            'A10:Q10' => [
                 'font' => [
                     'bold' => true,
                 ],
@@ -419,9 +381,10 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                     + $supplemental + $reversion + $realignment;
 
                 // --- For Later Release ---
-                $forLaterRelease = $oacGroup
-                    ->flatMap->appropriations
-                    ->sum(fn($a) => $a->for_later_release ?? 0);
+                $forLaterRelease = 0;
+                if ($currentQuarter < 2) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter2 ?? 0));
+                if ($currentQuarter < 3) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter3 ?? 0));
+                if ($currentQuarter < 4) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter4 ?? 0));
 
                 $allotment -= $forLaterRelease;
 

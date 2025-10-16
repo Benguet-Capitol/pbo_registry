@@ -31,6 +31,7 @@ class SAAODBAllFundsController extends Controller
         $sectors = Sector::all();
         $fundsQuery = Fund::orderBy('id');
         $allotmentClasses = AllotmentClass::all()->keyBy('class');
+        $allAllotmentClasses = AllotmentClass::all();
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
@@ -304,6 +305,79 @@ class SAAODBAllFundsController extends Controller
         // Now attach it (optional)
         $grandTotals = $grandTotal;
 
+        // --- SUMMARY TOTALS PER ALLOTMENT CLASS ---
+        $summaryTotals = [];
+
+        $grandSummary = [
+            'total_appropriation' => 0,
+            'total_obligations' => 0,
+            'total_disbursements' => 0,
+            'percent_obligation_vs_authorized' => 0,
+            'percent_disbursement_vs_authorized' => 0,
+            'percent_disbursement_vs_obligation' => 0,
+        ];
+
+        foreach ($allAllotmentClasses as $allotmentClass) {
+            $className = $allotmentClass->class;
+            $totals = [
+                'total_appropriation' => 0,
+                'total_obligations' => 0,
+                'total_disbursements' => 0,
+                'percent_obligation_vs_authorized' => 0,
+                'percent_disbursement_vs_authorized' => 0,
+                'percent_disbursement_vs_obligation' => 0,
+            ];
+
+        foreach ($funds as $fund) {
+            foreach ($fund->allotmentClasses as $class) {
+                if (strtoupper(trim($class->class)) === strtoupper(trim($className))) {
+                    $totals['total_appropriation'] += $class->authorized_appropriation ?? 0;
+                    $totals['total_obligations'] += $class->obligation ?? 0;
+                    $totals['total_disbursements'] += $class->disbursement ?? 0;
+                }
+            }
+        }
+
+        // Compute percentages
+        $totals['percent_obligation_vs_authorized'] =
+            $totals['total_appropriation'] > 0
+                ? ($totals['total_obligations'] / $totals['total_appropriation']) * 100
+                : 0;
+
+        $totals['percent_disbursement_vs_authorized'] =
+            $totals['total_appropriation'] > 0
+                ? ($totals['total_disbursements'] / $totals['total_appropriation']) * 100
+                : 0;
+
+        $totals['percent_disbursement_vs_obligation'] =
+            $totals['total_obligations'] > 0
+                ? ($totals['total_disbursements'] / $totals['total_obligations']) * 100
+                : 0;
+
+        $summaryTotals[$className] = $totals;
+
+        // Add to grand summary
+        $grandSummary['total_appropriation'] += $totals['total_appropriation'];
+        $grandSummary['total_obligations'] += $totals['total_obligations'];
+        $grandSummary['total_disbursements'] += $totals['total_disbursements'];
+    }
+
+    // Compute overall percentages
+    $grandSummary['percent_obligation_vs_authorized'] =
+        $grandSummary['total_appropriation'] > 0
+            ? ($grandSummary['total_obligations'] / $grandSummary['total_appropriation']) * 100
+            : 0;
+
+    $grandSummary['percent_disbursement_vs_authorized'] =
+        $grandSummary['total_appropriation'] > 0
+            ? ($grandSummary['total_disbursements'] / $grandSummary['total_appropriation']) * 100
+            : 0;
+
+    $grandSummary['percent_disbursement_vs_obligation'] =
+        $grandSummary['total_obligations'] > 0
+            ? ($grandSummary['total_disbursements'] / $grandSummary['total_obligations']) * 100
+            : 0;
+
         return view('saaodballfunds.index', compact(
             'availableYears',
             'selectedYear',
@@ -311,6 +385,9 @@ class SAAODBAllFundsController extends Controller
             'employees',
             'funds',
             'grandTotals',
+            'allAllotmentClasses',
+            'summaryTotals',
+            'grandSummary'
         ))->with('status', session('status'));
     }
 
@@ -323,7 +400,7 @@ public function exportExcel(Request $request)
         $certifiedSignatoryName = $request->input('certified_signatory_name');
         $certifiedSignatoryDesignation = $request->input('certified_signatory_designation');
 
-        $fileName = 'SAAODB_' . '_' . $year . '.xlsx';
+        $fileName = 'SAAODB_' . 'All_Funds_' . $year . '.xlsx';
 
          return Excel::download(new SAAODBAllFundsExport(
             $year,

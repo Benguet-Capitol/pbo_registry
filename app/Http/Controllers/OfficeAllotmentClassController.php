@@ -163,7 +163,7 @@ class OfficeAllotmentClassController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'year' => 'required|integer|min:1900|max:' . date('Y'),
+            'year' => 'required|integer|min:1900',
             'office' => 'required|string|max:255',
             'office_abbreviation' => 'required|string|max:255',
             'sub_office' => 'nullable|string|max:255',
@@ -190,7 +190,7 @@ class OfficeAllotmentClassController extends Controller
             /* 'mfo_services' => $validated['mfo_services'], */
         ]);
 
-        return redirect(route('office_allotment_classes.index'))->with('status', 'Registry for <strong>' . $office_allotment_class->office_abbreviation . '</strong> with allotment class <strong>' . $office_allotment_class->class . '</strong> has been created successfully!');
+        return redirect(route('office_allotment_classes.index'))->with('status', 'Allotment class: <strong>' . $office_allotment_class->class . '</strong> under <strong>' . $office_allotment_class->office_abbreviation . '</strong> has been created successfully!');
     }
 
 
@@ -227,7 +227,7 @@ class OfficeAllotmentClassController extends Controller
     public function update(Request $request, OfficeAllotmentClass $office_allotment_class): RedirectResponse
     {
         $validated = $request->validate([
-            'edit_year' => 'required|integer|min:1900|max:' . date('Y'),
+            'edit_year' => 'required|integer|min:1900',
             'edit_office' => 'required|string|max:255',
             'edit_office_abbreviation' => 'required|string|max:255',
             'edit_sub_office' => 'nullable|string|max:255',
@@ -253,7 +253,7 @@ class OfficeAllotmentClassController extends Controller
         ]);
 
         return redirect()->route('office_allotment_classes.index')
-                ->with('status', 'Registry for <strong>' . $office_allotment_class->office_abbreviation . '</strong> with allotment class <strong>' . $office_allotment_class->class . '</strong> has been updated successfully!');
+                ->with('status', 'Allotment class: <strong>' . $office_allotment_class->class . '</strong> under <strong>' . $office_allotment_class->office_abbreviation . '</strong> has been updated successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('status', '⚠️ <strong>Error:</strong> Update failed — ' . $e->getMessage());
         }
@@ -265,6 +265,6 @@ class OfficeAllotmentClassController extends Controller
     {
         $office_allotment_class->delete();
 
-        return redirect()->route('office_allotment_classes.index')->with('status', 'Registry for <strong>' . $office_allotment_class->office_abbreviation . '</strong> with allotment class <strong>' . $office_allotment_class->class . '</strong> has been deleted successfully!');
+        return redirect()->route('office_allotment_classes.index')->with('status', 'Allotment class: <strong>' . $office_allotment_class->class . '</strong> under <strong>' . $office_allotment_class->office_abbreviation . '</strong> has been deleted successfully!');
     }
 }

@@ -36,7 +36,7 @@
             <th colspan="17"> </th>
         </tr>
         <tr>
-            <th style="padding: 4px; width: 100px; text-align: center;">Allotment Class</th>
+            <th style="padding: 4px; width: 190px; text-align: center;">Allotment Class</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Approved Appropriations</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Supplemental Appropriations</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Reversions</th>
@@ -45,14 +45,14 @@
             <th style="padding: 4px; width: 100px; text-align: center;">Allotments</th>
             <th style="padding: 4px; width: 100px; text-align: center;">For Later Release</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Obligations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Balances from Authorized Appropriations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Percent of Obligations / Authorized Appropriations</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">% of Accomplishment (Obligations vs Authorized Appropriation)</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Unobligated Authorized Appropriations</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Allotments Balance</th>
             <th style="padding: 4px; width: 100px; text-align: center;">Percent of Obligations / Allotments</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Disbursements</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Percent of Disbursements / Obligations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Percent of Disbursements / Authorized Appropriations</th>
-            <th style="padding: 4px; width: 100px; text-align: center;">Obligations - Disbursements</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Actual Disbursements</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">% of Accomplishment (Disbursements vs Obligations)</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">Unpaid Obligations</th>
+            <th style="padding: 4px; width: 100px; text-align: center;">% of Accomplishment (Disbursements vs Authorized Appropriation)</th>
         </tr>
         <tr>
             <th colspan="17"> </th>
@@ -72,54 +72,168 @@
         @endphp
 
 
-         @foreach($currentClasses as $index => $class)
-        <tr>
-            <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
-                {{ $class->class }}
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-                {{ number_format($class->approved_appropriation, 2) }}
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-                {{ number_format($class->supplemental, 2) }}
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-                {{ number_format($class->reversion, 2) }}
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-                {{ number_format($class->realignment, 2) }}
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-                {{ number_format($class->for_later_release, 2) }}
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-                {{ number_format($class->obligation, 2) }}
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: center; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: center; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-                {{ number_format($class->disbursement, 2) }}
-            </td>
-            <td style="padding: 4px; text-align: center; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: center; vertical-align: middle; border: 1px solid #999;">
-            </td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; border: 1px solid #999;">
-            </td>
-        </tr>
-        @endforeach
+            @foreach($currentClasses as $index => $class)
+            <tr class="content-row-current">
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->class }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->approved_appropriation }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->supplemental }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->reversion }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->realignment }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->for_later_release }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->obligation }}
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->disbursement }}
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+            </tr>
+            {{-- Insert total after the last current class --}}
+                @if ($loop->last)
+                <tr class="subtotal-row-current">
+                    <td style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Total Current Appropriation: </td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                </tr>
+                @endif
+            @endforeach
 
-       
+            {{-- --- CONTINUING (CCO) CLASSES --- --}}
+            @foreach($continuingClasses as $index => $class)
+            <tr class="content-row-continuing">
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->class }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->approved_appropriation }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->supplemental }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->reversion }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->realignment }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->for_later_release }}
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->obligation }}
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                    {{ $class->disbursement }}
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: right; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+                <td style="padding: 4px; text-align: center; vertical-align: middle; border-left: 1px solid #999; border-right: 1px solid #999; border-top: 1px hair #999; border-bottom: 1px hair #999;">
+                </td>
+            </tr>
+            {{-- Insert total after the last continuing class --}}
+                @if ($loop->last)
+                <tr class="subtotal-row-continuing">
+                    <td style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Total Continuing Capital Outlay: </td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                    <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+                </tr>
+                @endif
+            @endforeach
+
+        <tr class="total-row-current-continuing">
+            <td style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Total Current and Continuing: </td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+        </tr>
+        <tr>
+            <td colspan="17"></td>
+        </tr>
+    @endforeach
 
         <tr class="grand-total-row" data-rowtype="grand-total">
             <td style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Grand Total: </td>
@@ -131,19 +245,31 @@
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
-            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
         </tr>
         <tr>
             <td colspan="17"></td>
         </tr>
-        @endforeach
+
+        {{-- Summary --}}
+        <tr>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Summary</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Total Appropriation</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Total Obligations</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999; white-space: normal; word-wrap: break-word;">% of Accomplishment (Obligations vs Authorized Appropriation)</td>
+            <td></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Total Disbursements</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999; white-space: normal; word-wrap: break-word;">% of Accomplishment (Disbursements vs Authorized Appropriation)</td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999; white-space: normal; word-wrap: break-word;">% of Accomplishment (Disbursements vs Obligations)</td>
+        </tr>
+
 
         {{-- Prepared By (Left) + Certified Correct (Right) --}}
         <tr>
@@ -163,23 +289,23 @@
         </tr>
 
         <tr>
-            <td style="text-align: center; font-weight: bold; font-size: 12px;">
+            <td colspan="3" style="text-align: center; font-weight: bold; font-size: 12px;">
             </td>
-            <td colspan="8" style="text-align: center; font-weight: bold; font-size: 12px;">
+            <td colspan="7" style="text-align: center; font-weight: bold; font-size: 12px;">
                 {{ $preparedSignatoryName ? strtoupper($preparedSignatoryName) : '_____________________' }}
             </td>
-            <td colspan="8" style="text-align: center; font-weight: bold; font-size: 12px;">
+            <td colspan="7" style="text-align: center; font-weight: bold; font-size: 12px;">
                 {{ $certifiedSignatoryName ? strtoupper($certifiedSignatoryName) : '_____________________' }}
             </td>
         </tr>
 
         <tr>
-            <td style="text-align: center; font-size: 12px;">
+            <td colspan="3" style="text-align: center; font-size: 12px;">
             </td>
-            <td colspan="8" style="text-align: center; font-size: 12px;">
+            <td colspan="7" style="text-align: center; font-size: 12px;">
                 {{ $preparedSignatoryDesignation ? $preparedSignatoryDesignation : '_____________________' }}
             </td>
-            <td colspan="8" style="text-align: center; font-size: 12px;">
+            <td colspan="7" style="text-align: center; font-size: 12px;">
                 {{ $certifiedSignatoryDesignation ? $certifiedSignatoryDesignation : '_____________________' }}
             </td>
         </tr>

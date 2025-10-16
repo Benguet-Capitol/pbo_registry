@@ -947,28 +947,28 @@
             const newWin = window.open('', '', `width=${screenW},height=${screenH},left=0,top=0,scrollbars=yes,resizable=yes`);
             newWin.document.write('<html><head><title>SAAODB</title>');
             newWin.document.write(`
-        <style>
-            body { font-family: sans-serif; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ccc; padding: 4px; }
+                <style>
+                    body { font-family: sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ccc; padding: 4px; }
 
-            th[data-key="ppas"] { width:200px; text-align:center; }
-            th[data-key="account_code"] { width:100px; text-align:center; }
-            th[data-key="appropriation"] { width:100px; text-align:center; }
-            th[data-key="sb_appropriation"] { width:100px; text-align:center; }
-            th[data-key="reversion"] { width:100px; text-align:center; }
-            th[data-key="realignment"] { width:100px; text-align:center; }
-            th[data-key="authorized_appropriation"] { width:100px; text-align:center; }
-            th[data-key="allotment"] { width:100px; text-align:center; }
-            th[data-key="obligation"] { width:100px; text-align:center; }
-            th[data-key="appropriation_balance"] { width:100px; text-align:center; }
-            th[data-key="appropriation_accomplishment"] { width:70px; text-align:center; }
-            th[data-key="disbursement"] { width:100px; text-align:center; }
-            th[data-key="disbursement_to_obligation"] { width:70px; text-align:center; }
-            th[data-key="disbursement_to_appropriation"] { width:70px; text-align:center; }
-            th[data-key="obligation_balance"] { width:100px; text-align:center; }
-        </style>
-    `);
+                    th[data-key="ppas"] { width:200px; text-align:center; }
+                    th[data-key="account_code"] { width:100px; text-align:center; }
+                    th[data-key="appropriation"] { width:100px; text-align:center; }
+                    th[data-key="sb_appropriation"] { width:100px; text-align:center; }
+                    th[data-key="reversion"] { width:100px; text-align:center; }
+                    th[data-key="realignment"] { width:100px; text-align:center; }
+                    th[data-key="authorized_appropriation"] { width:100px; text-align:center; }
+                    th[data-key="allotment"] { width:100px; text-align:center; }
+                    th[data-key="obligation"] { width:100px; text-align:center; }
+                    th[data-key="appropriation_balance"] { width:100px; text-align:center; }
+                    th[data-key="appropriation_accomplishment"] { width:70px; text-align:center; }
+                    th[data-key="disbursement"] { width:100px; text-align:center; }
+                    th[data-key="disbursement_to_obligation"] { width:70px; text-align:center; }
+                    th[data-key="disbursement_to_appropriation"] { width:70px; text-align:center; }
+                    th[data-key="obligation_balance"] { width:100px; text-align:center; }
+                </style>
+            `);
             newWin.document.write('</head><body>');
             newWin.document.write(`
         <div style="text-align:center; margin-bottom:20px;">

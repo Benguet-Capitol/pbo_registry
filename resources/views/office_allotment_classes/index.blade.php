@@ -288,7 +288,7 @@
                 @endforelse
                 <tfoot class="bg-gray-200 dark:bg-gray-800 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
                     <tr>
-                        <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">Total Appropriation:</td>
+                        <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">Total Approved Appropriation:</td>
                         <td id="totalAppropriationFooter" class="px-1 py-3 font-bold text-sm text-gray-900 dark:text-white"></td>
                         <td></td>
                     </tr>

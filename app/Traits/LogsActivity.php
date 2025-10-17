@@ -250,11 +250,11 @@ trait LogsActivity
 
             switch ($action) {
                 case 'create':
-                    return "Created new {$office} under {$allotmentClass}";
+                    return "Created new {$allotmentClass} under {$office}";
                 case 'update':
-                    return "Updated {$office} under {$allotmentClass}";
+                    return "Updated {$allotmentClass} under {$office}";
                 case 'delete':
-                    return "Deleted {$office} under {$allotmentClass}";
+                    return "Deleted {$allotmentClass} under {$office}";
                 default:
                     return "Office Allotment Class action: {$action}";
             }

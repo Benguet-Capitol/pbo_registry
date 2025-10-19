@@ -162,35 +162,54 @@ class OfficeAllotmentClassController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'year' => 'required|integer|min:1900',
-            'office' => 'required|string|max:255',
-            'office_abbreviation' => 'required|string|max:255',
-            'sub_office' => 'nullable|string|max:255',
-            'fund' => 'required|string|max:255',
-            'fund_source' => 'required|string|max:255',
-            'allotment_class' => 'required|string|max:255',
-            'fpp_code' => 'nullable|string|max:255',
-            'responsibility_code' => 'nullable|string|max:255',
-            /* 'mfo_services' => 'nullable|string|max:1000', */
-        ]);
+        try {
+            $validated = $request->validate([
+                'year' => 'required|integer|min:1900',
+                'office' => 'required|string|max:255',
+                'office_abbreviation' => 'required|string|max:255',
+                'sub_office' => 'nullable|string|max:255',
+                'fund' => 'required|string|max:255',
+                'fund_source' => 'required|string|max:255',
+                'allotment_class' => 'required|string|max:255',
+                'fpp_code' => 'nullable|string|max:255',
+                'responsibility_code' => 'nullable|string|max:255',
+                /* 'mfo_services' => 'nullable|string|max:1000', */
+            ]);
 
-        Log::info('Validated data:', $validated);
+            Log::info('Validated data:', $validated);
 
-        $office_allotment_class = OfficeAllotmentClass::create([
-            'year' => $validated['year'],
-            'office' => $validated['office'],
-            'office_abbreviation' => $validated['office_abbreviation'],
-            'sub_office' => $validated['sub_office'],
-            'fund' => $validated['fund'],
-            'fund_source' => $validated['fund_source'],
-            'class' => $validated['allotment_class'],
-            'fpp_code' => $validated['fpp_code'],
-            'responsibility_code' => $validated['responsibility_code'],
-            /* 'mfo_services' => $validated['mfo_services'], */
-        ]);
+            $office_allotment_class = OfficeAllotmentClass::create([
+                'year' => $validated['year'],
+                'office' => $validated['office'],
+                'office_abbreviation' => $validated['office_abbreviation'],
+                'sub_office' => $validated['sub_office'],
+                'fund' => $validated['fund'],
+                'fund_source' => $validated['fund_source'],
+                'class' => $validated['allotment_class'],
+                'fpp_code' => $validated['fpp_code'],
+                'responsibility_code' => $validated['responsibility_code'],
+                /* 'mfo_services' => $validated['mfo_services'], */
+            ]);
 
-        return redirect(route('office_allotment_classes.index'))->with('status', 'Allotment class: <strong>' . $office_allotment_class->class . '</strong> under <strong>' . $office_allotment_class->office_abbreviation . '</strong> has been created successfully!');
+            return redirect()
+                ->route('appropriations.index', ['office_allotment_class_id' => $office_allotment_class->id])
+                ->with('status', 'Allotment class: <strong>' . e($office_allotment_class->class) . '</strong> under <strong>' . e($office_allotment_class->office_abbreviation) . '</strong> has been created successfully!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Let Laravel handle validation exceptions automatically
+            throw $e;
+
+        } catch (\Exception $e) {
+            Log::error('Error creating Office Allotment Class:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred while creating the Office Allotment Class. Please try again.');
+        }
     }
 
 

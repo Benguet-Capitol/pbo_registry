@@ -141,7 +141,7 @@
                     </form>
                 </div>
             </div>
-            <table id="appropriationsTable" class="table-auto text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
+            <table id="appropriationsTable" class="table-auto text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
                 <thead class="text-center border-gray-400 text-xs text-gray-700 bg-gray-50 border-b-2 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
@@ -250,55 +250,44 @@
                                 @endif
                             </a>
                         </th>
-                        @canany(['edit appropriations', 'delete appropriations'])<th class="px-6 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 dark:text-gray-200">{{ __('Actions') }}</th>@endcanany
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($appropriations as $appropriation)
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->programs }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->account_code }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->description }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->fpp_code }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_location }}</td>
-                        @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_no }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->cco_year }}</td>
+                    @forelse ($appropriations as $appropriation)
+                    <tr 
+                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer relative"
+                        oncontextmenu="showAppropriationContextMenu(event, this)"
+                        @if(isset($appropriation))
+                            data-appropriation='@json($appropriation)'
+                            data-appropriation-id="{{ $appropriation->id }}"
+                            data-appropriation-name="{{ $appropriation->appropriation }}"
+                            data-appropriation-code="{{ $appropriation->account_code }}"
+                            data-appropriation-desc="{{ $appropriation->description }}"
                         @endif
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->appropriation, 2) }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter1, 2) }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter2, 2) }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter3, 2) }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter4, 2) }}</td>
-                        <td class="px-2 py-1 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->remarks }}</td>
-                        <td class="px-4 py-1 border-b border-gray-300">
-                            @canany(['edit appropriations', 'delete appropriations'])
-                            <div class="relative inline-block text-left">
-                                <button onclick="toggleDropdown(this)"
-                                    class="relative text-xs group px-2 py-1.5">
-                                    <span class="fas fa-ellipsis-v"></span>
-                                    <!-- Tooltip -->
-                                    <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                        {{ $appropriation->account_code ?? 'No Account Code' }} - {{ $appropriation->description ?? 'No Description' }}
-                                    </span>
-                                </button>
-                                <div class="absolute right-0 mt-1 w-24 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
-                                    @can('edit appropriations')
-                                    <button onclick='openEditAppropriationsModal(@json($appropriation))' class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600">
-                                        <i class="fas fa-edit mr-2"></i>Edit
-                                    </button>
-                                    @endcan
-                                    @can('delete appropriations')
-                                    <button onclick="openDeleteModal({{ $appropriation->id }}, '{{ $appropriation->appropriation }}', '{{ $appropriation->account_code }}', '{{ $appropriation->description }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
-                                        <i class="fas fa-trash mr-2"></i>Delete
-                                    </button>
-                                    @endcan
-                                </div>
-                            </div>
-                            @endcanany
+                    >
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->programs }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->account_code }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->description }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->fpp_code }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_location }}</td>
+                        @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_no }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->cco_year }}</td>
+                        @endif
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->appropriation, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter1, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter2, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter3, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter4, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->remarks }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="12" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                            No Accounts found
                         </td>
                     </tr>
-                    @endforeach
+                @endforelse
                 </tbody>
             </table>
             <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
@@ -306,6 +295,25 @@
                 {{ $appropriations->appends(request()->query())->links() }}
                 @endif
             </div>
+
+            <!-- Context Menu -->
+        <div id="appropriationContextMenu" 
+            class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600">
+            @can('edit appropriations')
+            <button id="contextEdit"
+                    class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600">
+                <i class="fas fa-edit mr-2"></i>Edit
+            </button>
+            @endcan
+            @can('delete appropriations')
+            <button id="contextDelete"
+                    class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
+                <i class="fas fa-trash mr-2"></i>Delete
+            </button>
+            @endcan
+        </div>
+
+
         </div>
     </div>
 
@@ -342,6 +350,51 @@
 
     // Add event listener for input event to filter table as you type
     document.getElementById('searchInput').addEventListener('input', filterTable);
+
+    function showAppropriationContextMenu(event, id) {
+    event.preventDefault();
+
+    const menu = document.getElementById('appropriationContextMenu');
+    const row = event.currentTarget;
+    const container = row.closest('.overflow-x-auto') || document.body;
+    const rowRect = row.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate position relative to container
+    const top = rowRect.top - containerRect.top + container.scrollTop + rowRect.height;
+    const left = rowRect.left - containerRect.left + container.scrollLeft + 10;
+
+    menu.style.position = 'absolute';
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+    menu.classList.remove('hidden');
+
+    // Attach action handlers if data is present
+    const appropriation = row.dataset.appropriation ? JSON.parse(row.dataset.appropriation) : null;
+
+    if (appropriation) {
+        document.getElementById('contextEdit')?.setAttribute('onclick', `openEditAppropriationsModal(${JSON.stringify(appropriation)})`);
+        document.getElementById('contextDelete')?.setAttribute(
+            'onclick',
+            `openDeleteModal(${appropriation.id}, '${appropriation.appropriation}', '${appropriation.account_code}', '${appropriation.description}')`
+        );
+    } else {
+        document.getElementById('contextEdit')?.removeAttribute('onclick');
+        document.getElementById('contextDelete')?.removeAttribute('onclick');
+    }
+
+    // Close on outside click
+    document.addEventListener('click', hideAppropriationContextMenu);
+}
+
+function hideAppropriationContextMenu(event) {
+    const menu = document.getElementById('appropriationContextMenu');
+    if (!menu.contains(event.target)) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', hideAppropriationContextMenu);
+    }
+}
+
 
     // Function to toggle dropdown menu
     function toggleDropdown(button) {

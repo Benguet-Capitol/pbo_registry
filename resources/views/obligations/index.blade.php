@@ -217,15 +217,16 @@
 
                         <tbody>
                             @forelse ($obligations as $obligation)
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                <td class="px-3 py-3">{{ $obligation->obr_date }}</td>
-                                <td class="px-3 py-3">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
-                                <td class="px-3 py-3">{{ $obligation->obr_type }}</td>
-                                <td class="px-3 py-3">{{ $obligation->obr_no }}</td>
-                                <td class="px-3 py-3 text-center max-w-sm">{{ $obligation->particulars }}</td>
-                                <td class="px-3 py-3 max-w-xs">{{ $obligation->remarks ?? '-'}}</td>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                ondblclick="openModal({{ $obligation->id }})">
+                                <td class="px-1 py-2">{{ $obligation->obr_date }}</td>
+                                <td class="px-1 py-2">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
+                                <td class="px-1 py-2">{{ $obligation->obr_type }}</td>
+                                <td class="px-1 py-2">{{ $obligation->obr_no }}</td>
+                                <td class="px-1 py-2 text-center max-w-sm">{{ $obligation->particulars }}</td>
+                                <td class="px-1 py-2 max-w-xs">{{ $obligation->remarks ?? '-'}}</td>
 
-                                <td class="px-3 py-3 text-right obligation-amount">
+                                <td class="px-1 py-2 text-right obligation-amount">
                                     <div class="relative inline-block group">
                                         @if ($obligation->obr_amount == 0.00)
                                             <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 px-2 py-1 rounded font-semibold">Cancelled</span>
@@ -263,7 +264,7 @@
                                     </div>
                                 </td>
 
-                                <td class="px-3 py-3 text-right po-amount">
+                                <td class="px-1 py-2 text-right po-amount">
                                     @php $poAmount = $obligation->purchaseOrders->sum('po_amount'); @endphp
                                     @if ($obligation->obr_type === 'Purchase Request')
                                         <div class="relative inline-block group">
@@ -305,7 +306,7 @@
                                         N/A
                                     @endif
                                 </td>
-                                <td class="px-3 py-3 text-right dv-amount">
+                                <td class="px-1 py-2 text-right dv-amount">
                                     @php
                                         $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
                                     @endphp
@@ -349,7 +350,7 @@
                                 </td>
                                 
 
-                                <td class="px-3 py-3">
+                                <td class="px-1 py-2">
                                     <div class="relative inline-block text-left">
                                         <button onclick="toggleDropdown(this)"
                                             class="relative text-xs group px-2 py-1.5">

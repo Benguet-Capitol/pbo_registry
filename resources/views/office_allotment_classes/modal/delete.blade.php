@@ -2,7 +2,7 @@
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="relative w-full max-w-md p-4 bg-white rounded-lg shadow-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center pb-3">
-                <h3 class="text-lg font-semibold text-red-600 dark:text-white">{{ __('Delete Registry') }}</h3>
+                <h3 class="text-lg font-semibold text-red-600 dark:text-white">{{ __('Delete Office Allotment Class') }}</h3>
                 <button onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-600 dark:text-gray-200 dark:hover:text-gray-400">
                     <i class="fas fa-times h-6 w-6"></i>
                 </button>

@@ -150,7 +150,7 @@
                 </div>
             </div>
 
-            <table id="employeesTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
+            <table id="employeesTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th class="px-1 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">
@@ -209,96 +209,97 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="officeAllotmentBody">
                     @forelse ($office_allotment_classes as $office_allotment_class)
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                            {{ $office_allotment_class->offices->office_abbreviation }}
-                        </td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                            {{ $office_allotment_class->allotmentClass->description ?? 'N/A' }}
-                        </td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                            {{ $office_allotment_class->fund_source }}
-                        </td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                            {{ $office_allotment_class->fund }}
-                        </td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                            {{ $office_allotment_class->fpp_code }}
-                        </td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                            {{ $office_allotment_class->responsibility_code }}
-                        </td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-right">
-                            @if($office_allotment_class->total_appropriation > 0)
-                                <span class="px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold">
-                                    {{ number_format($office_allotment_class->total_appropriation, 2) }}
-                                </span>
-                            @elseif($office_allotment_class->total_appropriation == 0)
-                                <span class="px-2 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-semibold">
-                                    {{ number_format($office_allotment_class->total_appropriation, 2) }}
-                                </span>
-                            @else
-                                <span class="text-gray-600 dark:text-gray-300">
-                                    {{ number_format($office_allotment_class->total_appropriation, 2) }}
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-1 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                            <div class="relative inline-block text-left">
-                                <button onclick="toggleDropdown(this)" 
-                                    class="relative text-xs group px-2 py-1.5">
-                                    <span class="fas fa-ellipsis-v"></span>
-                                    <!-- Tooltip -->
-                                    <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                        {{ $office_allotment_class->offices->office_abbreviation ?? 'No Office' }} - {{ $office_allotment_class->allotmentClass->description ?? 'No Class' }}
+                        <tr
+                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                            ondblclick="window.location.href='{{ route('appropriations.index', ['office_allotment_class_id' => $office_allotment_class->id]) }}'"
+                            oncontextmenu="showContextMenu(event, this)"
+                            data-id="{{ $office_allotment_class->id }}"
+                            data-office="{{ e($office_allotment_class->offices->office_abbreviation ?? '') }}"
+                            data-class="{{ e($office_allotment_class->allotmentClass->description ?? '') }}"
+                            data-json='@json($office_allotment_class)'
+                        >
+                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300">
+                                {{ $office_allotment_class->offices->office_abbreviation }}
+                            </td>
+                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300">
+                                {{ $office_allotment_class->allotmentClass->description ?? 'N/A' }}
+                            </td>
+                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300">
+                                {{ $office_allotment_class->fund_source }}
+                            </td>
+                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300">
+                                {{ $office_allotment_class->fund }}
+                            </td>
+                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300">
+                                {{ $office_allotment_class->fpp_code }}
+                            </td>
+                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300">
+                                {{ $office_allotment_class->responsibility_code }}
+                            </td>
+                            <td class="px-1 py-2 text-right">
+                                @if($office_allotment_class->total_appropriation > 0)
+                                    <span class="px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold">
+                                        {{ number_format($office_allotment_class->total_appropriation, 2) }}
                                     </span>
-                                </button>
-                                <div class="absolute right-0 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
-                                    <a href="{{ route('appropriations.index', ['office_allotment_class_id' => $office_allotment_class->id]) }}" 
-                                    class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-                                        <i class="fas fa-stream mr-2"></i>Accounts
-                                    </a>
-                                    @can('edit office allotment classes')
-                                    <button onclick='openEditOfficeAllotmentClassModal(@json($office_allotment_class))' 
-                                            class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
-                                        <i class="fas fa-edit mr-2"></i>Edit
-                                    </button>
-                                    @endcan
-                                    @can('delete office allotment classes')
-                                    <button onclick="openDeleteModal({{ $office_allotment_class->id }}, '{{ $office_allotment_class->office_abbreviation }}', '{{ $office_allotment_class->class }}')" 
-                                            class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
-                                        <i class="fas fa-trash mr-2"></i>Delete
-                                    </button>
-                                    @endcan
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
-                            No Office Allotment Classes found
-                        </td>
-                    </tr>
-                @endforelse
+                                @elseif($office_allotment_class->total_appropriation == 0)
+                                    <span class="px-2 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-semibold">
+                                        {{ number_format($office_allotment_class->total_appropriation, 2) }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-600 dark:text-gray-300">
+                                        {{ number_format($office_allotment_class->total_appropriation, 2) }}
+                                    </span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                                No Office Allotment Classes found
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+
                 <tfoot class="bg-gray-200 dark:bg-gray-800 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
                     <tr>
-                        <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">Total Approved Appropriation:</td>
+                        <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                            Total Approved Appropriation:
+                        </td>
                         <td id="totalAppropriationFooter" class="px-1 py-3 font-bold text-sm text-gray-900 dark:text-white"></td>
                         <td></td>
                     </tr>
                 </tfoot>
-                </tbody>
             </table>
+
+            <!-- Pagination -->
             <div class="mt-4">
                 @if ($perPage != 'all')
-                {{ $office_allotment_classes->appends(request()->query())->links() }}
+                    {{ $office_allotment_classes->appends(request()->query())->links() }}
                 @endif
+            </div>
+
+            <!-- Single Context Menu (outside tbody) -->
+            <div id="contextMenu" class="hidden absolute w-52 rounded-lg border shadow-lg z-50 bg-white dark:bg-gray-700 dark:border-gray-600">
+                <a id="contextAccounts" href="#" class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600">
+                    <i class="fas fa-stream mr-2"></i> Accounts
+                </a>
+
+                @can('edit office allotment classes')
+                <button id="contextEdit" type="button" class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
+                    <i class="fas fa-edit mr-2"></i> Edit
+                </button>
+                @endcan
+
+                @can('delete office allotment classes')
+                <button id="contextDelete" type="button" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
+                    <i class="fas fa-trash mr-2"></i> Delete
+                </button>
+                @endcan
             </div>
         </div>
     </div>
@@ -310,17 +311,113 @@
 </x-app-layout>
 
 <script>
-    // Function to toggle dropdown menu
-    function toggleDropdown(button) {
-        let dropdown = button.nextElementSibling;
-        let isOpen = !dropdown.classList.contains("hidden"); // true if already visible
+(function () {
+    const menu = document.getElementById('contextMenu');
+    const accountsLink = document.getElementById('contextAccounts');
+    const editBtn = document.getElementById('contextEdit');
+    const deleteBtn = document.getElementById('contextDelete');
 
-        closeAllDropdowns(); // close all first
+    // showContextMenu receives the mouse event and the <tr> element (this)
+    window.showContextMenu = function (event, row) {
+        event.preventDefault();
+        event.stopPropagation();
 
-        if (!isOpen) {
-            dropdown.classList.remove("hidden"); // open only if it wasn't open
+        // read data attributes
+        const id = row.dataset.id;
+        const office = row.dataset.office || '';
+        const klass = row.dataset.class || '';
+        const rowJson = row.dataset.json ? JSON.parse(row.dataset.json) : null;
+
+        // build links / callbacks
+        accountsLink.href = `{{ url('/appropriations') }}?office_allotment_class_id=${encodeURIComponent(id)}`;
+
+        if (editBtn) {
+            // pass the JSON if your modal expects the whole record, otherwise just id
+            editBtn.onclick = () => {
+                if (typeof openEditOfficeAllotmentClassModal === 'function') {
+                    openEditOfficeAllotmentClassModal(rowJson ?? { id });
+                } else {
+                    console.warn('openEditOfficeAllotmentClassModal() not defined');
+                }
+                hideContextMenu();
+            };
         }
+
+        if (deleteBtn) {
+            deleteBtn.onclick = () => {
+                if (typeof openDeleteModal === 'function') {
+                    openDeleteModal(id, office, klass);
+                } else {
+                    console.warn('openDeleteModal() not defined');
+                }
+                hideContextMenu();
+            };
+        }
+
+        // Find the nearest scrollable container (like overflow-x-auto)
+        const container = row.closest('.overflow-x-auto') || document.body;
+
+        // Get bounding rectangles
+        const rowRect = row.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Calculate relative position inside container
+        const top = rowRect.top - containerRect.top + container.scrollTop + rowRect.height + 4;
+        const left = rowRect.left - containerRect.left + container.scrollLeft + 20;
+
+        // Measure menu dimensions
+        const menuRect = menu.getBoundingClientRect();
+        const menuH = menuRect.height || 150;
+        const menuW = menuRect.width || 200;
+
+        // Get container visible area
+        const containerVisibleHeight = container.clientHeight;
+        const containerVisibleWidth = container.clientWidth;
+
+        // Adjust if menu would overflow container bottom
+        let adjustedTop = top;
+        if (adjustedTop + menuH > container.scrollTop + containerVisibleHeight - 10) {
+            adjustedTop = top - rowRect.height - menuH - 8; // place above
+        }
+
+        // Adjust horizontally if needed
+        let adjustedLeft = left;
+        if (adjustedLeft + menuW > container.scrollLeft + containerVisibleWidth - 10) {
+            adjustedLeft = container.scrollLeft + containerVisibleWidth - menuW - 10;
+        }
+        if (adjustedLeft < 10) adjustedLeft = 10;
+
+        // Apply
+        menu.style.position = 'absolute';
+        menu.style.top = `${adjustedTop}px`;
+        menu.style.left = `${adjustedLeft}px`;
+        menu.classList.remove('hidden');
+
+        // show
+        menu.classList.remove('hidden');
+
+        // small delay to avoid immediate hide from the click that triggered contextmenu
+        setTimeout(() => {
+            document.addEventListener('click', hideContextMenu);
+            window.addEventListener('resize', hideContextMenu);
+            window.addEventListener('scroll', hideContextMenu, { passive: true });
+        }, 30);
+    };
+
+    function hideContextMenu() {
+        if (!menu) return;
+        menu.classList.add('hidden');
+        document.removeEventListener('click', hideContextMenu);
+        window.removeEventListener('resize', hideContextMenu);
+        window.removeEventListener('scroll', hideContextMenu);
     }
+
+    // optional: hide when Esc is pressed
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hideContextMenu();
+    });
+
+})();
 
     function closeAllDropdowns() {
         document.querySelectorAll(".dropdown-menu").forEach(menu => menu.classList.add("hidden"));

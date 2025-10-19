@@ -219,12 +219,12 @@
                             }
                         @endphp
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_date }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_date }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
                             </td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_no }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_no }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300">
                                 @if($realignment->type === 'Recipient')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
                                         {{ ucfirst($realignment->type) }}
@@ -237,11 +237,11 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ ucfirst($realignment->type) }}</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->programs ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->appropriation->account_code ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->description ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-md">{{ $realignment->basis }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->programs ?? '-' }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->appropriation->account_code ?? '-' }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->description ?? '-' }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-md">{{ $realignment->basis }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300">
                                 @if($realignment->type === 'Recipient')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
                                         {{ number_format($realignment->amount, 2) }}
@@ -254,7 +254,7 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ number_format($realignment->amount, 2) }}</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 <div class="relative inline-block text-left">
                                     <button onclick="toggleDropdown(this)" 
                                             class="relative text-xs group px-2 py-1.5">

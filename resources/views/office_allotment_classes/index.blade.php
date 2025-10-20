@@ -22,9 +22,33 @@
 
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <!-- Left: Obligations Title -->
+            <!-- Left: Allotment Class Title with Filters -->
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Allotment Class') }}
+
+                @php
+                $filters = [];
+
+                if (request('office_filter')) {
+                    $officeFilter = $offices->firstWhere('id', request('office_filter'));
+                    if ($officeFilter) $filters[] = $officeFilter->office_abbreviation;
+                }
+                if (request('allotment_class_filter')) {
+                    $classFilter = $allotmentClasses->firstWhere('class', request('allotment_class_filter'));
+                    if ($classFilter) $filters[] = $classFilter->description;
+                }
+                if (request('fund_source_filter')) {
+                    $filters[] = request('fund_source_filter');
+                }
+                @endphp
+
+                @if (count($filters) > 0)
+                    <span class="text-lg"> > </span>
+                    <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
+                @endif
+                <span class="text-blue-800 dark:text-blue-400">
+                    (CY {{ $selectedYear }})
+                </span>
             </h3>
 
             <!-- Right: Breadcrumb Navigation -->

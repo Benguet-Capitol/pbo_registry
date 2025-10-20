@@ -26,6 +26,28 @@
         <div class="flex justify-between items-center">
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Supplemental Appropriations | Reversions') }}
+
+                @php
+                $filters = [];
+
+                if (request('office_allotment_class_id')) {
+                    $officeClass = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_id'));
+                    if ($officeClass) {
+                        $filters[] = $officeClass->offices->office_abbreviation . ' - ' . $officeClass->allotmentClass->class;
+                    }
+                }
+                if (request('supplemental_type_filter')) {
+                    $filters[] = request('supplemental_type_filter');
+                }
+                @endphp
+
+                @if (count($filters) > 0)
+                    <span class="text-lg"> > </span>
+                    <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
+                @endif
+                <span class="text-blue-800 dark:text-blue-400">
+                    (CY {{ request('year1', date('Y')) }})
+                </span>
             </h3>
 
             <!-- Right: Breadcrumb Navigation -->
@@ -62,7 +84,7 @@
                     <label for="year1" class="sr-only">Year</label>
                     <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
                         @foreach($availableYears as $year1)
-                            <option value="{{ $year1 }}" {{ request('year1') == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
+                            <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
                     </x-form.select>
                 </div>
@@ -191,12 +213,14 @@
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                 4th Qtr
                         </th>
-                        <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th>
+                        <!-- <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th> -->
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($supplementals as $supplemental)
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            oncontextmenu="showSupplementalContextMenu(event, this)"
+                            data-supplemental='@json($supplemental)'>
                             <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_date }}</td>
                             <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
@@ -219,7 +243,7 @@
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->account_code ?? '-' }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->description ?? '-' }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->basis }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-right">
                                 @if($supplemental->type === 'Supplemental')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
                                         {{ number_format($supplemental->amount, 2) }}
@@ -232,16 +256,16 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ number_format($supplemental->amount, 2) }}</span>
                                 @endif
                             </td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter1 }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter2 }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter3 }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter4 }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter1 }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter2 }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter3 }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter4 }}</td>
+                            <!-- <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 <div class="relative inline-block text-left">
                                     <button onclick="toggleDropdown(this)" 
                                             class="relative text-xs group px-2 py-1.5">
                                         <span class="fas fa-ellipsis-v"></span>
-                                        <!-- Tooltip -->
+                                        
                                         <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
                                             {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }} | {{ $supplemental->supplemental_no }} | {{ number_format($supplemental->amount, 2) }}
                                         </span>
@@ -259,7 +283,7 @@
                                         @endcan
                                     </div>
                                 </div>
-                            </td>
+                            </td> -->
                         </tr>
                     @empty
                         <tr>
@@ -294,14 +318,129 @@
         </div>
     </div>
 
+    <!-- Context Menu -->
+    <div id="supplementalContextMenu" 
+        class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
+        style="display: none;">
+        @can('edit supplementals')
+        <button id="contextEdit"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        @endcan
+        @can('delete supplementals')
+        <button id="contextDelete"
+                class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
+            <i class="fas fa-trash mr-2"></i>Delete
+        </button>
+        @endcan
+    </div>
+
     @include('supplementals.modal.create')
     @include('supplementals.modal.edit')
     @include('supplementals.modal.delete')
 
-
 </x-app-layout>
 
 <script>
+    (function() {
+    const menu = document.getElementById('supplementalContextMenu');
+
+    // showContextMenu receives the mouse event and the row element
+    window.showSupplementalContextMenu = function(event, row) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!menu) return;
+
+        // Get the table container
+        const container = row.closest('.overflow-x-auto') || document.body;
+        if (!container) return;
+
+        // Get element positions
+        const rowRect = row.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Find the first cell for horizontal positioning
+        const firstCell = row.querySelector('td:first-child');
+        const firstCellRect = firstCell.getBoundingClientRect();
+        const rowBottom = rowRect.bottom + 5;
+
+        // Position menu at first column, just below the row
+        menu.style.position = 'fixed';
+        menu.style.top = `${rowBottom}px`;
+        menu.style.left = `${firstCellRect.left}px`;
+        menu.style.display = 'block';
+        menu.classList.remove('hidden');
+
+        // Get supplemental data
+        const supplemental = row.dataset.supplemental ? JSON.parse(row.dataset.supplemental) : null;
+        if (supplemental) {
+            // Edit button
+            const editBtn = menu.querySelector('#contextEdit');
+            if (editBtn) {
+                editBtn.onclick = () => {
+                    hideSupplementalContextMenu();
+                    openEditSupplementalModal(supplemental);
+                };
+            }
+
+            // Delete button
+            const deleteBtn = menu.querySelector('#contextDelete');
+            if (deleteBtn && supplemental.id) {
+                deleteBtn.onclick = () => {
+                    hideSupplementalContextMenu();
+                    openDeleteSupplementalModal(
+                        supplemental.id,
+                        supplemental.supplemental_no,
+                        supplemental.type,
+                        supplemental.amount,
+                        supplemental.appropriations_id
+                    );
+                };
+            }
+        }
+
+        // Add event listeners with delay
+        setTimeout(() => {
+            document.addEventListener('click', hideSupplementalContextMenu);
+            window.addEventListener('resize', hideSupplementalContextMenu);
+            window.addEventListener('scroll', hideSupplementalContextMenu, { passive: true });
+            container.addEventListener('scroll', hideSupplementalContextMenu, { passive: true });
+        }, 30);
+    };
+
+    function hideSupplementalContextMenu() {
+        if (!menu) return;
+        menu.classList.add('hidden');
+        menu.style.display = 'none';
+
+        // Remove event listeners
+        document.removeEventListener('click', hideSupplementalContextMenu);
+        window.removeEventListener('resize', hideSupplementalContextMenu);
+        window.removeEventListener('scroll', hideSupplementalContextMenu);
+        const container = document.querySelector('.overflow-x-auto');
+        if (container) {
+            container.removeEventListener('scroll', hideSupplementalContextMenu);
+        }
+    }
+
+    // Hide on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hideSupplementalContextMenu();
+    });
+
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', () => {
+        // Hide context menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target)) {
+                hideSupplementalContextMenu();
+            }
+        });
+    });
+    })();
+
     function filterTable() {
         // Declare variables
         var input, filter, table, tr, td, i, j, txtValue;

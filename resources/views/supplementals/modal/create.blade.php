@@ -1,5 +1,5 @@
 <!-- Create Supplemental Appropriations / Reversions Modal -->
-<form id="createSupplementalsForm" method="POST" action="{{ route('supplementals.store') }}">
+<form id="createSupplementalsForm" method="POST" action="">
     @csrf
     <input type="hidden" name="year1" value="{{ request('year1') }}">
     <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
@@ -210,7 +210,7 @@
                                                     {{ __('Total') }}
                                                 </td>
                                                 <td class="px-2 py-2 text-right text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                    <span id="totalObligation" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-right text-xs">0.00</span>
+                                                    <span id="totalObligation" class="block w-full font-bold text-green-700 dark:text-green-400 text-right text-xs">0.00</span>
                                                 </td>
                                                 <td></td>
                                             </tr>

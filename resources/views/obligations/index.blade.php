@@ -2,9 +2,31 @@
 
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <!-- Left: Obligations Title -->
+            <!-- Left: Obligations Title with Filters -->
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Obligations') }}
+
+                @php
+                $filters = [];
+
+                if (request('office_allotment_class_filter')) {
+                    $officeClass = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_filter'));
+                    if ($officeClass) {
+                        $filters[] = $officeClass->offices->office_abbreviation . ' - ' . $officeClass->allotmentClass->class;
+                    }
+                }
+                if (request('obr_type_filter')) {
+                    $filters[] = request('obr_type_filter');
+                }
+                @endphp
+
+                @if (count($filters) > 0)
+                    <span class="text-lg"> > </span>
+                    <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
+                @endif
+                <span class="text-blue-800 dark:text-blue-400">
+                    (CY {{ request('year1', date('Y')) }})
+                </span>
             </h3>
 
             <!-- Right: Breadcrumb Navigation -->
@@ -70,7 +92,7 @@
                     <label for="year1" class="sr-only">Year</label>
                     <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
                         @foreach($availableYears as $year1)
-                        <option value="{{ $year1 }}" {{ request('year1') == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
+                        <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
                     </x-form.select>
                 </div>
@@ -178,14 +200,6 @@
                                     </a>
                                 </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'remarks', 'sort_order' => $sortBy == 'remarks' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Remarks
-                                        @if($sortBy == 'remarks')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     <a href="{{ route('obligations.index', ['sort_by' => 'obr_amount', 'sort_order' => $sortBy == 'obr_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                         Obligation
                                         @if($sortBy == 'obr_amount')
@@ -209,22 +223,37 @@
                                         @endif
                                     </a>
                                 </th>
-                                <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    Actions
+                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'balance', 'sort_order' => $sortBy == 'balance' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        Balance
+                                        @if($sortBy == 'balance')
+                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
                                 </th>
+                                <!-- <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    Actions
+                                </th> -->
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse ($obligations as $obligation)
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                                ondblclick="openModal({{ $obligation->id }})">
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer relative"
+                                ondblclick="openModal({{ $obligation->id }})"
+                                oncontextmenu="showObligationContextMenu(event, this)"
+                                data-obligation='@json($obligation)'
+                                data-obligation-id="{{ $obligation->id }}"
+                                data-obligation-obr="{{ $obligation->obr_no }}"
+                                data-obligation-office="{{ $obligation->officeAllotmentClass->offices->office_abbreviation }}"
+                                data-obligation-class="{{ $obligation->officeAllotmentClass->allotmentClass->class }}"
+                                data-obligation-amount="{{ $obligation->obr_amount }}"
+                            >
                                 <td class="px-1 py-2">{{ $obligation->obr_date }}</td>
                                 <td class="px-1 py-2">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
                                 <td class="px-1 py-2">{{ $obligation->obr_type }}</td>
                                 <td class="px-1 py-2">{{ $obligation->obr_no }}</td>
                                 <td class="px-1 py-2 text-center max-w-sm">{{ $obligation->particulars }}</td>
-                                <td class="px-1 py-2 max-w-xs">{{ $obligation->remarks ?? '-'}}</td>
 
                                 <td class="px-1 py-2 text-right obligation-amount">
                                     <div class="relative inline-block group">
@@ -307,55 +336,94 @@
                                     @endif
                                 </td>
                                 <td class="px-1 py-2 text-right dv-amount">
-                                    @php
-                                        $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
-                                    @endphp
-                                    <div class="relative inline-block group">
+                                @php
+                                    $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
+                                    $obligationAmount = $obligation->obr_amount;
 
-                                        @role('Obligation')
-                                            @if ($disbursementAmount > 0)
-                                                <span 
-                                                    class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold px-2 py-1">
-                                                    {{ number_format($disbursementAmount, 2) }}
-                                                </span>
-                                            @else
-                                                <span
-                                                    class="text-gray-700 dark:text-gray-400 px-2 py-1">
-                                                    {{ number_format($disbursementAmount, 2) }}
-                                                </span>
-                                            @endif
-                                        @else
-                                            {{-- Active button for other roles --}}
-                                            @if ($disbursementAmount > 0)
-                                                <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
-                                                    type="button"
-                                                    class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold hover:underline px-2 py-1">
-                                                    {{ number_format($disbursementAmount, 2) }}
-                                                </button>
-                                            @else
-                                                <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
-                                                    type="button"
-                                                    class="text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
-                                                    {{ number_format($disbursementAmount, 2) }}
-                                                </button>
-                                            @endif
+                                    $isEqual = bccomp($disbursementAmount, $obligationAmount, 2) === 0;
+                                    $isLower = $disbursementAmount < $obligationAmount && $disbursementAmount > 0;
+                                    $isZero = $disbursementAmount == 0;
+                                    $isOBRZero = $obligationAmount == 0; // ✅ New condition
+                                @endphp
 
-                                            <!-- Tooltip (only for non-Obligation roles) -->
-                                            <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                Add Disbursement
-                                            </span>
-                                        @endrole
+                                <div class="relative inline-block group">
+                                    @role('Obligation')
+                                        <span
+                                            class="px-2 py-1
+                                                @if ($isOBRZero)
+                                                    text-gray-700 dark:text-gray-400
+                                                @elseif ($isEqual)
+                                                    bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold
+                                                @elseif ($isLower)
+                                                    bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 font-semibold
+                                                @elseif ($isZero)
+                                                    text-gray-700 dark:text-gray-400
+                                                @else
+                                                    text-gray-700 dark:text-gray-400
+                                                @endif
+                                            ">
+                                            {{ number_format($disbursementAmount, 2) }}
+                                        </span>
+                                    @else
+                                        <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
+                                            type="button"
+                                            class="hover:underline px-2 py-1
+                                                @if ($isOBRZero)
+                                                    text-gray-700 dark:text-gray-400
+                                                @elseif ($isEqual)
+                                                    bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold
+                                                @elseif ($isLower)
+                                                    bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 font-semibold
+                                                @elseif ($isZero)
+                                                    text-gray-700 dark:text-gray-400
+                                                @else
+                                                    text-gray-700 dark:text-gray-400
+                                                @endif
+                                            ">
+                                            {{ number_format($disbursementAmount, 2) }}
+                                        </button>
 
-                                    </div>
-                                </td>
+                                        <!-- Tooltip -->
+                                        <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block 
+                                                    bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                            Add Disbursement
+                                        </span>
+                                    @endrole
+                                </div>
+                            </td>
+
+                            <td class="px-1 py-2 text-right balance">
+                                @php
+                                    $balance = $obligation->obr_amount - $disbursementAmount;
+                                @endphp
+                                <div class="relative inline-block group">
+                                    @if ($obligationAmount == 0)
+                                        <span class="text-gray-700 dark:text-gray-400 px-2 py-1">
+                                            {{ number_format($balance, 2) }}
+                                        </span>
+                                    @elseif ($balance > 0)
+                                        <span class="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-400 font-semibold px-2 py-1">
+                                            {{ number_format($balance, 2) }}
+                                        </span>
+                                    @elseif ($balance < 0)
+                                        <span class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-semibold px-2 py-1">
+                                            {{ number_format($balance, 2) }}
+                                        </span>
+                                    @else
+                                        <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold px-2 py-1">
+                                            {{ number_format($balance, 2) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
                                 
 
-                                <td class="px-1 py-2">
+                                <!-- <td class="px-1 py-2">
                                     <div class="relative inline-block text-left">
                                         <button onclick="toggleDropdown(this)"
                                             class="relative text-xs group px-2 py-1.5">
                                             <span class="fas fa-ellipsis-v"></span>
-                                            <!-- Tooltip -->
+                                            
                                             <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
                                                 {{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }} | {{ $obligation->obr_no }} | {{ number_format($obligation->obr_amount, 2) }}
                                             </span>
@@ -409,7 +477,7 @@
                                             @endcan
                                         </div>
                                     </div>
-                                </td>
+                                </td> -->
                             </tr>
                             @empty
                                 <tr>
@@ -444,6 +512,52 @@
             </div>
         </div>
     </div>
+
+    <!-- Context Menu -->
+    <div id="obligationContextMenu" 
+        class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
+        style="display: none;">
+        <button id="contextView"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-eye mr-2"></i>View Details
+        </button>
+        @can('view obligation adjustments')
+        <button id="contextAdjustments"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-file-edit mr-2"></i>Adjustments
+        </button>
+        @endcan
+        @can('view purchase orders')
+        <button id="contextPurchaseOrders"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-file-invoice mr-2"></i>Purchase Order
+        </button>
+        @endcan
+        @can('view disbursement')
+        <button id="contextDisbursement"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-file-medical-alt mr-2"></i>Disbursement
+        </button>
+        @endcan
+        @can('cancel obligations')
+        <button id="contextCancellation"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-window-close mr-2"></i>Cancellation
+        </button>
+        @endcan
+        @can('edit obligations')
+        <button id="contextEdit"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        @endcan
+        @can('delete obligations')
+        <button id="contextDelete"
+                class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
+            <i class="fas fa-trash mr-2"></i>Delete
+        </button>
+        @endcan
+    </div>
     
 
     @include('obligations.modal.obligation_details')
@@ -458,7 +572,185 @@
 </x-app-layout>
 
 <script>
-    /* Index blade Script */
+
+    (function() {
+    const menu = document.getElementById('obligationContextMenu');
+    let scrollTimeout;
+
+    // Function to handle scroll events with debouncing
+    function handleScroll() {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+        }
+        scrollTimeout = setTimeout(hideObligationContextMenu, 150);
+    }
+
+    // showContextMenu receives the mouse event and the row element
+    window.showObligationContextMenu = function(event, row) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!menu) return;
+
+        // Get the table container
+        const container = row.closest('.overflow-x-auto') || document.body;
+        if (!container) return;
+
+        // Get element positions
+        const rowRect = row.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Calculate position relative to container
+        const top = rowRect.top + rowRect.height + 5;
+        const left = containerRect.left + container.scrollLeft + 10;
+
+        // Position menu
+        menu.style.position = 'absolute';
+        menu.style.top = `${top}px`;
+        menu.style.left = `${left}px`;
+        menu.style.display = 'block';
+        menu.classList.remove('hidden');
+
+        // Get obligation data and set up menu items
+        const obligation = row.dataset.obligation ? JSON.parse(row.dataset.obligation) : null;
+        if (obligation) {
+            // View button
+            const viewBtn = menu.querySelector('#contextView');
+            if (viewBtn) {
+                viewBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    openModal(obligation.id);
+                };
+            }
+
+            // Adjustments button
+            const adjustBtn = menu.querySelector('#contextAdjustments');
+            if (adjustBtn && obligation.id) {
+                adjustBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    window.location.href = `/obligation_adjustments?obligation_id=${obligation.id}`;
+                };
+            }
+
+            // Purchase Orders button
+            const poBtn = menu.querySelector('#contextPurchaseOrders');
+            if (poBtn && obligation.id) {
+                // Only show for Purchase Request type
+                if (obligation.obr_type === 'Purchase Request') {
+                    poBtn.style.display = 'block';
+                    poBtn.onclick = () => {
+                        hideObligationContextMenu();
+                        window.location.href = `/purchase_orders?obligation_id=${obligation.id}`;
+                    };
+                } else {
+                    poBtn.style.display = 'none';
+                }
+            }
+
+            // Disbursement button
+            const disbursementBtn = menu.querySelector('#contextDisbursement');
+            if (disbursementBtn && obligation.id) {
+                disbursementBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    window.location.href = `/disbursements?obligation_id=${obligation.id}`;
+                };
+            }
+
+            // Edit button
+            const editBtn = menu.querySelector('#contextEdit');
+            if (editBtn) {
+                editBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    openEditObligationsModal(obligation);
+                };
+            }
+
+            // Delete button
+            const deleteBtn = menu.querySelector('#contextDelete');
+            if (deleteBtn) {
+                deleteBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    openDeleteModal(
+                        row.dataset.obligationId,
+                        row.dataset.obligationObr,
+                        row.dataset.obligationOffice,
+                        row.dataset.obligationClass,
+                        row.dataset.obligationAmount
+                    );
+                };
+            }
+
+            // Cancellation button
+            const cancelBtn = menu.querySelector('#contextCancellation');
+            if (cancelBtn) {
+                cancelBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    openCancellationModal(obligation.id, obligation);
+                };
+            }
+        }
+
+        // Add event listeners with delay
+        setTimeout(() => {
+            document.addEventListener('click', hideObligationContextMenu);
+            window.addEventListener('resize', hideObligationContextMenu);
+            window.addEventListener('scroll', hideObligationContextMenu, { passive: true });
+            
+            // Add scroll listener to container
+            container.addEventListener('scroll', hideObligationContextMenu, { passive: true });
+        }, 30);
+    };
+
+    function hideObligationContextMenu() {
+        if (!menu) return;
+        menu.classList.add('hidden');
+        menu.style.display = 'none';
+        
+        // Clear any existing scroll timeout
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+        }
+        
+        // Clean up event listeners
+        document.removeEventListener('click', hideObligationContextMenu);
+        window.removeEventListener('resize', hideObligationContextMenu);
+        window.removeEventListener('scroll', handleScroll);
+        
+        // Clean up horizontal scroll container listener
+        const container = document.querySelector('.overflow-x-auto');
+        if (container) {
+            container.removeEventListener('scroll', handleScroll);
+        }
+
+        // Clean up vertical scroll container listener
+        const scrollableContainer = document.querySelector('.max-h-\\[720px\\].overflow-y-auto');
+        if (scrollableContainer) {
+            scrollableContainer.removeEventListener('scroll', handleScroll);
+        }
+    }
+
+    // Hide on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hideObligationContextMenu();
+    });
+
+    // Initialize scroll event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        // Handle horizontal scroll container
+        const container = document.querySelector('.overflow-x-auto');
+        if (container) {
+            container.addEventListener('scroll', hideObligationContextMenu, { passive: true });
+        }
+        
+        // Handle vertical scroll container
+        const scrollableContainer = document.querySelector('.max-h-\\[720px\\].overflow-y-auto');
+        if (scrollableContainer) {
+            scrollableContainer.addEventListener('scroll', hideObligationContextMenu, { passive: true });
+        }
+    });
+})();
+
+
     // Compute totals for visible rows
     function computeTableTotals() {
         let totalObligation = 0;
@@ -516,9 +808,30 @@
         });
     }
 
-    // Recompute totals on filter/search
-    document.addEventListener('DOMContentLoaded', computeTableTotals);
-    document.getElementById('searchInput').addEventListener('input', computeTableTotals);
+    // Initialize all event handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize table totals
+        computeTableTotals();
+        
+        // Initialize search handling
+        document.getElementById('searchInput').addEventListener('input', computeTableTotals);
+        
+        // Initialize context menu handling
+        document.addEventListener('click', function(e) {
+            const contextMenu = document.getElementById('obligationContextMenu');
+            if (contextMenu && !contextMenu.contains(e.target) && !e.target.closest('[oncontextmenu]')) {
+                contextMenu.style.display = 'none';
+                contextMenu.classList.add('hidden');
+            }
+        });
+
+        // Prevent default context menu on the table
+        document.querySelector('.overflow-x-auto').addEventListener('contextmenu', function(e) {
+            if (!e.target.closest('[oncontextmenu]')) {
+                e.preventDefault();
+            }
+        });
+    });
     // If you have other filters, add their event listeners here to call computeTableTotals
 
     // If you use pagination or AJAX, call computeTableTotals after table updates
@@ -564,7 +877,15 @@
     }
 
     function closeAllDropdowns() {
+        // Close regular dropdowns
         document.querySelectorAll(".dropdown-menu").forEach(menu => menu.classList.add("hidden"));
+        
+        // Close context menu
+        const contextMenu = document.getElementById('obligationContextMenu');
+        if (contextMenu) {
+            contextMenu.style.display = 'none';
+            contextMenu.classList.add('hidden');
+        }
     }
 
     // Close dropdown if click happens outside
@@ -573,7 +894,6 @@
             closeAllDropdowns();
         }
     });
-
 
     /* Modal Create ObligationAdjustment */
     function openCreateObligationAdjustmentModal(obligationId) {

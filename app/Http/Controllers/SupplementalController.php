@@ -162,7 +162,7 @@ class SupplementalController extends Controller
             ['label' => 'Supplemental Appropriations | Reversions']
         ];
         // Return the view with the supplementals data
-        return view('supplementals.index', compact('supplementals', 'perPage', 'search', 'sortBy', 'sortOrder', 'availableYears',
+        return view('supplementals.index', compact('supplementals', 'perPage', 'search', 'sortBy', 'sortOrder', 'availableYears', 'selectedYear',
              'officeAllotmentClasses', 'office_allotment_classes', 'appropriations', 'breadcrumb'));
     }
 

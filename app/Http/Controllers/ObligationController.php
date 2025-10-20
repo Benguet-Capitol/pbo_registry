@@ -90,6 +90,11 @@ class ObligationController extends Controller
         } elseif ($sortBy === 'dv_amount') {
             $query->withSum('disbursements as dv_amount_sum', 'disbursement_amount')
                 ->orderBy('dv_amount_sum', $sortOrder);
+        } elseif ($sortBy === 'balance') {
+            // Calculate balance as (obligation amount - disbursement amount)
+            $query->withSum('obligationAmounts as obr_amount_sum', 'obr_amount')
+                ->withSum('disbursements as dv_amount_sum', 'disbursement_amount')
+                ->orderByRaw('(COALESCE(obr_amount_sum, 0) - COALESCE(dv_amount_sum, 0)) ' . $sortOrder);
         } else {
             $query->orderBy($sortBy, $sortOrder);
         }
@@ -284,6 +289,7 @@ class ObligationController extends Controller
                 'adjustments' => $adjustments,
                 'po_total' => $poTotal,
                 'disbursement_total' => $disbursementTotal,
+                'balance' => $obrAmount - $disbursementTotal,
             ];
         });
 

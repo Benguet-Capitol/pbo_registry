@@ -70,9 +70,10 @@
                             <th class="px-4 py-3 text-center">Program</th>
                             <th class="px-4 py-3 text-center">Account Code</th>
                             <th class="px-4 py-3 text-center">Description</th>
-                            <th class="px-4 py-3 text-center">Adjusted Obligation Amount</th>
-                            <th class="px-4 py-3 text-center">Purchase Order Amount</th>
-                            <th class="px-4 py-3 text-center">Disbursement Amount</th>
+                            <th class="px-4 py-3 text-center">Adjusted Obligation</th>
+                            <th class="px-4 py-3 text-center">Purchase Order</th>
+                            <th class="px-4 py-3 text-center">Disbursement</th>
+                            <th class="px-4 py-3 text-center">Balance</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,6 +90,12 @@
                                 </td>
                                 <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
                                     {{ number_format($row['disbursement_amount'], 2) }}
+                                </td>
+                                <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                                    @php
+                                        $balance = $row['obr_amount'] - $row['disbursement_amount'];
+                                    @endphp
+                                    {{ number_format($balance, 2) }}
                                 </td>
                             </tr>
                         @endforeach

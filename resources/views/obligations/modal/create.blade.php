@@ -209,7 +209,7 @@
                                                     {{ __('Total Obligation') }}
                                                 </td>
                                                 <td class="px-2 py-2 text-right text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                    <span id="totalObligation" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-right text-xs">0.00</span>
+                                                    <span id="totalObligation" class="block w-full font-bold text-green-700 dark:text-green-400 text-right text-xs">0.00</span>
                                                 </td>
                                                 <td></td>
                                             </tr>

@@ -428,8 +428,10 @@
                         <tr 
                             class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}'"
+                            oncontextmenu="showDropdownMenu(event, this)"
+                            data-class-id="{{ $class->id }}"
                         >
-                            <td class="px-1 py-1 text-center">
+                            <td class="px-1 py-2 text-center">
                                 <div class="relative inline-block text-left">
                                     <!-- Dropdown Button -->
                                     <button onclick="toggleDropdown(this)"
@@ -455,33 +457,33 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-1 py-1 text-center">{{ $class->office_abbreviation }}</td>
-                            <td class="px-1 py-1 text-center">{{ $class->class }}</td>
-                            <td class="px-1 py-1 text-center">{{ $class->fundSourceRelation->category ?? '-' }}</td>
-                            <td class="px-1 py-1 text-center">{{ $class->fpp_code }}</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->appropriations_sum, 2) }}</td>
-                            <td class="px-1 py-1 text-right {{ $class->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->supplemental_sum, 2) }}</td>
-                            <td class="px-1 py-1 text-right {{ $class->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->reversion_sum, 2) }}</td>
-                            <td class="px-1 py-1 text-right 
+                            <td class="px-1 py-2 text-center">{{ $class->office_abbreviation }}</td>
+                            <td class="px-1 py-2 text-center">{{ $class->class }}</td>
+                            <td class="px-1 py-2 text-center">{{ $class->fundSourceRelation->category ?? '-' }}</td>
+                            <td class="px-1 py-2 text-center">{{ $class->fpp_code }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->appropriations_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right {{ $class->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->supplemental_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right {{ $class->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->reversion_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right 
                                     {{ $class->realignments_sum < 0 ? 'text-red-600 font-semibold' : ($class->realignments_sum > 0 ? 'text-green-600 font-semibold' : 'text-gray-700 dark:text-gray-300') }}">
                                 {{ number_format($class->realignments_sum, 2) }}
                             </td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->authorized_appropriations, 2) }}</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->allotments_sum, 2) }}</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->for_later_release, 2) }}</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->obligations_sum, 2) }}</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->balance_appropriations, 2) }}</td>
-                            <td class="px-1 py-1 text-center">{{ number_format($class->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->balance_allotments, 2) }}</td>
-                            <td class="px-1 py-1 text-center">{{ number_format($class->allotment_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->disbursements_sum, 2) }}</td>
-                            <td class="px-1 py-1 text-right">{{ number_format($class->disbursement_balance, 2) }}</td>
-                            <td class="px-1 py-1 text-center">{{ number_format($class->disbursements_to_obligations, 2) }}%</td>
-                            <td class="px-1 py-1 text-center">{{ number_format($class->disbursements_to_appropriations, 2) }}%</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->authorized_appropriations, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->allotments_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->for_later_release, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->obligations_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->balance_appropriations, 2) }}</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($class->appropriation_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->balance_allotments, 2) }}</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($class->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->disbursements_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($class->disbursement_balance, 2) }}</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($class->disbursements_to_obligations, 2) }}%</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($class->disbursements_to_appropriations, 2) }}%</td>
                         </tr>
                         @empty
                             <tr>
-                                <td colspan="21" class="px-1 py-1 text-center text-gray-500 dark:text-gray-400 italic">
+                                <td colspan="21" class="px-1 py-2 text-center text-gray-500 dark:text-gray-400 italic">
                                     No Office Allotment Classes found
                                 </td>
                             </tr>
@@ -495,6 +497,15 @@
                 @endif
             </div>
         </div>
+    </div>
+
+    <!-- Right-click Dropdown Menu -->
+    <div id="classContextMenu" 
+        class="hidden absolute bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg w-48 z-50">
+        <a id="viewAccountsLink" href="#" 
+        class="block px-4 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-600">
+            <i class="fas fa-stream mr-2"></i> Accounts
+        </a>
     </div>
 
 
@@ -545,6 +556,38 @@
             });
 
         });
+
+        document.addEventListener('click', () => {
+        document.getElementById('classContextMenu').classList.add('hidden');
+        
+    });
+
+    function showDropdownMenu(event, row) {
+        event.preventDefault();
+
+        const contextMenu = document.getElementById('classContextMenu');
+        const id = row.getAttribute('data-class-id');
+
+        // Update link dynamically
+        document.getElementById('viewAccountsLink').href = `/dashboard/accounts/${id}`;
+
+        // Position context menu
+        contextMenu.style.left = event.pageX + 'px';
+        contextMenu.style.top = event.pageY + 'px';
+
+        // Show menu
+        contextMenu.classList.remove('hidden');
+    }
+
+    const scrollContainer = document.querySelector('.overflow-auto');
+    const contextMenu = document.getElementById('classContextMenu');
+
+    // Hide context menu when the table scrolls
+    scrollContainer.addEventListener('scroll', () => {
+        if (!contextMenu.classList.contains('hidden')) {
+            contextMenu.classList.add('hidden');
+        }
+    });
 
         function updateSelectColors() {
             document.querySelectorAll('.filter-select').forEach(select => {

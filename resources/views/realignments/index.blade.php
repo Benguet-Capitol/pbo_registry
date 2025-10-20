@@ -26,6 +26,28 @@
         <div class="flex justify-between items-center">
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Realignment | Augmentation') }}
+
+                @php
+                $filters = [];
+
+                if (request('office_allotment_class_id')) {
+                    $officeClass = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_id'));
+                    if ($officeClass) {
+                        $filters[] = $officeClass->offices->office_abbreviation . ' - ' . $officeClass->allotmentClass->class;
+                    }
+                }
+                if (request('realignment_type_filter')) {
+                    $filters[] = request('realignment_type_filter');
+                }
+                @endphp
+
+                @if (count($filters) > 0)
+                    <span class="text-lg"> > </span>
+                    <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
+                @endif
+                <span class="text-blue-800 dark:text-blue-400">
+                    (CY {{ request('year1', date('Y')) }})
+                </span>
             </h3>
 
             <!-- Right: Breadcrumb Navigation -->
@@ -67,7 +89,7 @@
                     data-default="{{ date('Y') }}" 
                     onchange="this.form.submit()">
                         @foreach($availableYears as $year1)
-                            <option value="{{ $year1 }}" {{ request('year1') == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
+                            <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
                     </x-form.select>
                 </div>
@@ -202,7 +224,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th>
+                        <!-- th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -218,7 +240,9 @@
                                 $totalRecipient += $realignment->amount;
                             }
                         @endphp
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                            oncontextmenu="showRealignmentContextMenu(event, this)"
+                            data-realignment='@json($realignment)'>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_date }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
@@ -241,7 +265,7 @@
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->appropriation->account_code ?? '-' }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->description ?? '-' }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-md">{{ $realignment->basis }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-right">
                                 @if($realignment->type === 'Recipient')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
                                         {{ number_format($realignment->amount, 2) }}
@@ -250,16 +274,16 @@
                                     <span class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold">
                                         {{ number_format($realignment->amount, 2) }}
                                     </span>
-                                @else
-                                    <span class="text-gray-600 dark:text-gray-300">{{ number_format($realignment->amount, 2) }}</span>
+                                @else 
+                                    <span class="text-gray-600 dark:text-gray-300 ">{{ number_format($realignment->amount, 2) }}</span>
                                 @endif
                             </td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <!-- <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 <div class="relative inline-block text-left">
                                     <button onclick="toggleDropdown(this)" 
                                             class="relative text-xs group px-2 py-1.5">
                                             <span class="fas fa-ellipsis-v"></span>
-                                            <!-- Tooltip -->
+                                            
                                             <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
                                                 {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }} | {{ $realignment->realignment_no }} | {{ number_format($realignment->amount, 2) }}
                                             </span>
@@ -277,7 +301,7 @@
                                         @endcan
                                     </div>
                                 </div>
-                            </td>
+                            </td> -->
                         </tr>
                     @empty
                         <tr>
@@ -312,11 +336,135 @@
         </div>
     </div>
 
+    <!-- Context Menu -->
+    <div id="realignmentContextMenu" 
+        class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
+        style="display: none;">
+        @can('edit realignments')
+        <button id="contextEdit"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        @endcan
+        @can('delete realignments')
+        <button id="contextDelete"
+                class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
+            <i class="fas fa-trash mr-2"></i>Delete
+        </button>
+        @endcan
+    </div>
+
     @include('realignments.modal.create')
     @include('realignments.modal.edit')
     @include('realignments.modal.delete')
 
 </x-app-layout>
+
+<script>
+    (function() {
+    const menu = document.getElementById('realignmentContextMenu');
+    let tableContainer;
+
+    // Function to handle scroll events
+    function handleTableScroll() {
+        hideRealignmentContextMenu();
+    }
+
+    // showContextMenu receives the mouse event and the row element
+    window.showRealignmentContextMenu = function(event, row) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!menu) return;
+
+        // Get the table container
+        const container = row.closest('.overflow-x-auto') || document.body;
+        if (!container) return;
+
+        // Get element positions
+        const rowRect = row.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Calculate position relative to container
+        const firstCell = row.querySelector('td:first-child');
+        const firstCellRect = firstCell.getBoundingClientRect();
+        const rowBottom = rowRect.bottom + 5;
+
+        // Position menu at first column, just below the row
+        menu.style.position = 'fixed';
+        menu.style.top = `${rowBottom}px`;
+        menu.style.left = `${firstCellRect.left}px`;
+        menu.style.display = 'block';
+        menu.classList.remove('hidden');
+
+        // Get realignment data
+        const realignment = row.dataset.realignment ? JSON.parse(row.dataset.realignment) : null;
+        if (realignment) {
+            // Edit button
+            const editBtn = menu.querySelector('#contextEdit');
+            if (editBtn) {
+                editBtn.onclick = () => {
+                    hideRealignmentContextMenu();
+                    openEditRealignmentModal(realignment);
+                };
+            }
+
+            // Delete button
+            const deleteBtn = menu.querySelector('#contextDelete');
+            if (deleteBtn && realignment.id) {
+                deleteBtn.onclick = () => {
+                    hideRealignmentContextMenu();
+                    openDeleteRealignmentModal(
+                        realignment.id,
+                        realignment.realignment_no,
+                        realignment.type,
+                        realignment.amount,
+                        realignment.appropriations_id
+                    );
+                };
+            }
+        }
+
+        // Add event listeners with delay
+        setTimeout(() => {
+            document.addEventListener('click', hideRealignmentContextMenu);
+            window.addEventListener('resize', hideRealignmentContextMenu);
+            window.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
+            container.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
+        }, 30);
+    };
+
+    function hideRealignmentContextMenu() {
+        if (!menu) return;
+        menu.classList.add('hidden');
+        menu.style.display = 'none';
+
+        // Remove event listeners
+        document.removeEventListener('click', hideRealignmentContextMenu);
+        window.removeEventListener('resize', hideRealignmentContextMenu);
+        window.removeEventListener('scroll', hideRealignmentContextMenu);
+        const container = document.querySelector('.overflow-x-auto');
+        if (container) {
+            container.removeEventListener('scroll', hideRealignmentContextMenu);
+        }
+    }
+
+    // Hide on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hideRealignmentContextMenu();
+    });
+
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', () => {
+        // Hide context menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target)) {
+                hideRealignmentContextMenu();
+            }
+        });
+    });
+    })();
+</script>
 
 <script>
     function filterTable() {

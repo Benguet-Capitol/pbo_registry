@@ -1,8 +1,27 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h3 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h3 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('All Purchase Orders') }}
+
+                @php
+                $filters = [];
+
+                if (request('office_allotment_class_filter')) {
+                    $officeClass = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_filter'));
+                    if ($officeClass) {
+                        $filters[] = $officeClass->offices->office_abbreviation . ' - ' . $officeClass->allotmentClass->class;
+                    }
+                }
+                @endphp
+
+                @if (count($filters) > 0)
+                    <span class="text-lg"> > </span>
+                    <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
+                @endif
+                <span class="text-blue-800 dark:text-blue-400">
+                    (CY {{ request('year1', date('Y')) }})
+                </span>
             </h3>
 
             <!-- Right: Breadcrumb Navigation -->
@@ -68,7 +87,7 @@
                     <label for="year1" class="sr-only">Year</label>
                     <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
                         @foreach($availableYears as $year1)
-                        <option value="{{ $year1 }}" {{ request('year1') == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
+                        <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
                     </x-form.select>
                 </div>
@@ -118,7 +137,7 @@
                     </form>
                 </div>
             </div>
-            <table id="purchaseOrdersTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
+            <table id="purchaseOrdersTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         @php

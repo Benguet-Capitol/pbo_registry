@@ -70,6 +70,10 @@
                             <td class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">{{ $officeAllotmentClass->fund }}</td>
                         </tr>
                         <tr>
+                            <th class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">FPP Code:</th>
+                            <td class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">{{ $officeAllotmentClass->fpp_code }}</td>
+                        </tr>
+                        <tr>
                             <th class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">Fund Source:</th>
                             <td class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">{{ $officeAllotmentClass->fund_source }}</td>
                         </tr>
@@ -78,12 +82,8 @@
                             <td class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">{{ $officeAllotmentClass->allotmentClass->description}}</td>
                         </tr>
                         <tr>
-                            <th class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">Approved Appropriation:</th>
-                            <td class="px-4 py-3 border-b text-left dark:border-gray-700 dark:text-gray-200">{{ number_format($totalAppropriation, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <th class="px-4 py-3 text-left dark:border-gray-700 dark:text-gray-200">Total Allotment:</th>
-                            <td class="px-4 py-3 text-left dark:border-gray-700 dark:text-gray-200">{{ number_format($totalAllotment, 2) }}</td>
+                            <th class="px-4 py-3 text-left dark:border-gray-700 dark:text-gray-200">Approved Appropriation:</th>
+                            <td class="px-4 py-3 text-left dark:border-gray-700 dark:text-gray-200">{{ number_format($totalAppropriation, 2) }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -142,9 +142,9 @@
                 </div>
             </div>
             <table id="appropriationsTable" class="table-auto text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
-                <thead class="text-center border-gray-400 text-xs text-gray-700 bg-gray-50 border-b-2 border-t-2 dark:bg-gray-700 dark:text-gray-400">
+                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'programs', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Programs
                                 @if($sortBy == 'programs')
@@ -152,7 +152,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'account_code', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Account Code
                                 @if($sortBy == 'account_code')
@@ -160,7 +160,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'description', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Description
                                 @if($sortBy == 'description')
@@ -168,7 +168,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'fpp_code', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 FPP Code
                                 @if($sortBy == 'fpp_code')
@@ -176,7 +176,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_location', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Project Location
                                 @if($sortBy == 'project_location')
@@ -185,7 +185,7 @@
                             </a>
                         </th>
                         @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_no', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Project No.
                                 @if($sortBy == 'project_no')
@@ -193,7 +193,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'cco_year', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 CCO Year
                                 @if($sortBy == 'cco_year')
@@ -202,7 +202,7 @@
                             </a>
                         </th>
                         @endif
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'appropriation', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Appropriation
                                 @if($sortBy == 'appropriation')
@@ -210,7 +210,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter1', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 1st Quarter Allotment
                                 @if($sortBy == 'quarter1')
@@ -218,7 +218,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter2', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 2nd Quarter Allotment
                                 @if($sortBy == 'quarter2')
@@ -226,7 +226,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter3', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 3rd Quarter Allotment
                                 @if($sortBy == 'quarter3')
@@ -234,7 +234,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter4', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 4th Quarter Allotment
                                 @if($sortBy == 'quarter4')
@@ -242,7 +242,7 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="px-4 py-1 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'remarks', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Remarks
                                 @if($sortBy == 'remarks')
@@ -274,11 +274,11 @@
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_no }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->cco_year }}</td>
                         @endif
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->appropriation, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter1, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter2, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter3, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ number_format($appropriation->quarter4, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->appropriation, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter1, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter2, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter3, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter4, 2) }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->remarks }}</td>
                     </tr>
                     @empty

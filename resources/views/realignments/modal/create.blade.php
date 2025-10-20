@@ -1,7 +1,6 @@
 <!-- Create Realignment Modal -->
 <form id="createRealignmentForm" method="POST" action="">
     @csrf
-    
     <input type="hidden" name="year1" value="{{ request('year1') }}">
     <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
     <input type="hidden" name="realignment_type_filter" value="{{ request('realignment_type_filter') }}">
@@ -151,7 +150,7 @@
                                                             {{ __('Total Source Amount') }}
                                                         </td>
                                                         <td class="px-2 py-2 text-right text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                            <span id="totalSourceAmount" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-right text-xs">0.00</span>
+                                                            <span id="totalSourceAmount" class="block w-full font-bold text-green-700 dark:text-green-400 text-right text-xs">0.00</span>
                                                         </td>
                                                         <td></td>
                                                     </tr>
@@ -294,7 +293,7 @@
                                                             {{ __('Total Recipient Amount') }}
                                                         </td>
                                                         <td class="px-2 py-2 text-right text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                            <span id="totalRecipientAmount" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-right text-xs">0.00</span>
+                                                            <span id="totalRecipientAmount" class="block w-full font-bold text-green-700 dark:text-green-400 text-right text-xs">0.00</span>
                                                         </td>
                                                         <td></td>
                                                     </tr>

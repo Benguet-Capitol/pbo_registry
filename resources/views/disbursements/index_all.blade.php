@@ -3,6 +3,24 @@
         <div class="flex justify-between items-center">
             <h3 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('All Disbursements') }}
+                 @php
+                $filters = [];
+
+                if (request('office_allotment_class_filter')) {
+                    $officeClass = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_filter'));
+                    if ($officeClass) {
+                        $filters[] = $officeClass->offices->office_abbreviation . ' - ' . $officeClass->allotmentClass->class;
+                    }
+                }
+                @endphp
+
+                @if (count($filters) > 0)
+                    <span class="text-lg"> > </span>
+                    <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
+                @endif
+                <span class="text-blue-800 dark:text-blue-400">
+                    (CY {{ request('year1', date('Y')) }})
+                </span>
             </h3>
         </div>
     </x-slot>
@@ -48,7 +66,7 @@
                     <label for="year1" class="sr-only">Year</label>
                     <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
                         @foreach($availableYears as $year1)
-                        <option value="{{ $year1 }}" {{ request('year1') == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
+                        <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
                     </x-form.select>
                 </div>

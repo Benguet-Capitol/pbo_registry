@@ -153,12 +153,13 @@
                                                     <td class="px-1 py-2">
                                                         <x-form.input
                                                             name="edit_account_code[]"
+                                                            id="edit_account_code"
                                                             placeholder="{{ __('Account Code') }}"
                                                             value="{{ $amount['account_code'] ?? '' }}"
                                                             class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
                                                             oninput="filterAccountCodes(this)"
                                                             autocomplete="off" />
-                                                        <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                                        <div id="editAccountCodeDropdown" class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                                             <!-- Suggestions will appear here -->
                                                         </div>
                                                     </td>
@@ -207,7 +208,7 @@
                                             @else
                                                 <tr>
                                                     <td class="px-1 py-2">
-                                                        <x-form.input name="edit_account_code[]" placeholder="{{ __('Account Code') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodes(this)" autocomplete="off" />
+                                                        <x-form.input name="edit_account_code[]" id="edit_account_code[]" placeholder="{{ __('Account Code') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodes(this)" autocomplete="off" />
                                                         <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                                             <!-- Suggestions will appear here -->
                                                         </div>
@@ -337,7 +338,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="px-1 py-2">
-                        <x-form.input name="edit_account_code[]" placeholder="Account Code" value="${amount.account_code || ''}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
+                        <x-form.input name="edit_account_code[]" id="edit_account_code[]" placeholder="Account Code" value="${amount.account_code || ''}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
                         <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
                     </td>
                     <td class="px-1 py-2">
@@ -366,7 +367,7 @@
             tr.innerHTML = `
                 <td class="px-1 py-2">
                     <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
-                    <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
+                    <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>
                 </td>
                 <td class="px-1 py-2">
                     <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
@@ -411,10 +412,18 @@
             {
                 id: "{{ $office_allotment_class->id }}",
                 name: "{{ $office_allotment_class->office_abbreviation }} - {{ $office_allotment_class->allotmentClass->class }}",
+                class: "{{ $office_allotment_class->class }}",
                 fund: "{{ $office_allotment_class->fund ?? 'General Fund' }}"
             }@if(!$loop->last),@endif
         @endforeach
     ];
+
+    const allowedObligationTypesEdit = {
+        'PS': ['Regular'],
+        'MOOE': ['Regular', 'Purchase Request'],
+        'CO': ['Purchase Request', 'Project/Contract'],
+        'CCO': ['Purchase Request', 'Project/Contract']
+    };
 
     //Filter Edit Office and Allotment Classes
     function filterEditOfficeAllotmentClasses() {
@@ -448,7 +457,16 @@
                 document.querySelectorAll('[name="programs[]"]').forEach(field => field.value = '');
                 document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
                 document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
+                generateObrNumberEdit(item.fund); // Pass fund name, not prefix
+                // Restrict Obligation Type based on detected class
+                restrictObligationTypeEdit(item.class);
+                // Auto-select "Regular" if PS
+                if (item.class === 'PS') {
+                    const obrTypeSelect = document.getElementById("edit_obr_type");
+                    obrTypeSelect.value = 'Regular';
+                }
                 dropdown.classList.add('hidden');
+                
             };
             dropdown.appendChild(option);
         });
@@ -466,8 +484,24 @@
         document.getElementById('edit_office_allotment_class').addEventListener('input', filterEditOfficeAllotmentClasses);
     }
 
+    // Function to restrict obligation type options dynamically
+    function restrictObligationTypeEdit(allotmentClass) {
+        const obrTypeSelect = document.getElementById("edit_obr_type");
+
+        obrTypeSelect.innerHTML = '<option value="">Select Obligation Type</option>'; // reset
+
+        if (allowedObligationTypesEdit[allotmentClass]) {
+            allowedObligationTypesEdit[allotmentClass].forEach(type => {
+                const option = document.createElement("option");
+                option.value = type;
+                option.textContent = type;
+                obrTypeSelect.appendChild(option);
+            });
+        }
+    }
+
     // Generate the OBR number in the format 00000-mm-yy-000
-    function generateObrNumber(fund) {
+    function generateObrNumberEdit(fund) {
         const obrNoField = document.getElementById('edit_obr_no');
         const date = new Date();
         const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
@@ -482,7 +516,7 @@
     }
 
     // Call the function to set the initial value
-    document.addEventListener('DOMContentLoaded', generateObrNumber);
+    document.addEventListener('DOMContentLoaded', generateObrNumberEdit);
 
     const editAppropriations = [
         @foreach($appropriations as $i => $appropriation) 
@@ -601,7 +635,7 @@
         newRow.innerHTML = `
             <td class="px-1 py-2">
                 <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
-                <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown"></div>
+                <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>
             </td>
             <td class="px-1 py-2">
                 <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
@@ -645,6 +679,74 @@
     document.getElementById('cancelEditDeleteBtn').addEventListener('click', function() {
         rowToDeleteEdit = null;
         document.getElementById('deleteConfirmEditModal').classList.add('hidden');
+    });
+
+    // Generic keyboard navigation for dropdowns
+    function enableDropdownKeyboardNavigation(inputId, dropdownId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        let currentFocus = -1;
+
+        if (!input || !dropdown) return;
+
+        input.addEventListener("keydown", function (e) {
+            let items = dropdown.querySelectorAll("div, li");
+            if (dropdown.classList.contains("hidden") || items.length === 0) return;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                currentFocus++;
+                if (currentFocus >= items.length) currentFocus = 0;
+                setActive(items, currentFocus);
+            } 
+            else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                currentFocus--;
+                if (currentFocus < 0) currentFocus = items.length - 1;
+                setActive(items, currentFocus);
+            } 
+            else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentFocus > -1 && items[currentFocus]) {
+                    items[currentFocus].click();
+                    currentFocus = -1;
+                }
+            } 
+            else if (e.key === "Escape") {
+                dropdown.classList.add("hidden");
+                currentFocus = -1;
+            }
+        });
+
+        function setActive(items, index) {
+            removeActive(items);
+            if (items[index]) {
+                items[index].classList.add("active");
+                items[index].style.backgroundColor = "#e5e7eb"; // light blue highlight
+                items[index].scrollIntoView({ block: "nearest" });
+            }
+        }
+
+        function removeActive(items) {
+            items.forEach(item => {
+                item.classList.remove("active");
+                item.style.backgroundColor = ""; // reset background
+                item.style.color = ""; // reset text color
+            });
+        }
+
+        document.addEventListener("click", function (event) {
+            if (!event.target.closest(`#${inputId}`) && !event.target.closest(`#${dropdownId}`)) {
+                dropdown.classList.add("hidden");
+                currentFocus = -1;
+            }
+        });
+    }
+
+    // Initialize once DOM is loaded
+    document.addEventListener("DOMContentLoaded", function() {
+        enableDropdownKeyboardNavigation("edit_office_allotment_class", "editOfficeAllotmentClassDropdown");
+        enableDropdownKeyboardNavigation("edit_account_code", "editAccountCodeDropdown");
     });
        
     function validateEditObligationsForm() {

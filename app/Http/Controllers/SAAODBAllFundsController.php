@@ -9,7 +9,7 @@ use App\Models\Appropriation;
 use App\Models\Office;
 use App\Models\AllotmentClass;
 use Carbon\Carbon;
-use App\Exports\SAAOBFundSectorExport;
+use App\Exports\SAAODBAllFundsExport;
 use App\Models\Employee;
 use App\Models\ObligationAdjustment;
 use App\Models\Fund;
@@ -31,6 +31,7 @@ class SAAODBAllFundsController extends Controller
         $sectors = Sector::all();
         $fundsQuery = Fund::orderBy('id');
         $allotmentClasses = AllotmentClass::all()->keyBy('class');
+        $allAllotmentClasses = AllotmentClass::all();
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
@@ -153,9 +154,10 @@ class SAAODBAllFundsController extends Controller
                     + $supplemental + $reversion + $realignment;
 
                 // --- For Later Release ---
-                $forLaterRelease = $oacGroup
-                    ->flatMap->appropriations
-                    ->sum(fn($a) => $a->for_later_release ?? 0);
+                $forLaterRelease = 0;
+                if ($currentQuarter < 2) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter2 ?? 0));
+                if ($currentQuarter < 3) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter3 ?? 0));
+                if ($currentQuarter < 4) $forLaterRelease += $oacGroup->flatMap->appropriations->sum(fn($a) => ($a->quarter4 ?? 0));
 
                 $allotment -= $forLaterRelease;
 
@@ -303,6 +305,79 @@ class SAAODBAllFundsController extends Controller
         // Now attach it (optional)
         $grandTotals = $grandTotal;
 
+        // --- SUMMARY TOTALS PER ALLOTMENT CLASS ---
+        $summaryTotals = [];
+
+        $grandSummary = [
+            'total_appropriation' => 0,
+            'total_obligations' => 0,
+            'total_disbursements' => 0,
+            'percent_obligation_vs_authorized' => 0,
+            'percent_disbursement_vs_authorized' => 0,
+            'percent_disbursement_vs_obligation' => 0,
+        ];
+
+        foreach ($allAllotmentClasses as $allotmentClass) {
+            $className = $allotmentClass->class;
+            $totals = [
+                'total_appropriation' => 0,
+                'total_obligations' => 0,
+                'total_disbursements' => 0,
+                'percent_obligation_vs_authorized' => 0,
+                'percent_disbursement_vs_authorized' => 0,
+                'percent_disbursement_vs_obligation' => 0,
+            ];
+
+        foreach ($funds as $fund) {
+            foreach ($fund->allotmentClasses as $class) {
+                if (strtoupper(trim($class->class)) === strtoupper(trim($className))) {
+                    $totals['total_appropriation'] += $class->authorized_appropriation ?? 0;
+                    $totals['total_obligations'] += $class->obligation ?? 0;
+                    $totals['total_disbursements'] += $class->disbursement ?? 0;
+                }
+            }
+        }
+
+        // Compute percentages
+        $totals['percent_obligation_vs_authorized'] =
+            $totals['total_appropriation'] > 0
+                ? ($totals['total_obligations'] / $totals['total_appropriation']) * 100
+                : 0;
+
+        $totals['percent_disbursement_vs_authorized'] =
+            $totals['total_appropriation'] > 0
+                ? ($totals['total_disbursements'] / $totals['total_appropriation']) * 100
+                : 0;
+
+        $totals['percent_disbursement_vs_obligation'] =
+            $totals['total_obligations'] > 0
+                ? ($totals['total_disbursements'] / $totals['total_obligations']) * 100
+                : 0;
+
+        $summaryTotals[$className] = $totals;
+
+        // Add to grand summary
+        $grandSummary['total_appropriation'] += $totals['total_appropriation'];
+        $grandSummary['total_obligations'] += $totals['total_obligations'];
+        $grandSummary['total_disbursements'] += $totals['total_disbursements'];
+    }
+
+    // Compute overall percentages
+    $grandSummary['percent_obligation_vs_authorized'] =
+        $grandSummary['total_appropriation'] > 0
+            ? ($grandSummary['total_obligations'] / $grandSummary['total_appropriation']) * 100
+            : 0;
+
+    $grandSummary['percent_disbursement_vs_authorized'] =
+        $grandSummary['total_appropriation'] > 0
+            ? ($grandSummary['total_disbursements'] / $grandSummary['total_appropriation']) * 100
+            : 0;
+
+    $grandSummary['percent_disbursement_vs_obligation'] =
+        $grandSummary['total_obligations'] > 0
+            ? ($grandSummary['total_disbursements'] / $grandSummary['total_obligations']) * 100
+            : 0;
+
         return view('saaodballfunds.index', compact(
             'availableYears',
             'selectedYear',
@@ -310,36 +385,30 @@ class SAAODBAllFundsController extends Controller
             'employees',
             'funds',
             'grandTotals',
+            'allAllotmentClasses',
+            'summaryTotals',
+            'grandSummary'
         ))->with('status', session('status'));
     }
 
-    public function exportExcel(Request $request)
-        {
-            $year = $request->input('year1');
-            $fund = $request->input('fund_filter');
-            $asOf = $request->input('as_of_filter');
-            $signatoryName = $request->input('signatory_name');
-            $signatoryDesignation = $request->input('signatory_designation');
+public function exportExcel(Request $request)
+    {
+        $year = $request->input('year1');
+        $asOf = $request->input('as_of_filter');
+        $preparedSignatoryName = $request->input('prepared_signatory_name');
+        $preparedSignatoryDesignation = $request->input('prepared_signatory_designation');
+        $certifiedSignatoryName = $request->input('certified_signatory_name');
+        $certifiedSignatoryDesignation = $request->input('certified_signatory_designation');
 
-           // Sanitize fund name for filename
-            $fundName = 'All_Funds';
+        $fileName = 'SAAODB_' . 'All_Funds_' . $year . '.xlsx';
 
-            if (!empty($fund)) {
-                if ($fund === 'others') {
-                    $fundName = 'BEGHEE_SEF';
-                } else {
-                    $fundName = preg_replace('/[^A-Za-z0-9_]/', '_', $fund);
-                }
-            }
-
-            $fileName = 'SAAOB_' . $fundName . '_' . $year . '.xlsx';
-
-            return Excel::download(new SAAOBFundSectorExport(
-                $year,
-                $fund,
-                $asOf,
-                $signatoryName,
-                $signatoryDesignation
-            ), $fileName);
-        }
+         return Excel::download(new SAAODBAllFundsExport(
+            $year,
+            $asOf,
+            $preparedSignatoryName,
+            $preparedSignatoryDesignation,
+            $certifiedSignatoryName,
+            $certifiedSignatoryDesignation
+        ), $fileName);
+    }
 }

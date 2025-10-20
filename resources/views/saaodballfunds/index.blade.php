@@ -132,7 +132,7 @@
             </button>
     </form>
 
-    <form method="GET" action="{{ route('saaodb.exportExcel') }}" style="display:inline;">
+    <form method="GET" action="{{ route('saaodbAllFunds.exportExcel') }}" style="display:inline;">
         <input type="hidden" name="year1" value="{{ request('year1') }}">
         <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
         <input type="hidden" name="as_of_filter" value="{{ request('as_of_filter') }}">
@@ -153,7 +153,7 @@
                 <table id="saaodbAllFundsTable" class="w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900">
                         <tr>
-                            <th class="px-1 py-1 w-[100px] text-center">Allotment Class</th>
+                            <th class="px-1 py-1 w-[150px] text-center" data-key="allotment_class">Allotment Class</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved Appropriations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental Appropriations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
@@ -161,12 +161,12 @@
                             <th class="px-1 py-1 w-[100px] text-center" data-key="authorized_appropriation">Authorized Appropriations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="allotment">Allotments</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="obligation">Obligations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance"> Balances from Authorized Appropriations</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">Percent of Obligations / Authorized Appropriations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="disbursement">Disbursements</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_obligation">Percent of Disbursements / Obligations</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_appropriation">Percent of Disbursements / Authorized Appropriations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="obligation_balance">Obligations - Disbursements</th>
+                            <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">% of Accomplishment (Obligations vs Authorized Appropriation)</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance"> Unobligated Authorized Appropriation</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="disbursement">Actual Disbursements</th>
+                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_appropriation">% of Accomplishment (Disbursements vs Authorized Appropriation)</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="obligation_balance">Unpaid Obligations</th>
+                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_obligation">% of Accomplishment (Disbursements vs Obligation)</th>
                         </tr>
                     </thead>
 
@@ -255,6 +255,10 @@
                                     @endif
                                 </td>
 
+                                <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">
+                                    {{ number_format($class->percent_obligated_to_authorized, 2) }}%
+                                </td>
+
                                 <td class="px-1 py-2 text-right" data-key="appropriation_balance">
                                     @if (is_null($class->authorized_appropriation_balance) || $class->authorized_appropriation_balance == 0)
                                         -
@@ -265,10 +269,6 @@
                                     @endif
                                 </td>
 
-                                <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">
-                                    {{ number_format($class->percent_obligated_to_authorized, 2) }}%
-                                </td>
-
                                 <td class="px-1 py-2 text-right" data-key="disbursement">
                                     @if (is_null($class->disbursement) || $class->disbursement == 0)
                                         -
@@ -277,10 +277,6 @@
                                     @else
                                         {{ number_format($class->disbursement, 2) }}
                                     @endif
-                                </td>
-
-                                <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">
-                                    {{ number_format($class->percent_disbursed_to_obligated, 2) }}%
                                 </td>
 
                                 <td class="px-1 py-2 text-right" data-key="disbursement_to_appropriation">
@@ -296,6 +292,11 @@
                                         {{ number_format($class->obligation_balance, 2) }}
                                     @endif
                                 </td>
+
+                                <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">
+                                    {{ number_format($class->percent_disbursed_to_obligated, 2) }}%
+                                </td>
+
                             </tr>
 
                             {{-- Insert total after the last current class --}}
@@ -332,7 +333,7 @@
                                         @endif
                                     </td>
 
-                                    <td>
+                                    <td data-key="realignment">
                                         @if (is_null($fund->total_current->realignment) || $fund->total_current->realignment == 0)
                                             -
                                         @elseif ($fund->total_current->realignment < 0)
@@ -372,6 +373,8 @@
                                         @endif
                                     </td>
 
+                                    <td>{{ number_format($fund->total_current->percent_obligated_to_authorized, 2) }}%</td>
+
                                     <td>
                                         @if (is_null($fund->total_current->authorized_appropriation_balance) || $fund->total_current->authorized_appropriation_balance == 0)
                                             -
@@ -381,8 +384,6 @@
                                             {{ number_format($fund->total_current->authorized_appropriation_balance, 2) }}
                                         @endif
                                     </td>
-
-                                    <td>{{ number_format($fund->total_current->percent_obligated_to_authorized, 2) }}%</td>
 
                                     <td>
                                         @if (is_null($fund->total_current->disbursement) || $fund->total_current->disbursement == 0)
@@ -394,7 +395,6 @@
                                         @endif
                                     </td>
 
-                                    <td>{{ number_format($fund->total_current->percent_disbursed_to_obligated, 2) }}%</td>
                                     <td>{{ number_format($fund->total_current->percent_disbursed_to_authorized, 2) }}%</td>
 
                                     <td>
@@ -406,6 +406,8 @@
                                             {{ number_format($fund->total_current->obligation_balance, 2) }}
                                         @endif
                                     </td>
+
+                                    <td>{{ number_format($fund->total_current->percent_disbursed_to_obligated, 2) }}%</td>
                                 </tr>
                             @endif
                         @endforeach
@@ -484,6 +486,10 @@
                                     @endif
                                 </td>
 
+                                <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">
+                                    {{ number_format($class->percent_obligated_to_authorized, 2) }}%
+                                </td>
+
                                 <td class="px-1 py-2 text-right" data-key="appropriation_balance">
                                     @if (is_null($class->authorized_appropriation_balance) || $class->authorized_appropriation_balance == 0)
                                         -
@@ -494,10 +500,6 @@
                                     @endif
                                 </td>
 
-                                <td class="px-1 py-2 text-right" data-key="appropriation_accomplishment">
-                                    {{ number_format($class->percent_obligated_to_authorized, 2) }}%
-                                </td>
-
                                 <td class="px-1 py-2 text-right" data-key="disbursement">
                                     @if (is_null($class->disbursement) || $class->disbursement == 0)
                                         -
@@ -506,10 +508,6 @@
                                     @else
                                         {{ number_format($class->disbursement, 2) }}
                                     @endif
-                                </td>
-
-                                <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">
-                                    {{ number_format($class->percent_disbursed_to_obligated, 2) }}%
                                 </td>
 
                                 <td class="px-1 py-2 text-right" data-key="disbursement_to_appropriation">
@@ -524,6 +522,10 @@
                                     @else
                                         {{ number_format($class->obligation_balance, 2) }}
                                     @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="disbursement_to_obligation">
+                                    {{ number_format($class->percent_disbursed_to_obligated, 2) }}%
                                 </td>
                             </tr>
 
@@ -561,7 +563,7 @@
                                         @endif
                                     </td>
 
-                                    <td>
+                                    <td data-key="realignment">
                                         @if (is_null($fund->total_continuing->realignment) || $fund->total_continuing->realignment == 0)
                                             -
                                         @elseif ($fund->total_continuing->realignment < 0)
@@ -601,6 +603,8 @@
                                         @endif
                                     </td>
 
+                                    <td>{{ number_format($fund->total_continuing->percent_obligated_to_authorized, 2) }}%</td>
+
                                     <td>
                                         @if (is_null($fund->total_continuing->authorized_appropriation_balance) || $fund->total_continuing->authorized_appropriation_balance == 0)
                                             -
@@ -610,8 +614,6 @@
                                             {{ number_format($fund->total_continuing->authorized_appropriation_balance, 2) }}
                                         @endif
                                     </td>
-
-                                    <td>{{ number_format($fund->total_continuing->percent_obligated_to_authorized, 2) }}%</td>
 
                                     <td>
                                         @if (is_null($fund->total_continuing->disbursement) || $fund->total_continuing->disbursement == 0)
@@ -623,7 +625,6 @@
                                         @endif
                                     </td>
 
-                                    <td>{{ number_format($fund->total_continuing->percent_disbursed_to_obligated, 2) }}%</td>
                                     <td>{{ number_format($fund->total_continuing->percent_disbursed_to_authorized, 2) }}%</td>
 
                                     <td>
@@ -635,6 +636,8 @@
                                             {{ number_format($fund->total_continuing->obligation_balance, 2) }}
                                         @endif
                                     </td>
+
+                                    <td>{{ number_format($fund->total_continuing->percent_disbursed_to_obligated, 2) }}%</td>
                                 </tr>
                             @endif
                         @endforeach
@@ -672,7 +675,7 @@
                                 @endif
                             </td>
 
-                            <td>
+                            <td data-key="realignment">
                                 @if (is_null($fund->total_overall->realignment) || $fund->total_overall->realignment == 0)
                                     -
                                 @elseif ($fund->total_overall->realignment < 0)
@@ -712,6 +715,8 @@
                                 @endif
                             </td>
 
+                            <td>{{ number_format($fund->total_overall->percent_obligated_to_authorized, 2) }}%</td>
+
                             <td>
                                 @if (is_null($fund->total_overall->authorized_appropriation_balance) || $fund->total_overall->authorized_appropriation_balance == 0)
                                     -
@@ -721,8 +726,6 @@
                                     {{ number_format($fund->total_overall->authorized_appropriation_balance, 2) }}
                                 @endif
                             </td>
-
-                            <td>{{ number_format($fund->total_overall->percent_obligated_to_authorized, 2) }}%</td>
 
                             <td>
                                 @if (is_null($fund->total_overall->disbursement) || $fund->total_overall->disbursement == 0)
@@ -734,7 +737,6 @@
                                 @endif
                             </td>
 
-                            <td>{{ number_format($fund->total_overall->percent_disbursed_to_obligated, 2) }}%</td>
                             <td>{{ number_format($fund->total_overall->percent_disbursed_to_authorized, 2) }}%</td>
 
                             <td>
@@ -746,10 +748,12 @@
                                     {{ number_format($fund->total_overall->obligation_balance, 2) }}
                                 @endif
                             </td>
+
+                            <td>{{ number_format($fund->total_overall->percent_disbursed_to_obligated, 2) }}%</td>
                         </tr>
                         @endforeach
                         <tr class="bg-gray-800 dark:bg-gray-200 text-gray-200 dark:text-gray-700 font-bold border-t-2 border-b-2 text-[10px]">
-                            <td class="px-2 py-2 text-right">GRAND TOTAL</td>
+                            <td class="px-2 py-2 text-right">Grand Total:</td>
                             <td class="px-2 py-2 text-right">
                                 @if (is_null($grandTotals->approved_appropriation) || $grandTotals->approved_appropriation == 0)
                                     -
@@ -777,7 +781,7 @@
                                     {{ number_format($grandTotals->reversion, 2) }}
                                 @endif
                             </td>
-                            <td class="px-2 py-2 text-right">
+                            <td class="px-2 py-2 text-right" data-key="realignment">
                                 @if (is_null($grandTotals->realignment) || $grandTotals->realignment == 0)
                                     -
                                 @elseif ($grandTotals->realignment < 0)
@@ -813,6 +817,7 @@
                                     {{ number_format($grandTotals->obligation, 2) }}
                                 @endif
                             </td>
+                            <td class="px-2 py-2 text-right">{{ number_format($grandTotals->percent_obligated_to_authorized, 2) }}%</td>
                             <td class="px-2 py-2 text-right">
                                 @if (is_null($grandTotals->authorized_appropriation_balance) || $grandTotals->authorized_appropriation_balance == 0)
                                     -
@@ -822,9 +827,6 @@
                                     {{ number_format($grandTotals->authorized_appropriation_balance, 2) }}
                                 @endif
                             </td>
-
-                            {{-- Percentages (leave as-is) --}}
-                            <td class="px-2 py-2 text-right">{{ number_format($grandTotals->percent_obligated_to_authorized, 2) }}%</td>
 
                             <td class="px-2 py-2 text-right">
                                 @if (is_null($grandTotals->disbursement) || $grandTotals->disbursement == 0)
@@ -836,7 +838,6 @@
                                 @endif
                             </td>
 
-                            <td class="px-2 py-2 text-right">{{ number_format($grandTotals->percent_disbursed_to_obligated, 2) }}%</td>
                             <td class="px-2 py-2 text-right">{{ number_format($grandTotals->percent_disbursed_to_authorized, 2) }}%</td>
 
                             <td class="px-2 py-2 text-right">
@@ -848,6 +849,44 @@
                                     {{ number_format($grandTotals->obligation_balance, 2) }}
                                 @endif
                             </td>
+                            <td class="px-2 py-2 text-right">{{ number_format($grandTotals->percent_disbursed_to_obligated, 2) }}%</td>
+                        </tr>
+                        <tr>
+                            <td colspan="7" class="border-l-0 border-r-0">&nbsp;</td>
+                        </tr>
+                        
+                        <tr id="summaryRow" class="sticky top-0 z-10 bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900 text-[12px] font-bold">
+                            <td class="px-1 py-1 text-center">Summary</td>
+                            <td class="px-1 py-1 text-center">Total Appropriation</td>
+                            <td class="px-1 py-1 text-center">Total Obligations</td>
+                            <td class="px-1 py-1 text-center">% of Accomplishment (Obligations vs Autho. Approp.)</td>
+                            <td class="px-1 py-1 text-center">Total Disbursements</td>
+                            <td class="px-1 py-1 text-center">% of Accomplishment (Disbursements vs Autho. Approp.)</td>
+                            <td class="px-1 py-1 text-center">% of Accomplishment (Disbursements vs Obligations)</td>
+                        </tr>
+                        @foreach ($allAllotmentClasses as $allotmentClass)
+                            @php
+                                $summary = $summaryTotals[$allotmentClass->class] ?? null;
+                            @endphp
+                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <td class="px-1 py-2 text-center">{{ $allotmentClass->description }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($summary['total_appropriation'] ?? 0, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($summary['total_obligations'] ?? 0, 2) }}</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($summary['percent_obligation_vs_authorized'] ?? 0, 2) }}%</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($summary['total_disbursements'] ?? 0, 2) }}</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($summary['percent_disbursement_vs_authorized'] ?? 0, 2) }}%</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($summary['percent_disbursement_vs_obligation'] ?? 0, 2) }}%</td>
+                        </tr>
+                        @endforeach
+                        {{-- Grand Total for Summary --}}
+                        <tr class="bg-gray-800 dark:bg-gray-200 text-gray-200 dark:text-gray-700 font-bold border-t-2 border-b-2 text-[10px]">
+                            <td class="px-1 py-2 text-center">Grand Total:</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($grandSummary['total_appropriation'] ?? 0, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($grandSummary['total_obligations'] ?? 0, 2) }}</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($grandSummary['percent_obligation_vs_authorized'] ?? 0, 2) }}%</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($grandSummary['total_disbursements'] ?? 0, 2) }}</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($grandSummary['percent_disbursement_vs_authorized'] ?? 0, 2) }}%</td>
+                            <td class="px-1 py-2 text-center">{{ number_format($grandSummary['percent_disbursement_vs_obligation'] ?? 0, 2) }}%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -894,6 +933,14 @@
             runPrintSAAODBAllFundsTable(); // call actual print function
         };
 
+        // Intercept Excel Export Submit
+        document.querySelector(`form[action="{{ route('saaodbAllFunds.exportExcel') }}"]`)
+            .addEventListener('submit', function(e) {
+                if (!validateSignatories()) {
+                    e.preventDefault();
+                }
+            });
+
 
         function updatePreparedDesignation() {
             const select = document.getElementById('prepared_signatory_name');
@@ -914,21 +961,24 @@
 
         function runPrintSAAODBAllFundsTable() {
             const table = document.getElementById('saaodbAllFundsTable').cloneNode(true);
+            
+            const hiddenKeys = [
+                'realignment'
+            ];
 
+            // Remove only <td> and <th> elements matching these keys
             table.querySelectorAll('thead th[data-key], tbody td[data-key]').forEach(cell => {
                 const key = cell.getAttribute('data-key');
+                if (hiddenKeys.includes(key)) {
+                    cell.remove();
+                }
             });
 
             // Styling rows
             table.querySelectorAll('[id^="fundRow"]').forEach(tr => {
-                tr.style.textTransform = 'uppercase';
                 tr.style.fontWeight = 'bold';
                 tr.style.fontSize = '10px';
-                tr.style.textAlign = 'center';
-            });
-            table.querySelectorAll('[id^="fundSourceRow"]').forEach(tr => {
-                tr.style.fontWeight = 'bold';
-                tr.style.fontSize = '10px';
+                tr.style.textAlign = 'left';
             });
             table.querySelectorAll('[id^="sectorRow"]').forEach(tr => {
                 tr.style.fontWeight = 'bold';
@@ -944,7 +994,7 @@
 
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cells = tr.querySelectorAll('td');
-                for (let i = 2; i < cells.length; i++) {
+                for (let i = 1; i < cells.length; i++) {
                     cells[i].style.textAlign = 'right';
                 }
             });
@@ -969,6 +1019,12 @@
                 th.style.textAlign = 'center';
                 th.style.fontWeight = 'bold';
                 th.style.fontSize = '10px';
+            });
+
+            table.querySelectorAll('[id^="summaryRow"]').forEach(tr => {
+                tr.style.fontWeight = 'bold';
+                tr.style.fontSize = '10px';
+                tr.style.textAlign = 'center';
             });
 
             // Format As of date
@@ -1018,7 +1074,29 @@
 
             const newWin = window.open('', '', `width=${screenW},height=${screenH},left=0,top=0,scrollbars=yes,resizable=yes`);
             newWin.document.write('<html><head><title>SAAODB</title>');
-            newWin.document.write('<style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:4px;} </style>');
+            newWin.document.write(`
+            <style>
+                body { font-family: sans-serif; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #ccc; padding: 4px; }
+
+                th[data-key="allotment_class"] { width:150px; text-align:center; }
+                th[data-key="account_code"] { width:100px; text-align:center; }
+                th[data-key="appropriation"] { width:100px; text-align:center; }
+                th[data-key="sb_appropriation"] { width:100px; text-align:center; }
+                th[data-key="reversion"] { width:100px; text-align:center; }
+                th[data-key="realignment"] { width:100px; text-align:center; }
+                th[data-key="authorized_appropriation"] { width:100px; text-align:center; }
+                th[data-key="allotment"] { width:100px; text-align:center; }
+                th[data-key="obligation"] { width:100px; text-align:center; }
+                th[data-key="appropriation_balance"] { width:100px; text-align:center; }
+                th[data-key="appropriation_accomplishment"] { width:70px; text-align:center; }
+                th[data-key="disbursement"] { width:100px; text-align:center; }
+                th[data-key="disbursement_to_obligation"] { width:70px; text-align:center; }
+                th[data-key="disbursement_to_appropriation"] { width:70px; text-align:center; }
+                th[data-key="obligation_balance"] { width:100px; text-align:center; }
+            </style>
+        `);
             newWin.document.write('</head><body>');
             newWin.document.write(`
             <div style="text-align:center; margin-bottom:20px;">
@@ -1036,7 +1114,7 @@
         <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px;">
             
             <!-- Prepared by (left side) -->
-            <div style="width: 45%; text-align: left; margin-left: 5%;">
+            <div style="width: 30%; text-align: left; margin-left: 30%;">
                 <strong>Prepared by:</strong>
                 <br><br><br>
                 <div style="text-align: center;">
@@ -1050,7 +1128,7 @@
             </div>
 
             <!-- Certified Correct (right side) -->
-            <div style="width: 45%; text-align: left; margin-right: 5%;">
+            <div style="width: 35%; text-align: left; margin-right: 5%;">
                 <strong>Certified Correct:</strong>
                 <br><br><br>
                 <div style="text-align: center;">

@@ -158,6 +158,8 @@ Route::middleware('auth')->group(function () {
     Route::get('saaodb/export-excel', [SAAODBOfficeController::class, 'exportExcel'])->name('saaodb.exportExcel');
     // SAAODB All Funds Report Routes
     Route::get('/saaodballfunds', [SAAODBAllFundsController::class, 'index'])->name('saaodballfunds.index');
+    // SAAODB All Funds Excel Export
+    Route::get('saaodbAllFunds/export-excel', [SAAODBAllFundsController::class, 'exportExcel'])->name('saaodbAllFunds.exportExcel');
 });
 
 // useless routes

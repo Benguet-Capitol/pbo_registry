@@ -425,8 +425,11 @@
                     </thead>
                     <tbody>
                         @forelse ($officeAllotmentClasses as $class)
-                        <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td class="px-1 py-3 text-center">
+                        <tr 
+                            class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                            ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}'"
+                        >
+                            <td class="px-1 py-1 text-center">
                                 <div class="relative inline-block text-left">
                                     <!-- Dropdown Button -->
                                     <button onclick="toggleDropdown(this)"
@@ -452,33 +455,33 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-1 py-3 text-center">{{ $class->office_abbreviation }}</td>
-                            <td class="px-1 py-3 text-center">{{ $class->class }}</td>
-                            <td class="px-1 py-3 text-center">{{ $class->fundSourceRelation->category ?? '-' }}</td>
-                            <td class="px-1 py-3 text-center">{{ $class->fpp_code }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->appropriations_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right {{ $class->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->supplemental_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right {{ $class->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->reversion_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right 
+                            <td class="px-1 py-1 text-center">{{ $class->office_abbreviation }}</td>
+                            <td class="px-1 py-1 text-center">{{ $class->class }}</td>
+                            <td class="px-1 py-1 text-center">{{ $class->fundSourceRelation->category ?? '-' }}</td>
+                            <td class="px-1 py-1 text-center">{{ $class->fpp_code }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->appropriations_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right {{ $class->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->supplemental_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right {{ $class->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->reversion_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right 
                                     {{ $class->realignments_sum < 0 ? 'text-red-600 font-semibold' : ($class->realignments_sum > 0 ? 'text-green-600 font-semibold' : 'text-gray-700 dark:text-gray-300') }}">
                                 {{ number_format($class->realignments_sum, 2) }}
                             </td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->authorized_appropriations, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->allotments_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->for_later_release, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->obligations_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->balance_appropriations, 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($class->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->balance_allotments, 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($class->allotment_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->disbursements_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($class->disbursement_balance, 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($class->disbursements_to_obligations, 2) }}%</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($class->disbursements_to_appropriations, 2) }}%</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->authorized_appropriations, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->allotments_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->for_later_release, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->obligations_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->balance_appropriations, 2) }}</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($class->appropriation_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->balance_allotments, 2) }}</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($class->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->disbursements_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($class->disbursement_balance, 2) }}</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($class->disbursements_to_obligations, 2) }}%</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($class->disbursements_to_appropriations, 2) }}%</td>
                         </tr>
                         @empty
                             <tr>
-                                <td colspan="21" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                                <td colspan="21" class="px-1 py-1 text-center text-gray-500 dark:text-gray-400 italic">
                                     No Office Allotment Classes found
                                 </td>
                             </tr>

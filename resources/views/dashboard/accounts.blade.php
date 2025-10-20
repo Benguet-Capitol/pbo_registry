@@ -324,35 +324,35 @@
                                     </div>
                                 </div>
                             </td> -->
-                            <td class="px-1 py-3 text-center">{{ $appropriation->programs }}</td>
-                            <td class="px-1 py-3 text-center">{{ $appropriation->description }}</td>
-                            <td class="px-1 py-3 text-center">{{ $appropriation->account_code }}</td>
-                            <td class="px-1 py-3 text-center">{{ $appropriation->fpp_code }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->appropriation_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right {{ $appropriation->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
+                            <td class="px-1 py-1 text-center">{{ $appropriation->programs }}</td>
+                            <td class="px-1 py-1 text-center">{{ $appropriation->description }}</td>
+                            <td class="px-1 py-1 text-center">{{ $appropriation->account_code }}</td>
+                            <td class="px-1 py-1 text-center">{{ $appropriation->fpp_code }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->appropriation_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right {{ $appropriation->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
                                 {{ number_format($appropriation->supplemental_sum, 2) }}
                             </td>
-                            <td class="px-1 py-3 text-right {{ $appropriation->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
+                            <td class="px-1 py-1 text-right {{ $appropriation->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
                                 {{ number_format($appropriation->reversion_sum, 2) }}
                             </td>
-                            <td class="px-1 py-3 text-right 
+                            <td class="px-1 py-1 text-right 
                                     {{ $appropriation->realignments_sum < 0 ? 'text-red-600 font-semibold' : '' }} 
                                     {{ $appropriation->realignments_sum > 0 ? 'text-green-600 font-semibold' : '' }} 
                                     {{ $appropriation->realignments_sum == 0 ? 'text-gray-600 dark:text-gray-300' : '' }}">
                                 {{ number_format($appropriation->realignments_sum, 2) }}
                             </td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->authorized_appropriations, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->allotments_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->for_later_release, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->obligations_sum, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->balance_appropriations, 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($appropriation->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->balance_allotments, 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($appropriation->allotment_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->disbursements, 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($appropriation->disbursement_balance, 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($appropriation->disbursements_to_obligations, 2) }}%</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($appropriation->disbursements_to_appropriations, 2) }}%</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->authorized_appropriations, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->allotments_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->for_later_release, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->obligations_sum, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->balance_appropriations, 2) }}</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($appropriation->appropriation_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->balance_allotments, 2) }}</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($appropriation->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->disbursements, 2) }}</td>
+                            <td class="px-1 py-1 text-right">{{ number_format($appropriation->disbursement_balance, 2) }}</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($appropriation->disbursements_to_obligations, 2) }}%</td>
+                            <td class="px-1 py-1 text-center">{{ number_format($appropriation->disbursements_to_appropriations, 2) }}%</td>
                         </tr>
                         @endforeach
                     </tbody>

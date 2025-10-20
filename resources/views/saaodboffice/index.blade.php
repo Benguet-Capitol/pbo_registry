@@ -74,62 +74,64 @@
         </div>
 
         <!-- Second row: Signatories -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-center">
-            <!-- Prepared By Label -->
-            <div class="col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-100 mb-2">Prepared By</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <!-- Prepared by Signatory Name -->
-                    <x-form.select
-                        name="prepared_signatory_name"
-                        id="prepared_signatory_name"
-                        class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                        onchange="this.form.submit()">
-                        <option value="">Select Signatory</option>
-                        @foreach($employees as $employee)
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+            <!-- Prepared By -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-100 mb-2">
+                    Prepared By
+                </label>
+                <x-form.select
+                    name="prepared_signatory_name"
+                    id="prepared_signatory_name"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    onchange="this.form.submit()">
+                    <option value="">Select Signatory</option>
+                    @foreach($employees as $employee)
                         <option value="{{ $employee->name }}"
                             data-designation="{{ $employee->designation }}"
                             {{ request('prepared_signatory_name') == $employee->name ? 'selected' : '' }}>
                             {{ $employee->name }}
                         </option>
-                        @endforeach
-                    </x-form.select>
-                </div>
+                    @endforeach
+                </x-form.select>
+                <input type="hidden" id="prepared_signatory_designation" name="prepared_signatory_designation">
             </div>
 
-            <!-- Hidden input for designation -->
-            <input type="hidden" id="prepared_signatory_designation" name="prepared_signatory_designation">
-
-            <!-- Certified Correct Label -->
-            <div class="col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-100 mb-2">Certified Correct</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <!-- Certified Correct Signatory Name -->
-                    <x-form.select
-                        name="certified_signatory_name"
-                        id="certified_signatory_name"
-                        class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                        onchange="this.form.submit()">
-                        <option value="">Select Signatory</option>
-                        @foreach($employees as $employee)
-                        <option value="{{ $employee->name }}" {{ request('certified_signatory_name') == $employee->name ? 'selected' : '' }}>
+            <!-- Certified Correct: Name -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-100 mb-2">
+                    Certified Correct
+                </label>
+                <x-form.select
+                    name="certified_signatory_name"
+                    id="certified_signatory_name"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    onchange="this.form.submit()">
+                    <option value="">Select Signatory</option>
+                    @foreach($employees as $employee)
+                        <option value="{{ $employee->name }}"
+                            {{ request('certified_signatory_name') == $employee->name ? 'selected' : '' }}>
                             {{ $employee->name }}
                         </option>
-                        @endforeach
-                    </x-form.select>
+                    @endforeach
+                </x-form.select>
+            </div>
 
-                    <!-- Certified Correct Designation -->
-                    <x-form.select
-                        name="certified_signatory_designation"
-                        id="certified_signatory_designation"
-                        class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                        onchange="this.form.submit()">
-                        <option value="">Select Designation</option>
-                        <option value="Provincial Accountant" {{ request('certified_signatory_designation') == 'Provincial Accountant' ? 'selected' : '' }}>Provincial Accountant</option>
-                        <option value="Acting Provincial Accountant" {{ request('certified_signatory_designation') == 'Acting Provincial Accountant' ? 'selected' : '' }}>Acting Provincial Accountant</option>
-                        <option value="OIC, Provincial Accountant" {{ request('certified_signatory_designation') == 'OIC, Provincial Accountant' ? 'selected' : '' }}>OIC, Provincial Accountant</option>
-                    </x-form.select>
-                </div>
+            <!-- Certified Correct: Designation -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-100 mb-2 invisible lg:visible">
+                    &nbsp; <!-- To align label with Certified Correct -->
+                </label>
+                <x-form.select
+                    name="certified_signatory_designation"
+                    id="certified_signatory_designation"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    onchange="this.form.submit()">
+                    <option value="">Select Designation</option>
+                    <option value="Provincial Accountant" {{ request('certified_signatory_designation') == 'Provincial Accountant' ? 'selected' : '' }}>Provincial Accountant</option>
+                    <option value="Acting Provincial Accountant" {{ request('certified_signatory_designation') == 'Acting Provincial Accountant' ? 'selected' : '' }}>Acting Provincial Accountant</option>
+                    <option value="OIC, Provincial Accountant" {{ request('certified_signatory_designation') == 'OIC, Provincial Accountant' ? 'selected' : '' }}>OIC, Provincial Accountant</option>
+                </x-form.select>
             </div>
         </div>
 
@@ -945,28 +947,28 @@
             const newWin = window.open('', '', `width=${screenW},height=${screenH},left=0,top=0,scrollbars=yes,resizable=yes`);
             newWin.document.write('<html><head><title>SAAODB</title>');
             newWin.document.write(`
-        <style>
-            body { font-family: sans-serif; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ccc; padding: 4px; }
+                <style>
+                    body { font-family: sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ccc; padding: 4px; }
 
-            th[data-key="ppas"] { width:200px; text-align:center; }
-            th[data-key="account_code"] { width:100px; text-align:center; }
-            th[data-key="appropriation"] { width:100px; text-align:center; }
-            th[data-key="sb_appropriation"] { width:100px; text-align:center; }
-            th[data-key="reversion"] { width:100px; text-align:center; }
-            th[data-key="realignment"] { width:100px; text-align:center; }
-            th[data-key="authorized_appropriation"] { width:100px; text-align:center; }
-            th[data-key="allotment"] { width:100px; text-align:center; }
-            th[data-key="obligation"] { width:100px; text-align:center; }
-            th[data-key="appropriation_balance"] { width:100px; text-align:center; }
-            th[data-key="appropriation_accomplishment"] { width:70px; text-align:center; }
-            th[data-key="disbursement"] { width:100px; text-align:center; }
-            th[data-key="disbursement_to_obligation"] { width:70px; text-align:center; }
-            th[data-key="disbursement_to_appropriation"] { width:70px; text-align:center; }
-            th[data-key="obligation_balance"] { width:100px; text-align:center; }
-        </style>
-    `);
+                    th[data-key="ppas"] { width:200px; text-align:center; }
+                    th[data-key="account_code"] { width:100px; text-align:center; }
+                    th[data-key="appropriation"] { width:100px; text-align:center; }
+                    th[data-key="sb_appropriation"] { width:100px; text-align:center; }
+                    th[data-key="reversion"] { width:100px; text-align:center; }
+                    th[data-key="realignment"] { width:100px; text-align:center; }
+                    th[data-key="authorized_appropriation"] { width:100px; text-align:center; }
+                    th[data-key="allotment"] { width:100px; text-align:center; }
+                    th[data-key="obligation"] { width:100px; text-align:center; }
+                    th[data-key="appropriation_balance"] { width:100px; text-align:center; }
+                    th[data-key="appropriation_accomplishment"] { width:70px; text-align:center; }
+                    th[data-key="disbursement"] { width:100px; text-align:center; }
+                    th[data-key="disbursement_to_obligation"] { width:70px; text-align:center; }
+                    th[data-key="disbursement_to_appropriation"] { width:70px; text-align:center; }
+                    th[data-key="obligation_balance"] { width:100px; text-align:center; }
+                </style>
+            `);
             newWin.document.write('</head><body>');
             newWin.document.write(`
         <div style="text-align:center; margin-bottom:20px;">

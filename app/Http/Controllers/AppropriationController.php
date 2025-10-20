@@ -73,15 +73,7 @@ class AppropriationController extends Controller
             });
         }
         // Sort appropriations: prioritize those without programs, then alphabetically sort those with programs
-       $query->orderByRaw("
-            CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC,
-            programs ASC,
-            CAST(SUBSTRING_INDEX(account_code, '-', 1) AS UNSIGNED) ASC,
-            CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(account_code, '-', 2), '-', -1) AS UNSIGNED) ASC,
-            CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(account_code, '-', 3), '-', -1) AS UNSIGNED) ASC,
-            CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING_INDEX(account_code, ' ', 1), '-', -1), ' ', 1) AS UNSIGNED) ASC,
-            SUBSTRING_INDEX(account_code, ' ', -1) ASC
-        ");
+       $query->orderBy('id');
 
         // Get the appropriations
         $appropriations = ($perPage == 'all')
@@ -302,6 +294,6 @@ class AppropriationController extends Controller
             Appropriation::create($data);
         });
 
-        return redirect()->back()->with('status', '<strong>Appropriations</strong> and <strong>Allotments</strong> Imported successfully!');
+        return redirect()->back()->with('status', '<strong>Accounts</strong> Imported successfully!');
     }
 }

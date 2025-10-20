@@ -698,6 +698,76 @@
             }
         });
 
+        // Generic keyboard navigation for dropdowns
+    function enableDropdownKeyboardNavigation(inputId, dropdownId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        let currentFocus = -1;
+
+        if (!input || !dropdown) return;
+
+        input.addEventListener("keydown", function (e) {
+            let items = dropdown.querySelectorAll("div, li");
+            if (dropdown.classList.contains("hidden") || items.length === 0) return;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                currentFocus++;
+                if (currentFocus >= items.length) currentFocus = 0;
+                setActive(items, currentFocus);
+            } 
+            else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                currentFocus--;
+                if (currentFocus < 0) currentFocus = items.length - 1;
+                setActive(items, currentFocus);
+            } 
+            else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentFocus > -1 && items[currentFocus]) {
+                    items[currentFocus].click();
+                    currentFocus = -1;
+                }
+            } 
+            else if (e.key === "Escape") {
+                dropdown.classList.add("hidden");
+                currentFocus = -1;
+            }
+        });
+
+        function setActive(items, index) {
+            removeActive(items);
+            if (items[index]) {
+                items[index].classList.add("active");
+                items[index].style.backgroundColor = "#e5e7eb"; // light blue highlight
+                items[index].scrollIntoView({ block: "nearest" });
+            }
+        }
+
+        function removeActive(items) {
+            items.forEach(item => {
+                item.classList.remove("active");
+                item.style.backgroundColor = ""; // reset background
+                item.style.color = ""; // reset text color
+            });
+        }
+
+        document.addEventListener("click", function (event) {
+            if (!event.target.closest(`#${inputId}`) && !event.target.closest(`#${dropdownId}`)) {
+                dropdown.classList.add("hidden");
+                currentFocus = -1;
+            }
+        });
+    }
+
+    // Initialize once DOM is loaded
+    document.addEventListener("DOMContentLoaded", function() {
+        enableDropdownKeyboardNavigation("edit_source_office_allotment_class", "edit_SourceOfficeAllotmentClassDropdown");
+        enableDropdownKeyboardNavigation("edit_source_account_code", "edit_SourceAccountCodeDropdown");
+        enableDropdownKeyboardNavigation("edit_recipient_office_allotment_class", "edit_RecipientOfficeAllotmentClassDropdown");
+        enableDropdownKeyboardNavigation("edit_recipient_account_code", "edit_RecipientAccountCodeDropdown");
+    });
+
         // Utility to update text color for edit modal fields
         function editUpdateTextColor(element) {
             if (element.value && element.value.trim() !== "") {

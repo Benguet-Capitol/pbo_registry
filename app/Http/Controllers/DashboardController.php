@@ -355,6 +355,7 @@ class DashboardController extends Controller
                             ->orWhere('fpp_code', 'like', "%{$search}%");
                     });
                 }
+                $query->orderBy('id', 'asc');
             },
             'supplementals',
             'realignments',
@@ -460,18 +461,9 @@ class DashboardController extends Controller
         // Calculate Disbursement Balance
         $officeAllotmentClasses->disbursement_balance = ($officeAllotmentClasses->obligations_sum - $officeAllotmentClasses->disbursements_sum);
 
-        $sortedAppropriations = $officeAllotmentClasses->appropriations
-            ->sortBy(function ($item) {
-                return [
-                    empty($item->programs) ? 0 : 1,  // Empty/null programs first
-                    $item->account_code,            // Then by account_code
-                ];
-            })->values(); // Re-index the collection
-
-        $officeAllotmentClasses->setRelation('appropriations', $sortedAppropriations);
-
+        
         // Calculate the sum of appropriations, allotments, obligations, supplementals, and reversions for each appropriation
-        foreach ($sortedAppropriations as $appropriation) {
+        foreach ($officeAllotmentClasses->appropriations as $appropriation) {
             // Approved Appropriations
             $appropriation->appropriation_sum = $appropriation->appropriation;
 
@@ -556,6 +548,7 @@ class DashboardController extends Controller
 
         // Get all appropriation IDs for the filtered office allotment class
         $appropriationIds = $officeAllotmentClasses->appropriations->pluck('id');
+        
 
         return view('dashboard.accounts', compact(
             'officeAllotmentClasses',

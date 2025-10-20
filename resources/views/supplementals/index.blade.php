@@ -214,12 +214,12 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ ucfirst($supplemental->type) }}</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_no }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->programs ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->account_code ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->description ?? '-' }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->basis }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_no }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->programs ?? '-' }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->account_code ?? '-' }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->description ?? '-' }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->basis }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300">
                                 @if($supplemental->type === 'Supplemental')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
                                         {{ number_format($supplemental->amount, 2) }}
@@ -232,11 +232,11 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ number_format($supplemental->amount, 2) }}</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter1 }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter2 }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter3 }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter4 }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter1 }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter2 }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter3 }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->quarter4 }}</td>
+                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 <div class="relative inline-block text-left">
                                     <button onclick="toggleDropdown(this)" 
                                             class="relative text-xs group px-2 py-1.5">

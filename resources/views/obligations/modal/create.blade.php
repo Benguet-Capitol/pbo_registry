@@ -63,18 +63,6 @@
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
-                            <!-- Number -->
-                            <div class="sm:col-span-3">
-                                <x-form.label for="obr_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('OBR No.')" />
-                                <div class="mt-2">
-                                    <x-form.input-with-icon-wrapper>
-                                        <x-slot name="icon">
-                                            <i class="fas fa-list-ol"></i>
-                                        </x-slot>
-                                        <x-form.input withicon type='text' name="obr_no" autocomplete="off" id="obr_no" placeholder="{{ __('OBR No.') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
-                                    </x-form.input-with-icon-wrapper>
-                                </div>
-                            </div>
                             <!-- Obligation Type -->
                             <div class="sm:col-span-3">
                                 <x-form.label for="obr_type" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Obligation Type')" />
@@ -91,6 +79,19 @@
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
                                     <span id="obrTypeError" class="text-red-500 text-sm"></span>
+                                </div>
+                            </div>
+                            <!-- Number -->
+                            <div class="sm:col-span-3">
+                                <x-form.label for="obr_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('OBR No.')" />
+                                <div class="mt-2">
+                                    <x-form.input-with-icon-wrapper>
+                                        <x-slot name="icon">
+                                            <i class="fas fa-list-ol"></i>
+                                        </x-slot>
+                                        <x-form.input withicon type='text' name="obr_no" autocomplete="off" id="obr_no" placeholder="{{ __('OBR No.') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                    </x-form.input-with-icon-wrapper>
+                                    <span id="obrNoError" class="text-red-500 text-sm"></span>
                                 </div>
                             </div>
                             <!-- Particulars -->
@@ -737,14 +738,44 @@
         console.log("OBR Type Selected:", obrType.value);
 
         // Validate OBR Number
-        const obrNo = document.getElementById('obr_no');
-        if (!obrNo.value.trim()) {
-            obrNo.classList.add('border-red-500');
-            obrNo.classList.remove('border-gray-300');
+        const obrNoField = document.getElementById('obr_no');
+        const obrNoValue = obrNoField.value.trim();
+
+        // 1. Check if the field is empty (Original logic)
+        if (!obrNoValue) {
+            obrNoField.classList.add('border-red-500');
+            obrNoField.classList.remove('border-gray-300');
             isValid = false;
         } else {
-            obrNo.classList.remove('border-red-500');
-            obrNo.classList.add('border-gray-300');
+            // 2. Check the format: expecting 5 digits followed by a hyphen
+            // The pattern checks for:
+            // ^: start of string
+            // (\d{5}): capture group for exactly 5 digits
+            // -: literal hyphen
+            // (.*)?: optional remaining characters (mm-yy-000)
+            const formatRegex = /^(\d{5})-(.*)?$/;
+            const match = obrNoValue.match(formatRegex);
+
+            if (match) {
+                // Extract the 5-digit sequence (first captured group)
+                const fiveDigitSequence = match[1];
+                
+                // Check if the 5-digit sequence is entirely zero (e.g., '00000')
+                // Using parseInt and checking if it equals 0, or comparing against '00000'
+                if (parseInt(fiveDigitSequence) === 0) {
+                    document.getElementById('obrNoError').textContent = 'Obligation No. unique sequence is required.';
+                    isValid = false;
+                } else {
+                    // Passed validation
+                    obrNoField.classList.remove('border-red-500');
+                    obrNoField.classList.add('border-gray-300');
+                }
+            } else {
+                // Did not match the expected basic format (e.g., missing 5 digits or hyphen)
+                obrNoField.classList.add('border-red-500');
+                obrNoField.classList.remove('border-gray-300');
+                isValid = false;
+            }
         }
 
         // Validate Particulars

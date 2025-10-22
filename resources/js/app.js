@@ -4,11 +4,7 @@ import Alpine from 'alpinejs'
 import collapse from '@alpinejs/collapse'
 import PerfectScrollbar from 'perfect-scrollbar'
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import 'jquery';
-import 'datatables.net-dt';
 
-
- 
 window.PerfectScrollbar = PerfectScrollbar
 
 document.addEventListener('alpine:init', () => {

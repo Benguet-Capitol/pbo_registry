@@ -300,6 +300,8 @@
         closeAllDropdowns();
 
         document.getElementById('editObligationsForm').action = `/obligations/${obligation.id}`;
+        console.log('Loaded obligation:', obligation);
+        console.log('Sample obligation with amounts:', @json($obligations->first()));
 
         // Fields to populate
         const fields = {
@@ -334,7 +336,34 @@
         const tableBody = document.querySelector('#edit_programs_table tbody');
         tableBody.innerHTML = '';
         if (Array.isArray(obligation.obligation_amounts) && obligation.obligation_amounts.length > 0) {
-            obligation.obligation_amounts.forEach(amount => {
+            console.log('Debug - Full obligation:', obligation);
+            obligation.obligation_amounts.forEach((amount, index) => {
+                console.log(`Debug - Processing amount ${index}:`, amount);
+                
+                // Get values with proper error handling
+                const description = amount.description || amount.appropriation?.description || '';
+                const program = amount.program || amount.appropriation?.programs || '';
+                const balanceFromAllotment = parseFloat(amount.balance_from_allotment || 0);
+                const obrAmount = parseFloat(amount.obr_amount || 0);
+                
+                console.log(`Debug - Processed values for row ${index}:`, {
+                    description,
+                    program,
+                    raw_balance: amount.balance_from_allotment,
+                    processed_balance: balanceFromAllotment,
+                    raw_amount: amount.obr_amount,
+                    processed_amount: obrAmount
+                });
+                
+                console.log('Full amount object:', amount);
+            console.log(`Row ${index} values:`, {
+                description,
+                program,
+                balanceFromAllotment: amount.balance_from_allotment,
+                obrAmount,
+                appropriation: amount.appropriation
+            });
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="px-1 py-2">
@@ -342,16 +371,16 @@
                         <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
                     </td>
                     <td class="px-1 py-2">
-                        <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${amount.description || ''}</x-form.textarea>
+                        <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${description}</x-form.textarea>
                     </td>
                     <td class="px-1 py-2">
-                        <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${amount.program || ''}</x-form.textarea>
+                        <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${program}</x-form.textarea>
                     </td>
                     <td class="px-1 py-2">
-                        <x-form.input type="text" name="edit_balance_from_allotment[]" value="${Number(amount.balance_from_allotment || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                        <x-form.input type="text" name="edit_balance_from_allotment[]" value="${balanceFromAllotment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
                     </td>
                     <td class="px-1 py-2">
-                        <x-form.input type="text" name="edit_amount_of_obligation[]" value="${parseFloat(amount.amount || 0).toFixed(2)}" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                        <x-form.input type="text" name="edit_amount_of_obligation[]" value="${parseFloat(obrAmount).toFixed(2)}" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
                     </td>
                     <td class="px-1 py-2 text-center">
                         <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
@@ -452,11 +481,11 @@
                 input.value = `${item.name}`;
                 document.getElementById('edit_office_allotment_class_id').value = item.id; // Set the hidden input value
                 // Reset all account code fields when OfficeAllotmentClass is selected
-                document.querySelectorAll('[name="account_code[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="description[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="programs[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="edit_account_code[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="edit_description[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="edit_programs[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="edit_balance_from_allotment[]"]').forEach(field => field.value = '');
+                document.querySelectorAll('[name="edit_amount_of_obligation[]"]').forEach(field => field.value = '');
                 generateObrNumberEdit(item.fund); // Pass fund name, not prefix
                 // Restrict Obligation Type based on detected class
                 restrictObligationTypeEdit(item.class);
@@ -541,7 +570,7 @@
             dropdown.classList.add('hidden');
             return;
         }
-        const filteredCodes = appropriations.filter(item =>
+        const filteredCodes = editAppropriations.filter(item =>
             String(item.office_allotment_class_id) === String(officeAllotmentClassId) &&
             item.account_code.toLowerCase().includes(filter)
         );

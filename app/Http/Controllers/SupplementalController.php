@@ -17,154 +17,119 @@ use Illuminate\Support\Facades\Log;
 class SupplementalController extends Controller
 {
     public function index(Request $request): View
-    {
-        $perPage = $request->input('per_page', 'all');
-        $search = $request->input('search');
+{
+    $perPage = $request->input('per_page', 'all');
+    $search = $request->input('search');
 
-        // Get sorting parameters
-        $sortBy = $request->query('sort_by', 'id'); // Default to 'id'
-        $sortOrder = $request->query('sort_order', 'desc'); // Default to 'desc'
+    $sortBy = $request->query('sort_by', 'id');
+    $sortOrder = $request->query('sort_order', 'desc');
 
-        // Get the selected year or default to the current year
-        $currentYear = date('Y');
-        $selectedYear = $request->input('year1', $currentYear);
+    $currentYear = date('Y');
+    $selectedYear = $request->input('year1', $currentYear);
 
-        // Query supplementals
-        $query = Supplemental:: query()
-            ->with(['officeAllotmentClass', 'appropriation'])
-            ->whereHas('officeAllotmentClass', function ($q) use ($selectedYear) {
-                $q->where('year', $selectedYear);
-            });
+    // Preload supplementals with office allotment class and appropriation
+    $query = Supplemental::with(['officeAllotmentClass', 'appropriation'])
+        ->whereHas('officeAllotmentClass', fn($q) => $q->where('year', $selectedYear));
 
-        // Apply filters for office_allotment_class_id
-        if ($request->filled('office_allotment_class_id')) {
-            $query->where('office_allotment_classes_id', $request->office_allotment_class_id);
-        }
-
-        // Apply filters for supplemental_type
-        if ($request->filled('supplemental_type_filter')) {
-            $query->where('type', $request->supplemental_type_filter);
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('supplemental_no', 'like', '%' . $search . '%')
-                    ->orWhere('supplemental_date', 'like', '%' . $search . '%')
-                    ->orWhere('basis_no', 'like', '%' . $search . '%')
-                    ->orWhere('basis', 'like', '%' . $search . '%')
-                    ->orWhere('type', 'like', '%' . $search . '%')
-                    ->orWhere('amount', 'like', '%' . $search . '%')
-                    ->orWhere('remarks', 'like', '%' . $search . '%');
-            });
-        }
-
-        // Apply sorting before pagination
-        $query = $query->orderBy($sortBy, $sortOrder);
-        if ($perPage == 'all') {
-            $supplementals = $query->get();
-        } else {
-            $supplementals = $query->paginate($perPage)->appends([
-                'year1' => $selectedYear, // Retain the selected year
-                'search' => $search,      // Retain the search term (if applicable)
-                'sort_by' => $sortBy,     // Retain the sort column
-                'sort_order' => $sortOrder, // Retain the sort order
-                'office_allotment_classes_id' => $request->office_allotment_class_id,
-                'type' => $request->supplemental_type_filter,
-                'per_page' => $perPage,
-            ]);
-        }
-
-        // Fetch distinct years from the database
-        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
-        // Get the list of office allotment classes filtered by the selected year
-        $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
-            ->where('year', $selectedYear)
-            ->orderBy('office', 'asc')
-            ->get();
-        // Get the list of office allotment classes filtered by the selected year
-        $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
-            ->select('id', 'office_abbreviation', 'class', 'fund')
-            ->where('year', $currentYear) // Filter by the current year 
-            ->get();
-
-
-        // Get the list of all appropriations with calculated balances
-        $appropriations = Appropriation::select(
-            'id',
-            'office_allotment_class_id',
-            'account_code',
-            'description',
-            'programs',
-            'quarter1',
-            'quarter2',
-            'quarter3',
-            'quarter4'
-        )->get()->map(function ($appropriation) {
-            // --- Calculate the total appropriation (up to current quarter only) ---
-            $totalAppropriation = 0;
-
-            if ($appropriation) {
-                $currentMonth = now()->month; 
-                if ($currentMonth >= 1 && $currentMonth <= 3) {
-                    $currentQuarter = 1;
-                } elseif ($currentMonth >= 4 && $currentMonth <= 6) {
-                    $currentQuarter = 2;
-                } elseif ($currentMonth >= 7 && $currentMonth <= 9) {
-                    $currentQuarter = 3;
-                } else {
-                    $currentQuarter = 4;
-                }
-
-                if ($currentQuarter >= 1) $totalAppropriation += $appropriation->quarter1 ?? 0;
-                if ($currentQuarter >= 2) $totalAppropriation += $appropriation->quarter2 ?? 0;
-                if ($currentQuarter >= 3) $totalAppropriation += $appropriation->quarter3 ?? 0;
-                if ($currentQuarter >= 4) $totalAppropriation += $appropriation->quarter4 ?? 0;
-            }
-
-            // Get all obligation amounts for this appropriation
-            $obligationAmounts = ObligationAmount::where('appropriation_id', $appropriation->id)->get();
-            $totalObrAmount = 0;
-            foreach ($obligationAmounts as $obr) {
-                // Sum adjustments for this obligation amount
-                $adjustmentSum = ObligationAdjustment::where('obligation_amounts_id', $obr->id)->sum('adjustment_amount');
-                $totalObrAmount += $obr->obr_amount + $adjustmentSum;
-            }
-            // Get all realignments for this appropriation
-            $realignments = Realignment::where('appropriations_id', $appropriation->id)->get();
-            $realignmentTotal = 0;
-            foreach ($realignments as $realignment) {
-                if ($realignment->type === 'Source') {
-                    $realignmentTotal -= $realignment->amount;
-                } elseif ($realignment->type === 'Recipient') {
-                    $realignmentTotal += $realignment->amount;
-                }
-            }
-
-            // Get all supplemental appropriations for this appropriation
-            $supplementalAppropriations = Supplemental::where('appropriations_id', $appropriation->id)->get();
-            $supplementalTotal = 0;
-            foreach ($supplementalAppropriations as $supplemental) {
-                if ($supplemental->type === 'Reversion') {
-                    $supplementalTotal -= $supplemental->amount;
-                } elseif ($supplemental->type === 'Supplemental') {
-                    $supplementalTotal += $supplemental->amount;
-                }
-            }
-            // Calculate the balance
-            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
-            $appropriation->balance_from_allotment = ($totalAppropriation + $realignmentTotal) - $totalObrAmount;
-
-            return $appropriation;
-        });
-
-        $breadcrumb = [
-            ['label' => 'Dashboard', 'route' => route('dashboard')],
-            ['label' => 'Supplemental Appropriations | Reversions']
-        ];
-        // Return the view with the supplementals data
-        return view('supplementals.index', compact('supplementals', 'perPage', 'search', 'sortBy', 'sortOrder', 'availableYears', 'selectedYear',
-             'officeAllotmentClasses', 'office_allotment_classes', 'appropriations', 'breadcrumb'));
+    if ($request->filled('office_allotment_class_id')) {
+        $query->where('office_allotment_classes_id', $request->office_allotment_class_id);
     }
+
+    if ($request->filled('supplemental_type_filter')) {
+        $query->where('type', $request->supplemental_type_filter);
+    }
+
+    if ($search) {
+        $query->where(fn($q) => $q->where('supplemental_no', 'like', "%{$search}%")
+            ->orWhere('supplemental_date', 'like', "%{$search}%")
+            ->orWhere('basis_no', 'like', "%{$search}%")
+            ->orWhere('basis', 'like', "%{$search}%")
+            ->orWhere('type', 'like', "%{$search}%")
+            ->orWhere('amount', 'like', "%{$search}%")
+            ->orWhere('remarks', 'like', "%{$search}%"));
+    }
+
+    $query->orderBy($sortBy, $sortOrder);
+
+    $supplementals = $perPage === 'all'
+        ? $query->get()
+        : $query->paginate($perPage)->appends([
+            'year1' => $selectedYear,
+            'search' => $search,
+            'sort_by' => $sortBy,
+            'sort_order' => $sortOrder,
+            'office_allotment_classes_id' => $request->office_allotment_class_id,
+            'type' => $request->supplemental_type_filter,
+            'per_page' => $perPage,
+        ]);
+
+    $availableYears = OfficeAllotmentClass::distinct()
+        ->orderBy('year', 'desc')
+        ->pluck('year');
+
+    $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
+        ->where('year', $selectedYear)
+        ->orderBy('office', 'asc')
+        ->get();
+
+    $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
+        ->select('id', 'office_abbreviation', 'class', 'fund')
+        ->where('year', $currentYear)
+        ->get();
+
+    // Optimize appropriations calculation with eager loading to avoid N+1
+    $appropriations = Appropriation::with([
+        'obligationAmounts.obligationAdjustments',
+        'realignments',
+        'supplementals'
+    ])->select(
+        'id', 'office_allotment_class_id', 'account_code', 'description', 'programs',
+        'quarter1', 'quarter2', 'quarter3', 'quarter4'
+    )->get()->map(function ($appropriation) {
+        // Determine current quarter
+        $month = now()->month;
+        $currentQuarter = match (true) {
+            $month <= 3 => 1,
+            $month <= 6 => 2,
+            $month <= 9 => 3,
+            default => 4,
+        };
+
+        // Sum appropriation up to current quarter
+        $totalAppropriation = array_sum(array_slice(
+            [$appropriation->quarter1, $appropriation->quarter2, $appropriation->quarter3, $appropriation->quarter4],
+            0, $currentQuarter
+        ));
+
+        // Total obligation including adjustments
+        $totalObrAmount = $appropriation->obligationAmounts->sum(fn($obr) =>
+            $obr->obr_amount + $obr->obligationAdjustments->sum('adjustment_amount')
+        );
+
+        // Realignments
+        $realignmentTotal = $appropriation->realignments->sum(fn($r) => $r->type === 'Source' ? -$r->amount : $r->amount);
+
+        // Supplemental appropriations
+        $supplementalTotal = $appropriation->supplementals->sum(fn($s) => $s->type === 'Reversion' ? -$s->amount : $s->amount);
+
+        // Calculate balances
+        $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+        $appropriation->balance_from_allotment = ($totalAppropriation + $realignmentTotal) - $totalObrAmount;
+
+        return $appropriation;
+    });
+
+    $breadcrumb = [
+        ['label' => 'Dashboard', 'route' => route('dashboard')],
+        ['label' => 'Supplemental Appropriations | Reversions']
+    ];
+
+    return view('supplementals.index', compact(
+        'supplementals', 'perPage', 'search', 'sortBy', 'sortOrder',
+        'availableYears', 'selectedYear', 'officeAllotmentClasses',
+        'office_allotment_classes', 'appropriations', 'breadcrumb'
+    ));
+}
 
     public function create(): View
     {
@@ -235,7 +200,7 @@ class SupplementalController extends Controller
                 Supplemental::create($dataToInsert);
             }
 
-            return redirect()->route('supplementals.index', $request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
+            return redirect()->route('supplementals.index', $request->only(['year1', 'office_allotment_class_filter', 'supplemental_type_filter', 'per_page', 'search']))
             ->with('status', "<strong>{$validated['type']}</strong> No. <strong>{$validated['supplemental_no']}</strong> has been created successfully!");
         } catch (\Exception $e) {
             Log::error('Error saving supplemental: ' . $e->getMessage(), [

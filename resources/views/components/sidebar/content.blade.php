@@ -309,70 +309,7 @@
             <i class="fas fa-file-invoice text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
-    <x-sidebar.dropdown
-        title="Auxiliary"
-        :active="request()->routeIs('account_codes.index') || request()->routeIs('offices.index') || request()->routeIs('allotment_classes.index') || request()->routeIs('funds.index') || request()->routeIs('fund_sources.index') || request()->routeIs('sectors.index') || request()->routeIs('programs.index')">
-        <x-slot name="icon">
-            <i class="fas fa-toolbox text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
-        </x-slot>
-        <x-sidebar.sublink
-            title="Account"
-            href="{{ route('account_codes.index') }}"
-            :active="request()->routeIs('account_codes.index')">
-            <x-slot name="icon">
-                <i class="fas fa-stream text-base flex-shrink-0 dark:text-gray-100"></i>
-            </x-slot>
-        </x-sidebar.sublink>
-        <x-sidebar.sublink
-            title="Allotment Class"
-            href="{{ route('allotment_classes.index') }}"
-            :active="request()->routeIs('allotment_classes.index')">
-            <x-slot name="icon">
-                <i class="fas fa-server text-base flex-shrink-0 dark:text-gray-100"></i>
-            </x-slot>
-        </x-sidebar.sublink>
-        <x-sidebar.sublink
-            title="Fund"
-            href="{{ route('funds.index') }}"
-            :active="request()->routeIs('funds.index')">
-            <x-slot name="icon">
-                <i class="fas fa-sliders-h text-base flex-shrink-0 dark:text-gray-100"></i>
-            </x-slot>
-        </x-sidebar.sublink>
-        <x-sidebar.sublink
-            title="Fund Source"
-            href="{{ route('fund_sources.index') }}"
-            :active="request()->routeIs('fund_sources.index')">
-            <x-slot name="icon">
-                <i class="fas fa-landmark text-base flex-shrink-0 dark:text-gray-100"></i>
-            </x-slot>
-        </x-sidebar.sublink>
-        <x-sidebar.sublink
-            title="Office"
-            href="{{ route('offices.index') }}"
-            :active="request()->routeIs('offices.index')">
-            <x-slot name="icon">
-                <i class="fas fa-qrcode text-base flex-shrink-0 dark:text-gray-100"></i>
-            </x-slot>
-        </x-sidebar.sublink>
-        <x-sidebar.sublink
-            title="Program"
-            href="{{ route('programs.index') }}"
-            :active="request()->routeIs('programs.index')">
-            <x-slot name="icon">
-                <i class="fas fa-file-alt text-base flex-shrink-0 dark:text-gray-100"></i>
-            </x-slot>
-        </x-sidebar.sublink>
-        <x-sidebar.sublink
-            title="Sector"
-            href="{{ route('sectors.index') }}"
-            :active="request()->routeIs('sectors.index')">
-            <x-slot name="icon">
-                <i class="fas fa-vector-square text-base flex-shrink-0 dark:text-gray-100"></i>
-            </x-slot>
-        </x-sidebar.sublink>
-    </x-sidebar.dropdown>
-
+    
     <div
         x-transition
         x-show="isSidebarOpen || isSidebarHovered"

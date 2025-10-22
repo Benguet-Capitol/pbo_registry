@@ -25,34 +25,34 @@ class ObligationController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the per page value from the request
+        // --- Filters & Sorting setup ---
         $perPage = $request->input('per_page', 'all');
         $search = $request->input('search');
-        // Get the sort by and sort order values from the request
         $sortBy = $request->query('sort_by', 'obr_date');
         $sortOrder = $request->query('sort_order', 'desc');
-
-        // Get the selected year or default to the current year
         $currentYear = date('Y');
         $selectedYear = $request->input('year1', $currentYear);
 
-        // Query Obligations
-        $query = Obligation::with(['officeAllotmentClass.offices', 'officeAllotmentClass.allotmentClass', 'purchaseOrders'])
-            ->whereHas('officeAllotmentClass', function ($q) use ($selectedYear) {
-                $q->where('year', $selectedYear);
-            });
+        // --- Base Query for Obligations ---
+        $query = Obligation::with([
+            'officeAllotmentClass.offices',
+            'officeAllotmentClass.allotmentClass',
+            'purchaseOrders',
+            'obligationAmounts.appropriation',
+            'obligationAmounts.obligationAdjustments',
+            'disbursements',
+            'obligationAdjustments'
+        ])->whereHas('officeAllotmentClass', function ($q) use ($selectedYear) {
+            $q->where('year', $selectedYear);
+        });
 
-        // Apply filters for office_allotment_class_id
+        // --- Filters ---
         if ($request->filled('office_allotment_class_filter')) {
             $query->where('office_allotment_class_id', $request->office_allotment_class_filter);
         }
-
-        // Apply filters for obr_type
         if ($request->filled('obr_type_filter')) {
             $query->where('obr_type', $request->obr_type_filter);
         }
-
-        // Apply search filters
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('obr_date', 'like', "%{$search}%")
@@ -61,27 +61,21 @@ class ObligationController extends Controller
                     ->orWhere('particulars', 'like', "%{$search}%")
                     ->orWhere('processed_by', 'like', "%{$search}%")
                     ->orWhere('remarks', 'like', "%{$search}%");
-            });
-
-            // Search in related tables: offices and allotment_class
-            $query->orWhereHas('officeAllotmentClass.offices', function ($q) use ($search) {
-                $q->where('office_abbreviation', 'like', "%{$search}%");
-            })->orWhereHas('officeAllotmentClass.allotmentClass', function ($q) use ($search) {
-                $q->where('class', 'like', "%{$search}%");
-            });
+            })
+            ->orWhereHas('officeAllotmentClass.offices', fn($q) => 
+                $q->where('office_abbreviation', 'like', "%{$search}%"))
+            ->orWhereHas('officeAllotmentClass.allotmentClass', fn($q) => 
+                $q->where('class', 'like', "%{$search}%"));
         }
 
-        // Apply sorting and pagination
-       if ($sortBy === 'office_allotment_class') {
-        $query->join('office_allotment_classes', 'obligations.office_allotment_class_id', '=', 'office_allotment_classes.id')
-            ->join('offices', 'offices.id', '=', 'office_allotment_classes.office')
-            ->join('allotment_classes', 'allotment_classes.class', '=', 'office_allotment_classes.class')
-            ->orderBy(
-                DB::raw("CONCAT(offices.office_abbreviation, ' - ', allotment_classes.class)"),
-                $sortOrder
-            )
-        ->select('obligations.*'); // prevent ambiguous column issues
-        } elseif ($sortBy === 'obr_amount') {
+        // --- Sorting ---
+        if ($sortBy === 'office_allotment_class') {
+            $query->join('office_allotment_classes', 'obligations.office_allotment_class_id', '=', 'office_allotment_classes.id')
+                ->join('offices', 'offices.id', '=', 'office_allotment_classes.office')
+                ->join('allotment_classes', 'allotment_classes.class', '=', 'office_allotment_classes.class')
+                ->orderBy(DB::raw("CONCAT(offices.office_abbreviation, ' - ', allotment_classes.class)"), $sortOrder)
+                ->select('obligations.*');
+    } elseif ($sortBy === 'obr_amount') {
             $query->withSum('obligationAmounts as obr_amount_sum', 'obr_amount')
                 ->orderBy('obr_amount_sum', $sortOrder);
         } elseif ($sortBy === 'po_amount') {
@@ -91,7 +85,6 @@ class ObligationController extends Controller
             $query->withSum('disbursements as dv_amount_sum', 'disbursement_amount')
                 ->orderBy('dv_amount_sum', $sortOrder);
         } elseif ($sortBy === 'balance') {
-            // Calculate balance as (obligation amount - disbursement amount)
             $query->withSum('obligationAmounts as obr_amount_sum', 'obr_amount')
                 ->withSum('disbursements as dv_amount_sum', 'disbursement_amount')
                 ->orderByRaw('(COALESCE(obr_amount_sum, 0) - COALESCE(dv_amount_sum, 0)) ' . $sortOrder);
@@ -99,152 +92,132 @@ class ObligationController extends Controller
             $query->orderBy($sortBy, $sortOrder);
         }
 
-        // Always fallback order by ID DESC for tie-breaking
         $query->orderBy('obr_date', 'desc');
 
-        if ($perPage == 'all') {
-            $obligations = $query->get();
-        } else {
-            $obligations = $query->paginate($perPage)->appends([
-                'year1' => $selectedYear, // Retain the selected year
-                'search' => $search,      // Retain the search term (if applicable)
-                'sort_by' => $sortBy,     // Retain the sort column
-                'sort_order' => $sortOrder, // Retain the sort order
+        // --- Pagination ---
+        $obligations = $perPage == 'all'
+            ? $query->get()
+            : $query->paginate($perPage)->appends([
+                'year1' => $selectedYear,
+                'search' => $search,
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
                 'office_allotment_class_filter' => $request->office_allotment_class_filter,
                 'obr_type_filter' => $request->obr_type_filter,
                 'per_page' => $perPage,
             ]);
-        }
 
-        // Fetch distinct years from the database
+        // --- Preload Appropriations and related data ---
+        $appropriations = Appropriation::with([
+            'obligationAmounts.obligationAdjustments',
+            'realignments',
+            'supplementals'
+        ])->get();
+
+        $currentMonth = now()->month;
+        $currentQuarter = ceil($currentMonth / 3);
+
+        // Precompute balances for appropriations (no per-loop queries)
+        $appropriations->each(function ($appropriation) use ($currentQuarter) {
+            $totalAppropriation = collect([
+                $appropriation->quarter1,
+                $appropriation->quarter2,
+                $appropriation->quarter3,
+                $appropriation->quarter4
+            ])->take($currentQuarter)->sum();
+
+            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
+                return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+            });
+
+            $realignmentTotal = $appropriation->realignments->sum(function ($r) {
+                return $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0);
+            });
+
+            $supplementalTotal = $appropriation->supplementals->sum(function ($s) {
+                return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
+            });
+
+            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+        });
+
+        // Build appropriation map for O(1) lookup instead of O(n) searches
+        $appropriationMap = $appropriations->keyBy('id');
+
+        // --- Compute obligation values (single pass, in-memory) ---
+        $obligations->each(function ($obligation) use ($appropriationMap) {
+            // Calculate total obligation amount with adjustments
+            $obrAmount = $obligation->obligationAmounts->sum('obr_amount');
+            $adjustmentAmount = $obligation->obligationAdjustments->sum('adjustment_amount');
+            $obligation->obr_amount = $obrAmount + $adjustmentAmount;
+
+            // Add these fields directly to the obligation object
+            $obligation->office_abbreviation = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
+            $obligation->allotment_class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
+
+            // Transform obligation_amounts in a single pass with precomputed data
+            $transformedAmounts = $obligation->obligationAmounts->map(function ($amount) use ($appropriationMap) {
+                $relatedAppropriation = $appropriationMap->get($amount->appropriation_id);
+                $balance = $relatedAppropriation ? $relatedAppropriation->balance : 0;
+                
+                // Calculate adjustments for this specific obligation amount
+                $adjustmentSum = $amount->obligationAdjustments->sum('adjustment_amount');
+                $totalObrAmount = $amount->obr_amount + $adjustmentSum;
+
+                // Return as stdClass for proper JSON serialization
+                return (object)[
+                    'id' => $amount->id,
+                    'appropriation_id' => $amount->appropriation_id,
+                    'obligation_id' => $amount->obligation_id,
+                    'account_code' => $amount->account_code ?? '',
+                    'obr_amount' => $totalObrAmount,
+                    'balance_from_allotment' => $balance + $totalObrAmount,
+                    'description' => $amount->appropriation->description ?? '',
+                    'program' => $amount->appropriation->programs ?? '',
+                    'appropriation' => (object)[
+                        'id' => $amount->appropriation->id ?? null,
+                        'description' => $amount->appropriation->description ?? '',
+                        'programs' => $amount->appropriation->programs ?? '',
+                    ],
+                    'created_at' => $amount->created_at,
+                    'updated_at' => $amount->updated_at,
+                ];
+            });
+
+            // Replace the relationship with computed data
+            $obligation->setRelation('obligation_amounts', $transformedAmounts);
+
+            // Prepare data for cancellation modal
+            $obligation->obligation_data = json_encode([
+                'obr_date' => $obligation->obr_date,
+                'office_abbreviation' => $obligation->office_abbreviation,
+                'allotment_class' => $obligation->allotment_class,
+                'obr_no' => $obligation->obr_no,
+                'obr_type' => $obligation->obr_type,
+                'particulars' => $obligation->particulars,
+                'obr_amount' => $obligation->obr_amount,
+            ]);
+        });
+
+        // --- Other variables ---
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
-        // Get the list of office allotment classes filtered by the selected year
+
         $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
             ->where('year', $selectedYear)
             ->orderBy('office', 'asc')
             ->get();
-        // Get the list of office allotment classes filtered by the selected year
+
         $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
             ->select('id', 'office_abbreviation', 'class', 'fund')
-            ->where('year', $currentYear) // Filter by the current year 
+            ->where('year', $currentYear)
             ->get();
 
-        // Get the list of all appropriations with calculated balances
-        $appropriations = Appropriation::select(
-            'id',
-            'office_allotment_class_id',
-            'account_code',
-            'description',
-            'programs',
-            'quarter1',
-            'quarter2',
-            'quarter3',
-            'quarter4'
-        )->get()->map(function ($appropriation) {
-            // --- Calculate the total appropriation (up to current quarter only) ---
-            $totalAppropriation = 0;
-
-            if ($appropriation) {
-                $currentMonth = now()->month; 
-                if ($currentMonth >= 1 && $currentMonth <= 3) {
-                    $currentQuarter = 1;
-                } elseif ($currentMonth >= 4 && $currentMonth <= 6) {
-                    $currentQuarter = 2;
-                } elseif ($currentMonth >= 7 && $currentMonth <= 9) {
-                    $currentQuarter = 3;
-                } else {
-                    $currentQuarter = 4;
-                }
-
-                if ($currentQuarter >= 1) $totalAppropriation += $appropriation->quarter1 ?? 0;
-                if ($currentQuarter >= 2) $totalAppropriation += $appropriation->quarter2 ?? 0;
-                if ($currentQuarter >= 3) $totalAppropriation += $appropriation->quarter3 ?? 0;
-                if ($currentQuarter >= 4) $totalAppropriation += $appropriation->quarter4 ?? 0;
-            }
-
-            // Get all obligation amounts for this appropriation
-            $obligationAmounts = ObligationAmount::where('appropriation_id', $appropriation->id)->get();
-            $totalObrAmount = 0;
-            foreach ($obligationAmounts as $obr) {
-                // Sum adjustments for this obligation amount
-                $adjustmentSum = ObligationAdjustment::where('obligation_amounts_id', $obr->id)->sum('adjustment_amount');
-                $totalObrAmount += $obr->obr_amount + $adjustmentSum;
-            }
-            // Get all realignments for this appropriation
-            $realignments = Realignment::where('appropriations_id', $appropriation->id)->get();
-            $realignmentTotal = 0;
-            foreach ($realignments as $realignment) {
-                if ($realignment->type === 'Source') {
-                    $realignmentTotal -= $realignment->amount;
-                } elseif ($realignment->type === 'Recipient') {
-                    $realignmentTotal += $realignment->amount;
-                }
-            }
-
-            //Get sum of all supplemental appropriations for this appropriation
-            $supplementalAppropriations = Supplemental::where('appropriations_id', $appropriation->id)->get();
-            $supplementalTotal = 0;
-            foreach ($supplementalAppropriations as $supplemental) {
-                if ($supplemental->type === 'Reversion') {
-                    $supplementalTotal -= $supplemental->amount;
-                }
-                elseif ($supplemental->type === 'Supplemental') {
-                    $supplementalTotal += $supplemental->amount;
-                }
-            }
-
-            // Calculate the balance with the realignment and supplemental amounts
-            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
-
-            return $appropriation;
-        });
-
-        // Calculate the sum of obr_amount for each obligation, including adjustments
-        foreach ($obligations as $obligation) {
-            $obrAmount = ObligationAmount::where('obligation_id', $obligation->id)->sum('obr_amount');
-            $adjustmentAmount = $obligation->obligationAdjustments ? $obligation->obligationAdjustments->sum('adjustment_amount') : 0;
-            $obligation->obr_amount = $obrAmount + $adjustmentAmount;
-
-            // Prepare obligation_amounts for the edit modal
-            $obligationAmounts = ObligationAmount::with('appropriation')
-                ->where('obligation_id', $obligation->id)
-                ->get()
-                ->map(function ($amount) use ($appropriations) {
-                    // 🔍 Find the appropriation that matches this obligation_amount
-                    $relatedAppropriation = $appropriations->firstWhere('id', $amount->appropriation_id);
-
-                    // ✅ Use the computed balance as balance_from_allotment
-                    $balance = $relatedAppropriation ? $relatedAppropriation->balance : 0;
-
-                    return [
-                        'account_code' => $amount->account_code,
-                        'description' => $amount->appropriation->description ?? '',
-                        'program' => $amount->appropriation->programs ?? '',
-                        'obr_amount' => $amount->obr_amount,
-                        'amount' => $amount->obr_amount,
-                        'balance_from_allotment' => $balance + $amount->obr_amount, // ✅ add this field
-                    ];
-                });
-            $obligation->obligation_amounts = $obligationAmounts;
-            } // End of obligation calculation
-
-            // Prepare obligationData for the cancellation modal
-            foreach ($obligations as $obligation) {
-                $obligation->obligation_data = json_encode([
-                    'obr_date' => $obligation->obr_date,
-                    'office_abbreviation' => $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A',
-                    'allotment_class' => $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A',
-                    'obr_no' => $obligation->obr_no,
-                    'obr_type' => $obligation->obr_type,
-                    'particulars' => $obligation->particulars,
-                    'obr_amount' => $obligation->obr_amount,
-                ]);
-            }
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'Obligations']
         ];
 
+        // --- Return view ---
         return view('obligations.index', compact(
             'obligations',
             'officeAllotmentClasses',
@@ -663,6 +636,28 @@ class ObligationController extends Controller
                 'remarks' => 'required|string|max:255',
             ]);
 
+            DB::beginTransaction();
+
+            // Get counts for the success message
+            $purchaseOrdersCount = $obligation->purchaseOrders()->count();
+            $disbursementsCount = $obligation->disbursements()->count();
+
+            // Set all purchase order amounts to zero
+            if ($purchaseOrdersCount > 0) {
+                $obligation->purchaseOrders()->update([
+                    'po_amount' => 0,
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Set all disbursement amounts to zero
+            if ($disbursementsCount > 0) {
+                $obligation->disbursements()->update([
+                    'disbursement_amount' => 0,
+                    'updated_at' => now(),
+                ]);
+            }
+
             // Perform cancellation logic
             $currentDate = now()->format('Y-m-d');
             $obligationAmounts = ObligationAmount::where('obligation_id', $obligation->id)->get();
@@ -681,25 +676,42 @@ class ObligationController extends Controller
                 ]);
             }
 
+            DB::commit();
+
             // Prepare success message data
             $obrNumber = $obligation->obr_no;
             $account_code = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
             $class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
-            $totalObrAmount = $obligation->obr_amount;
+
+            // Build detailed success message
+            $successMessage = "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!";
+            
+            if ($purchaseOrdersCount > 0 || $disbursementsCount > 0) {
+                $additionalInfo = [];
+                if ($purchaseOrdersCount > 0) {
+                    $additionalInfo[] = "<strong>{$purchaseOrdersCount}</strong> purchase order(s) set to zero";
+                }
+                if ($disbursementsCount > 0) {
+                    $additionalInfo[] = "<strong>{$disbursementsCount}</strong> disbursement(s) set to zero";
+                }
+                $successMessage .= " " . implode(' and ', $additionalInfo) . ".";
+            }
 
             return redirect()->to(url()->previous())
-            ->with('status', [
-                'type' => 'delete',
-                'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!"
-            ]);
+                ->with('status', [
+                    'type' => 'delete',
+                    'message' => $successMessage
+                ]);
         } catch (\Exception $e) {
+            DB::rollBack();
+            
             Log::error('Error cancelling obligation:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_id', 'obr_type_filter']))
-            ->with('error', 'Failed to cancel obligation. Please try again.');
+                ->with('error', 'Failed to cancel obligation. Please try again.');
         }
     }
 

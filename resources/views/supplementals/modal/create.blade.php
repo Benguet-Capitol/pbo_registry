@@ -2,7 +2,7 @@
 <form id="createSupplementalsForm" method="POST" action="">
     @csrf
     <input type="hidden" name="year1" value="{{ request('year1') }}">
-    <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
+    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
     <input type="hidden" name="supplemental_type_filter" value="{{ request('supplemental_type_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">

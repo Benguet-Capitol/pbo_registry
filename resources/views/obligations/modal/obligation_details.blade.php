@@ -57,13 +57,13 @@
                 } = data;
                 // Fields configuration for the Disbursement table
                 const disbursementTableFields = [
-                    { class: 'px-2 py-2 text-center', render: r => r.dv_no || '' },
-                    { class: 'px-2 py-2 text-center', render: r => r.disbursement_date || '' },
-                    { class: 'px-2 py-2 text-center', render: r => r.status || '' },
+                    { class: 'px-2 py-2 text-center', render: r => r.dv_no || '-' },
+                    { class: 'px-2 py-2 text-center', render: r => r.disbursement_date || '-' },
+                    { class: 'px-2 py-2 text-center', render: r => r.status || '-' },
                     { class: 'px-2 py-2 text-center', render: r => r.programs || '-' },
                     { class: 'px-2 py-2 text-center', render: r => r.account_code || '-' },
                     { class: 'px-2 py-2 text-center', render: r => r.description || '-' },
-                    { class: 'px-3 py-2 text-right', render: r => formatCurrency(r.disbursement_amount) }
+                    { class: 'px-3 py-2 text-right', render: r => formatCurrency(r.disbursement_amount) || '-' }
                 ];
 
                 /**
@@ -412,7 +412,7 @@
                 </style>
             </head>
             <body onload="window.print(); window.close();">
-                <h2>Obligation Request Details</h2>
+                <h2>Obligation Details</h2>
                 ${modalContent}
             </body>
             </html>

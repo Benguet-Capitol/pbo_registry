@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appropriation;
+use App\Models\Disbursement;
 use App\Models\Obligation;
 use App\Models\ObligationAdjustment;
 use App\Models\ObligationAmount;
@@ -315,15 +316,66 @@ class PurchaseOrderController extends Controller
      */
     public function destroy(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->delete();
+        try {
+            // Get the obligation_amounts_id from the purchase order
+            $obligationAmountId = $purchaseOrder->obligation_amounts_id;
 
-        $accountCode = optional(optional($purchaseOrder->obligationAmount)->appropriation)->account_code ?? 'N/A';
+            // Check for existing disbursements linked to this obligation amount
+            $disbursementsCount = Disbursement::where('obligation_id', $purchaseOrder->obligation_id)
+                ->where('obligation_amounts_id', $obligationAmountId)
+                ->count();
 
-        return redirect()->route('purchase_orders.index', [
-            'obligation_id' => $purchaseOrder->obligation_id,
-        ])->with('status', [
-            'type' => 'delete',
-            'message' => "Purchase Order No: <strong>{$purchaseOrder->po_number}</strong> dated <strong>{$purchaseOrder->po_date}</strong> under Account Code: <strong>{$accountCode}</strong> has been <strong>deleted</strong>!"
-        ]);
+            // Prevent deletion if there are related disbursements
+            if ($disbursementsCount > 0) {
+                return redirect()->route('purchase_orders.index', [
+                    'obligation_id' => $purchaseOrder->obligation_id,
+                ])->with('status', [
+                    'type' => 'delete',
+                    'message' => "Cannot delete Purchase Order No: <strong>{$purchaseOrder->po_number}</strong>. This purchase order has <strong>{$disbursementsCount}</strong> disbursement(s) associated with the same obligation and account code. Please delete the related disbursements first."
+                ]);
+            }
+
+            /* // Check for existing disbursements with non-zero amounts
+            $disbursementsWithAmount = Disbursement::where('obligation_id', $purchaseOrder->obligation_id)
+                ->where('obligation_amounts_id', $obligationAmountId)
+                ->where('disbursement_amount', '>', 0)
+                ->count();
+
+            if ($disbursementsWithAmount > 0) {
+                return redirect()->route('purchase_orders.index', [
+                    'obligation_id' => $purchaseOrder->obligation_id,
+                ])->with('status', [
+                    'type' => 'error',
+                    'message' => "Cannot delete Purchase Order No: <strong>{$purchaseOrder->po_number}</strong>. This purchase order has <strong>{$disbursementsWithAmount}</strong> disbursement(s) with non-zero amounts linked to the same account code. Please set all disbursement amounts to zero or delete the related disbursements first."
+                ]);
+            } */
+
+            // Store details before deletion
+            $poNumber = $purchaseOrder->po_number;
+            $poDate = $purchaseOrder->po_date;
+            $obligationId = $purchaseOrder->obligation_id;
+            $accountCode = optional(optional($purchaseOrder->obligationAmount)->appropriation)->account_code ?? 'N/A';
+
+            // Proceed with deletion
+            $purchaseOrder->delete();
+
+            return redirect()->route('purchase_orders.index', [
+                'obligation_id' => $obligationId,
+            ])->with('status', [
+                'type' => 'delete',
+                'message' => "Purchase Order No: <strong>{$poNumber}</strong> dated <strong>{$poDate}</strong> under Account Code: <strong>{$accountCode}</strong> has been <strong>deleted</strong>!"
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting purchase order:', [
+                'purchase_order_id' => $purchaseOrder->id ?? null,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('purchase_orders.index', [
+                'obligation_id' => $purchaseOrder->obligation_id,
+            ])->with('error', 'Failed to delete purchase order. Please try again.');
+        }
     }
 }

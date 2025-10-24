@@ -638,80 +638,102 @@ class ObligationController extends Controller
 
             DB::beginTransaction();
 
-            // Get counts for the success message
-            $purchaseOrdersCount = $obligation->purchaseOrders()->count();
-            $disbursementsCount = $obligation->disbursements()->count();
+            // Eager load relationships to avoid N+1 queries
+            $obligation->load([
+                'purchaseOrders',
+                'disbursements',
+                'obligationAmounts',
+                'officeAllotmentClass.offices',
+                'officeAllotmentClass.allotmentClass'
+            ]);
 
-            // Set all purchase order amounts to zero
-            if ($purchaseOrdersCount > 0) {
-                $obligation->purchaseOrders()->update([
-                    'po_amount' => 0,
-                    'updated_at' => now(),
-                ]);
+            // Check for existing purchase orders and disbursements with non-zero amounts (single query each)
+            $purchaseOrdersWithAmount = $obligation->purchaseOrders->where('po_amount', '>', 0)->count();
+            $disbursementsWithAmount = $obligation->disbursements->where('disbursement_amount', '>', 0)->count();
+
+            // Prevent cancellation if there are related records with non-zero amounts
+            if ($purchaseOrdersWithAmount > 0 || $disbursementsWithAmount > 0) {
+                DB::rollBack();
+                
+                $errorMessages = [];
+                
+                if ($purchaseOrdersWithAmount > 0) {
+                    $errorMessages[] = "This obligation has <strong>{$purchaseOrdersWithAmount}</strong> purchase order(s) with non-zero amounts.</br>";
+                }
+                
+                if ($disbursementsWithAmount > 0) {
+                    $errorMessages[] = "This obligation has <strong>{$disbursementsWithAmount}</strong> disbursement(s) with non-zero amounts.</br>";
+                }
+                
+                $errorMessages[] = "Please ensure all purchase orders have zero PO amounts and all disbursements have zero disbursement amounts before cancelling this obligation.";
+                
+                return redirect()->back()
+                    ->with('status', [
+                        'type' => 'delete',
+                        'message' => implode(' ', $errorMessages)
+                    ]);
             }
 
-            // Set all disbursement amounts to zero
-            if ($disbursementsCount > 0) {
-                $obligation->disbursements()->update([
-                    'disbursement_amount' => 0,
-                    'updated_at' => now(),
-                ]);
-            }
-
-            // Perform cancellation logic
+            // Prepare cancellation data
             $currentDate = now()->format('Y-m-d');
-            $obligationAmounts = ObligationAmount::where('obligation_id', $obligation->id)->get();
+            $userName = Auth::user()->name ?? 'Unknown User';
 
-            foreach ($obligationAmounts as $amount) {
-                $existingAdjustment = ObligationAdjustment::where('obligation_amounts_id', $amount->id)->sum('adjustment_amount');
-                $adjustmentAmount = - ($amount->obr_amount + $existingAdjustment);
+            // Bulk fetch existing adjustments (single query instead of N queries)
+            $existingAdjustments = ObligationAdjustment::whereIn(
+                'obligation_amounts_id',
+                $obligation->obligationAmounts->pluck('id')
+            )->get()->groupBy('obligation_amounts_id');
 
-                ObligationAdjustment::create([
+            // Prepare bulk insert data
+            $adjustmentsToCreate = [];
+            
+            foreach ($obligation->obligationAmounts as $amount) {
+                $existingAdjustmentSum = $existingAdjustments->get($amount->id)?->sum('adjustment_amount') ?? 0;
+                $adjustmentAmount = -($amount->obr_amount + $existingAdjustmentSum);
+
+                $adjustmentsToCreate[] = [
                     'obligation_id' => $obligation->id,
                     'obligation_amounts_id' => $amount->id,
                     'adjustment_date' => $currentDate,
                     'adjustment_amount' => $adjustmentAmount,
                     'adjustment_remarks' => $validated['remarks'],
-                    'adjusted_by' => Auth::user()->name ?? 'Unknown User',
-                ]);
+                    'adjusted_by' => $userName,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            // Bulk insert all adjustments (single query instead of N queries)
+            if (!empty($adjustmentsToCreate)) {
+                ObligationAdjustment::insert($adjustmentsToCreate);
             }
 
             DB::commit();
 
-            // Prepare success message data
+            // Prepare success message data (already loaded from eager loading)
             $obrNumber = $obligation->obr_no;
             $account_code = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
             $class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
 
-            // Build detailed success message
-            $successMessage = "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!";
-            
-            if ($purchaseOrdersCount > 0 || $disbursementsCount > 0) {
-                $additionalInfo = [];
-                if ($purchaseOrdersCount > 0) {
-                    $additionalInfo[] = "<strong>{$purchaseOrdersCount}</strong> purchase order(s) set to zero";
-                }
-                if ($disbursementsCount > 0) {
-                    $additionalInfo[] = "<strong>{$disbursementsCount}</strong> disbursement(s) set to zero";
-                }
-                $successMessage .= " " . implode(' and ', $additionalInfo) . ".";
-            }
-
             return redirect()->to(url()->previous())
                 ->with('status', [
                     'type' => 'delete',
-                    'message' => $successMessage
+                    'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!"
                 ]);
+                
         } catch (\Exception $e) {
             DB::rollBack();
             
             Log::error('Error cancelling obligation:', [
+                'obligation_id' => $obligation->id ?? null,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_id', 'obr_type_filter']))
-                ->with('error', 'Failed to cancel obligation. Please try again.');
+            return redirect()->route('obligations.index', $request->only([
+                'search', 'sort_by', 'sort_order', 'per_page', 'year1', 
+                'office_allotment_class_id', 'obr_type_filter'
+            ]))->with('error', 'Failed to cancel obligation. Please try again.');
         }
     }
 

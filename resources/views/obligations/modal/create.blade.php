@@ -738,43 +738,31 @@
         console.log("OBR Type Selected:", obrType.value);
 
         // Validate OBR Number
-        const obrNoField = document.getElementById('obr_no');
-        const obrNoValue = obrNoField.value.trim();
+        const obrNo = document.getElementById('obr_no');
+        const obrNoError = document.getElementById('obrNoError');
+        const obrValue = obrNo.value.trim();
 
-        // 1. Check if the field is empty (Original logic)
-        if (!obrNoValue) {
-            obrNoField.classList.add('border-red-500');
-            obrNoField.classList.remove('border-gray-300');
+        if (!obrValue) {
+            obrNo.classList.add('border-red-500');
+            obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
+            obrNoError.textContent = 'OBR Number is required';
             isValid = false;
         } else {
-            // 2. Check the format: expecting 5 digits followed by a hyphen
-            // The pattern checks for:
-            // ^: start of string
-            // (\d{5}): capture group for exactly 5 digits
-            // -: literal hyphen
-            // (.*)?: optional remaining characters (mm-yy-000)
-            const formatRegex = /^(\d{5})-(.*)?$/;
-            const match = obrNoValue.match(formatRegex);
-
-            if (match) {
-                // Extract the 5-digit sequence (first captured group)
-                const fiveDigitSequence = match[1];
-                
-                // Check if the 5-digit sequence is entirely zero (e.g., '00000')
-                // Using parseInt and checking if it equals 0, or comparing against '00000'
-                if (parseInt(fiveDigitSequence) === 0) {
-                    document.getElementById('obrNoError').textContent = 'Obligation No. unique sequence is required.';
-                    isValid = false;
-                } else {
-                    // Passed validation
-                    obrNoField.classList.remove('border-red-500');
-                    obrNoField.classList.add('border-gray-300');
-                }
-            } else {
-                // Did not match the expected basic format (e.g., missing 5 digits or hyphen)
-                obrNoField.classList.add('border-red-500');
-                obrNoField.classList.remove('border-gray-300');
+            // Split by dash and check if the last part (sequence) has a value
+            const parts = obrValue.split('-');
+            const sequence = parts[parts.length - 1]; // Get the last part after the last dash
+            
+            if (!sequence || sequence.trim() === '') {
+                // Sequence is missing or empty
+                obrNo.classList.add('border-red-500');
+                obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
+                obrNoError.textContent = 'OBR Number sequence is incomplete. Please complete the sequence number.';
                 isValid = false;
+            } else {
+                // Valid OBR number
+                obrNo.classList.remove('border-red-500');
+                obrNo.classList.add('border-gray-300', 'dark:border-gray-700');
+                obrNoError.textContent = '';
             }
         }
 

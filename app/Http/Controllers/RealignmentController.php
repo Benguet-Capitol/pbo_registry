@@ -269,23 +269,27 @@ class RealignmentController extends Controller
     public function update(Request $request): RedirectResponse
     {
         try {
-            // Use only realignment_id to fetch the row
             $realignment_id = $request->input('realignment_id');
             $realignment = Realignment::find($realignment_id);
+
             if (!$realignment) {
-                Log::warning('No realignment found for update', [
-                    'realignment_id' => $realignment_id,
-                ]);
+                Log::warning('No realignment found for update', ['realignment_id' => $realignment_id]);
                 return redirect()->back()->withInput()->with('status', 'No realignment found to update.');
             }
+
             $type = $realignment->type;
-            // Always validate shared fields
+            
+            // CRITICAL STEP 1: Store the original Realignment Number before any updates.
+            // This is the common key for all related rows.
+            $originalRealignmentNo = $realignment->realignment_no;
+
+            // 2. Validate shared and type-specific fields
             $rules = [
                 'edit_realignment_no' => 'required|string|max:255',
                 'edit_realignment_date' => 'required|date',
                 'edit_basis' => 'required|string|max:255',
             ];
-            // Set appropriations_id from hidden input if not present
+            // ... (rest of type-specific rule setting logic)
             if ($type === 'Source') {
                 if (!$request->has('edit_source_appropriations_id') && $request->has('appropriations_id')) {
                     $request->merge(['edit_source_appropriations_id' => $request->input('appropriations_id')]);
@@ -293,7 +297,7 @@ class RealignmentController extends Controller
                 $rules = array_merge($rules, [
                     'edit_source_office_allotment_class_id' => 'required|exists:office_allotment_classes,id',
                     'edit_source_appropriations_id' => 'required|exists:appropriations,id',
-                    'edit_source_amount' => 'required',
+                    'edit_source_amount' => 'required|numeric|min:0',
                 ]);
             } elseif ($type === 'Recipient') {
                 if (!$request->has('edit_recipient_appropriations_id') && $request->has('appropriations_id')) {
@@ -302,35 +306,65 @@ class RealignmentController extends Controller
                 $rules = array_merge($rules, [
                     'edit_recipient_office_allotment_class_id' => 'required|exists:office_allotment_classes,id',
                     'edit_recipient_appropriations_id' => 'required|exists:appropriations,id',
-                    'edit_recipient_amount' => 'required|numeric',
+                    'edit_recipient_amount' => 'required|numeric|min:0',
                 ]);
             }
             $request->validate($rules);
-            $updateData = [
+
+            // 3. Prepare data for updates
+            $sharedUpdateData = [
                 'realignment_no' => $request->input('edit_realignment_no'),
                 'realignment_date' => $request->input('edit_realignment_date'),
                 'basis' => $request->input('edit_basis'),
             ];
+
+            $lineItemUpdateData = $sharedUpdateData;
+            
+            // ... (rest of type-specific data merging logic)
             if ($type === 'Source') {
-                $updateData = array_merge($updateData, [
+                $lineItemUpdateData = array_merge($lineItemUpdateData, [
                     'office_allotment_classes_id' => $request->input('edit_source_office_allotment_class_id'),
                     'appropriations_id' => $request->input('edit_source_appropriations_id'),
                     'amount' => $request->input('edit_source_amount'),
                 ]);
             } elseif ($type === 'Recipient') {
-                $updateData = array_merge($updateData, [
+                $lineItemUpdateData = array_merge($lineItemUpdateData, [
                     'office_allotment_classes_id' => $request->input('edit_recipient_office_allotment_class_id'),
                     'appropriations_id' => $request->input('edit_recipient_appropriations_id'),
                     'amount' => $request->input('edit_recipient_amount'),
                 ]);
             }
-            $realignment->update($updateData);
-            Log::info('Realignment updated', [
+
+            // 4. Update the specific line item (Realignment row)
+            $realignment->update($lineItemUpdateData);
+            
+            // 5. CRITICAL STEP 2: Update ALL related line items (peers) with the same administrative data.
+            // Use the original number to find all related entries.
+            // We exclude the current row because it was already updated, but we update the other rows
+            // that share the transaction ID (originalRealignmentNo).
+            
+            if ($originalRealignmentNo !== $request->input('edit_realignment_no')) {
+                // Case A: The Realignment No. was changed. 
+                // We need to update all rows that previously had this number.
+                Realignment::where('realignment_no', $originalRealignmentNo)
+                    ->where('id', '!=', $realignment_id)
+                    ->update($sharedUpdateData);
+            } else {
+                // Case B: Only Date/Basis changed, but Realignment No. stayed the same.
+                // We update all peer rows with the new shared data.
+                Realignment::where('realignment_no', $originalRealignmentNo)
+                    ->where('id', '!=', $realignment_id)
+                    ->update($sharedUpdateData);
+            }
+            
+            Log::info('Realignment updated. Shared administrative data synchronized across related entries.', [
                 'id' => $realignment->id,
-                'type' => $realignment->type,
-                'updateData' => $updateData,
+                'original_no' => $originalRealignmentNo,
+                'new_no' => $request->input('edit_realignment_no'),
             ]);
-            // Update Appropriation account_code if present in request
+
+            // 6. Update Appropriation account_code (Original logic maintained)
+            // ... (Appropriation update logic remains the same)
             if ($type === 'Source' && $request->has('edit_source_account_code')) {
                 $appId = $request->input('edit_source_appropriations_id');
                 $accountCode = $request->input('edit_source_account_code');
@@ -352,8 +386,11 @@ class RealignmentController extends Controller
                     }
                 }
             }
+            
+            // 7. Redirect with status
             return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
-            ->with('status', 'Realignment No.: <strong>' . $request->input('edit_realignment_no') . '</strong> with Type: <strong>' . $realignment->type . '</strong> has been updated successfully!');
+            ->with('status', 'Realignment No.: <strong>' . $request->input('edit_realignment_no') . '</strong> with Type: <strong>' . $realignment->type . '</strong> has been updated successfully! Shared administrative data was also synchronized.');
+
         } catch (\Throwable $e) {
             Log::error('Realignment Update Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),

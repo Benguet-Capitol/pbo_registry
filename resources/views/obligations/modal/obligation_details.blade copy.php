@@ -360,7 +360,7 @@
         printWindow.document.write(`
             <html>
             <head>
-                <title>Obligation Request Details</title>
+                <title>Obligation Details</title>
                 <style>
                     body { font-family: Arial, sans-serif; font-size: 12px; color: #000; }
                     table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
@@ -370,7 +370,7 @@
                 </style>
             </head>
             <body onload="window.print(); window.close();">
-                <h2>Obligation Request Details</h2>
+                <h2>Obligation Details</h2>
                 ${modalContent}
             </body>
             </html>

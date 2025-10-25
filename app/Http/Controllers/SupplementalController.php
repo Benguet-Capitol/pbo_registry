@@ -11,6 +11,7 @@ use App\Models\ObligationAdjustment;
 use App\Models\Realignment;
 use Illuminate\Http\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
 
@@ -235,11 +236,17 @@ class SupplementalController extends Controller
                 'edit_quarter_4' => 'nullable|string',
             ]);
 
+            DB::beginTransaction();
+
+            // Store the original supplemental_no to find all related rows
+            $originalSupplementalNo = $supplemental->supplemental_no;
+
             // Find the appropriation by account_code and office_allotment_class_id
             $appropriation = Appropriation::where('account_code', $validated['edit_account_code'])
                 ->where('office_allotment_class_id', $validated['edit_office_allotment_class_id'])
                 ->first();
 
+            // Update the current row with all fields
             $supplemental->update([
                 'office_allotment_classes_id' => $validated['edit_office_allotment_class_id'],
                 'appropriations_id' => $appropriation ? $appropriation->id : null,
@@ -255,14 +262,35 @@ class SupplementalController extends Controller
                 'quarter4' => $validated['edit_quarter_4'] ?? '0.00',
             ]);
 
+            // Update shared fields for all other rows with the same original supplemental_no
+            // Exclude the current row being edited
+            Supplemental::where('supplemental_no', $originalSupplementalNo)
+                ->where('id', '!=', $supplemental->id)
+                ->update([
+                    'office_allotment_classes_id' => $validated['edit_office_allotment_class_id'],
+                    'supplemental_no' => $validated['edit_supplemental_no'],
+                    'supplemental_date' => $validated['edit_supplemental_date'],
+                    'type' => $validated['edit_type'],
+                    'basis_no' => $validated['edit_basis_no'] ?? null,
+                    'basis' => $validated['edit_basis'],
+                ]);
+
+            DB::commit();
+
             return redirect()->route('supplementals.index', $request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
-            ->with('status', "<strong>{$validated['edit_type']}</strong> No. <strong>{$validated['edit_supplemental_no']}</strong> with Account Code: <strong>{$validated['edit_account_code']} - {$validated['edit_description']}</strong>  has been updated successfully!");
+                ->with('status', "<strong>{$validated['edit_type']}</strong> No. <strong>{$validated['edit_supplemental_no']}</strong> with Account Code: <strong>{$validated['edit_account_code']} - {$validated['edit_description']}</strong> has been updated successfully!");
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            
             Log::error('Error updating supplemental: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all()
             ]);
-            return redirect()->back()->withInput()->with('status', 'Error updating supplemental: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error updating supplemental: ' . $e->getMessage());
         }
     }
 
@@ -271,21 +299,44 @@ class SupplementalController extends Controller
         try {
             // Get the related appropriation
             $appropriation = Appropriation::find($supplemental->appropriations_id);
-            $accountCode = $appropriation ? $appropriation->account_code : '';
-            $description = $appropriation ? $appropriation->description : '';
+            $accountCode = $appropriation ? $appropriation->account_code : 'N/A';
+            $description = $appropriation ? $appropriation->description : 'N/A';
+            $type = $supplemental->type;
+            $supplementalNo = $supplemental->supplemental_no;
 
+            // Check if obligations exist for this appropriation (only for Supplemental type)
+            if ($type === 'Supplemental' && $appropriation) {
+                // Check if there are any obligation amounts linked to this appropriation
+                $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)
+                    ->distinct('obligation_id')
+                    ->count('obligation_id');
+
+                if ($obligationsCount > 0) {
+                    return redirect()->route('supplementals.index', request()->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
+                        ->with('error', 
+                            "Cannot delete <strong>{$type}</strong> No. <strong>{$supplementalNo}</strong> for Account Code: <strong>{$accountCode}</strong>. " .
+                            "This supplemental has <strong>{$obligationsCount}</strong> obligation(s) created using these supplemental funds. " .
+                            "Please delete the related obligations first before removing this supplemental entry."
+                        );
+                }
+            }
+
+            // Proceed with deletion if no obligations exist or if it's a Reversion
             $supplemental->delete();
 
             return redirect()->route('supplementals.index', request()->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
-            ->with('status',
-                '<strong>' . $supplemental->type . '</strong> No.: <strong>' . $supplemental->supplemental_no . '</strong> with Account Code: <strong>' . $accountCode . '</strong> - <strong>' . $description . '</strong> has been deleted successfully!'
-            );
+                ->with('status',
+                    '<strong>' . $type . '</strong> No. <strong>' . $supplementalNo . '</strong> with Account Code: <strong>{$accountCode}</strong> - <strong>' . $description . '</strong> has been deleted successfully!'
+                );
+
         } catch (\Throwable $e) {
             Log::error('Supplemental | Reversion Delete Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
-                'supplemental_id' => $supplemental->id
+                'supplemental_id' => $supplemental->id ?? null
             ]);
-            return redirect()->back()->with('status', 'An error occurred while deleting the supplemental / reversion: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->with('error', 'An error occurred while deleting the supplemental / reversion: ' . $e->getMessage());
         }
     }
 }

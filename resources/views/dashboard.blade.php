@@ -428,7 +428,6 @@
                         <tr 
                             class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}'"
-                            oncontextmenu="showDropdownMenu(event, this)"
                             data-class-id="{{ $class->id }}"
                         >
                             <td class="px-1 py-2 text-center">
@@ -499,16 +498,6 @@
         </div>
     </div>
 
-    <!-- Right-click Dropdown Menu -->
-    <div id="classContextMenu" 
-        class="hidden absolute bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg w-48 z-50">
-        <a id="viewAccountsLink" href="#" 
-        class="block px-4 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-600">
-            <i class="fas fa-stream mr-2"></i> Accounts
-        </a>
-    </div>
-
-
     <script>
         function toggleDropdown(button) {
             const dropdown = button.nextElementSibling;
@@ -560,33 +549,6 @@
         document.addEventListener('click', () => {
         document.getElementById('classContextMenu').classList.add('hidden');
         
-    });
-
-    function showDropdownMenu(event, row) {
-        event.preventDefault();
-
-        const contextMenu = document.getElementById('classContextMenu');
-        const id = row.getAttribute('data-class-id');
-
-        // Update link dynamically
-        document.getElementById('viewAccountsLink').href = `/dashboard/accounts/${id}`;
-
-        // Position context menu
-        contextMenu.style.left = event.pageX + 'px';
-        contextMenu.style.top = event.pageY + 'px';
-
-        // Show menu
-        contextMenu.classList.remove('hidden');
-    }
-
-    const scrollContainer = document.querySelector('.overflow-auto');
-    const contextMenu = document.getElementById('classContextMenu');
-
-    // Hide context menu when the table scrolls
-    scrollContainer.addEventListener('scroll', () => {
-        if (!contextMenu.classList.contains('hidden')) {
-            contextMenu.classList.add('hidden');
-        }
     });
 
         function updateSelectColors() {

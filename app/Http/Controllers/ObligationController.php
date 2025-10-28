@@ -606,26 +606,80 @@ class ObligationController extends Controller
 
     public function destroy(Request $request, Obligation $obligation): RedirectResponse
     {
-        // Eager load relationships
-        $obligation->load('officeAllotmentClass.offices', 'officeAllotmentClass.allotmentClass');
+        try {
+            DB::beginTransaction();
 
-        $obrNumber = $obligation->obr_no;
+            // Eager load related models to minimize queries
+            $obligation->load([
+                'officeAllotmentClass.offices',
+                'officeAllotmentClass.allotmentClass',
+                'obligationAmounts',
+                'purchaseOrders',
+                'disbursements'
+            ]);
 
-        // Sum all obr_amounts related to this obligation's ID
-        $totalObrAmount = ObligationAmount::where('obligation_id', $obligation->id)->sum('obr_amount');
+            $obrNumber = $obligation->obr_no;
+            $account_code = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
+            $class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
 
-        $account_code = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
-        $class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
+            // --- Check for related records before deletion ---
+            $hasAdjustments = ObligationAdjustment::where('obligation_id', $obligation->id)->exists();
+            $hasPurchaseOrders = $obligation->purchaseOrders->isNotEmpty();
+            $hasDisbursements = $obligation->disbursements->isNotEmpty();
 
-        // Delete the selected obligation
-        $obligation->delete();
+            if ($hasAdjustments || $hasPurchaseOrders || $hasDisbursements) {
+                $errorMessages = [];
 
-        return redirect()
-            ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
-            ->with('status', [
-            'type' => 'delete',
-            'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been deleted successfully!"
-        ]);
+                if ($hasAdjustments) {
+                    $errorMessages[] = "This obligation has related <strong>Obligation Adjustments</strong>.</br>";
+                }
+                if ($hasPurchaseOrders) {
+                    $errorMessages[] = "This obligation has related <strong>Purchase Orders</strong>.</br>";
+                }
+                if ($hasDisbursements) {
+                    $errorMessages[] = "This obligation has related <strong>Disbursements</strong>.</br>";
+                }
+
+                $errorMessages[] = "Please ensure that there are no related records for <strong>Obligation Adjustments, Purchase Orders and Disbursements</strong> before deleting this obligation.";
+
+                DB::rollBack();
+
+                return redirect()->back()->with('status', [
+                    'type' => 'delete',
+                    'message' => implode(' ', $errorMessages)
+                ]);
+            }
+
+            // --- Safe to delete ---
+            $totalObrAmount = $obligation->obligationAmounts->sum('obr_amount');
+            $obligation->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('obligations.index', $request->only([
+                    'search', 'sort_by', 'sort_order', 'per_page', 'year1',
+                    'office_allotment_class_filter', 'obr_type_filter'
+                ]))
+                ->with('status', [
+                    'type' => 'delete',
+                    'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been deleted successfully!"
+                ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error deleting obligation:', [
+                'obligation_id' => $obligation->id ?? null,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('obligations.index', $request->only([
+                'search', 'sort_by', 'sort_order', 'per_page', 'year1', 
+                'office_allotment_class_filter', 'obr_type_filter'
+            ]))->with('error', 'Failed to delete obligation. Please try again.');
+        }
     }
 
     public function cancel(Request $request, Obligation $obligation): RedirectResponse

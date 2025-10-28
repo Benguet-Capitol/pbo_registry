@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountCode;
 use App\Models\Appropriation;
+use App\Models\ObligationAmount;
 use App\Models\Program;
 use Illuminate\Http\Request;
 use App\Models\OfficeAllotmentClass;
+use App\Models\Realignment;
+use App\Models\Supplemental;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -223,15 +226,68 @@ class AppropriationController extends Controller
      */
     public function destroy(Appropriation $appropriation): RedirectResponse
     {
-        // Store the office_allotment_class_id before deleting
-        $officeAllotmentClassId = $appropriation->office_allotment_class_id;
+        try {
+            // Store details before deletion
+            $officeAllotmentClassId = $appropriation->office_allotment_class_id;
+            $accountCode = $appropriation->account_code;
+            $description = $appropriation->description;
+            $appropriationAmount = $appropriation->appropriation;
 
-        // Delete the record
-        $appropriation->delete();
+            // Check if there are any obligation amounts linked to this appropriation
+            $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)
+                ->distinct('obligation_id')
+                ->count('obligation_id');
 
-        // Redirect to index with the correct parameter
-        return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
-            ->with('status', 'Appropriations of <strong>' . number_format($appropriation->appropriation, 2) . '</strong> under <strong>Account Code: ' . $appropriation->account_code . ' - ' . $appropriation->description . '</strong> has been deleted successfully!');
+            if ($obligationsCount > 0) {
+                return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+                    ->with('error', 
+                        "Cannot delete Account Code: <strong>{$accountCode} - {$description}</strong>. " .
+                        "This Account has <strong>{$obligationsCount}</strong> obligation(s) associated with it. " .
+                        "Please delete the related obligations first before removing this Account."
+                    );
+            }
+
+            // Check if there are any realignments linked to this appropriation
+            $realignmentsCount = Realignment::where('appropriations_id', $appropriation->id)->count();
+
+            if ($realignmentsCount > 0) {
+                return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+                    ->with('error', 
+                        "Cannot delete Account Code: <strong>{$accountCode} - {$description}</strong>. " .
+                        "This Account has <strong>{$realignmentsCount}</strong> realignment(s) associated with it. " .
+                        "Please delete the related realignments first before removing this Account."
+                    );
+            }
+
+            // Check if there are any supplementals linked to this appropriation
+            $supplementalsCount = Supplemental::where('appropriations_id', $appropriation->id)->count();
+
+            if ($supplementalsCount > 0) {
+                return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+                    ->with('error', 
+                        "Cannot delete Account Code: <strong>{$accountCode} - {$description}</strong>. " .
+                        "This Account has <strong>{$supplementalsCount}</strong> supplemental/reversion(s) associated with it. " .
+                        "Please delete the related supplementals/reversions first before removing this Account."
+                    );
+            }
+
+            // Proceed with deletion if no related records exist
+            $appropriation->delete();
+
+            return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+                ->with('status', 
+                    'Appropriations of <strong>' . number_format($appropriationAmount, 2) . '</strong> under <strong>Account Code: ' . $accountCode . ' - ' . $description . '</strong> has been deleted successfully!'
+                );
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting appropriation: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'appropriation_id' => $appropriation->id ?? null
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'An error occurred while deleting the appropriation. Please try again.');
+        }
     }
 
     public function import(Request $request)

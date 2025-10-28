@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AllotmentClass;
+use App\Models\Appropriation;
 use App\Models\FundSource;
 use App\Models\Office;
 use App\Models\OfficeAllotmentClass;
@@ -282,8 +283,39 @@ class OfficeAllotmentClassController extends Controller
      */
     public function destroy(OfficeAllotmentClass $office_allotment_class): RedirectResponse
     {
-        $office_allotment_class->delete();
+        try {
+            // Store details before deletion
+            $class = $office_allotment_class->class;
+            $officeAbbreviation = $office_allotment_class->office_abbreviation;
 
-        return redirect()->route('office_allotment_classes.index')->with('status', 'Allotment class: <strong>' . $office_allotment_class->class . '</strong> under <strong>' . $office_allotment_class->office_abbreviation . '</strong> has been deleted successfully!');
+            // Check if there are any appropriations linked to this office allotment class
+            $appropriationsCount = Appropriation::where('office_allotment_class_id', $office_allotment_class->id)->count();
+
+            if ($appropriationsCount > 0) {
+                return redirect()->route('office_allotment_classes.index')
+                    ->with('error', 
+                        "Cannot delete Allotment Class: <strong>{$class}</strong> under <strong>{$officeAbbreviation}</strong>. " .
+                        "This allotment class has <strong>{$appropriationsCount}</strong> account(s) associated with it. " .
+                        "Please delete the related accounts first before removing this allotment class."
+                    );
+            }
+
+            // Proceed with deletion if no related records exist
+            $office_allotment_class->delete();
+
+            return redirect()->route('office_allotment_classes.index')
+                ->with('status', 
+                    'Allotment class: <strong>' . $class . '</strong> under <strong>' . $officeAbbreviation . '</strong> has been deleted successfully!'
+                );
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting office allotment class: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'office_allotment_class_id' => $office_allotment_class->id ?? null
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'An error occurred while deleting the office allotment class. Please try again.');
+        }
     }
 }

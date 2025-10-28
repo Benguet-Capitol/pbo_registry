@@ -47,7 +47,7 @@
         }
 
         document.getElementById('deleteForm').action = '{{ route("obligations.destroy", ":id") }}'.replace(':id', userId);
-        document.getElementById('deleteModalContent').innerHTML = `Are you sure you want to delete this Obligation with OBR No. <strong>${obrNo}</strong> under <strong>${officeAbbreviation} - ${Class}</strong> with Total Amount: <strong>${formattedObrAmount}</strong>? <br> <strong>This action will also delete all related records from its Obligation Adjustment, Purchase Order and Disbursement.</strong>`;
+        document.getElementById('deleteModalContent').innerHTML = `Are you sure you want to delete this Obligation with OBR No. <strong>${obrNo}</strong> under <strong>${officeAbbreviation} - ${Class}</strong> with Total Amount: <strong>${formattedObrAmount}</strong>? <br> This action cannot be undone.`;
         document.getElementById('deleteModal').classList.remove('hidden');
         
     }

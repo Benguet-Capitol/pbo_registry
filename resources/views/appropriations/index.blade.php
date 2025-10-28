@@ -1,23 +1,31 @@
 <x-app-layout>
+    {{-- Success messages --}}
     @if (session('status'))
-    @php
-    $alertType = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-600 dark:text-green-200';
-    if (str_contains(session('status'), 'updated successfully')) {
-    $alertType = 'bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-200';
-    } elseif (str_contains(session('status'), 'deleted successfully')) {
-    $alertType = 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-600 dark:text-red-200';
-    }
-    @endphp
-    <div class="border-l-4 p-4 mb-4 {{ $alertType }}" role="alert">
-        <div class="flex justify-between items-center">
-            <div>
-                <p>{!! session('status') !!}</p>
-            </div>
-            <button type="button" class="text-2xl font-semibold leading-none" onclick="this.parentElement.parentElement.remove();">
+        @php
+            $alertType = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-600 dark:text-green-200';
+            if (str_contains(session('status'), 'updated successfully')) {
+                $alertType = 'bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-200';
+            } elseif (str_contains(session('status'), 'deleted successfully')) {
+                $alertType = 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-600 dark:text-red-200';
+            }
+        @endphp
+
+        <div class="border-l-4 p-4 mb-4 flex justify-between items-start {{ $alertType }}" role="alert">
+            <p class="flex-1">{!! session('status') !!}</p>
+            <button type="button" class="ml-4 text-2xl font-semibold leading-none" onclick="this.closest('div[role=alert]').remove();">
                 &times;
             </button>
         </div>
-    </div>
+    @endif
+
+    {{-- Error/Warning messages --}}
+    @if (session('error'))
+        <div class="border-l-4 p-4 mb-4 flex justify-between items-start bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-600 dark:text-red-200" role="alert">
+            <p class="flex-1">{!! session('error') !!}</p>
+            <button type="button" class="ml-4 text-2xl font-semibold leading-none" onclick="this.closest('div[role=alert]').remove();">
+                &times;
+            </button>
+        </div>
     @endif
 
     <x-slot name="header">

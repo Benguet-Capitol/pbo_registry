@@ -51,35 +51,6 @@
         </div>
     </x-slot>
 
-    <!-- Display Success Message -->
-    @if(session('status'))
-    @php
-    $status = session('status');
-    $color = match ($status['type'] ?? 'info') {
-    'delete' => 'red',
-    'update' => 'blue',
-    default => 'green'
-    };
-    @endphp
-
-    <div class="bg-{{ $color }}-100 border border-{{ $color }}-400 text-{{ $color }}-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline">{!! $status['message'] ?? $status !!}</span>
-        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
-            <span class="text-{{ $color }}-700">&times;</span>
-        </button>
-    </div>
-    @endif
-
-    <!-- Display Error Message -->
-    @if(session('error'))
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline">{!! session('error') !!}</span>
-        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
-            <span class="text-red-700">&times;</span>
-        </button>
-    </div>
-    @endif
-
     <!-- Filter Section -->
     <div class="bg-white p-4 rounded-lg shadow-md mb-3 dark:bg-gray-800">
         <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
@@ -135,6 +106,36 @@
             </div>
         </form>
     </div>
+
+    <!-- Display Success Message -->
+    @if(session('status'))
+    @php
+    $status = session('status');
+    $color = match ($status['type'] ?? 'info') {
+    'delete' => 'red',
+    'update' => 'blue',
+    default => 'green'
+    };
+    @endphp
+
+    <div class="bg-{{ $color }}-100 border border-{{ $color }}-400 text-{{ $color }}-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{!! $status['message'] ?? $status !!}</span>
+        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
+            <span class="text-{{ $color }}-700">&times;</span>
+        </button>
+    </div>
+    @endif
+
+    <!-- Display Error Message -->
+    @if(session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{!! session('error') !!}</span>
+        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
+            <span class="text-red-700">&times;</span>
+        </button>
+    </div>
+    @endif
+    
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-2 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">

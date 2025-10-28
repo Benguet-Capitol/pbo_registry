@@ -171,6 +171,16 @@
                                                 </tr>
                                             @endforeach
                                         </tbody>
+                                        <tfoot>
+                                            <tr class="bg-gray-50 dark:bg-gray-900">
+                                                <td colspan="4" class="px-2 py-2 text-right text-xs font-semibold text-gray-900 dark:text-gray-200">
+                                                    Total Purchase Order Amount:
+                                                </td>
+                                                <td class="px-2 py-2 text-right text-xs font-bold text-green-700 dark:text-green-400" id="editPurchaseOrderTotalCell">
+                                                    0.00
+                                                </td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                     @else
                                     <p class="text-center text-gray-500 dark:text-gray-400">No obligation amounts found for this obligation.</p>
@@ -201,6 +211,37 @@
 @endforeach
 
 <script>
+    function updatePurchaseOrderTotalEdit() {
+        const poInputs = document.querySelectorAll("input[name^='edit_po_amount']");
+        let total = 0;
+
+        poInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val) && val > 0) {
+                total += val;
+            }
+        });
+
+        const totalCell = document.getElementById('editPurchaseOrderTotalCell');
+        if (totalCell) {
+            totalCell.textContent = total.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+    }
+
+    // Recalculate whenever input changes
+    document.addEventListener('input', function(event) {
+        if (event.target.name && event.target.name.startsWith('edit_po_amount')) {
+            updatePurchaseOrderTotalEdit();
+        }
+    });
+
+    // Recalculate on modal load
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePurchaseOrderTotalEdit();
+    });
     //Checks if an input has a value and adjusts the text color accordingly
     // Make updateTextColor globally accessible
     function updateTextColor(element) {
@@ -282,10 +323,21 @@
 
         // Show the modal
         document.getElementById('editPurchaseOrderModal').classList.remove('hidden');
+        // Update total
+        updatePurchaseOrderTotalEdit();
     }
 
     function closeEditPurchaseOrderModal() {
         document.getElementById('editPurchaseOrderModal').classList.add('hidden');
+    }
+
+    function updateEditPurchaseOrderTotal() {
+        let total = 0;
+        document.querySelectorAll('input[name^="edit_po_amount"]').forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            total += value;
+        });
+        document.getElementById('editPurchaseOrderTotalCell').textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function validateAmount(inputElement) {

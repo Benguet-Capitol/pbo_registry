@@ -279,9 +279,10 @@
         @foreach($office_allotment_classes as $office_allotment_class) {
             id: "{{ $office_allotment_class->id }}",
             name: "{{ $office_allotment_class->office_abbreviation }} - {{ $office_allotment_class->class }}",
+            office: "{{ $office_allotment_class->office_abbreviation }}",
             class: "{{ $office_allotment_class->class }}", 
             fund: "{{ $office_allotment_class->fund ?? 'General Fund' }}"
-        }, // Ensure `fund` is in your DB query
+        }, 
         @endforeach
     ];
 
@@ -292,6 +293,15 @@
         'CCO': ['Purchase Request', 'Project/Contract']
     };
 
+    // OBR Type shortcuts
+    const obrTypeShortcuts = {
+        'Regular': 'REG',
+        'Purchase Request': 'PR',
+        'Project/Contract': 'CONT'
+    };
+
+    // Store selected office allotment class data
+    let selectedOfficeAllotmentClass = null;
 
     // Filter office allotment classes based on input
     function filterOfficeAllotmentClasses() {
@@ -320,20 +330,30 @@
             option.onclick = function() {
                 input.value = item.name;
                 document.getElementById("office_allotment_class_id").value = item.id;
+                
+                // Store the selected office allotment class data
+                selectedOfficeAllotmentClass = item;
+                
                 // Reset all account code fields when a new OfficeAllotmentClass is selected
                 document.querySelectorAll('[name="account_code[]"]').forEach(field => field.value = '');
                 document.querySelectorAll('[name="description[]"]').forEach(field => field.value = '');
                 document.querySelectorAll('[name="programs[]"]').forEach(field => field.value = '');
                 document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
                 document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
-                generateObrNumber(item.fund); // Pass fund name, not prefix
+                
                 // Restrict Obligation Type based on detected class
                 restrictObligationType(item.class);
-                // Auto-select "Regular" if PS
+                
+                // Auto-select "Regular" if PS and generate OBR number
                 if (item.class === 'PS') {
                     const obrTypeSelect = document.getElementById("obr_type");
                     obrTypeSelect.value = 'Regular';
+                    generateObrNumber(); // Generate with auto-selected Regular type
+                } else {
+                    // Clear OBR number if not PS (user needs to select type first)
+                    document.getElementById('obr_no').value = '';
                 }
+                
                 dropdown.classList.add("hidden");
             };
             dropdown.appendChild(option);
@@ -365,9 +385,24 @@
         }
     }
 
-    // Generate the OBR number in the format 00000-mm-yy-000
-    function generateObrNumber(fund) {
+    // Generate the OBR number in the format Office-Class-TypeShortcut-FundCode-YY-MM-
+    function generateObrNumber() {
         const obrNoField = document.getElementById('obr_no');
+        const obrTypeSelect = document.getElementById('obr_type');
+        
+        // Check if office allotment class is selected
+        if (!selectedOfficeAllotmentClass) {
+            obrNoField.value = '';
+            return;
+        }
+        
+        // Check if obligation type is selected
+        const selectedObrType = obrTypeSelect.value;
+        if (!selectedObrType) {
+            obrNoField.value = '';
+            return;
+        }
+        
         const date = new Date();
         const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (01-12)
         const year = String(date.getFullYear()).slice(-2); // Last two digits
@@ -379,14 +414,21 @@
             'Provincial Development Fund': '107'
         };
 
-        const sequence = fundToSequence[fund] || '000'; // Default to '000' if fund is unknown
-
-        const obrNumber = `${sequence}-${year}-${month}-`;
+        const fundCode = fundToSequence[selectedOfficeAllotmentClass.fund] || '000'; // Default to '000' if fund is unknown
+        const typeShortcut = obrTypeShortcuts[selectedObrType] || 'OTH'; // Default to 'OTH' if type is unknown
+        
+        // Format: Office-Class-TypeShortcut-FundCode-YY-MM-
+        const obrNumber = `${selectedOfficeAllotmentClass.office}-${selectedOfficeAllotmentClass.class}-${typeShortcut}-${fundCode}-${year}-${month}-`;
         obrNoField.value = obrNumber;
     }
 
-    // Call the function to set the initial value
-    document.addEventListener('DOMContentLoaded', generateObrNumber);
+    // Add event listener to OBR Type select to regenerate OBR number when type changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const obrTypeSelect = document.getElementById('obr_type');
+        if (obrTypeSelect) {
+            obrTypeSelect.addEventListener('change', generateObrNumber);
+        }
+    });
 
     // List of appropriations passed from the backend
     const appropriations = [

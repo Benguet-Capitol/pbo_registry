@@ -151,6 +151,14 @@ class RealignmentController extends Controller
             ['label' => 'Realignments | Augmentations']
         ];
 
+        $realignmentsBulkDelete = Realignment::with('appropriation')
+            ->when($request->filled('year1'), function ($q) use ($request) {
+                $q->whereHas('officeAllotmentClass', function ($q2) use ($request) {
+                    $q2->where('year', $request->year1);
+                });
+            })
+            ->get();
+
         // --- Return View ---
         return view('realignments.index', compact(
             'realignments',
@@ -165,7 +173,8 @@ class RealignmentController extends Controller
             'office_allotment_classes',
             'appropriations',
             'officeAllotmentClassesJs',
-            'appropriationsJs'
+            'appropriationsJs',
+            'realignmentsBulkDelete'
         ));
     }
 
@@ -400,26 +409,99 @@ class RealignmentController extends Controller
         }
     }
 
-    public function destroy(Realignment $realignment): RedirectResponse
+    public function destroy(Request $request, Realignment $realignment): RedirectResponse
     {
         try {
-            // Get the related appropriation
+            DB::beginTransaction();
+
+            // Store details before deletion
+            $realignmentNo = $realignment->realignment_no;
+            $type = $realignment->type;
+            $amount = $realignment->amount;
             $appropriation = Appropriation::find($realignment->appropriations_id);
-            $accountCode = $appropriation ? $appropriation->account_code : '';
-            $description = $appropriation ? $appropriation->description : '';
+            $accountCode = $appropriation ? $appropriation->account_code : 'N/A';
+            $description = $appropriation ? $appropriation->description : 'N/A';
 
-            $realignment->delete();
+            // Check if this is a bulk delete request
+            $isBulkDelete = $request->has('bulk_delete') && $request->bulk_delete == '1';
 
-            return redirect()->route('realignments.index', request()->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
-                ->with('status',
-                'Realignment No.: <strong>' . $realignment->realignment_no . '</strong> with Type: <strong>' . $realignment->type . '</strong>, Account Code: <strong>' . $accountCode . '</strong> - <strong>' . $description . '</strong> and Amount: <strong>' . number_format($realignment->amount, 2) . '</strong> has been deleted successfully!'
-            );
+            if ($isBulkDelete) {
+                // Delete all realignments with the same realignment_no
+                $relatedRealignments = Realignment::where('realignment_no', $realignmentNo)->get();
+                $deletedCount = $relatedRealignments->count();
+                
+                // Check if any related realignment has obligations
+                foreach ($relatedRealignments as $related) {
+                    $appropriationCheck = Appropriation::find($related->appropriations_id);
+                    if ($appropriationCheck) {
+                        $obligationsCount = ObligationAmount::where('appropriation_id', $appropriationCheck->id)->count();
+                        if ($obligationsCount > 0) {
+                            DB::rollBack();
+                            return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
+                                ->with('error', 
+                                    "Cannot delete Realignment No: <strong>{$realignmentNo}</strong>. " .
+                                    "One or more accounts in this realignment transaction have <strong>{$obligationsCount}</strong> obligation(s) associated with them. " .
+                                    "Please delete the related obligations first before removing this realignment."
+                                );
+                        }
+                    }
+                }
+
+                // Delete all related realignments
+                Realignment::where('realignment_no', $realignmentNo)->delete();
+
+                DB::commit();
+
+                return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
+                    ->with('status',
+                        "All <strong>{$deletedCount}</strong> realignment(s) with Realignment No: <strong>{$realignmentNo}</strong> have been deleted successfully!"
+                    );
+            } else {
+                // Single delete - check for linked records
+                $relatedCount = Realignment::where('realignment_no', $realignmentNo)
+                    ->where('id', '!=', $realignment->id)
+                    ->count();
+
+                // Check if appropriation has obligations
+                if ($appropriation) {
+                    $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)->count();
+                    if ($obligationsCount > 0) {
+                        DB::rollBack();
+                        return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
+                            ->with('error', 
+                                "Cannot delete Realignment No: <strong>{$realignmentNo}</strong> with Type: <strong>{$type}</strong>, Account Code: <strong>{$accountCode}</strong>. " .
+                                "This realignment has <strong>{$obligationsCount}</strong> obligation(s) associated with it. " .
+                                "Please delete the related obligations first before removing this realignment."
+                            );
+                    }
+                }
+
+                // Single delete
+                $realignment->delete();
+
+                DB::commit();
+
+                $warningMessage = '';
+                if ($relatedCount > 0) {
+                    $warningMessage = " <strong>Note:</strong> There are still <strong>{$relatedCount}</strong> related realignment(s) with the same Realignment No.";
+                }
+
+                return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
+                    ->with('status',
+                        'Realignment No: <strong>' . $realignmentNo . '</strong> with Type: <strong>' . $type . '</strong>, Account Code: <strong>' . $accountCode . '</strong> - <strong>' . $description . '</strong> and Amount: <strong>' . number_format($amount, 2) . '</strong> has been deleted successfully! </br>' . $warningMessage
+                    );
+            }
+
         } catch (\Throwable $e) {
+            DB::rollBack();
+            
             Log::error('Realignment Delete Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
-                'realignment_id' => $realignment->id
+                'realignment_id' => $realignment->id ?? null
             ]);
-            return redirect()->back()->with('status', 'An error occurred while deleting the realignment: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->with('error', 'An error occurred while deleting the realignment: ' . $e->getMessage());
         }
     }
 }

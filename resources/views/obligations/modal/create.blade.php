@@ -293,12 +293,12 @@
         'CCO': ['Purchase Request', 'Project/Contract']
     };
 
-    // OBR Type shortcuts
-    const obrTypeShortcuts = {
-        'Regular': 'REG',
-        'Purchase Request': 'PR',
-        'Project/Contract': 'CONT'
-    };
+    // Existing OBR numbers from the database for the current year
+    const existingObrNumbers = [
+        @foreach($obligations_check ?? [] as $obligation)
+            "{{ $obligation->obr_no }}",
+        @endforeach
+    ];
 
     // Store selected office allotment class data
     let selectedOfficeAllotmentClass = null;
@@ -341,18 +341,8 @@
                 document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
                 document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
                 
-                // Restrict Obligation Type based on detected class
-                restrictObligationType(item.class);
-                
-                // Auto-select "Regular" if PS and generate OBR number
-                if (item.class === 'PS') {
-                    const obrTypeSelect = document.getElementById("obr_type");
-                    obrTypeSelect.value = 'Regular';
-                    generateObrNumber(); // Generate with auto-selected Regular type
-                } else {
-                    // Clear OBR number if not PS (user needs to select type first)
-                    document.getElementById('obr_no').value = '';
-                }
+                // Generate OBR number when office allotment class is selected
+                generateObrNumber();
                 
                 dropdown.classList.add("hidden");
             };
@@ -369,36 +359,12 @@
         }
     });
 
-    // Function to restrict obligation type options dynamically
-    function restrictObligationType(allotmentClass) {
-        const obrTypeSelect = document.getElementById("obr_type");
-
-        obrTypeSelect.innerHTML = '<option value="">Select Obligation Type</option>'; // reset
-
-        if (allowedObligationTypes[allotmentClass]) {
-            allowedObligationTypes[allotmentClass].forEach(type => {
-                const option = document.createElement("option");
-                option.value = type;
-                option.textContent = type;
-                obrTypeSelect.appendChild(option);
-            });
-        }
-    }
-
-    // Generate the OBR number in the format Office-Class-TypeShortcut-FundCode-YY-MM-
+    // Generate the OBR number in the format FundCode-YY-MM-
     function generateObrNumber() {
         const obrNoField = document.getElementById('obr_no');
-        const obrTypeSelect = document.getElementById('obr_type');
         
         // Check if office allotment class is selected
         if (!selectedOfficeAllotmentClass) {
-            obrNoField.value = '';
-            return;
-        }
-        
-        // Check if obligation type is selected
-        const selectedObrType = obrTypeSelect.value;
-        if (!selectedObrType) {
             obrNoField.value = '';
             return;
         }
@@ -415,18 +381,71 @@
         };
 
         const fundCode = fundToSequence[selectedOfficeAllotmentClass.fund] || '000'; // Default to '000' if fund is unknown
-        const typeShortcut = obrTypeShortcuts[selectedObrType] || 'OTH'; // Default to 'OTH' if type is unknown
         
-        // Format: Office-Class-TypeShortcut-FundCode-YY-MM-
-        const obrNumber = `${selectedOfficeAllotmentClass.office}-${selectedOfficeAllotmentClass.class}-${typeShortcut}-${fundCode}-${year}-${month}-`;
+        // Format: FundCode-YY-MM-
+        const obrNumber = `${fundCode}-${year}-${month}-`;
         obrNoField.value = obrNumber;
     }
 
-    // Add event listener to OBR Type select to regenerate OBR number when type changes
+    // Check if serial number already exists (checks only the serial number part)
+    function checkObrNumberExists() {
+        const obrNoField = document.getElementById('obr_no');
+        const obrNoError = document.getElementById('obrNoError');
+        const obrValue = obrNoField.value.trim();
+        
+        // Clear previous error
+        obrNoError.textContent = '';
+        obrNoField.classList.remove('border-red-500');
+        obrNoField.classList.add('border-gray-300', 'dark:border-gray-700');
+        
+        if (!obrValue) {
+            return false;
+        }
+        
+        // Split by dash to get all parts
+        // Format: FundCode-YY-MM-Serial
+        const parts = obrValue.split('-');
+        if (parts.length < 4) {
+            return false; // Invalid format or no serial yet
+        }
+        
+        // Get the serial number (last part)
+        const serial = parts[parts.length - 1];
+        
+        if (!serial || serial.trim() === '') {
+            return false; // No serial number yet
+        }
+        
+        // Check if any existing OBR number has the same serial (regardless of prefix)
+        const serialExists = existingObrNumbers.some(existingObr => {
+            const existingParts = existingObr.split('-');
+            const existingSerial = existingParts[existingParts.length - 1];
+            return existingSerial === serial;
+        });
+        
+        if (serialExists) {
+            obrNoField.classList.add('border-red-500');
+            obrNoField.classList.remove('border-gray-300', 'dark:border-gray-700');
+            obrNoError.textContent = `Serial number "${serial}" is already used. Please enter a different serial number.`;
+            return true;
+        }
+        
+        return false;
+    }
+
+    // Add event listener for OBR number field
     document.addEventListener('DOMContentLoaded', function() {
-        const obrTypeSelect = document.getElementById('obr_type');
-        if (obrTypeSelect) {
-            obrTypeSelect.addEventListener('change', generateObrNumber);
+        // Add event listener to OBR number field for real-time validation
+        const obrNoField = document.getElementById('obr_no');
+        if (obrNoField) {
+            obrNoField.addEventListener('blur', checkObrNumberExists);
+            obrNoField.addEventListener('input', function() {
+                // Real-time check as user types the serial number
+                const parts = this.value.split('-');
+                if (parts.length >= 4 && parts[3]) {
+                    checkObrNumberExists();
+                }
+            });
         }
     });
 
@@ -790,21 +809,32 @@
             obrNoError.textContent = 'OBR Number is required';
             isValid = false;
         } else {
-            // Split by dash and check if the last part (sequence) has a value
             const parts = obrValue.split('-');
-            const sequence = parts[parts.length - 1]; // Get the last part after the last dash
-            
+            const sequence = parts[parts.length - 1]; // Get last part after last dash
+
             if (!sequence || sequence.trim() === '') {
-                // Sequence is missing or empty
                 obrNo.classList.add('border-red-500');
                 obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
-                obrNoError.textContent = 'OBR Number sequence is incomplete. Please complete the sequence number.';
+                obrNoError.textContent = 'OBR Number is incomplete. Please enter the serial number.';
                 isValid = false;
             } else {
-                // Valid OBR number
-                obrNo.classList.remove('border-red-500');
-                obrNo.classList.add('border-gray-300', 'dark:border-gray-700');
-                obrNoError.textContent = '';
+                // Check for duplicate OBR serial numbers
+                const serialExists = existingObrNumbers.some(existingObr => {
+                    const existingParts = existingObr.split('-');
+                    const existingSerial = existingParts[existingParts.length - 1];
+                    return existingSerial === sequence;
+                });
+
+                if (serialExists) {
+                    obrNo.classList.add('border-red-500');
+                    obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
+                    obrNoError.textContent = `Serial number "${sequence}" is already used. Please enter a different serial number.`;
+                    isValid = false;
+                } else {
+                    obrNo.classList.remove('border-red-500');
+                    obrNo.classList.add('border-gray-300', 'dark:border-gray-700');
+                    obrNoError.textContent = '';
+                }
             }
         }
 

@@ -212,6 +212,12 @@ class ObligationController extends Controller
             ->where('year', $currentYear)
             ->get();
 
+        $obligations_check = Obligation::select('obr_no')
+        ->whereHas('officeAllotmentClass', function($q) use ($currentYear) {
+            $q->where('year', $currentYear);
+        })
+        ->get();
+
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'Obligations']
@@ -229,6 +235,7 @@ class ObligationController extends Controller
             'availableYears',
             'selectedYear',
             'office_allotment_classes',
+            'obligations_check',
             'breadcrumb'
         ));
     }

@@ -346,10 +346,14 @@
             <i class="fas fa-edit mr-2"></i>Edit
         </button>
         @endcan
-        @can('delete realignments')
+         @can('delete realignments')
         <button id="contextDelete"
                 class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
-            <i class="fas fa-trash mr-2"></i>Delete
+            <i class="fas fa-trash mr-2"></i>Delete This Entry
+        </button>
+        <button id="contextBulkDelete"
+                class="w-full text-left px-4 py-2 text-xs text-orange-600 hover:bg-gray-200 dark:text-orange-400 dark:hover:bg-gray-600 rounded-b-lg">
+            <i class="fas fa-trash-alt mr-2"></i>Delete All Related
         </button>
         @endcan
     </div>
@@ -420,6 +424,18 @@
                         realignment.type,
                         realignment.amount,
                         realignment.appropriations_id
+                    );
+                };
+            }
+
+            // Bulk Delete button
+            const bulkDeleteBtn = menu.querySelector('#contextBulkDelete');
+            if (bulkDeleteBtn && realignment.id && realignment.realignment_no) {
+                bulkDeleteBtn.onclick = () => {
+                    hideRealignmentContextMenu();
+                    openBulkDeleteRealignmentModal(
+                        realignment.realignment_no,
+                        realignment.id
                     );
                 };
             }

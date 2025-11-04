@@ -1,25 +1,36 @@
 <x-app-layout>
-    @if (session('status'))
-    @php
-    $alertType = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-200';
-    if (str_contains(session('status'), 'updated successfully')) {
-        $alertType = 'bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200';
-    } elseif (str_contains(session('status'), 'deleted successfully')) {
-        $alertType = 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-700 dark:text-red-200';
-    } elseif (str_contains(session('status'), 'created successfully')) {
-        $alertType = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-200';
-    }
-    @endphp
-    <div class="border-l-4 p-4 mb-4 {{ $alertType }}" role="alert">
-        <div class="flex justify-between items-center">
-            <div>
-                <p>{!! session('status') !!}</p>
+    @if (session('status') || session('error'))
+        @php
+            $message = session('status') ?? session('error');
+            $isError = session()->has('error');
+
+            if ($isError) {
+                $alertType = 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-700 dark:text-red-200';
+            } else {
+                // Default success color
+                $alertType = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-200';
+                if (str_contains($message, 'updated successfully')) {
+                    $alertType = 'bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200';
+                } elseif (str_contains($message, 'deleted successfully')) {
+                    $alertType = 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-700 dark:text-red-200';
+                } elseif (str_contains($message, 'created successfully')) {
+                    $alertType = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-200';
+                }
+            }
+        @endphp
+
+        <div class="border-l-4 p-4 mb-4 {{ $alertType }}" role="alert">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p>{!! $message !!}</p>
+                </div>
+                <button type="button"
+                    class="text-2xl font-semibold leading-none dark:text-gray-200"
+                    onclick="this.parentElement.parentElement.remove();">
+                    &times;
+                </button>
             </div>
-            <button type="button" class="text-2xl font-semibold leading-none dark:text-gray-200" onclick="this.parentElement.parentElement.remove();">
-                &times;
-            </button>
         </div>
-    </div>
     @endif
 
     <x-slot name="header">
@@ -320,18 +331,22 @@
 
     <!-- Context Menu -->
     <div id="supplementalContextMenu" 
-        class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
+        class="absolute hidden w-56 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
         style="display: none;">
         @can('edit supplementals')
         <button id="contextEdit"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600 rounded-t-lg">
             <i class="fas fa-edit mr-2"></i>Edit
         </button>
         @endcan
         @can('delete supplementals')
         <button id="contextDelete"
                 class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
-            <i class="fas fa-trash mr-2"></i>Delete
+            <i class="fas fa-trash mr-2"></i>Delete This Entry
+        </button>
+        <button id="contextBulkDelete"
+                class="w-full text-left px-4 py-2 text-xs text-orange-600 hover:bg-gray-200 dark:text-orange-400 dark:hover:bg-gray-600 rounded-b-lg">
+            <i class="fas fa-trash-alt mr-2"></i>Delete All Related
         </button>
         @endcan
     </div>
@@ -396,6 +411,18 @@
                         supplemental.type,
                         supplemental.amount,
                         supplemental.appropriations_id
+                    );
+                };
+            }
+
+            // Bulk Delete button
+            const bulkDeleteBtn = menu.querySelector('#contextBulkDelete');
+            if (bulkDeleteBtn && supplemental.supplemental_no) {
+                bulkDeleteBtn.onclick = () => {
+                    hideSupplementalContextMenu();
+                    openBulkDeleteSupplementalModal(
+                        supplemental.supplemental_no,
+                        supplemental.id
                     );
                 };
             }

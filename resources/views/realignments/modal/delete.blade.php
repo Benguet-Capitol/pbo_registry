@@ -94,8 +94,24 @@
             });
         }
 
-        document.getElementById('deleteRealignmentForm').action = '{{ route("realignments.destroy", ":id") }}'.replace(':id', realignmentId);
-        document.getElementById('deleteRealignmentModalContent').innerHTML = `Are you sure you want to delete this Realignment No: <strong>${realignmentNo}</strong> with Type: <strong>${realignmentType}</strong>, Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedRealignmentAmount}</strong>?</br>This action cannot be undone.`;
+        // Set form action with proper route
+        const deleteForm = document.getElementById('deleteRealignmentForm');
+        if (deleteForm) {
+            deleteForm.action = `/realignments/${realignmentId}`; // Direct path
+            console.log('Form action set to:', deleteForm.action);
+        }
+
+        document.getElementById('deleteRealignmentModalContent').innerHTML = `
+            Are you sure you want to delete this Realignment No: <strong>${realignmentNo}</strong> with Type: <strong>${realignmentType}</strong>, Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedRealignmentAmount}</strong>?
+            <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <strong>Note:</strong> This will only delete this specific account entry. Other accounts under the same Realignment No. will remain.
+                </p>
+            </div>
+            <p class="mt-3 text-red-600 dark:text-red-400 font-semibold">This action cannot be undone.</p>
+        `;
+
         document.getElementById('deleteRealignmentModal').classList.remove('hidden');
     }
 
@@ -189,7 +205,12 @@
             </div>
         `;
         document.getElementById('bulkDeleteRealignmentDetails').innerHTML = detailsHtml;
-        document.getElementById('bulkDeleteRealignmentForm').action = '{{ route("realignments.destroy", ":id") }}'.replace(':id', currentRealignmentId);
+        // Set form action
+    const bulkForm = document.getElementById('bulkDeleteRealignmentForm');
+    if (bulkForm) {
+        bulkForm.action = `/realignments/${currentRealignmentId}`; // Direct path
+        console.log('Bulk form action set to:', bulkForm.action);
+    }
         document.getElementById('bulkDeleteRealignmentModal').classList.remove('hidden');
     }
 

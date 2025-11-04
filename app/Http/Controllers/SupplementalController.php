@@ -125,10 +125,18 @@ class SupplementalController extends Controller
         ['label' => 'Supplemental Appropriations | Reversions']
     ];
 
+    $supplementalsBulkDelete = Supplemental::with('appropriation')
+        ->when($request->year1, function ($query) use ($request) {
+            $query->whereHas('officeAllotmentClass', function ($q) use ($request) {
+                $q->where('year', $request->year1);
+            });
+        })
+        ->get();
+
     return view('supplementals.index', compact(
         'supplementals', 'perPage', 'search', 'sortBy', 'sortOrder',
         'availableYears', 'selectedYear', 'officeAllotmentClasses',
-        'office_allotment_classes', 'appropriations', 'breadcrumb'
+        'office_allotment_classes', 'appropriations', 'breadcrumb', 'supplementalsBulkDelete'
     ));
 }
 
@@ -294,49 +302,110 @@ class SupplementalController extends Controller
         }
     }
 
-    public function destroy(Supplemental $supplemental): RedirectResponse
+    public function destroy(Request $request, Supplemental $supplemental): RedirectResponse
     {
         try {
-            // Get the related appropriation
+            DB::beginTransaction();
+
+            // Store details before deletion
+            $supplementalNo = $supplemental->supplemental_no;
+            $type = $supplemental->type;
+            $amount = $supplemental->amount;
             $appropriation = Appropriation::find($supplemental->appropriations_id);
             $accountCode = $appropriation ? $appropriation->account_code : 'N/A';
             $description = $appropriation ? $appropriation->description : 'N/A';
-            $type = $supplemental->type;
-            $supplementalNo = $supplemental->supplemental_no;
 
-            // Check if obligations exist for this appropriation (only for Supplemental type)
-            if ($type === 'Supplemental' && $appropriation) {
-                // Check if there are any obligation amounts linked to this appropriation
-                $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)
-                    ->distinct('obligation_id')
-                    ->count('obligation_id');
+            // Check if this is a bulk delete request
+            $isBulkDelete = $request->input('bulk_delete') === '1';
 
-                if ($obligationsCount > 0) {
-                    return redirect()->route('supplementals.index', request()->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
-                        ->with('error', 
-                            "Cannot delete <strong>{$type}</strong> No. <strong>{$supplementalNo}</strong> for Account Code: <strong>{$accountCode}</strong>. " .
-                            "This supplemental has <strong>{$obligationsCount}</strong> obligation(s) created using these supplemental funds. " .
-                            "Please delete the related obligations first before removing this supplemental entry."
-                        );
+            if ($isBulkDelete) {
+                // Delete all supplementals with the same supplemental_no
+                $relatedSupplementals = Supplemental::where('supplemental_no', $supplementalNo)->get();
+                $deletedCount = $relatedSupplementals->count();
+                
+                // Check if any related supplemental has obligations (only for Supplemental type)
+                foreach ($relatedSupplementals as $related) {
+                    if ($related->type === 'Supplemental') {
+                        $appropriationCheck = Appropriation::find($related->appropriations_id);
+                        if ($appropriationCheck) {
+                            $obligationsCount = ObligationAmount::where('appropriation_id', $appropriationCheck->id)
+                                ->distinct('obligation_id')
+                                ->count('obligation_id');
+                            
+                            if ($obligationsCount > 0) {
+                                DB::rollBack();
+                                return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
+                                    ->with('error', 
+                                        "Cannot delete Supplemental/Reversion No: <strong>{$supplementalNo}</strong>. " .
+                                        "One or more supplemental accounts in this transaction have <strong>{$obligationsCount}</strong> obligation(s) associated with them. " .
+                                        "Please delete the related obligations first before removing this supplemental/reversion."
+                                    );
+                            }
+                        }
+                    }
                 }
+
+                // Delete all related supplementals
+                Supplemental::where('supplemental_no', $supplementalNo)->delete();
+
+                DB::commit();
+
+                return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
+                    ->with('status',
+                        "All <strong>{$deletedCount}</strong> supplemental/reversion(s) with No: <strong>{$supplementalNo}</strong> have been deleted successfully!"
+                    );
+            } else {
+                // Single delete - check for obligations first (only for Supplemental type)
+                if ($type === 'Supplemental' && $appropriation) {
+                    $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)
+                        ->distinct('obligation_id')
+                        ->count('obligation_id');
+                    
+                    if ($obligationsCount > 0) {
+                        DB::rollBack();
+                        return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
+                            ->with('error', 
+                                "Cannot delete <strong>{$type}</strong> No. <strong>{$supplementalNo}</strong> for Account Code: <strong>{$accountCode}</strong>. " .
+                                "This supplemental has <strong>{$obligationsCount}</strong> obligation(s) created using these supplemental funds. " .
+                                "Please delete the related obligations first before removing this supplemental entry."
+                            );
+                    }
+                }
+
+                // Count related records BEFORE deletion
+                $relatedCount = Supplemental::where('supplemental_no', $supplementalNo)
+                    ->where('id', '!=', $supplemental->id)
+                    ->count();
+
+                // Delete the single supplemental
+                $supplemental->delete();
+
+                DB::commit();
+
+                $warningMessage = '';
+                if ($relatedCount > 0) {
+                    $warningMessage = " <strong>Note:</strong> There are still <strong>{$relatedCount}</strong> related supplemental/reversion(s) with the same No.";
+                }
+
+                return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
+                    ->with('status',
+                        '<strong>' . $type . '</strong> No. <strong>' . $supplementalNo . '</strong> with Account Code: <strong>' . $accountCode . '</strong> - <strong>' . $description . '</strong> and Amount: <strong>' . number_format($amount, 2) . '</strong> has been deleted successfully!' . $warningMessage
+                    );
             }
 
-            // Proceed with deletion if no obligations exist or if it's a Reversion
-            $supplemental->delete();
-
-            return redirect()->route('supplementals.index', request()->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
-                ->with('status',
-                    '<strong>' . $type . '</strong> No. <strong>' . $supplementalNo . '</strong> with Account Code: <strong>{$accountCode}</strong> - <strong>' . $description . '</strong> has been deleted successfully!'
-                );
-
         } catch (\Throwable $e) {
+            DB::rollBack();
+            
             Log::error('Supplemental | Reversion Delete Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
-                'supplemental_id' => $supplemental->id ?? null
+                'supplemental_id' => $supplemental->id ?? null,
+                'is_bulk_delete' => $isBulkDelete ?? false,
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ]);
             
-            return redirect()->back()
-                ->with('error', 'An error occurred while deleting the supplemental / reversion: ' . $e->getMessage());
+            return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
+                ->with('error', 'An error occurred while deleting the supplemental/reversion: ' . $e->getMessage());
         }
     }
 }

@@ -165,18 +165,23 @@
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                             @foreach($obligationAmounts as $obligationAmount)
-                                            @php
-                                                $adjustments = \App\Models\ObligationAdjustment::where('obligation_amounts_id', $obligationAmount->id)->sum('adjustment_amount');
-                                                $disbursements = \App\Models\Disbursement::where('obligation_amounts_id', $obligationAmount->id)->sum('disbursement_amount');
-                                                $totalPO = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)->sum('po_amount');
-                                                $defaultBalance = (($obligationAmount->obr_amount - $disbursements) + $adjustments);
-                                                $appropriation = $obligationAmount->appropriation;
+                                                @php
+                                                    $adjustments = \App\Models\ObligationAdjustment::where('obligation_amounts_id', $obligationAmount->id)->sum('adjustment_amount');
+                                                    $disbursements = \App\Models\Disbursement::where('obligation_amounts_id', $obligationAmount->id)->sum('disbursement_amount');
+                                                    $totalPO = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)->sum('po_amount');
+                                                    $appropriation = $obligationAmount->appropriation;
 
-                                                // Choose balance based on OBR type
-                                                $balance = $obligationAmount->obligation->obr_type === 'Purchase Request'
-                                                    ? $totalPO
-                                                    : $defaultBalance;
-                                            @endphp
+                                                    // Compute default balance (for non-PO types)
+                                                    $defaultBalance = (($obligationAmount->obr_amount - $disbursements) + $adjustments);
+
+                                                    // Compute PO balance by deducting disbursements
+                                                    $poBalance = $totalPO - $disbursements;
+
+                                                    // Choose which balance to use based on OBR type
+                                                    $balance = $obligationAmount->obligation->obr_type === 'Purchase Request'
+                                                        ? $poBalance
+                                                        : $defaultBalance;
+                                                @endphp
                                             <tr>
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
                                                     {{ $appropriation->programs ?? '-' }}

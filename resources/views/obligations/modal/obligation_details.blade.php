@@ -122,10 +122,6 @@
                         render: r => r.remarks || 'N/A'
                     },
                     {
-                        class: 'px-3 py-2 text-center',
-                        render: r => r.adjusted_by || 'N/A'
-                    },
-                    {
                         class: 'px-3 py-2 text-right',
                         render: r => formatCurrency(r.adjustment_amount)
                     }
@@ -146,29 +142,50 @@
                     },
                     {
                         class: 'px-3 py-2 text-right',
-                        render: r => formatCurrency(r.obr_amount)
+                        render: r => {
+                            const val = parseFloat(r.obr_amount);
+                            if (!val) return '-';
+                            const formatted = Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return val < 0 ? `(${formatted})` : formatted;
+                        }
                     },
                     {
                         class: 'px-3 py-2 text-right',
-                        render: r => formatCurrency(r.adjustments)
+                        render: r => {
+                            const val = parseFloat(r.adjustments);
+                            if (!val) return '-';
+                            const formatted = Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return val < 0 ? `(${formatted})` : formatted;
+                        }
                     },
                     {
                         class: 'px-3 py-2 text-right',
                         render: r => {
                             const obr = parseFloat(r.obr_amount) || 0;
                             const adj = parseFloat(r.adjustments) || 0;
-                            // If adjustment is zero or empty, adjusted obligation is zero
-                            if (!adj) return formatCurrency(0);
-                            return formatCurrency(obr + adj);
+                            const total = adj ? obr + adj : 0;
+                            if (!total) return '-';
+                            const formatted = Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return total < 0 ? `(${formatted})` : formatted;
                         }
                     },
                     ...(showPO ? [{
                         class: 'px-3 py-2 text-right',
-                        render: r => formatCurrency(r.po_total)
+                        render: r => {
+                            const val = parseFloat(r.po_total);
+                            if (!val) return '-';
+                            const formatted = Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return val < 0 ? `(${formatted})` : formatted;
+                        }
                     }] : []),
                     {
                         class: 'px-3 py-2 text-right',
-                        render: r => formatCurrency(r.disbursement_total)
+                        render: r => {
+                            const val = parseFloat(r.disbursement_total);
+                            if (!val) return '-';
+                            const formatted = Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return val < 0 ? `(${formatted})` : formatted;
+                        }
                     }
                 ];
 
@@ -195,12 +212,8 @@
                             <td class="px-4 py-2 text-gray-700 dark:text-gray-400">${data.obligation.particulars || 'N/A'}</td>
                         </tr>
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                            <td class="px-4 py-2 font-semibold bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Processed by:</td>
-                            <td class="px-4 py-2 text-gray-700 dark:text-gray-400">${data.obligation.processed_by || 'N/A'}</td>
-                        </tr>
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                             <td class="px-4 py-2 font-semibold bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Remarks:</td>
-                            <td class="px-4 py-2 text-gray-700 dark:text-gray-400">${data.obligation.remarks || ''}</td>
+                            <td class="px-4 py-2 text-gray-700 dark:text-gray-400">${data.obligation.remarks || '-'}</td>
                         </tr>
 
                 `;
@@ -231,15 +244,50 @@
                                 ${buildRows(obligation_amounts, summaryTableFields)}
                                 <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
                                     <td colspan="3" class="text-right px-3 py-2">Total:</td>
-                                    <td class="text-right px-3 py-2">${formatCurrency(obligation_amounts.reduce((sum, r) => sum + parseFloat(r.obr_amount || 0), 0))}</td>
-                                    <td class="text-right px-3 py-2">${formatCurrency(obligation_amounts.reduce((sum, r) => sum + parseFloat(r.adjustments || 0), 0))}</td>
                                     <td class="text-right px-3 py-2">${
-                                            (obligation_amounts.length === 0 || obligation_amounts.every(r => !parseFloat(r.adjustments)))
-                                            ? formatCurrency(0)
-                                            : formatCurrency(obligation_amounts.reduce((sum, r) => sum + parseFloat(r.obr_amount || 0) + parseFloat(r.adjustments || 0), 0))
+                                        (() => {
+                                            const total = obligation_amounts.reduce((sum, r) => sum + parseFloat(r.obr_amount || 0), 0);
+                                            if (!total) return '-';
+                                            const formatted = Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            return total < 0 ? `(${formatted})` : formatted;
+                                        })()
                                     }</td>
-                                    ${showPO ? `<td class="text-right px-3 py-2">${formatCurrency(total_po_amount)}</td>` : ''}
-                                    <td class="text-right px-3 py-2">${formatCurrency(total_disbursement_amount)}</td>
+                                    <td class="text-right px-3 py-2">${
+                                        (() => {
+                                            const total = obligation_amounts.reduce((sum, r) => sum + parseFloat(r.adjustments || 0), 0);
+                                            if (!total) return '-';
+                                            const formatted = Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            return total < 0 ? `(${formatted})` : formatted;
+                                        })()
+                                    }</td>
+                                    <td class="text-right px-3 py-2">${
+                                        (() => {
+                                            if (obligation_amounts.length === 0 || obligation_amounts.every(r => !parseFloat(r.adjustments))) return '-';
+                                            const total = obligation_amounts.reduce((sum, r) =>
+                                                sum + parseFloat(r.obr_amount || 0) + parseFloat(r.adjustments || 0), 0
+                                            );
+                                            if (!total) return '-';
+                                            const formatted = Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            return total < 0 ? `(${formatted})` : formatted;
+                                        })()
+                                    }</td>
+                                    ${showPO ? `
+                                    <td class="text-right px-3 py-2">${
+                                        (() => {
+                                            const total = total_po_amount || 0;
+                                            if (!total) return '-';
+                                            const formatted = Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            return total < 0 ? `(${formatted})` : formatted;
+                                        })()
+                                    }</td>` : ''}
+                                    <td class="text-right px-3 py-2">${
+                                        (() => {
+                                            const total = total_disbursement_amount || 0;
+                                            if (!total) return '-';
+                                            const formatted = Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                            return total < 0 ? `(${formatted})` : formatted;
+                                        })()
+                                    }</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -256,7 +304,6 @@
                                     <th scope="col" class="px-4 py-2 text-center">Programs</th>
                                     <th scope="col" class="px-4 py-2 text-center">Account Code</th>
                                     <th scope="col" class="px-4 py-2 text-center">Description</th>
-                                    <th scope="col" class="px-4 py-2 text-center">Adjusted / Cancelled by</th>
                                     <th scope="col" class="px-4 py-2 text-center">Adjustment</th>
                                 </tr>
                             </thead>
@@ -267,6 +314,12 @@
                                         return obligation_adjustments.map(row => {
                                             const showCells = row.remarks !== lastRemarks;
                                             lastRemarks = row.remarks;
+                                            const adj = parseFloat(row.adjustment_amount);
+                                            const adjDisplay = !adj
+                                                ? '-'
+                                                : (adj < 0
+                                                    ? `(${Math.abs(adj).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+                                                    : adj.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
                                             return `
                                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                                     <td class="px-3 py-2 text-center">${showCells ? (row.adjustment_date || 'N/A') : ''}</td>
@@ -274,17 +327,25 @@
                                                     <td class="px-3 py-2 text-center">${row.programs || '-'}</td>
                                                     <td class="px-3 py-2 text-center">${row.account_code || 'N/A'}</td>
                                                     <td class="px-3 py-2 text-center">${row.description || 'N/A'}</td>
-                                                    <td class="px-3 py-2 text-center">${row.adjusted_by || 'N/A'}</td>
-                                                    <td class="px-3 py-2 text-right">${formatCurrency(row.adjustment_amount)}</td>
+                                                    <td class="px-3 py-2 text-right">${adjDisplay}</td>
                                                 </tr>
                                             `;
                                         }).join('');
                                     })()
-                                    : ` <tr><td colspan = "7" class = "px-3 py-3 text-center text-gray-500"> No adjustments found. </td></tr> `
+                                    : `<tr><td colspan="6" class="px-3 py-3 text-center text-gray-500">No adjustments found.</td></tr>`
                             }</tbody>
                             <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
-                                <td colspan="6" class="text-right px-3 py-2">Total Adjustment:</td>
-                                <td class="text-right px-3 py-2">${formatCurrency(obligation_adjustments.reduce((sum, r) => sum + parseFloat(r.adjustment_amount || 0), 0))}</td>
+                                <td colspan="5" class="text-right px-3 py-2">Total Adjustment:</td>
+                                <td class="text-right px-3 py-2">${
+                                    (() => {
+                                        const total = obligation_adjustments.reduce((sum, r) => sum + parseFloat(r.adjustment_amount || 0), 0);
+                                        return !total
+                                            ? '-'
+                                            : (total < 0
+                                                ? `(${Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+                                                : total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    })()
+                                }</td>
                             </tr>
                         </table>
                     </div>
@@ -311,40 +372,25 @@
                                 ${
                                     purchase_orders.length
                                     ? (() => {
-                                        // ✅ Sort purchase_orders by po_number to group them
                                         purchase_orders.sort((a, b) => a.po_number.localeCompare(b.po_number));
-
                                         let shownPoNumbers = new Set();
-
                                         return buildRows(purchase_orders, [
-                                            {
-                                                class: 'px-2 py-2',
-                                                render: r => shownPoNumbers.has(r.po_number) ? '' : r.po_number
-                                            },
-                                            {
-                                                class: 'px-2 py-2',
-                                                render: r => shownPoNumbers.has(r.po_number) ? '' : r.po_date
-                                            },
-                                            {
-                                                class: 'px-2 py-2',
-                                                render: r => shownPoNumbers.has(r.po_number) ? '' : r.pr_no
-                                            },
-                                            {
-                                                class: 'px-2 py-2',
-                                                render: r => shownPoNumbers.has(r.po_number) ? '' : r.supplier
-                                            },
-                                            { 
-                                                class: 'px-2 py-2', 
-                                                render: r => shownPoNumbers.has(r.po_number) ? '' : r.delivery_period 
-                                            },
-                                            { class: 'px-2 py-2', render: r => r.programs && r.programs.trim() !== '' ? r.programs : '-' },
+                                            { class: 'px-2 py-2', render: r => shownPoNumbers.has(r.po_number) ? '' : r.po_number },
+                                            { class: 'px-2 py-2', render: r => shownPoNumbers.has(r.po_number) ? '' : r.po_date },
+                                            { class: 'px-2 py-2', render: r => shownPoNumbers.has(r.po_number) ? '' : r.pr_no },
+                                            { class: 'px-2 py-2', render: r => shownPoNumbers.has(r.po_number) ? '' : r.supplier },
+                                            { class: 'px-2 py-2', render: r => shownPoNumbers.has(r.po_number) ? '' : r.delivery_period },
+                                            { class: 'px-2 py-2', render: r => r.programs?.trim() ? r.programs : '-' },
                                             { class: 'px-2 py-2', render: r => r.account_code },
                                             { class: 'px-2 py-2', render: r => r.description },
                                             {
                                                 class: 'px-2 py-2 text-right',
                                                 render: r => {
-                                                    shownPoNumbers.add(r.po_number); // ✅ Mark as shown only after rendering PO Amount
-                                                    return formatCurrency(r.po_amount);
+                                                    shownPoNumbers.add(r.po_number);
+                                                    const val = parseFloat(r.po_amount);
+                                                    if (!val) return '-';
+                                                    const formatted = Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                                    return val < 0 ? `(${formatted})` : formatted;
                                                 }
                                             }
                                         ]);
@@ -354,11 +400,21 @@
                             </tbody>
                             <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
                                 <td colspan="8" class="text-right px-3 py-2">Total Purchase Order Amount:</td>
-                                <td class="text-right px-3 py-2">${formatCurrency(purchase_orders.reduce((sum, r) => sum + parseFloat(r.po_amount || 0), 0))}</td>
+                                <td class="text-right px-3 py-2">${
+                                    (() => {
+                                        const total = purchase_orders.reduce((sum, r) => sum + parseFloat(r.po_amount || 0), 0);
+                                        return !total
+                                            ? '-'
+                                            : (total < 0
+                                                ? `(${Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+                                                : total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    })()
+                                }</td>
                             </tr>
                         </table>
                     </div>
                     ` : ''}
+
                     <!-- Disbursement Table -->
                     <div class="mt-4">
                         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-300">Disbursements:</h3>
@@ -375,14 +431,43 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${disbursements.length
-                                    ? buildRows(disbursements, disbursementTableFields)
-                                    : `<tr><td colspan="7" class="px-3 py-3 text-center text-gray-500">No disbursements found.</td></tr>`}
+                                ${
+                                    disbursements.length
+                                        ? disbursements.map(r => {
+                                            const val = parseFloat(r.disbursement_amount);
+                                            const display = !val
+                                                ? '-'
+                                                : (val < 0
+                                                    ? `(${Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+                                                    : val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                            return `
+                                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                                    <td class="px-2 py-2">${r.dv_no || '-'}</td>
+                                                    <td class="px-2 py-2">${r.disbursement_date || '-'}</td>
+                                                    <td class="px-2 py-2">${r.status || '-'}</td>
+                                                    <td class="px-2 py-2">${r.programs || '-'}</td>
+                                                    <td class="px-2 py-2">${r.account_code || '-'}</td>
+                                                    <td class="px-2 py-2">${r.description || '-'}</td>
+                                                    <td class="px-2 py-2 text-right">${display}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')
+                                        : `<tr><td colspan="7" class="px-3 py-3 text-center text-gray-500">No disbursements found.</td></tr>`
+                                }
                             </tbody>
                             <tfoot>
                                 <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
                                     <td colspan="6" class="text-right px-3 py-2">Total DV / Check Amount:</td>
-                                    <td class="text-right px-3 py-2">${formatCurrency(total_disbursement_amount)}</td>
+                                    <td class="text-right px-3 py-2">${
+                                        (() => {
+                                            const total = total_disbursement_amount || 0;
+                                            return !total
+                                                ? '-'
+                                                : (total < 0
+                                                    ? `(${Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+                                                    : total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        })()
+                                    }</td>
                                 </tr>
                             </tfoot>
                         </table>

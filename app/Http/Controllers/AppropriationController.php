@@ -11,6 +11,7 @@ use App\Models\OfficeAllotmentClass;
 use App\Models\Realignment;
 use App\Models\Supplemental;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Spatie\SimpleExcel\SimpleExcelReader;
@@ -49,7 +50,7 @@ class AppropriationController extends Controller
                 ->sum('appropriation');
             // Calculate the total allotment (sum of all quarters)
             $totalAllotment = Appropriation::where('office_allotment_class_id', $officeAllotmentClassId)
-                ->sum(\DB::raw('COALESCE(quarter1,0) + COALESCE(quarter2,0) + COALESCE(quarter3,0) + COALESCE(quarter4,0)'));
+                ->sum(DB::raw('COALESCE(quarter1,0) + COALESCE(quarter2,0) + COALESCE(quarter3,0) + COALESCE(quarter4,0)'));
         }
         // Query the appropriations
         $query = Appropriation::query()->with(['officeAllotmentClass.allotmentClass']);
@@ -330,8 +331,11 @@ class AppropriationController extends Controller
             return redirect()->back()->withErrors(['file' => 'Missing required columns: ' . implode(', ', $missingHeaders)]);
         }
 
+        // Counter for imported accounts
+        $importedCount = 0;
+
         // Process rows
-        $reader->getRows()->each(function (array $rowProperties) use ($request, $headerMap) {
+        $reader->getRows()->each(function (array $rowProperties) use ($request, $headerMap, &$importedCount) {
             $data = [];
 
             foreach ($headerMap as $friendlyHeader => $dbField) {
@@ -348,8 +352,9 @@ class AppropriationController extends Controller
             $data['office_allotment_class_id'] = $request->office_allotment_class_id;
 
             Appropriation::create($data);
+            $importedCount++; // Increment counter for each successfully created record
         });
 
-        return redirect()->back()->with('status', '<strong>Accounts</strong> Imported successfully!');
+        return redirect()->back()->with('status', "<strong>{$importedCount} account(s)</strong> imported successfully!");
     }
 }

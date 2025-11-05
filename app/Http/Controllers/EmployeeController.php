@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeController extends Controller
 {
@@ -99,10 +102,51 @@ class EmployeeController extends Controller
         return redirect()->route('employees.index')->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $employee->office . '</strong> has been updated successfully!');
     }
 
-    public function destroy(Employee $employee): RedirectResponse
+    public function destroy(Request $request, Employee $employee): RedirectResponse
     {
-        $employee->delete();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('employees.index')->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $employee->office . '</strong>has been deleted successfully!');
+            // Store details before deletion
+            $employeeName = $employee->name;
+            $employeeOffice = $employee->office;
+
+            // System Validation: Check if employee has a related user account
+            $relatedUser = User::where('name', $employee->name)->first();
+            
+            if ($relatedUser) {
+                DB::rollBack();
+                return redirect()->route('employees.index', array_filter($request->only(['per_page', 'search'])))
+                    ->with('error', 
+                        "Cannot delete Employee <strong>{$employeeName}</strong>. " .
+                        "This employee has a user account (<strong>{$relatedUser->username}</strong>) associated with them. " .
+                        "Please delete or reassign the user account first before removing this employee."
+                    );
+            }
+
+            // All validations passed - proceed with deletion
+            $employee->delete();
+
+            DB::commit();
+
+            return redirect()->route('employees.index', array_filter($request->only(['per_page', 'search'])))
+                ->with('status', 
+                    'Employee <strong>' . $employeeName . '</strong> from <strong>' . $employeeOffice . '</strong> has been deleted successfully!'
+                );
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            
+            Log::error('Employee Delete Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'employee_id' => $employee->id ?? null,
+                'employee_name' => $employee->name ?? null,
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+            
+            return redirect()->route('employees.index', array_filter($request->only(['per_page', 'search'])))
+                ->with('error', 'An error occurred while deleting the employee: ' . $e->getMessage());
+        }
     }
 }

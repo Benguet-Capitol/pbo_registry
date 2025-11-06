@@ -3,9 +3,8 @@
 namespace App\Exports;
 
 use App\Models\AllotmentClass;
-use App\Models\Fund;
-use Illuminate\Contracts\View\View;
 use App\Models\Office;
+use Illuminate\Contracts\View\View;
 use Carbon\Carbon;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -18,7 +17,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 
-class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
+class SAAODBGFExport implements FromView, WithStyles, WithEvents
 {
     protected $selectedYear;
     protected $asOfDate;
@@ -382,7 +381,7 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
         $asOfDate = request('as_of_filter', now()->toDateString());
         $allAllotmentClasses = AllotmentClass::all();
 
-        $fundsQuery = Fund::orderBy('id');
+        $officeQuery = Office::where('fund', 'General Fund')->orderBy('id');
 
         $month = Carbon::parse($asOfDate)->month;
             $currentQuarter = match(true) {
@@ -392,7 +391,7 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                 default => 4,
             };
 
-       $funds = $fundsQuery->with([
+       $offices = $officeQuery->with([
             'officeAllotmentClasses' => function ($query) use ($selectedYear) {
                 $query->where('year', $selectedYear)
                     ->with([
@@ -452,9 +451,9 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
         }
 
         // --- Main computation
-        foreach ($funds as $fund) {
-            $officeAllotmentClasses = $fund->officeAllotmentClasses
-                ->filter(fn($oac) => $oac->fund === $fund->fund);
+        foreach ($offices as $office) {
+            $officeAllotmentClasses = $office->officeAllotmentClasses
+                ->filter(fn($oac) => $oac->office === $office->id);
 
             // Group by allotment class
             $groupedByAllotmentClass = $officeAllotmentClasses->groupBy(
@@ -581,24 +580,24 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                 ]);
             }
 
-            // Assign computed results under each fund
-            $fund->allotmentClasses = $allotmentClasses->values();
-            $fund->totals = (object) computeTotals($allotmentClasses);
+            // Assign computed results under each office
+            $office->allotmentClasses = $allotmentClasses->values();
+            $office->totals = (object) computeTotals($allotmentClasses);
 
             // --- Group totals by category ---
             $currentClasses = $allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
             $continuingClasses = $allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
 
-            $fund->total_current = (object) computeTotals($currentClasses);
-            $fund->total_continuing = (object) computeTotals($continuingClasses);
+            $office->total_current = (object) computeTotals($currentClasses);
+            $office->total_continuing = (object) computeTotals($continuingClasses);
 
             // Combine all for grand total
-            $fund->total_overall = (object) computeTotals($allotmentClasses);
+            $office->total_overall = (object) computeTotals($allotmentClasses);
 
             // Ensure default totals always exist even if empty
             foreach (['total_current', 'total_continuing', 'total_overall'] as $key) {
-                if (!isset($fund->$key) || !$fund->$key) {
-                    $fund->$key = (object)[
+                if (!isset($office->$key) || !$office->$key) {
+                    $office->$key = (object)[
                         'approved_appropriation' => 0,
                         'supplemental' => 0,
                         'reversion' => 0,
@@ -635,10 +634,10 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
         ];
 
         // Sum up totals from each fund
-        foreach ($funds as $fund) {
+        foreach ($offices as $office) {
             foreach ($grandTotal as $key => $value) {
-                if (property_exists($fund->total_overall, $key) && !str_starts_with($key, 'percent')) {
-                    $grandTotal->$key += $fund->total_overall->$key ?? 0;
+                if (property_exists($office->total_overall, $key) && !str_starts_with($key, 'percent')) {
+                    $grandTotal->$key += $office->total_overall->$key ?? 0;
                 }
             }
         }
@@ -682,8 +681,8 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                 'percent_disbursement_vs_obligation' => 0,
             ];
 
-            foreach ($funds as $fund) {
-                foreach ($fund->allotmentClasses as $class) {
+            foreach ($offices as $office) {
+                foreach ($office->allotmentClasses as $class) {
                     if (strtoupper(trim($class->class)) === strtoupper(trim($className))) {
                         $totals['total_appropriation'] += $class->authorized_appropriation ?? 0;
                         $totals['total_obligations'] += $class->obligation ?? 0;
@@ -733,8 +732,8 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                 : 0;
 
         // Pass signatory info to the view as well
-        return view('exports.saaodbAllFunds', [
-            'funds' => $funds,
+        return view('exports.saaodbGF', [
+            'offices' => $offices,
             'allAllotmentClasses' => $allAllotmentClasses,
             'selectedYear' => $selectedYear,
             'asOfDate' => $asOfDate,

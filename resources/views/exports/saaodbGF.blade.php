@@ -19,7 +19,7 @@
         </tr>
         <tr>
             <th colspan="17" style="text-align:center; font-size: 11px; font-weight: bold; margin-top:5px;">
-                ALL FUNDS
+                GENERAL FUND
             </th>
         </tr>
         <tr>
@@ -60,15 +60,15 @@
     </thead>
 
     <tbody style="border: 1px solid #d1d5db; font-size: 10px;">
-        @foreach($funds as $fund)
+        @foreach($offices as $office)
         <tr>
-            <td colspan="17" style="padding: 8px 4px; font-weight: bold; border: 1px solid #ccc;">{{ $fund->fund }}</td>
+            <td colspan="17" style="padding: 8px 4px; font-weight: bold; border: 1px solid #ccc;">{{ $office->office_name }}</td>
         </tr>
 
         @php
             // Separate allotment classes into current and continuing (CCO)
-            $currentClasses = $fund->allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
-            $continuingClasses = $fund->allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
+            $currentClasses = $office->allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
+            $continuingClasses = $office->allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
         @endphp
 
 
@@ -236,7 +236,7 @@
     @endforeach
 
         <tr class="grand-total-row" data-rowtype="grand-total">
-            <td style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Grand Total: </td>
+            <td style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Grand Total General Fund Proper: </td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
@@ -292,7 +292,7 @@
 
         {{-- Summary Grand Total Row --}}
         <tr style="background-color: #f3f4f6; font-weight: bold;">
-            <td style="padding: 8px; text-align: right; font-weight: bold; border: 1px solid #999;">Grand Total:</td>
+            <td style="padding: 8px; text-align: right; font-weight: bold; border: 1px solid #999;">Grand Total General Fund Proper:</td>
             <td style="padding: 8px; text-align: right; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 8px; text-align: right; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 8px; text-align: center; font-weight: bold; border: 1px solid #999;"></td>

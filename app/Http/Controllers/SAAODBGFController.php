@@ -10,13 +10,14 @@ use App\Models\Office;
 use App\Models\AllotmentClass;
 use Carbon\Carbon;
 use App\Exports\SAAODBAllFundsExport;
+use App\Exports\SAAODBGFExport;
 use App\Models\Employee;
 use App\Models\ObligationAdjustment;
 use App\Models\Fund;
 use App\Models\Sector;
 use Maatwebsite\Excel\Facades\Excel;
 
-class SAAODBAllFundsController extends Controller
+class SAAODBGFController extends Controller
 {
     public function index(Request $request)
     {
@@ -29,7 +30,7 @@ class SAAODBAllFundsController extends Controller
             ->get(['employee_id', 'name', 'designation']);
 
         $sectors = Sector::all();
-        $fundsQuery = Fund::orderBy('id');
+        $officeQuery = Office::where('fund', 'General Fund')->orderBy('id');
         $allotmentClasses = AllotmentClass::all()->keyBy('class');
         $allAllotmentClasses = AllotmentClass::all();
 
@@ -43,7 +44,7 @@ class SAAODBAllFundsController extends Controller
                 default => 4,
             };
 
-       $funds = $fundsQuery->with([
+       $offices = $officeQuery->with([
             'officeAllotmentClasses' => function ($query) use ($selectedYear) {
                 $query->where('year', $selectedYear)
                     ->with([
@@ -103,9 +104,9 @@ class SAAODBAllFundsController extends Controller
         }
 
         // --- Main computation
-        foreach ($funds as $fund) {
-            $officeAllotmentClasses = $fund->officeAllotmentClasses
-                ->filter(fn($oac) => $oac->fund === $fund->fund);
+        foreach ($offices as $office) {
+            $officeAllotmentClasses = $office->officeAllotmentClasses
+                ->filter(fn($oac) => $oac->office === $office->id);
 
             // Group by allotment class
             $groupedByAllotmentClass = $officeAllotmentClasses->groupBy(
@@ -232,24 +233,24 @@ class SAAODBAllFundsController extends Controller
                 ]);
             }
 
-            // Assign computed results under each fund
-            $fund->allotmentClasses = $allotmentClasses->values();
-            $fund->totals = (object) computeTotals($allotmentClasses);
+            // Assign computed results under each office
+            $office->allotmentClasses = $allotmentClasses->values();
+            $office->totals = (object) computeTotals($allotmentClasses);
 
             // --- Group totals by category ---
             $currentClasses = $allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
             $continuingClasses = $allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
 
-            $fund->total_current = (object) computeTotals($currentClasses);
-            $fund->total_continuing = (object) computeTotals($continuingClasses);
+            $office->total_current = (object) computeTotals($currentClasses);
+            $office->total_continuing = (object) computeTotals($continuingClasses);
 
             // Combine all for grand total
-            $fund->total_overall = (object) computeTotals($allotmentClasses);
+            $office->total_overall = (object) computeTotals($allotmentClasses);
 
             // Ensure default totals always exist even if empty
             foreach (['total_current', 'total_continuing', 'total_overall'] as $key) {
-                if (!isset($fund->$key) || !$fund->$key) {
-                    $fund->$key = (object)[
+                if (!isset($office->$key) || !$office->$key) {
+                    $office->$key = (object)[
                         'approved_appropriation' => 0,
                         'supplemental' => 0,
                         'reversion' => 0,
@@ -285,11 +286,11 @@ class SAAODBAllFundsController extends Controller
             'obligation_balance' => 0,
         ];
 
-        // Sum up totals from each fund
-        foreach ($funds as $fund) {
+        // Sum up totals from each office
+        foreach ($offices as $office) {
             foreach ($grandTotal as $key => $value) {
-                if (property_exists($fund->total_overall, $key) && !str_starts_with($key, 'percent')) {
-                    $grandTotal->$key += $fund->total_overall->$key ?? 0;
+                if (property_exists($office->total_overall, $key) && !str_starts_with($key, 'percent')) {
+                    $grandTotal->$key += $office->total_overall->$key ?? 0;
                 }
             }
         }
@@ -333,8 +334,8 @@ class SAAODBAllFundsController extends Controller
                 'percent_disbursement_vs_obligation' => 0,
             ];
 
-        foreach ($funds as $fund) {
-            foreach ($fund->allotmentClasses as $class) {
+        foreach ($offices as $office) {
+            foreach ($office->allotmentClasses as $class) {
                 if (strtoupper(trim($class->class)) === strtoupper(trim($className))) {
                     $totals['total_appropriation'] += $class->authorized_appropriation ?? 0;
                     $totals['total_obligations'] += $class->obligation ?? 0;
@@ -383,12 +384,12 @@ class SAAODBAllFundsController extends Controller
             ? ($grandSummary['total_disbursements'] / $grandSummary['total_obligations']) * 100
             : 0;
 
-        return view('saaodballfunds.index', compact(
+        return view('saaodbgf.index', compact(
             'availableYears',
             'selectedYear',
             'asOfDate',
             'employees',
-            'funds',
+            'offices',
             'grandTotals',
             'allAllotmentClasses',
             'summaryTotals',
@@ -405,9 +406,9 @@ public function exportExcel(Request $request)
         $certifiedSignatoryName = $request->input('certified_signatory_name');
         $certifiedSignatoryDesignation = $request->input('certified_signatory_designation');
 
-        $fileName = 'SAAODB_' . 'All_Funds_' . $year . '.xlsx';
+        $fileName = 'SAAODB_' . 'GF_' . $year . '.xlsx';
 
-         return Excel::download(new SAAODBAllFundsExport(
+         return Excel::download(new SAAODBGFExport(
             $year,
             $asOf,
             $preparedSignatoryName,

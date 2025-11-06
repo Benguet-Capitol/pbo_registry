@@ -116,6 +116,39 @@ trait LogsActivity
         
     }
 
+    /**
+     * Explicit logger for Obligation cancellation actions initiated by controller logic.
+     */
+    public static function logObligationCancellation($obligation, string $remarks = ''): void
+    {
+        try {
+            // Ensure required relations are available for context
+            $obligation->load([
+                'officeAllotmentClass.offices',
+                'officeAllotmentClass.allotmentClass',
+                'obligationAmounts',
+                'obligationAdjustments'
+            ]);
+
+            $office = optional($obligation->officeAllotmentClass->offices)->office_abbreviation ?? 'Unknown Office';
+            $allotmentClass = optional($obligation->officeAllotmentClass->allotmentClass)->class ?? 'Unknown Class';
+
+            $totalObrAmount = (float)($obligation->obligationAmounts->sum('obr_amount') ?? 0);
+            $totalAdjustments = (float)($obligation->obligationAdjustments->sum('adjustment_amount') ?? 0);
+            $totalAfterAdjustments = $totalObrAmount + $totalAdjustments;
+
+            $baseDetails = "OBR# {$obligation->obr_no} under {$office} - {$allotmentClass}";
+            $amountDetails = "Previous Total: ₱" . number_format($totalObrAmount, 2) . ", Adjustments: ₱" . number_format($totalAdjustments, 2) . ", Net: ₱" . number_format($totalAfterAdjustments, 2);
+            $remarksPart = $remarks !== '' ? " Remarks: {$remarks}" : '';
+
+            $description = "Cancellation of Obligation ({$baseDetails}). {$amountDetails}.{$remarksPart}";
+
+            ActivityLogger::log($description, 'delete', null);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error logging obligation cancellation: ' . $e->getMessage());
+        }
+    }
+
     protected static function formatChanges($model, array $changes): string
 {
     $formattedChanges = [];
@@ -353,12 +386,7 @@ trait LogsActivity
                 'obligation.obligationAmounts'
             ]);
             
-            // Check if this adjustment has already been logged
-            static $loggedAdjustments = [];
-            if (in_array($model->id, $loggedAdjustments) && $action === 'create') {
-                return ''; // Skip duplicate adjustment logs
-            }
-            $loggedAdjustments[] = $model->id;
+            // Ensure we always return a non-empty description for logging
             
             $office = optional($model->obligation->officeAllotmentClass)->offices->office_abbreviation ?? 'Unknown Office';
             $allotmentClass = optional($model->obligation->officeAllotmentClass)->allotmentClass->class ?? 'Unknown Class';

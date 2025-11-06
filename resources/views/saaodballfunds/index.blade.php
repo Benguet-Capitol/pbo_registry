@@ -161,12 +161,12 @@
                             <th class="px-1 py-1 w-[100px] text-center" data-key="authorized_appropriation">Authorized Appropriations</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="allotment">Allotments</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="obligation">Obligations</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">% of Accomplishment (Obligations vs Authorized Appropriation)</th>
+                            <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">Percent of Accomplishment (Obligations vs Authorized Appropriation)</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance"> Unobligated Authorized Appropriation</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="disbursement">Actual Disbursements</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_appropriation">% of Accomplishment (Disbursements vs Authorized Appropriation)</th>
+                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_appropriation">Percent of Accomplishment (Disbursements vs Authorized Appropriation)</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="obligation_balance">Unpaid Obligations</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_obligation">% of Accomplishment (Disbursements vs Obligation)</th>
+                            <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_obligation">Percent of Accomplishment (Disbursements vs Obligation)</th>
                         </tr>
                     </thead>
 
@@ -859,10 +859,10 @@
                             <td class="px-1 py-1 text-center">Summary</td>
                             <td class="px-1 py-1 text-center">Total Appropriation</td>
                             <td class="px-1 py-1 text-center">Total Obligations</td>
-                            <td class="px-1 py-1 text-center">% of Accomplishment (Obligations vs Autho. Approp.)</td>
+                            <td class="px-1 py-1 text-center">Percent of Accomplishment (Obligations vs Authorized Appropriation)</td>
                             <td class="px-1 py-1 text-center">Total Disbursements</td>
-                            <td class="px-1 py-1 text-center">% of Accomplishment (Disbursements vs Autho. Approp.)</td>
-                            <td class="px-1 py-1 text-center">% of Accomplishment (Disbursements vs Obligations)</td>
+                            <td class="px-1 py-1 text-center">Percent of Accomplishment (Disbursements vs Authorized Appropriation)</td>
+                            <td class="px-1 py-1 text-center">Percent of Accomplishment (Disbursements vs Obligations)</td>
                         </tr>
                         @foreach ($allAllotmentClasses as $allotmentClass)
                             @php

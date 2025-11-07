@@ -35,7 +35,7 @@
                 <x-form.select
                     name="year1"
                     id="year1"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     onchange="this.form.submit()">
                     @foreach($availableYears as $year)
                     <option value="{{ $year }}" {{ request('year1', date('Y')) == $year ? 'selected' : '' }}>{{ $year }}</option>
@@ -48,7 +48,7 @@
                 <x-form.select
                     name="office_filter"
                     id="office_filter"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     onchange="this.form.submit()">
                     <option value="">All Office</option>
                     @foreach($allOffices as $office)
@@ -67,7 +67,7 @@
                     autocomplete="off"
                     id="as_of_filter"
                     value="{{ request('as_of_filter', now()->format('Y-m-d')) }}"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     onchange="this.form.submit()">
                 </x-form.input>
             </div>
@@ -83,7 +83,7 @@
                 <x-form.select
                     name="prepared_signatory_name"
                     id="prepared_signatory_name"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     onchange="this.form.submit()">
                     <option value="">Select Signatory</option>
                     @foreach($employees as $employee)
@@ -105,7 +105,7 @@
                 <x-form.select
                     name="certified_signatory_name"
                     id="certified_signatory_name"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     onchange="this.form.submit()">
                     <option value="">Select Signatory</option>
                     @foreach($employees as $employee)
@@ -125,7 +125,7 @@
                 <x-form.select
                     name="certified_signatory_designation"
                     id="certified_signatory_designation"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     onchange="this.form.submit()">
                     <option value="">Select Designation</option>
                     <option value="Provincial Accountant" {{ request('certified_signatory_designation') == 'Provincial Accountant' ? 'selected' : '' }}>Provincial Accountant</option>

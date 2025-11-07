@@ -232,6 +232,16 @@
                                         @endif
                                     </a>
                                 </th>
+                                @hasanyrole('Disbursement|Administrator|Developer')
+                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'payment_remarks', 'sort_order' => $sortBy == 'payment_remarks' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        Remarks
+                                        @if($sortBy == 'payment_remarks')
+                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
+                                </th>
+                                @endhasanyrole
                                 <!-- <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     Actions
                                 </th> -->
@@ -246,6 +256,7 @@
                                 data-obligation='@json($obligation)'
                                 data-obligation-id="{{ $obligation->id }}"
                                 data-obligation-obr="{{ $obligation->obr_no }}"
+                                data-obligation-payment-remarks="{{ $obligation->payment_remarks }}"
                                 data-obligation-office="{{ $obligation->officeAllotmentClass->offices->office_abbreviation }}"
                                 data-obligation-class="{{ $obligation->officeAllotmentClass->allotmentClass->class }}"
                                 data-obligation-amount="{{ $obligation->obr_amount }}"
@@ -254,7 +265,7 @@
                                 <td class="px-1 py-2">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
                                 <td class="px-1 py-2">{{ $obligation->obr_type }}</td>
                                 <td class="px-1 py-2">{{ $obligation->obr_no }}</td>
-                                <td class="px-1 py-2 text-center max-w-sm">{{ $obligation->particulars }}</td>
+                                <td class="px-1 py-2 text-left max-w-sm">{{ $obligation->particulars }}</td>
 
                                 <td class="px-1 py-2 text-right obligation-amount">
                                     <div class="relative inline-block group">
@@ -417,6 +428,13 @@
                                     @endif
                                 </div>
                             </td>
+                            @hasanyrole('Disbursement|Administrator|Developer')
+                            <td class="px-1 py-2 text-center max-w-sm payment-remarks">
+                                <div class="relative inline-block group">
+                                    {{ $obligation->payment_remarks ? Str::limit($obligation->payment_remarks, 50) : '-' }}
+                                </div>
+                            </td>
+                            @endhasanyrole
                                 
 
                                 <!-- <td class="px-1 py-2">
@@ -546,6 +564,12 @@
             <i class="fas fa-window-close mr-2"></i>Cancellation
         </button>
         @endcan
+        @hasanyrole('Disbursement|Administrator|Developer')
+        <button id="contextPaymentRemarks"
+                class="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-comment-dollar mr-2"></i>Payment Remarks
+        </button>
+        @endhasanyrole
         @can('edit obligations')
         <button id="contextEdit"
                 class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
@@ -566,6 +590,7 @@
     @include('obligations.modal.delete')
     @include('obligations.modal.create')
     @include('obligations.modal.edit')
+    @include('obligations.modal.payment_remarks')
     <div id="createPOModalContainer"></div>
     <div id="createObligationAdjustmentModalContainer"></div>.
     <div id="createDisbursementModalContainer"></div>
@@ -663,6 +688,19 @@
                 editBtn.onclick = () => {
                     hideObligationContextMenu();
                     openEditObligationsModal(obligation);
+                };
+            }
+
+            // Payment Remarks button
+            const paymentRemarksBtn = menu.querySelector('#contextPaymentRemarks');
+            if (paymentRemarksBtn && obligation.id) {
+                paymentRemarksBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    openPaymentRemarksModal(
+                        obligation.id,
+                        obligation.obr_no,
+                        obligation.payment_remarks || ''
+                    );
                 };
             }
 

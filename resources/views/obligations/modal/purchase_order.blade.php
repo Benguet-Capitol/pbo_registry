@@ -18,8 +18,8 @@
                             {{ __('Add Purchase Order') }} (
                             <span class="text-blue-800 dark:text-blue-400">
                             {{ $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A' }} - {{ $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A' }} | 
-                            {{ $obligation->obr_no }} )
-                            </span>
+                            {{ $obligation->obr_no }}
+                            </span>)
                         </h3>
                     <button type="button" onclick="closeCreatePOModal()" class="text-black hover:text-gray-600 dark:text-white">
                         <i class="fas fa-times text-xl mr-2"></i>

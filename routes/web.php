@@ -26,6 +26,7 @@ use App\Models\Office;
 use Illuminate\Http\Request;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisbursementController;
+use App\Http\Controllers\RAOController;
 use App\Http\Controllers\SAAOBFundSourceController;
 use App\Http\Controllers\SAAOBCOController;
 use App\Http\Controllers\SAAOBGFCurrentController;
@@ -109,6 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/obligations/{obligation}/store-obligation-adjustment', [ObligationController::class, 'storeObligationAdjustment'])->name('obligations.storeObligationAdjustment');
     Route::get('obligations/{obligation}/disbursement-modal', [ObligationController::class, 'showDisbursementModal'])->name('obligations.disbursement_modal');
     Route::post('/obligations/{obligation}/store-disbursement', [ObligationController::class, 'storeDisbursement'])->name('obligations.storeDisbursement');
+    Route::post('/obligations/{obligation}/payment-remarks', [ObligationController::class, 'updatePaymentRemarks'])->name('obligations.updatePaymentRemarks');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);
@@ -165,6 +167,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/saaodbgf', [SAAODBGFController::class, 'index'])->name('saaodbgf.index');
     // SAAODB GF Excel Export
     Route::get('saaodbGF/export-excel', [SAAODBGFController::class, 'exportExcel'])->name('saaodbGF.exportExcel');
+    // RAO Report Routes
+    Route::get('/rao', [RAOController::class, 'index'])->name('rao.index');
 });
 
 // useless routes

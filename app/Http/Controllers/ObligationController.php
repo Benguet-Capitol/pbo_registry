@@ -1114,4 +1114,26 @@ class ObligationController extends Controller
             ]);
         }
 
+    public function updatePaymentRemarks(Request $request, Obligation $obligation)
+    {
+        $request->validate([
+            'payment_remarks' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $obligation->update([
+                'payment_remarks' => $request->payment_remarks,
+            ]);
+
+            return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_id', 'obr_type_filter', 'per_page', 'search']))
+                ->with('status', [
+                    'type' => 'update',
+                    'message' => '<strong>Payment remarks</strong> for OBR No. <strong>' . $obligation->obr_no . '</strong> has been updated successfully!'
+                ]);
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to update payment remarks: ' . $e->getMessage());
+        }
+    }
+
 }

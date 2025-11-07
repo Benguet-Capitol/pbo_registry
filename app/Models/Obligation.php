@@ -20,6 +20,7 @@ class Obligation extends Model
         'particulars',
         'remarks',
         'processed_by',
+        'payment_remarks'
     ];
 
     // Add custom attributes to be included in activity log
@@ -31,7 +32,8 @@ class Obligation extends Model
         'obr_date',
         'particulars',
         'remarks',
-        'processed_by'
+        'processed_by',
+        'payment_remarks'
     ];
 
     /**

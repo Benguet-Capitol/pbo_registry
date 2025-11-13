@@ -5,14 +5,24 @@
             <div>
                 @php
                 $selectedYear = request('year1', date('Y'));
+                $selectedOfficeAllotmentClassId = request('office_allotment_class_filter');
+                $selectedOfficeAllotmentClass = $officeAllotmentClasses
+                    ->firstWhere('id', $selectedOfficeAllotmentClassId);
                 @endphp
                 <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                    {{ __('Record of Appropriations and Obligations') }}
+                {{ __('Record of Appropriations and Obligations') }}
+                @if($selectedOfficeAllotmentClass)
                     |
                     <span class="text-blue-800 dark:text-blue-400">
-                        (CY {{ $selectedYear }})
+                        {{ $selectedOfficeAllotmentClass->offices->office_name }}
+                        -
+                        {{ $selectedOfficeAllotmentClass->allotmentClass->description }}
                     </span>
-                </h3>
+                @endif
+                <span class="text-blue-800 dark:text-blue-400">
+                    (CY {{ $selectedYear }})
+                </span>
+            </h3>
             </div>
         </div>
     </x-slot>
@@ -238,90 +248,424 @@
                             <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600"></td>
                         </tr>
 
-                        {{-- Quarter 1 Row --}}
-                        <tr class="bg-gray-100 dark:bg-gray-600 font-semibold">
-                            <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600">1st Quarter</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
-                                Released Appropriation
-                            </td>
+                       @php
+                            // Helper function to group adjustments by unique reference
+                            $groupAdjustmentsByReference = function($adjustments) {
+                                return $adjustments->groupBy(function($item) {
+                                    return $item['reference'] . '|' . $item['date'];
+                                });
+                            };
                             
-                            <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                {{ $formatAmount($totalQuarter1, 2) }}
-                            </td>
+                            // Initialize cumulative totals
+                            $cumulativeTotalPerQuarter = 0;
+                            $cumulativeTotalPerAppropriationPerQuarter = [];
+                            foreach($appropriations as $appropriation) {
+                                $cumulativeTotalPerAppropriationPerQuarter[$appropriation->id] = 0;
+                            }
 
-                            @foreach($appropriations as $appropriation)
-                                <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                    {{ isset($appropriationData[$appropriation->id]['quarter1']) && $appropriationData[$appropriation->id]['quarter1'] > 0 ? $formatAmount($appropriationData[$appropriation->id]['quarter1'], 2) : '-' }}
-                                </td>
-                            @endforeach
-                        </tr>
+                            // Initialize grand totals
+                            $grandTotalObligations = 0;
+                            $grandTotalObligationsByAppropriationId = [];
+                            foreach($appropriations as $appropriation) {
+                                $grandTotalObligationsByAppropriationId[$appropriation->id] = 0;
+                            }
+                        @endphp
 
-                        {{-- Quarter 2 Row --}}
-                        <tr class="bg-gray-100 dark:bg-gray-600 font-semibold">
-                            <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600">2nd Quarter</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
-                                Released Appropriation
-                            </td>
+                        @foreach([1, 2, 3, 4] as $quarter)
+                            @php
+                                $quarterLabel = ['1st', '2nd', '3rd', '4th'][$quarter - 1];
+                                $quarterField = 'quarter' . $quarter;
+                                $totalQuarter = ${'totalQuarter' . $quarter};
+                                
+                                // Group adjustments by reference
+                                $supplementalGroups = $groupAdjustmentsByReference($quarterlyAdjustments[$quarter]['supplementals']);
+                                $reversionGroups = $groupAdjustmentsByReference($quarterlyAdjustments[$quarter]['reversions']);
+                                $realignmentGroups = $groupAdjustmentsByReference($quarterlyAdjustments[$quarter]['realignments']);
+                                
+                                $hasAdjustments = $supplementalGroups->count() > 0 || $reversionGroups->count() > 0 || $realignmentGroups->count() > 0;
+                                
+                                // Get obligations for this quarter
+                                $quarterObligations = $quarterlyObligations[$quarter] ?? collect();
+                                $hasObligations = $quarterObligations->count() > 0;
+                            @endphp
                             
-                            <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                {{ $formatAmount($totalQuarter2, 2) }}
-                            </td>
-
-                            @foreach($appropriations as $appropriation)
-                                <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                    {{ isset($appropriationData[$appropriation->id]['quarter2']) && $appropriationData[$appropriation->id]['quarter2'] > 0 ? $formatAmount($appropriationData[$appropriation->id]['quarter2'], 2) : '-' }}
-                                </td>
-                            @endforeach
-                        </tr>
-
-                        {{-- Quarter 3 Row --}}
-                        <tr class="bg-gray-100 dark:bg-gray-600 font-semibold">
-                            <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600">3rd Quarter</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
-                                Released Appropriation
-                            </td>
+                            {{-- Quarter Header --}}
+                            <tr class="bg-gray-100 dark:bg-gray-600 font-semibold">
+                                <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600">{{ $quarterLabel }} Quarter</td>
+                            </tr>
                             
-                            <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                {{ $formatAmount($totalQuarter3, 2) }}
-                            </td>
-
-                            @foreach($appropriations as $appropriation)
-                                <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                    {{ isset($appropriationData[$appropriation->id]['quarter3']) && $appropriationData[$appropriation->id]['quarter3'] > 0 ? $formatAmount($appropriationData[$appropriation->id]['quarter3'], 2) : '-' }}
-                                </td>
-                            @endforeach
-                        </tr>
-
-                        {{-- Quarter 4 Row --}}
-                        <tr class="bg-gray-100 dark:bg-gray-600 font-semibold">
-                            <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600">4th Quarter</td>
-                        </tr>
-                        <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
-                                Released Appropriation
-                            </td>
+                            {{-- Released Appropriation Row (only show if there's a value) --}}
+                            @if($totalQuarter > 0)
+                                <tr class="bg-gray-50 dark:bg-gray-800">
+                                    <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                        Released Appropriation
+                                    </td>
+                                    <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                        {{ $formatAmount($totalQuarter) }}
+                                    </td>
+                                    @foreach($appropriations as $appropriation)
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ isset($appropriationData[$appropriation->id][$quarterField]) && $appropriationData[$appropriation->id][$quarterField] > 0 ? $formatAmount($appropriationData[$appropriation->id][$quarterField]) : '-' }}
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endif
                             
-                            <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                {{ $formatAmount($totalQuarter4, 2) }}
-                            </td>
+                            @if($hasAdjustments)
+                                {{-- Supplementals --}}
+                                @foreach($supplementalGroups as $refKey => $items)
+                                    @php
+                                        [$reference, $date] = explode('|', $refKey);
+                                        $totalAmount = 0;
+                                        $amountsByAppropriationId = [];
+                                        foreach($items as $item) {
+                                            $totalAmount += $item['amount'];
+                                            $amountsByAppropriationId[$item['appropriation_id']] = ($amountsByAppropriationId[$item['appropriation_id']] ?? 0) + $item['amount'];
+                                        }
+                                    @endphp
+                                    <tr class="bg-gray-50 dark:bg-gray-800">
+                                        <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                            Supplemental {{ $reference }} dated {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}
+                                        </td>
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ $formatAmount($totalAmount) }}
+                                        </td>
+                                        @foreach($appropriations as $appropriation)
+                                            <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                                {{ isset($amountsByAppropriationId[$appropriation->id]) && $amountsByAppropriationId[$appropriation->id] != 0 ? $formatAmount($amountsByAppropriationId[$appropriation->id]) : '-' }}
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                                
+                                {{-- Reversions --}}
+                                @foreach($reversionGroups as $refKey => $items)
+                                    @php
+                                        [$reference, $date] = explode('|', $refKey);
+                                        $totalAmount = 0;
+                                        $amountsByAppropriationId = [];
+                                        foreach($items as $item) {
+                                            $totalAmount += $item['amount'];
+                                            $amountsByAppropriationId[$item['appropriation_id']] = ($amountsByAppropriationId[$item['appropriation_id']] ?? 0) + $item['amount'];
+                                        }
+                                    @endphp
+                                    <tr class="bg-gray-50 dark:bg-gray-800">
+                                        <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                            Reversion {{ $reference }} dated {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}
+                                        </td>
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ $formatAmount($totalAmount) }}
+                                        </td>
+                                        @foreach($appropriations as $appropriation)
+                                            <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                                {{ isset($amountsByAppropriationId[$appropriation->id]) && $amountsByAppropriationId[$appropriation->id] != 0 ? $formatAmount($amountsByAppropriationId[$appropriation->id]) : '-' }}
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                                
+                                {{-- Realignments --}}
+                                @foreach($realignmentGroups as $refKey => $items)
+                                    @php
+                                        [$reference, $date] = explode('|', $refKey);
+                                        $totalAmount = 0;
+                                        $amountsByAppropriationId = [];
+                                        foreach($items as $item) {
+                                            $totalAmount += $item['amount'];
+                                            $amountsByAppropriationId[$item['appropriation_id']] = ($amountsByAppropriationId[$item['appropriation_id']] ?? 0) + $item['amount'];
+                                        }
+                                    @endphp
+                                    <tr class="bg-gray-50 dark:bg-gray-800">
+                                        <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                            Realignment {{ $reference }} dated {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}
+                                        </td>
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ $formatAmount($totalAmount) }}
+                                        </td>
+                                        @foreach($appropriations as $appropriation)
+                                            <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                                {{ isset($amountsByAppropriationId[$appropriation->id]) && $amountsByAppropriationId[$appropriation->id] != 0 ? $formatAmount($amountsByAppropriationId[$appropriation->id]) : '-' }}
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                                
+                                {{-- Total Row for Quarter (Released + Adjustments + Previous Quarter Total) --}}
+                                <tr class="bg-gray-200 dark:bg-gray-600 font-bold">
+                                    <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                        Total Released Appropriations
+                                    </td>
+                                    @php
+                                        // Calculate current quarter released and adjustments
+                                        $currentQuarterTotal = $totalQuarter;
+                                        foreach($supplementalGroups as $items) {
+                                            foreach($items as $item) {
+                                                $currentQuarterTotal += $item['amount'];
+                                            }
+                                        }
+                                        foreach($reversionGroups as $items) {
+                                            foreach($items as $item) {
+                                                $currentQuarterTotal += $item['amount'];
+                                            }
+                                        }
+                                        foreach($realignmentGroups as $items) {
+                                            foreach($items as $item) {
+                                                $currentQuarterTotal += $item['amount'];
+                                            }
+                                        }
+                                        
+                                        // Add previous quarter's cumulative total
+                                        $grandTotalForQuarter = $cumulativeTotalPerQuarter + $currentQuarterTotal;
+                                        
+                                        // Update cumulative total for next quarter
+                                        $cumulativeTotalPerQuarter = $grandTotalForQuarter;
+                                    @endphp
+                                    <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                        {{ $formatAmount($grandTotalForQuarter) }}
+                                    </td>
+                                    @foreach($appropriations as $appropriation)
+                                        @php
+                                            // Calculate current quarter for this appropriation
+                                            $appCurrentQuarter = $appropriationData[$appropriation->id][$quarterField] ?? 0;
+                                            
+                                            // Add supplementals for this appropriation
+                                            foreach($quarterlyAdjustments[$quarter]['supplementals'] as $item) {
+                                                if($item['appropriation_id'] == $appropriation->id) {
+                                                    $appCurrentQuarter += $item['amount'];
+                                                }
+                                            }
+                                            
+                                            // Add reversions for this appropriation
+                                            foreach($quarterlyAdjustments[$quarter]['reversions'] as $item) {
+                                                if($item['appropriation_id'] == $appropriation->id) {
+                                                    $appCurrentQuarter += $item['amount'];
+                                                }
+                                            }
+                                            
+                                            // Add realignments for this appropriation
+                                            foreach($quarterlyAdjustments[$quarter]['realignments'] as $item) {
+                                                if($item['appropriation_id'] == $appropriation->id) {
+                                                    $appCurrentQuarter += $item['amount'];
+                                                }
+                                            }
+                                            
+                                            // Add previous quarter's cumulative total for this appropriation
+                                            $appTotal = $cumulativeTotalPerAppropriationPerQuarter[$appropriation->id] + $appCurrentQuarter;
+                                            
+                                            // Update cumulative total for this appropriation for next quarter
+                                            $cumulativeTotalPerAppropriationPerQuarter[$appropriation->id] = $appTotal;
+                                        @endphp
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ $formatAmount($appTotal) }}
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            
+                            @else
+                                {{-- If no adjustments, still calculate and display Total Released Appropriations --}}
+                                @php
+                                    // Calculate current quarter released (no adjustments)
+                                    $currentQuarterTotal = $totalQuarter;
+                                    
+                                    // Add previous quarter's cumulative total
+                                    $grandTotalForQuarter = $cumulativeTotalPerQuarter + $currentQuarterTotal;
+                                    
+                                    // Update cumulative total for next quarter
+                                    $cumulativeTotalPerQuarter = $grandTotalForQuarter;
+                                @endphp
+                                
+                                <tr class="bg-gray-200 dark:bg-gray-600 font-bold">
+                                    <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                        Total Released Appropriations
+                                    </td>
+                                    <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                        {{ $formatAmount($grandTotalForQuarter) }}
+                                    </td>
+                                    @foreach($appropriations as $appropriation)
+                                        @php
+                                            // Calculate current quarter for this appropriation (no adjustments)
+                                            $appCurrentQuarter = $appropriationData[$appropriation->id][$quarterField] ?? 0;
+                                            
+                                            // Add previous quarter's cumulative total for this appropriation
+                                            $appTotal = $cumulativeTotalPerAppropriationPerQuarter[$appropriation->id] + $appCurrentQuarter;
+                                            
+                                            // Update cumulative total for this appropriation for next quarter
+                                            $cumulativeTotalPerAppropriationPerQuarter[$appropriation->id] = $appTotal;
+                                        @endphp
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ $formatAmount($appTotal) }}
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endif
+                            
+                            {{-- Obligations Section --}}
+                            @if($hasObligations)
+                                {{-- Empty Row Before Obligations --}}
+                                <tr>
+                                    <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600"></td>
+                                </tr>
+                                
+                                {{-- Obligations Header --}}
+                                <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
+                                    <td colspan="{{ 4 + $appropriations->count() }}" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                        Obligations & Adjustments
+                                    </td>
+                                </tr>
+                                
+                                {{-- Individual Obligations and Adjustments --}}
+                                @php
+                                    $quarterObligationTotal = 0;
+                                    $quarterObligationsByAppropriationId = [];
+                                    foreach($appropriations as $appropriation) {
+                                        $quarterObligationsByAppropriationId[$appropriation->id] = 0;
+                                    }
+                                @endphp
+                                
+                                @foreach($quarterObligations as $item)
+                                    @php
+                                        $quarterObligationTotal += $item['total_amount'];
+                                        foreach($item['amounts_by_appropriation'] as $appId => $amount) {
+                                            if(isset($quarterObligationsByAppropriationId[$appId])) {
+                                                $quarterObligationsByAppropriationId[$appId] += $amount;
+                                            }
+                                        }
 
-                            @foreach($appropriations as $appropriation)
-                                <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
-                                    {{ isset($appropriationData[$appropriation->id]['quarter4']) && $appropriationData[$appropriation->id]['quarter4'] > 0 ? $formatAmount($appropriationData[$appropriation->id]['quarter4'], 2) : '-' }}
-                                </td>
-                            @endforeach
-                        </tr>
-
-
-                        {{-- Empty Row Before Obligations --}}
+                                        // Add to grand totals
+                                        $grandTotalObligations += $item['total_amount'];
+                                        foreach($item['amounts_by_appropriation'] as $appId => $amount) {
+                                            if(isset($grandTotalObligationsByAppropriationId[$appId])) {
+                                                $grandTotalObligationsByAppropriationId[$appId] += $amount;
+                                            }
+                                        }
+                                    @endphp
+                                    
+                                    @if($item['type'] == 'obligation')
+                                        {{-- Regular Obligation Row --}}
+                                        <tr class="bg-white dark:bg-gray-800">
+                                            <td class="px-2 py-1 text-center border border-gray-300 dark:border-gray-600">
+                                                {{ \Carbon\Carbon::parse($item['date'])->format('m/d/Y') }}
+                                            </td>
+                                            <td class="px-2 py-1 text-center border border-gray-300 dark:border-gray-600">
+                                                {{ $item['obr_no'] }}
+                                            </td>
+                                            <td class="px-2 py-1 text-left border border-gray-300 dark:border-gray-600">
+                                                {{ $item['particulars'] }}
+                                            </td>
+                                            <td class="px-2 py-1 text-right border border-gray-300 dark:border-gray-600">
+                                                {{ $formatAmount($item['total_amount']) }}
+                                            </td>
+                                            @foreach($appropriations as $appropriation)
+                                                <td class="px-2 py-1 text-right border border-gray-300 dark:border-gray-600">
+                                                    {{ isset($item['amounts_by_appropriation'][$appropriation->id]) && $item['amounts_by_appropriation'][$appropriation->id] > 0 ? $formatAmount($item['amounts_by_appropriation'][$appropriation->id]) : '-' }}
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @else
+                                        {{-- Obligation Adjustment Row --}}
+                                        <tr class="bg-yellow-50 dark:bg-yellow-900">
+                                            <td class="px-2 py-1 text-center border border-gray-300 dark:border-gray-600">
+                                                {{ \Carbon\Carbon::parse($item['date'])->format('m/d/Y') }}
+                                            </td>
+                                            <td class="px-2 py-1 text-center border border-gray-300 dark:border-gray-600">
+                                                {{ $item['obr_no'] }}
+                                            </td>
+                                            <td class="px-2 py-1 text-left border border-gray-300 dark:border-gray-600">
+                                                {{ $item['particulars'] }}
+                                            </td>
+                                            <td class="px-2 py-1 text-right border border-gray-300 dark:border-gray-600">
+                                                {{ $formatAmount($item['total_amount']) }}
+                                            </td>
+                                            @foreach($appropriations as $appropriation)
+                                                <td class="px-2 py-1 text-right border border-gray-300 dark:border-gray-600">
+                                                    {{ isset($item['amounts_by_appropriation'][$appropriation->id]) && $item['amounts_by_appropriation'][$appropriation->id] != 0 ? $formatAmount($item['amounts_by_appropriation'][$appropriation->id]) : '-' }}
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endif
+                                @endforeach
+                                
+                                {{-- Total Obligations Row --}}
+                                <tr class="bg-gray-200 dark:bg-gray-800 font-bold">
+                                    <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                        Total Expenses ({{ $quarterLabel }} Quarter)
+                                    </td>
+                                    <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                        {{ $formatAmount($quarterObligationTotal) }}
+                                    </td>
+                                    @foreach($appropriations as $appropriation)
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ $formatAmount($quarterObligationsByAppropriationId[$appropriation->id]) }}
+                                        </td>
+                                    @endforeach
+                                </tr>
+                                
+                                {{-- Unobligated Balance Row --}}
+                                <tr class="bg-gray-100 dark:bg-gray-900 font-bold">
+                                    <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                                        Balance from Released Appropriations ({{ $quarterLabel }} Quarter)
+                                    </td>
+                                    @php
+                                        // Use the cumulative total (grandTotalForQuarter already includes previous quarters)
+                                        $unobligatedBalance = $grandTotalForQuarter - $quarterObligationTotal;
+                                    @endphp
+                                    <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                        {{ $formatAmount($unobligatedBalance) }}
+                                    </td>
+                                    @foreach($appropriations as $appropriation)
+                                        @php
+                                            // Use the cumulative total for this appropriation (already stored in $cumulativeTotalPerAppropriationPerQuarter)
+                                            $appCumulativeTotal = $cumulativeTotalPerAppropriationPerQuarter[$appropriation->id];
+                                            $appUnobligated = $appCumulativeTotal - ($quarterObligationsByAppropriationId[$appropriation->id] ?? 0);
+                                        @endphp
+                                        <td class="px-2 py-2 text-right border border-gray-300 dark:border-gray-600">
+                                            {{ $formatAmount($appUnobligated) }}
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endif
+                        {{-- Empty Row Before Next Section --}}
                         <tr>
                             <td colspan="{{ 4 + $appropriations->count() }}" class="px-1 py-1 border border-gray-300 dark:border-gray-600"></td>
+                        </tr>
+                        @endforeach
+
+                        {{-- Grand Total Obligations Section --}}
+
+                        <tr class="bg-gray-300 dark:bg-gray-700 font-bold">
+                            <td colspan="3" class="px-2 py-2 text-left border border-gray-400 dark:border-gray-600">
+                                Grand Total Expenses
+                            </td>
+                            <td class="px-2 py-2 text-right border border-gray-400 dark:border-gray-600">
+                                {{ $formatAmount($grandTotalObligations) }}
+                            </td>
+                            @foreach($appropriations as $appropriation)
+                                <td class="px-2 py-2 text-right border border-gray-400 dark:border-gray-600">
+                                    {{ $formatAmount($grandTotalObligationsByAppropriationId[$appropriation->id]) }}
+                                </td>
+                            @endforeach
+                        </tr>
+
+                        {{-- Grand Total Unobligated Balance Section --}}
+                        <tr class="bg-gray-300 dark:bg-gray-700 font-bold">
+                            <td colspan="3" class="px-2 py-2 text-left border border-gray-400 dark:border-gray-600">
+                                Balance from Released Appropriations
+                            </td>
+                            @php
+                                // Use the final cumulative total (from Q4) minus grand total obligations
+                                $grandUnobligatedBalance = $cumulativeTotalPerQuarter - $grandTotalObligations;
+                            @endphp
+                            <td class="px-2 py-2 text-right border border-gray-400 dark:border-gray-600">
+                                {{ $formatAmount($grandUnobligatedBalance) }}
+                            </td>
+                            @foreach($appropriations as $appropriation)
+                                @php
+                                    $appGrandUnobligated = $cumulativeTotalPerAppropriationPerQuarter[$appropriation->id] - $grandTotalObligationsByAppropriationId[$appropriation->id];
+                                @endphp
+                                <td class="px-2 py-2 text-right border border-gray-400 dark:border-gray-600">
+                                    {{ $formatAmount($appGrandUnobligated) }}
+                                </td>
+                            @endforeach
                         </tr>
 
                     @else

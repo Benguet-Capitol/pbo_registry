@@ -392,6 +392,15 @@
         </x-sidebar.sublink>
     </x-sidebar.dropdown>
 
+    <x-sidebar.link
+        title="RAO"
+        href="{{ route('rao.index') }}"
+        :isActive="request()->routeIs('rao.index')">
+        <x-slot name="icon">
+            <i class="fas fa-file-archive text-base flex-shrink-0 dark:text-gray-100"></i>
+        </x-slot>
+    </x-sidebar.link>
+
     <!-- Disbursement Role -->
     @elserole('Disbursement')
         <x-sidebar.link

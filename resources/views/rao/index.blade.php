@@ -10,7 +10,7 @@
                     ->firstWhere('id', $selectedOfficeAllotmentClassId);
                 @endphp
                 <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                {{ __('Record of Appropriations and Obligations') }}
+                {{ __('Registry of Appropriations and Obligations') }}
                 @if($selectedOfficeAllotmentClass)
                     |
                     <span class="text-blue-800 dark:text-blue-400">
@@ -52,7 +52,7 @@
                     id="officeAllotmentClass" 
                     class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
                     onchange="this.form.submit()">
-                    <option value="">All Allotment Classes per Office</option>
+                    <option value="">Office Allotment Classes</option>
                     @foreach($officeAllotmentClasses as $officeAllotmentClass)
                     <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_filter') == $officeAllotmentClass->id ? 'selected' : '' }}>
                         {{ $officeAllotmentClass->offices->office_abbreviation }} - {{ $officeAllotmentClass->allotmentClass->class }}
@@ -102,9 +102,9 @@
             </div>
             
     </form>
-    <form method="GET" action="{{ route('saaob.exportExcel') }}" style="display:inline;">
+    <form method="GET" action="{{ route('rao.exportExcel') }}" style="display:inline;">
         <input type="hidden" name="year1" value="{{ request('year1') }}">
-        <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
+        <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
         <input type="hidden" name="as_of_filter" value="{{ request('as_of_filter') }}">
         <input type="hidden" name="signatory_name" value="{{ request('signatory_name') }}">
         <input type="hidden" name="signatory_designation" value="{{ request('signatory_designation') }}">
@@ -118,13 +118,13 @@
 
     <div class="bg-white overflow-hidden shadow-md sm:rounded-lg mt-6 mb-6 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto max-h-[700px]">
                 <table id="dashboardTable" class="min-w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900 border border-gray-300 dark:border-gray-600">
                         <tr>
                             <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">Date</th>
                             <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">OBR No.</th>
-                            <th class="px-1 py-1 min-w-[250px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">Particulars</th>
+                            <th class="px-1 py-1 min-w-[300px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">Particulars</th>
                             <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">Total</th>
                             @if(request('office_allotment_class_filter') && isset($appropriations) && $appropriations->count() > 0)
                                 @foreach($appropriations as $appropriation)
@@ -160,7 +160,7 @@
 
                         {{-- Second Row: Appropriations --}}
                         <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600 font-semibold">
                                 Appropriations
                             </td>
                             
@@ -177,7 +177,7 @@
 
                         {{-- Third Row: Supplemental Appropriations --}}
                         <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600 font-semibold">
                                 Supplemental Appropriations
                             </td>
                             
@@ -194,7 +194,7 @@
 
                         {{-- Fourth Row: Reversions --}}
                         <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600 font-semibold">
                                 Reversions
                             </td>
                             
@@ -211,7 +211,7 @@
 
                         {{-- Fifth Row: Realignments --}}
                         <tr class="bg-gray-50 dark:bg-gray-800">
-                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600">
+                            <td colspan="3" class="px-2 py-2 text-left border border-gray-300 dark:border-gray-600 font-semibold">
                                 Realignments
                             </td>
                             
@@ -630,7 +630,7 @@
                         </tr>
                         @endforeach
 
-                        {{-- Grand Total Obligations Section --}}
+                        {{-- Grand Total Expenses Section --}}
 
                         <tr class="bg-gray-300 dark:bg-gray-700 font-bold">
                             <td colspan="3" class="px-2 py-2 text-left border border-gray-400 dark:border-gray-600">
@@ -646,7 +646,7 @@
                             @endforeach
                         </tr>
 
-                        {{-- Grand Total Unobligated Balance Section --}}
+                        {{-- Balance from Released Appropriation Section --}}
                         <tr class="bg-gray-300 dark:bg-gray-700 font-bold">
                             <td colspan="3" class="px-2 py-2 text-left border border-gray-400 dark:border-gray-600">
                                 Balance from Released Appropriations
@@ -668,6 +668,30 @@
                             @endforeach
                         </tr>
 
+                        {{-- Balance from Authorized Appropriation Section --}}
+                        <tr class="bg-gray-300 dark:bg-gray-700 font-bold">
+                            <td colspan="3" class="px-2 py-2 text-left border border-gray-400 dark:border-gray-600">
+                                Balance from Authorized Appropriations
+                            </td>
+                            @php
+                                // Use the final cumulative total (from Q4) minus grand total obligations
+                                $grandTotalBalance = $grandTotal - $grandTotalObligations;
+                            @endphp
+                            <td class="px-2 py-2 text-right border border-gray-400 dark:border-gray-600">
+                                {{ $formatAmount($grandTotalBalance) }}
+                            </td>
+                            @foreach($appropriations as $appropriation)
+                                @php
+                                    // Use Total Appropriations per appropriation minus expenses per appropriation
+                                    $appTotalAppropriation = $appropriationData[$appropriation->id]['total'] ?? 0;
+                                    $appGrandBalance = $appTotalAppropriation - $grandTotalObligationsByAppropriationId[$appropriation->id];
+                                @endphp
+                                <td class="px-2 py-2 text-right border border-gray-400 dark:border-gray-600">
+                                    {{ $formatAmount($appGrandBalance) }}
+                                </td>
+                            @endforeach
+                        </tr>
+
                     @else
                         {{-- No office allotment class selected --}}
                         <tr>
@@ -685,33 +709,40 @@
     </div>
 
     <script>
-        // Validation for the signatory fields
-        function validateSignatories() {
-            const name = document.getElementById('signatory_name').value.trim();
-            const designation = document.getElementById('signatory_designation').value.trim();
-            const errorSpan = document.getElementById('signatory_error');
+        // Validation for the signatory fields and office allotment class
+    function validateSignatories() {
+        const name = document.getElementById('signatory_name').value.trim();
+        const designation = document.getElementById('signatory_designation').value.trim();
+        const officeAllotmentClass = document.getElementById('officeAllotmentClass').value.trim();
+        const errorSpan = document.getElementById('signatory_error');
 
-            let errorMessage = '';
-            if (!name && !designation) {
-                errorMessage = 'Please select both Signatory Name and Designation.';
-            } else if (!name) {
-                errorMessage = 'Please select a Signatory Name.';
-            } else if (!designation) {
-                errorMessage = 'Please select a Designation.';
-            }
-
-            if (errorMessage) {
-                errorSpan.textContent = errorMessage;
-                errorSpan.classList.remove('hidden');
-                return false;
-            } else {
-                errorSpan.classList.add('hidden');
-                return true;
-            }
+        let errorMessage = '';
+        
+        // Check if office allotment class is selected
+        if (!officeAllotmentClass) {
+            errorMessage = 'Please select an Office Allotment Class.';
+        }
+        // Check signatory fields
+        else if (!name && !designation) {
+            errorMessage = 'Please select both Signatory Name and Designation.';
+        } else if (!name) {
+            errorMessage = 'Please select a Signatory Name.';
+        } else if (!designation) {
+            errorMessage = 'Please select a Designation.';
         }
 
+        if (errorMessage) {
+            errorSpan.textContent = errorMessage;
+            errorSpan.classList.remove('hidden');
+            return false;
+        } else {
+            errorSpan.classList.add('hidden');
+            return true;
+        }
+    }
+
         // Intercept Excel Export Submit
-        document.querySelector(`form[action="{{ route('saaob.exportExcel') }}"]`)
+        document.querySelector(`form[action="{{ route('rao.exportExcel') }}"]`)
             .addEventListener('submit', function(e) {
                 if (!validateSignatories()) {
                     e.preventDefault();

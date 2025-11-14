@@ -169,6 +169,8 @@ Route::middleware('auth')->group(function () {
     Route::get('saaodbGF/export-excel', [SAAODBGFController::class, 'exportExcel'])->name('saaodbGF.exportExcel');
     // RAO Report Routes
     Route::get('/rao', [RAOController::class, 'index'])->name('rao.index');
+    // RAO Excel Export
+    Route::get('rao/export-excel', [RAOController::class, 'exportExcel'])->name('rao.exportExcel');
 });
 
 // useless routes

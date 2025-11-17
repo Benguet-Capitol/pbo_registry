@@ -165,109 +165,123 @@
 
                         {{-- Appropriations WITHOUT a Program --}}
                         @if (isset($oac->groupedAppropriations['']) && count($oac->groupedAppropriations['']) > 0)
-                        @foreach ($oac->groupedAppropriations[''] as $appropriation)
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <td class="px-1 py-2 text-left">{{ $appropriation->description }}</td>
-                            <td class="px-1 py-2 text-center">{{ $appropriation->account_code }}</td>
-                            <td class="px-1 py-2 text-center">{{ $appropriation->fpp_code }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">
-                                @php $val = $appropriation->appropriation ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                            @php
+                                // Check if there are any appropriations WITH programs
+                                $hasProgramGroups = false;
+                                foreach ($oac->groupedAppropriations as $program => $appropriations) {
+                                    if ($program !== '') {
+                                        $hasProgramGroups = true;
+                                        break;
+                                    }
+                                }
+                            @endphp
 
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
-                                @php $val = $appropriation->sb_appropriation ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                            @foreach ($oac->groupedAppropriations[''] as $appropriation)
+                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <td class="px-1 py-2 text-left">{{ $appropriation->description }}</td>
+                                <td class="px-1 py-2 text-center">{{ $appropriation->account_code }}</td>
+                                <td class="px-1 py-2 text-center">{{ $appropriation->fpp_code }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation">
+                                    @php $val = $appropriation->appropriation ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right" data-key="reversion">
-                                @php $val = $appropriation->reversion ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                    @php $val = $appropriation->sb_appropriation ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right" data-key="realignment">
-                                @php $val = $appropriation->realignment ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-right" data-key="reversion">
+                                    @php $val = $appropriation->reversion ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right">
-                                @php $val = $appropriation->authorized_appropriation ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-right" data-key="realignment">
+                                    @php $val = $appropriation->realignment ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right">
-                                @php $val = $appropriation->allotment ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-right">
+                                    @php $val = $appropriation->authorized_appropriation ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right">
-                                @php $val = $appropriation->for_later_release ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-right">
+                                    @php $val = $appropriation->allotment ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right">
-                                @php $val = $appropriation->obligation ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-right">
+                                    @php $val = $appropriation->for_later_release ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
-                                @php $val = $appropriation->appropriation_balance ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-right">
+                                    @php $val = $appropriation->obligation ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
-                                {{ number_format($appropriation->appropriation_accomplishment ?? 0, 2) }}%
-                            </td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                    @php $val = $appropriation->appropriation_balance ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                            <td class="px-1 py-2 text-right">
-                                @php $val = $appropriation->allotment_balance ?? null; @endphp
-                                {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
-                            </td>
+                                <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                    {{ number_format($appropriation->appropriation_accomplishment ?? 0, 2) }}%
+                                </td>
 
-                            <td class="px-1 py-2 text-center">
-                                {{ number_format($appropriation->allotment_accomplishment ?? 0, 2) }}%
-                            </td>
-                        </tr>
+                                <td class="px-1 py-2 text-right">
+                                    @php $val = $appropriation->allotment_balance ?? null; @endphp
+                                    {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
+                                </td>
 
-                        @php
-                        foreach ($noProgramTotals as $key => $val) {
-                        $noProgramTotals[$key] += $appropriation->$key;
-                        $classTotals[$key] += $appropriation->$key;
-                        $officeTotals[$key] += $appropriation->$key;
-                        }
+                                <td class="px-1 py-2 text-center">
+                                    {{ number_format($appropriation->allotment_accomplishment ?? 0, 2) }}%
+                                </td>
+                            </tr>
 
-                        $classAccomplishmentCounts['appropriation_accomplishment']++;
-                        $classAccomplishmentCounts['allotment_accomplishment']++;
-                        @endphp
-                        @endforeach
+                            @php
+                            foreach ($noProgramTotals as $key => $val) {
+                                $noProgramTotals[$key] += $appropriation->$key;
+                                $classTotals[$key] += $appropriation->$key;
+                                $officeTotals[$key] += $appropriation->$key;
+                            }
 
-                        <tr class="bg-gray-500 text-gray-100 dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                            <td colspan="3" class="px-2 py-2 text-right">Subtotal:</td>
-                            @foreach ($noProgramTotals as $key => $val)
-                            <td class="px-2 py-2 
-                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
-                                    text-center 
-                                @else 
-                                    text-right 
-                                @endif" 
-                                data-key="{{ $key }}">
-                                
-                                @if ($key === 'appropriation_accomplishment')
-                                    {{ $noProgramTotals['authorized_appropriation'] > 0 ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
-                                @elseif ($key === 'allotment_accomplishment')
-                                    {{ $noProgramTotals['allotment'] > 0 ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['allotment']) * 100, 2) : '0.00' }}%
-                                @else
-                                    @if ($val == 0 || $val === null)
-                                        -
-                                    @elseif ($val < 0)
-                                        ({{ number_format(abs($val), 2) }})
-                                    @else
-                                        {{ number_format($val, 2) }}
-                                    @endif
-                                @endif
-                            </td>
+                            $classAccomplishmentCounts['appropriation_accomplishment']++;
+                            $classAccomplishmentCounts['allotment_accomplishment']++;
+                            @endphp
                             @endforeach
-                        </tr>
+
+                            {{-- Only show subtotal if there are program groups --}}
+                            @if($hasProgramGroups)
+                            <tr class="bg-gray-500 text-gray-100 dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
+                                <td colspan="3" class="px-2 py-2 text-right">Subtotal:</td>
+                                @foreach ($noProgramTotals as $key => $val)
+                                <td class="px-2 py-2 
+                                    @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
+                                        text-center 
+                                    @else 
+                                        text-right 
+                                    @endif" 
+                                    data-key="{{ $key }}">
+                                    
+                                    @if ($key === 'appropriation_accomplishment')
+                                        {{ $noProgramTotals['authorized_appropriation'] > 0 ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    @elseif ($key === 'allotment_accomplishment')
+                                        {{ $noProgramTotals['allotment'] > 0 ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['allotment']) * 100, 2) : '0.00' }}%
+                                    @else
+                                        @if ($val == 0 || $val === null)
+                                            -
+                                        @elseif ($val < 0)
+                                            ({{ number_format(abs($val), 2) }})
+                                        @else
+                                            {{ number_format($val, 2) }}
+                                        @endif
+                                    @endif
+                                </td>
+                                @endforeach
+                            </tr>
+                            @endif
                         @endif
 
                         {{-- Appropriations GROUPED BY Program --}}

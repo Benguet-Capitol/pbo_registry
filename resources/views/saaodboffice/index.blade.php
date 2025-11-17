@@ -209,356 +209,364 @@
                         @endphp
 
                         {{-- Appropriations WITHOUT a Program --}}
-                        @if (isset($oac->groupedAppropriations['']) && count($oac->groupedAppropriations['']) > 0)
-                        @foreach ($oac->groupedAppropriations[''] as $appropriation)
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <td class="px-1 py-2 text-left">{{ $appropriation->description }}
-                                @if(!empty($appropriation->cco_year))
-                                - {{ $appropriation->cco_year }}
-                                @endif</td>
-                            <td class="px-1 py-2 text-center" data-key="account_code">{{ $appropriation->account_code }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">
-                                @if (is_null($appropriation->appropriation) || $appropriation->appropriation == 0)
-                                    -
-                                @elseif ($appropriation->appropriation < 0)
-                                    ({{ number_format(abs($appropriation->appropriation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->appropriation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
-                                @if (is_null($appropriation->sb_appropriation) || $appropriation->sb_appropriation == 0)
-                                    -
-                                @elseif ($appropriation->sb_appropriation < 0)
-                                    ({{ number_format(abs($appropriation->sb_appropriation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->sb_appropriation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="reversion">
-                                @if (is_null($appropriation->reversion) || $appropriation->reversion == 0)
-                                    -
-                                @elseif ($appropriation->reversion < 0)
-                                    ({{ number_format(abs($appropriation->reversion), 2) }})
-                                @else
-                                    {{ number_format($appropriation->reversion, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="realignment">
-                                @if (is_null($appropriation->realignment) || $appropriation->realignment == 0)
-                                    -
-                                @elseif ($appropriation->realignment < 0)
-                                    ({{ number_format(abs($appropriation->realignment), 2) }})
-                                @else
-                                    {{ number_format($appropriation->realignment, 2) }}
-                                @endif
-                            </td>
-                            <td class="px-1 py-2 text-right" data-key="authorized_appropriation">
-                                @if (is_null($appropriation->authorized_appropriation) || $appropriation->authorized_appropriation == 0)
-                                    -
-                                @elseif ($appropriation->authorized_appropriation < 0)
-                                    ({{ number_format(abs($appropriation->authorized_appropriation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->authorized_appropriation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="allotment">
-                                @if (is_null($appropriation->allotment) || $appropriation->allotment == 0)
-                                    -
-                                @elseif ($appropriation->allotment < 0)
-                                    ({{ number_format(abs($appropriation->allotment), 2) }})
-                                @else
-                                    {{ number_format($appropriation->allotment, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="obligation">
-                                @if (is_null($appropriation->obligation) || $appropriation->obligation == 0)
-                                    -
-                                @elseif ($appropriation->obligation < 0)
-                                    ({{ number_format(abs($appropriation->obligation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->obligation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
-                                @if (is_null($appropriation->appropriation_balance) || $appropriation->appropriation_balance == 0)
-                                    -
-                                @elseif ($appropriation->appropriation_balance < 0)
-                                    ({{ number_format(abs($appropriation->appropriation_balance), 2) }})
-                                @else
-                                    {{ number_format($appropriation->appropriation_balance, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
-                                {{ number_format($appropriation->appropriation_accomplishment, 2) }}%
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="disbursement">
-                                @if (is_null($appropriation->disbursement) || $appropriation->disbursement == 0)
-                                    -
-                                @elseif ($appropriation->disbursement < 0)
-                                    ({{ number_format(abs($appropriation->disbursement), 2) }})
-                                @else
-                                    {{ number_format($appropriation->disbursement, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-center" data-key="disbursement_to_obligation">
-                                {{ number_format($appropriation->disbursement_to_obligation, 2) }}%
-                            </td>
-
-                            <td class="px-1 py-2 text-center" data-key="disbursement_to_appropriation">
-                                {{ number_format($appropriation->disbursement_to_appropriation, 2) }}%
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="obligation_balance">
-                                @if (is_null($appropriation->disbursement_balance) || $appropriation->disbursement_balance == 0)
-                                    -
-                                @elseif ($appropriation->disbursement_balance < 0)
-                                    ({{ number_format(abs($appropriation->disbursement_balance), 2) }})
-                                @else
-                                    {{ number_format($appropriation->disbursement_balance, 2) }}
-                                @endif
-                            </td>
-                        </tr>
-
                         @php
-                        foreach ($noProgramTotals as $key => $val) {
-                        $noProgramTotals[$key] += $appropriation->$key;
-                        $classTotals[$key] += $appropriation->$key;
-                        $officeTotals[$key] += $appropriation->$key;
-                        }
-
-                        $classAccomplishmentCounts['appropriation_accomplishment']++;
-                        $classAccomplishmentCounts['disbursement_to_obligation']++;
-                        $classAccomplishmentCounts['disbursement_to_appropriation']++;
+                            // Check if there are any programs (non-empty keys)
+                            $hasPrograms = collect($oac->groupedAppropriations)->keys()->filter(fn($key) => $key !== '')->isNotEmpty();
                         @endphp
-                        @endforeach
 
-                        <tr class="bg-gray-500 text-gray-100 dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                            <td colspan="2" class="px-2 py-2 text-right">Subtotal:</td>
-                            @foreach ($noProgramTotals as $key => $val)
-                            <td class="px-2 py-2 
-                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
-                                    text-center 
-                                @else 
-                                    text-right 
-                                @endif" 
-                                data-key="{{ $key }}">
-                                
-                                @if ($key === 'appropriation_accomplishment')
-                                    {{ $noProgramTotals['authorized_appropriation'] > 0 
-                                        ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100, 2) 
-                                        : '0.00' }}%
-                                @elseif ($key === 'disbursement_to_obligation')
-                                    {{ $noProgramTotals['obligation'] > 0 
-                                        ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['obligation']) * 100, 2) 
-                                        : '0.00' }}%
-                                @elseif ($key === 'disbursement_to_appropriation')
-                                    {{ $noProgramTotals['authorized_appropriation'] > 0 
-                                        ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['authorized_appropriation']) * 100, 2) 
-                                        : '0.00' }}%
-                                @else
-                                    @if ($val == 0 || $val === null)
+                        @if (!empty($oac->groupedAppropriations['']))
+                            @foreach ($oac->groupedAppropriations[''] as $appropriation)
+                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <td class="px-1 py-2 text-left">{{ $appropriation->description }}
+                                    @if(!empty($appropriation->cco_year))
+                                    - {{ $appropriation->cco_year }}
+                                    @endif</td>
+                                <td class="px-1 py-2 text-center" data-key="account_code">{{ $appropriation->account_code }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation">
+                                    @if (is_null($appropriation->appropriation) || $appropriation->appropriation == 0)
                                         -
-                                    @elseif ($val < 0)
-                                        ({{ number_format(abs($val), 2) }})
+                                    @elseif ($appropriation->appropriation < 0)
+                                        ({{ number_format(abs($appropriation->appropriation), 2) }})
                                     @else
-                                        {{ number_format($val, 2) }}
+                                        {{ number_format($appropriation->appropriation, 2) }}
                                     @endif
-                                @endif
-                            </td>
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                    @if (is_null($appropriation->sb_appropriation) || $appropriation->sb_appropriation == 0)
+                                        -
+                                    @elseif ($appropriation->sb_appropriation < 0)
+                                        ({{ number_format(abs($appropriation->sb_appropriation), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->sb_appropriation, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="reversion">
+                                    @if (is_null($appropriation->reversion) || $appropriation->reversion == 0)
+                                        -
+                                    @elseif ($appropriation->reversion < 0)
+                                        ({{ number_format(abs($appropriation->reversion), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->reversion, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="realignment">
+                                    @if (is_null($appropriation->realignment) || $appropriation->realignment == 0)
+                                        -
+                                    @elseif ($appropriation->realignment < 0)
+                                        ({{ number_format(abs($appropriation->realignment), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->realignment, 2) }}
+                                    @endif
+                                </td>
+                                <td class="px-1 py-2 text-right" data-key="authorized_appropriation">
+                                    @if (is_null($appropriation->authorized_appropriation) || $appropriation->authorized_appropriation == 0)
+                                        -
+                                    @elseif ($appropriation->authorized_appropriation < 0)
+                                        ({{ number_format(abs($appropriation->authorized_appropriation), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->authorized_appropriation, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="allotment">
+                                    @if (is_null($appropriation->allotment) || $appropriation->allotment == 0)
+                                        -
+                                    @elseif ($appropriation->allotment < 0)
+                                        ({{ number_format(abs($appropriation->allotment), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->allotment, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="obligation">
+                                    @if (is_null($appropriation->obligation) || $appropriation->obligation == 0)
+                                        -
+                                    @elseif ($appropriation->obligation < 0)
+                                        ({{ number_format(abs($appropriation->obligation), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->obligation, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                    @if (is_null($appropriation->appropriation_balance) || $appropriation->appropriation_balance == 0)
+                                        -
+                                    @elseif ($appropriation->appropriation_balance < 0)
+                                        ({{ number_format(abs($appropriation->appropriation_balance), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->appropriation_balance, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                    {{ number_format($appropriation->appropriation_accomplishment, 2) }}%
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="disbursement">
+                                    @if (is_null($appropriation->disbursement) || $appropriation->disbursement == 0)
+                                        -
+                                    @elseif ($appropriation->disbursement < 0)
+                                        ({{ number_format(abs($appropriation->disbursement), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->disbursement, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-center" data-key="disbursement_to_obligation">
+                                    {{ number_format($appropriation->disbursement_to_obligation, 2) }}%
+                                </td>
+
+                                <td class="px-1 py-2 text-center" data-key="disbursement_to_appropriation">
+                                    {{ number_format($appropriation->disbursement_to_appropriation, 2) }}%
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="obligation_balance">
+                                    @if (is_null($appropriation->disbursement_balance) || $appropriation->disbursement_balance == 0)
+                                        -
+                                    @elseif ($appropriation->disbursement_balance < 0)
+                                        ({{ number_format(abs($appropriation->disbursement_balance), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->disbursement_balance, 2) }}
+                                    @endif
+                                </td>
+                            </tr>
+
+                            @php
+                            foreach ($noProgramTotals as $key => $val) {
+                                $noProgramTotals[$key] += $appropriation->$key;
+                                $classTotals[$key] += $appropriation->$key;
+                                $officeTotals[$key] += $appropriation->$key;
+                            }
+
+                            $classAccomplishmentCounts['appropriation_accomplishment']++;
+                            $classAccomplishmentCounts['disbursement_to_obligation']++;
+                            $classAccomplishmentCounts['disbursement_to_appropriation']++;
+                            @endphp
                             @endforeach
-                        </tr>
+
+                            {{-- Subtotal row - only shows if there are also programmed appropriations --}}
+                            @if ($hasPrograms)
+                            <tr class="bg-gray-500 text-gray-100 dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
+                                <td colspan="2" class="px-2 py-2 text-right">Subtotal:</td>
+                                @foreach ($noProgramTotals as $key => $val)
+                                <td class="px-2 py-2 
+                                    @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                        text-center 
+                                    @else 
+                                        text-right 
+                                    @endif" 
+                                    data-key="{{ $key }}">
+                                    
+                                    @if ($key === 'appropriation_accomplishment')
+                                        {{ $noProgramTotals['authorized_appropriation'] > 0 
+                                            ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100, 2) 
+                                            : '0.00' }}%
+                                    @elseif ($key === 'disbursement_to_obligation')
+                                        {{ $noProgramTotals['obligation'] > 0 
+                                            ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['obligation']) * 100, 2) 
+                                            : '0.00' }}%
+                                    @elseif ($key === 'disbursement_to_appropriation')
+                                        {{ $noProgramTotals['authorized_appropriation'] > 0 
+                                            ? number_format(($noProgramTotals['disbursement'] / $noProgramTotals['authorized_appropriation']) * 100, 2) 
+                                            : '0.00' }}%
+                                    @else
+                                        @if ($val == 0 || $val === null)
+                                            -
+                                        @elseif ($val < 0)
+                                            ({{ number_format(abs($val), 2) }})
+                                        @else
+                                            {{ number_format($val, 2) }}
+                                        @endif
+                                    @endif
+                                </td>
+                                @endforeach
+                            </tr>
+                            @endif
                         @endif
 
                         {{-- Appropriations GROUPED BY Program --}}
                         @foreach ($oac->groupedAppropriations as $program => $appropriations)
-                        @if ($program !== '')
-                        @php
-                        $programTotals = array_fill_keys(array_keys($officeTotals), 0);
-                        $programAccomplishmentCounts = ['appropriation_accomplishment' => 0, 'disbursement_to_obligation' => 0, 'disbursement_to_appropriation' => 0];
-                        @endphp
+                            @if ($program !== '')
+                            @php
+                            $programTotals = array_fill_keys(array_keys($officeTotals), 0);
+                            $programAccomplishmentCounts = ['appropriation_accomplishment' => 0, 'disbursement_to_obligation' => 0, 'disbursement_to_appropriation' => 0];
+                            @endphp
 
-                        <tr id="programRow-{{ $loop->index }}-{{ $oac->id }}" class="bg-gray-200 text-gray-700 dark:bg-gray-300 dark:text-gray-700 font-semibold border-t border-b border-gray-400 dark:border-gray-100 italic">
-                            <td colspan="16" class="px-6 py-2 text-xs">{{ $program }}</td>
-                        </tr>
+                            <tr id="programRow-{{ $loop->index }}-{{ $oac->id }}" class="bg-gray-200 text-gray-700 dark:bg-gray-300 dark:text-gray-700 font-semibold border-t border-b border-gray-400 dark:border-gray-100 italic">
+                                <td colspan="16" class="px-6 py-2 text-xs">{{ $program }}</td>
+                            </tr>
 
-                        @foreach ($appropriations as $appropriation)
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <td class="px-1 py-2 text-left">{{ $appropriation->description }}
-                                @if(!empty($appropriation->cco_year))
-                                - {{ $appropriation->cco_year }}
-                                @endif</td>
-                            <td class="px-1 py-2 text-center" data-key="account_code">{{ $appropriation->account_code }}</td>
-                            <td class="px-1 py-2 text-right" data-key="appropriation">
-                                @if (is_null($appropriation->appropriation) || $appropriation->appropriation == 0)
-                                    -
-                                @elseif ($appropriation->appropriation < 0)
-                                    ({{ number_format(abs($appropriation->appropriation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->appropriation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="sb_appropriation">
-                                @if (is_null($appropriation->sb_appropriation) || $appropriation->sb_appropriation == 0)
-                                    -
-                                @elseif ($appropriation->sb_appropriation < 0)
-                                    ({{ number_format(abs($appropriation->sb_appropriation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->sb_appropriation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="reversion">
-                                @if (is_null($appropriation->reversion) || $appropriation->reversion == 0)
-                                    -
-                                @elseif ($appropriation->reversion < 0)
-                                    ({{ number_format(abs($appropriation->reversion), 2) }})
-                                @else
-                                    {{ number_format($appropriation->reversion, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="realignment">
-                                @if (is_null($appropriation->realignment) || $appropriation->realignment == 0)
-                                    -
-                                @elseif ($appropriation->realignment < 0)
-                                    ({{ number_format(abs($appropriation->realignment), 2) }})
-                                @else
-                                    {{ number_format($appropriation->realignment, 2) }}
-                                @endif
-                            </td>
-                            <td class="px-1 py-2 text-right" data-key="authorized_appropriation">
-                                @if (is_null($appropriation->authorized_appropriation) || $appropriation->authorized_appropriation == 0)
-                                    -
-                                @elseif ($appropriation->authorized_appropriation < 0)
-                                    ({{ number_format(abs($appropriation->authorized_appropriation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->authorized_appropriation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="allotment">
-                                @if (is_null($appropriation->allotment) || $appropriation->allotment == 0)
-                                    -
-                                @elseif ($appropriation->allotment < 0)
-                                    ({{ number_format(abs($appropriation->allotment), 2) }})
-                                @else
-                                    {{ number_format($appropriation->allotment, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="obligation">
-                                @if (is_null($appropriation->obligation) || $appropriation->obligation == 0)
-                                    -
-                                @elseif ($appropriation->obligation < 0)
-                                    ({{ number_format(abs($appropriation->obligation), 2) }})
-                                @else
-                                    {{ number_format($appropriation->obligation, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="appropriation_balance">
-                                @if (is_null($appropriation->appropriation_balance) || $appropriation->appropriation_balance == 0)
-                                    -
-                                @elseif ($appropriation->appropriation_balance < 0)
-                                    ({{ number_format(abs($appropriation->appropriation_balance), 2) }})
-                                @else
-                                    {{ number_format($appropriation->appropriation_balance, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
-                                {{ number_format($appropriation->appropriation_accomplishment, 2) }}%
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="disbursement">
-                                @if (is_null($appropriation->disbursement) || $appropriation->disbursement == 0)
-                                    -
-                                @elseif ($appropriation->disbursement < 0)
-                                    ({{ number_format(abs($appropriation->disbursement), 2) }})
-                                @else
-                                    {{ number_format($appropriation->disbursement, 2) }}
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-center" data-key="disbursement_to_obligation">
-                                {{ number_format($appropriation->disbursement_to_obligation, 2) }}%
-                            </td>
-
-                            <td class="px-1 py-2 text-center" data-key="disbursement_to_appropriation">
-                                {{ number_format($appropriation->disbursement_to_appropriation, 2) }}%
-                            </td>
-
-                            <td class="px-1 py-2 text-right" data-key="obligation_balance">
-                                @if (is_null($appropriation->disbursement_balance) || $appropriation->disbursement_balance == 0)
-                                    -
-                                @elseif ($appropriation->disbursement_balance < 0)
-                                    ({{ number_format(abs($appropriation->disbursement_balance), 2) }})
-                                @else
-                                    {{ number_format($appropriation->disbursement_balance, 2) }}
-                                @endif
-                            </td>
-                        </tr>
-
-                        @php
-                        foreach ($programTotals as $key => $val) {
-                        $programTotals[$key] += $appropriation->$key;
-                        $classTotals[$key] += $appropriation->$key;
-                        $officeTotals[$key] += $appropriation->$key;
-                        }
-
-                        $programAccomplishmentCounts['appropriation_accomplishment']++;
-                        $programAccomplishmentCounts['disbursement_to_obligation']++;
-                        $programAccomplishmentCounts['disbursement_to_appropriation']++;
-                        @endphp
-                        @endforeach
-
-                        <tr class="bg-gray-500 text-white dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                            <td colspan="2" class="px-2 py-2 text-right italic">Subtotal ({{ $program }}): </td>
-                            @foreach ($programTotals as $key => $val)
-                            <td class="px-2 py-2 
-                                @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
-                                    text-center 
-                                @else 
-                                    text-right 
-                                @endif" 
-                                data-key="{{ $key }}">
-                                
-                                @if ($key === 'appropriation_accomplishment')
-                                    {{ $programTotals['authorized_appropriation'] > 0 
-                                        ? number_format(($programTotals['obligation'] / $programTotals['authorized_appropriation']) * 100, 2) 
-                                        : '0.00' }}%
-                                @elseif ($key === 'disbursement_to_obligation')
-                                    {{ $programTotals['obligation'] > 0 
-                                        ? number_format(($programTotals['disbursement'] / $programTotals['obligation']) * 100, 2) 
-                                        : '0.00' }}%
-                                @elseif ($key === 'disbursement_to_appropriation')
-                                    {{ $programTotals['authorized_appropriation'] > 0 
-                                        ? number_format(($programTotals['disbursement'] / $programTotals['authorized_appropriation']) * 100, 2) 
-                                        : '0.00' }}%
-                                @else
-                                    @if ($val == 0 || $val === null)
+                            @foreach ($appropriations as $appropriation)
+                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <td class="px-1 py-2 text-left">{{ $appropriation->description }}
+                                    @if(!empty($appropriation->cco_year))
+                                    - {{ $appropriation->cco_year }}
+                                    @endif</td>
+                                <td class="px-1 py-2 text-center" data-key="account_code">{{ $appropriation->account_code }}</td>
+                                <td class="px-1 py-2 text-right" data-key="appropriation">
+                                    @if (is_null($appropriation->appropriation) || $appropriation->appropriation == 0)
                                         -
-                                    @elseif ($val < 0)
-                                        ({{ number_format(abs($val), 2) }})
+                                    @elseif ($appropriation->appropriation < 0)
+                                        ({{ number_format(abs($appropriation->appropriation), 2) }})
                                     @else
-                                        {{ number_format($val, 2) }}
+                                        {{ number_format($appropriation->appropriation, 2) }}
                                     @endif
-                                @endif
-                            </td>
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="sb_appropriation">
+                                    @if (is_null($appropriation->sb_appropriation) || $appropriation->sb_appropriation == 0)
+                                        -
+                                    @elseif ($appropriation->sb_appropriation < 0)
+                                        ({{ number_format(abs($appropriation->sb_appropriation), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->sb_appropriation, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="reversion">
+                                    @if (is_null($appropriation->reversion) || $appropriation->reversion == 0)
+                                        -
+                                    @elseif ($appropriation->reversion < 0)
+                                        ({{ number_format(abs($appropriation->reversion), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->reversion, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="realignment">
+                                    @if (is_null($appropriation->realignment) || $appropriation->realignment == 0)
+                                        -
+                                    @elseif ($appropriation->realignment < 0)
+                                        ({{ number_format(abs($appropriation->realignment), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->realignment, 2) }}
+                                    @endif
+                                </td>
+                                <td class="px-1 py-2 text-right" data-key="authorized_appropriation">
+                                    @if (is_null($appropriation->authorized_appropriation) || $appropriation->authorized_appropriation == 0)
+                                        -
+                                    @elseif ($appropriation->authorized_appropriation < 0)
+                                        ({{ number_format(abs($appropriation->authorized_appropriation), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->authorized_appropriation, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="allotment">
+                                    @if (is_null($appropriation->allotment) || $appropriation->allotment == 0)
+                                        -
+                                    @elseif ($appropriation->allotment < 0)
+                                        ({{ number_format(abs($appropriation->allotment), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->allotment, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="obligation">
+                                    @if (is_null($appropriation->obligation) || $appropriation->obligation == 0)
+                                        -
+                                    @elseif ($appropriation->obligation < 0)
+                                        ({{ number_format(abs($appropriation->obligation), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->obligation, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="appropriation_balance">
+                                    @if (is_null($appropriation->appropriation_balance) || $appropriation->appropriation_balance == 0)
+                                        -
+                                    @elseif ($appropriation->appropriation_balance < 0)
+                                        ({{ number_format(abs($appropriation->appropriation_balance), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->appropriation_balance, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-center" data-key="appropriation_accomplishment">
+                                    {{ number_format($appropriation->appropriation_accomplishment, 2) }}%
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="disbursement">
+                                    @if (is_null($appropriation->disbursement) || $appropriation->disbursement == 0)
+                                        -
+                                    @elseif ($appropriation->disbursement < 0)
+                                        ({{ number_format(abs($appropriation->disbursement), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->disbursement, 2) }}
+                                    @endif
+                                </td>
+
+                                <td class="px-1 py-2 text-center" data-key="disbursement_to_obligation">
+                                    {{ number_format($appropriation->disbursement_to_obligation, 2) }}%
+                                </td>
+
+                                <td class="px-1 py-2 text-center" data-key="disbursement_to_appropriation">
+                                    {{ number_format($appropriation->disbursement_to_appropriation, 2) }}%
+                                </td>
+
+                                <td class="px-1 py-2 text-right" data-key="obligation_balance">
+                                    @if (is_null($appropriation->disbursement_balance) || $appropriation->disbursement_balance == 0)
+                                        -
+                                    @elseif ($appropriation->disbursement_balance < 0)
+                                        ({{ number_format(abs($appropriation->disbursement_balance), 2) }})
+                                    @else
+                                        {{ number_format($appropriation->disbursement_balance, 2) }}
+                                    @endif
+                                </td>
+                            </tr>
+
+                            @php
+                            foreach ($programTotals as $key => $val) {
+                                $programTotals[$key] += $appropriation->$key;
+                                $classTotals[$key] += $appropriation->$key;
+                                $officeTotals[$key] += $appropriation->$key;
+                            }
+
+                            $programAccomplishmentCounts['appropriation_accomplishment']++;
+                            $programAccomplishmentCounts['disbursement_to_obligation']++;
+                            $programAccomplishmentCounts['disbursement_to_appropriation']++;
+                            @endphp
                             @endforeach
-                        </tr>
-                        @endif
+
+                            <tr class="bg-gray-500 text-white dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
+                                <td colspan="2" class="px-2 py-2 text-right italic">Subtotal ({{ $program }}): </td>
+                                @foreach ($programTotals as $key => $val)
+                                <td class="px-2 py-2 
+                                    @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 
+                                        text-center 
+                                    @else 
+                                        text-right 
+                                    @endif" 
+                                    data-key="{{ $key }}">
+                                    
+                                    @if ($key === 'appropriation_accomplishment')
+                                        {{ $programTotals['authorized_appropriation'] > 0 
+                                            ? number_format(($programTotals['obligation'] / $programTotals['authorized_appropriation']) * 100, 2) 
+                                            : '0.00' }}%
+                                    @elseif ($key === 'disbursement_to_obligation')
+                                        {{ $programTotals['obligation'] > 0 
+                                            ? number_format(($programTotals['disbursement'] / $programTotals['obligation']) * 100, 2) 
+                                            : '0.00' }}%
+                                    @elseif ($key === 'disbursement_to_appropriation')
+                                        {{ $programTotals['authorized_appropriation'] > 0 
+                                            ? number_format(($programTotals['disbursement'] / $programTotals['authorized_appropriation']) * 100, 2) 
+                                            : '0.00' }}%
+                                    @else
+                                        @if ($val == 0 || $val === null)
+                                            -
+                                        @elseif ($val < 0)
+                                            ({{ number_format(abs($val), 2) }})
+                                        @else
+                                            {{ number_format($val, 2) }}
+                                        @endif
+                                    @endif
+                                </td>
+                                @endforeach
+                            </tr>
+                            @endif
                         @endforeach
 
                         <tr class="bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-white font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">

@@ -68,6 +68,11 @@
         </tr>
 
         {{-- Appropriations WITHOUT a Program --}}
+        @php
+            // Check if there are any programs (non-empty keys)
+            $hasPrograms = collect($oac->groupedAppropriations)->keys()->filter(fn($key) => $key !== '')->isNotEmpty();
+        @endphp
+        
         @if (isset($oac->groupedAppropriations['']) && count($oac->groupedAppropriations['']) > 0)
         @foreach ($oac->groupedAppropriations[''] as $appropriation)
         <tr class="content-row-without-program" data-rowtype="content">
@@ -116,6 +121,8 @@
         </tr>
         @endforeach
 
+        {{-- Subtotal row - only shows if there are also programmed appropriations --}}
+        @if ($hasPrograms)
         <tr class="subtotal-row-without-program" data-rowtype="subtotal">
             <td colspan="3" style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">Subtotal:</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
@@ -135,6 +142,7 @@
             <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
         </tr>
+        @endif
         @endif
 
         {{-- Appropriations GROUPED BY Program --}}

@@ -234,7 +234,7 @@
         href="{{ route('rao.index') }}"
         :isActive="request()->routeIs('rao.index')">
         <x-slot name="icon">
-            <i class="fas fa-file-archive text-base flex-shrink-0 dark:text-gray-100"></i>
+            <i class="fas fa-sticky-note text-base flex-shrink-0 dark:text-gray-100"></i>
         </x-slot>
     </x-sidebar.link>
 
@@ -397,7 +397,7 @@
         href="{{ route('rao.index') }}"
         :isActive="request()->routeIs('rao.index')">
         <x-slot name="icon">
-            <i class="fas fa-file-archive text-base flex-shrink-0 dark:text-gray-100"></i>
+            <i class="fas fa-sticky-note text-base flex-shrink-0 dark:text-gray-100"></i>
         </x-slot>
     </x-sidebar.link>
 

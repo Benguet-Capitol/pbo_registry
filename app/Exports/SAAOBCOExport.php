@@ -43,10 +43,10 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                 $highestRow = $sheet->getHighestRow();
 
                 // Freeze rows above row 11
-                $sheet->freezePane('A11');
+                $sheet->freezePane('A12');
 
                 // Set rows 6 to 10 to repeat on printed pages
-                $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 11);
+                $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 12);
 
                 // Hide specific columns
                 foreach (['E', 'F', 'G', 'H', 'K', 'M', 'N'] as $col) {
@@ -178,7 +178,7 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                     'size' => 10,
                 ],
             ],
-            'A10:P10' => [
+            'A11:P11' => [
                 'font' => [
                     'bold' => true,
                 ],

@@ -213,6 +213,7 @@ class DashboardController extends Controller
             Appropriation::whereIn('id', $appropriationIds)->sum('quarter3') +
             Appropriation::whereIn('id', $appropriationIds)->sum('quarter4');
         $totalAllotments += $totalSupplementals;
+        $totalAllotments += $totalRealignments;
         $totalAllotments -= $totalReversions;
 
         // Get all obligation amounts for appropriations in the filtered set, including adjustments
@@ -242,7 +243,7 @@ class DashboardController extends Controller
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
 
         // Calculate Authorized Appropriations
-        $totalAuthorizedAppropriations = ($totalAppropriations + $totalSupplementals) - $totalReversions;
+        $totalAuthorizedAppropriations = ($totalAppropriations + $totalSupplementals + $totalRealignments) - $totalReversions;
 
         // Calculate Authorized Appropriations Balance
         $totalAuthorizedAppropriationsBalance = $totalAuthorizedAppropriations - $totalObligations;

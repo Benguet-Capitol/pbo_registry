@@ -34,160 +34,181 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
     }
 
     public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function (AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-                $highestRow = $sheet->getHighestRow();
+{
+    return [
+        AfterSheet::class => function (AfterSheet $event) {
+            $sheet = $event->sheet->getDelegate();
+            $highestRow = $sheet->getHighestRow();
 
-                // Freeze rows above row 11
-                $sheet->freezePane('A11');
+            // Freeze rows above row 11
+            $sheet->freezePane('A12');
 
-                // Set rows 5 to 11 to repeat on printed pages
-                $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 11);
+            // Set rows 5 to 11 to repeat on printed pages
+            $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 12);
 
-                // Hide specific columns
-                foreach (['D', 'E', 'F', 'G', 'L', 'M'] as $col) {
-                    $sheet->getColumnDimension($col)->setVisible(false);
+            // Hide specific columns
+            foreach (['D', 'E', 'F', 'G', 'L', 'M'] as $col) {
+                $sheet->getColumnDimension($col)->setVisible(false);
+            }
+
+            // Identify the certified correct row
+            $certifiedRow = null;
+            for ($row = 13; $row <= $highestRow; $row++) {
+                $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                if (str_contains($cellValue, 'CERTIFIED CORRECT')) {
+                    $certifiedRow = $row;
+                    break;
                 }
+            }
 
-                // Identify the certified correct row
-                $certifiedRow = null;
-                for ($row = 13; $row <= $highestRow; $row++) {
-                    $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
-                    if (str_contains($cellValue, 'CERTIFIED CORRECT')) {
-                        $certifiedRow = $row;
-                        break;
-                    }
-                }
+            // Default to 2 rows above certified correct row, or fallback to highestRow
+            $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
 
-                // Default to 2 rows above certified correct row, or fallback to highestRow
-                $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
-
-                // Format number columns
-                foreach (range('D', 'O') as $column) {
-                    if (!in_array($column, ['M', 'O'])) {
-                        $sheet->getStyle("{$column}13:{$column}{$highestRow}")
-                            ->getNumberFormat()
-                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
-                    }
-                }
-
-                // Format percentage columns
-                foreach (['M', 'O'] as $column) {
+            // Format number columns
+            foreach (range('D', 'O') as $column) {
+                if (!in_array($column, ['M', 'O'])) {
                     $sheet->getStyle("{$column}13:{$column}{$highestRow}")
-                        ->getNumberFormat()->setFormatCode('0.00%');
+                        ->getNumberFormat()
+                        ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
+                }
+            }
+
+            // Format percentage columns
+            foreach (['M', 'O'] as $column) {
+                $sheet->getStyle("{$column}13:{$column}{$highestRow}")
+                    ->getNumberFormat()->setFormatCode('0.00%');
+            }
+
+            // Classify rows based on Z column
+            $contentRows = [];
+            $subtotalRows = [];
+            $totalRows = [];
+            $grandTotalRow = null;
+
+            for ($row = 13; $row <= $lastDataRow; $row++) {
+                $firstCellValue = trim((string) $sheet->getCell("A{$row}")->getValue());
+
+                if (
+                    str_starts_with(strtolower($firstCellValue), 'subtotal') ||
+                    str_starts_with(strtolower($firstCellValue), 'total') ||
+                    str_contains(strtolower($firstCellValue), 'grand total') ||
+                    str_contains(strtolower($firstCellValue), 'certified correct')
+                ) {
+                    continue; // Skip subtotal/total/certified rows
                 }
 
-                // Classify rows based on Z column
-                $contentRows = [];
-                $subtotalRows = [];
-                $totalRows = [];
-                $grandTotalRow = null;
+                // Apply formulas to content rows
+                $sheet->setCellValue("H{$row}", "=D{$row}+E{$row}+F{$row}+G{$row}");
+                $sheet->setCellValue("I{$row}", "=H{$row}-J{$row}");
+                $sheet->setCellValue("L{$row}", "=H{$row}-K{$row}");
+                $sheet->setCellValue("M{$row}", "=IF(H{$row}>0,K{$row}/H{$row},0.00)");
+                $sheet->setCellValue("N{$row}", "=I{$row}-K{$row}");
+                $sheet->setCellValue("O{$row}", "=IF(I{$row}>0,K{$row}/I{$row},0.00)");
+            }
 
-                for ($row = 13; $row <= $lastDataRow; $row++) {
-                    $firstCellValue = trim((string) $sheet->getCell("A{$row}")->getValue());
+            // Utility: Apply percentage formulas for columns M and O
+            function applyPercentageFormulas($sheet, $row)
+            {
+                $h = "H{$row}";
+                $i = "I{$row}";
+                $k = "K{$row}";
+                $sheet->setCellValue("M{$row}", "=IF($h>0,$k/$h,0)");
+                $sheet->setCellValue("O{$row}", "=IF($i>0,$k/$i,0)");
+            }
 
-                    if (
-                        str_starts_with(strtolower($firstCellValue), 'subtotal') ||
-                        str_starts_with(strtolower($firstCellValue), 'total') ||
-                        str_contains(strtolower($firstCellValue), 'grand total') ||
-                        str_contains(strtolower($firstCellValue), 'certified correct')
-                    ) {
-                        continue; // Skip subtotal/total/certified rows
-                    }
+            // Loop through all rows to apply formulas
+            for ($row = 13; $row <= $lastDataRow; $row++) {
+                $label = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
 
-                    // Apply formulas to content rows
-                    $sheet->setCellValue("H{$row}", "=D{$row}+E{$row}+F{$row}+G{$row}");
-                    $sheet->setCellValue("I{$row}", "=H{$row}-J{$row}");
-                    $sheet->setCellValue("L{$row}", "=H{$row}-K{$row}");
-                    $sheet->setCellValue("M{$row}", "=IF(H{$row}>0,K{$row}/H{$row},0.00)");
-                    $sheet->setCellValue("N{$row}", "=I{$row}-K{$row}");
-                    $sheet->setCellValue("O{$row}", "=IF(I{$row}>0,K{$row}/I{$row},0.00)");
-                }
-
-                // Utility: Apply percentage formulas for columns M and O
-                function applyPercentageFormulas($sheet, $row)
-                {
-                    $h = "H{$row}";
-                    $i = "I{$row}";
-                    $k = "K{$row}";
-                    $sheet->setCellValue("M{$row}", "=IF($h>0,$k/$h,0)");
-                    $sheet->setCellValue("O{$row}", "=IF($i>0,$k/$i,0)");
-                }
-
-                // Loop through all rows to apply formulas
-                for ($row = 13; $row <= $lastDataRow; $row++) {
-                    $label = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
-
-                    // === SUBTOTAL ROW ===
-                    if (str_starts_with($label, 'SUBTOTAL')) {
-                        $startRow = $row - 1;
-                        while ($startRow > 13) {
-                            $prevLabel = strtoupper(trim((string) $sheet->getCell("A{$startRow}")->getValue()));
-                            if (
-                                str_starts_with($prevLabel, 'SUBTOTAL') ||
-                                str_starts_with($prevLabel, 'TOTAL') ||
-                                str_contains($prevLabel, 'GRAND TOTAL') ||
-                                str_contains($prevLabel, 'CERTIFIED CORRECT')
-                            ) {
-                                $startRow++;
-                                break;
-                            }
-                            $startRow--;
+                // === SUBTOTAL ROW ===
+                if (str_starts_with($label, 'SUBTOTAL')) {
+                    $startRow = $row - 1;
+                    while ($startRow > 13) {
+                        $prevLabel = strtoupper(trim((string) $sheet->getCell("A{$startRow}")->getValue()));
+                        if (
+                            str_starts_with($prevLabel, 'SUBTOTAL') ||
+                            str_starts_with($prevLabel, 'TOTAL') ||
+                            str_contains($prevLabel, 'GRAND TOTAL') ||
+                            str_contains($prevLabel, 'CERTIFIED CORRECT')
+                        ) {
+                            $startRow++;
+                            break;
                         }
-                        if ($startRow < 13) $startRow = 13;
+                        $startRow--;
+                    }
+                    if ($startRow < 13) $startRow = 13;
 
+                    foreach (range('D', 'O') as $col) {
+                        $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
+                    }
+                    applyPercentageFormulas($sheet, $row);
+                }
+
+                // === TOTAL ROW ===
+                elseif (str_starts_with($label, 'TOTAL')) {
+                    $subtotalRows = [];
+                    $contentRows = [];
+                    
+                    // Look backwards to find subtotals or content rows
+                    for ($i = $row - 1; $i >= 13; $i--) {
+                        $check = strtoupper(trim((string) $sheet->getCell("A{$i}")->getValue()));
+                        if (
+                            str_starts_with($check, 'TOTAL') ||
+                            str_contains($check, 'GRAND TOTAL') ||
+                            str_contains($check, 'CERTIFIED CORRECT')
+                        ) break;
+                        
+                        if (str_starts_with($check, 'SUBTOTAL')) {
+                            $subtotalRows[] = $i;
+                        } elseif (!empty($check)) {
+                            // This is a content row
+                            $contentRows[] = $i;
+                        }
+                    }
+                    
+                    // If there are subtotals, sum them
+                    if (!empty($subtotalRows)) {
                         foreach (range('D', 'O') as $col) {
-                            $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
+                            $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($subtotalRows)));
+                            $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                         }
                         applyPercentageFormulas($sheet, $row);
                     }
-
-                    // === TOTAL ROW ===
-                    elseif (str_starts_with($label, 'TOTAL')) {
-                        $subtotalRows = [];
-                        for ($i = $row - 1; $i >= 13; $i--) {
-                            $check = strtoupper(trim((string) $sheet->getCell("A{$i}")->getValue()));
-                            if (
-                                str_starts_with($check, 'TOTAL') ||
-                                str_contains($check, 'GRAND TOTAL') ||
-                                str_contains($check, 'CERTIFIED CORRECT')
-                            ) break;
-                            if (str_starts_with($check, 'SUBTOTAL')) $subtotalRows[] = $i;
+                    // If no subtotals, sum all content rows directly
+                    elseif (!empty($contentRows)) {
+                        $startRow = min($contentRows);
+                        $endRow = max($contentRows);
+                        
+                        foreach (range('D', 'O') as $col) {
+                            $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}{$endRow})");
                         }
-                        if (!empty($subtotalRows)) {
-                            foreach (range('D', 'O') as $col) {
-                                $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($subtotalRows)));
-                                $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
-                            }
-                            applyPercentageFormulas($sheet, $row);
-                        }
-                    }
-
-                    // === GRAND TOTAL ROW ===
-                    elseif (str_contains($label, 'GRAND TOTAL')) {
-                        $totalRows = [];
-                        for ($i = $row - 1; $i >= 13; $i--) {
-                            $check = strtoupper(trim((string) $sheet->getCell("A{$i}")->getValue()));
-                            if (
-                                str_contains($check, 'GRAND TOTAL') ||
-                                str_contains($check, 'CERTIFIED CORRECT')
-                            ) break;
-                            if (str_starts_with($check, 'TOTAL')) $totalRows[] = $i;
-                        }
-                        if (!empty($totalRows)) {
-                            foreach (range('D', 'O') as $col) {
-                                $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalRows)));
-                                $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
-                            }
-                            applyPercentageFormulas($sheet, $row);
-                        }
+                        applyPercentageFormulas($sheet, $row);
                     }
                 }
-            },
-        ];
-    }
+
+                // === GRAND TOTAL ROW ===
+                elseif (str_contains($label, 'GRAND TOTAL')) {
+                    $totalRows = [];
+                    for ($i = $row - 1; $i >= 13; $i--) {
+                        $check = strtoupper(trim((string) $sheet->getCell("A{$i}")->getValue()));
+                        if (
+                            str_contains($check, 'GRAND TOTAL') ||
+                            str_contains($check, 'CERTIFIED CORRECT')
+                        ) break;
+                        if (str_starts_with($check, 'TOTAL')) $totalRows[] = $i;
+                    }
+                    if (!empty($totalRows)) {
+                        foreach (range('D', 'O') as $col) {
+                            $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalRows)));
+                            $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
+                        }
+                        applyPercentageFormulas($sheet, $row);
+                    }
+                }
+            }
+        },
+    ];
+}
 
     public function styles(Worksheet $sheet)
     {
@@ -198,7 +219,7 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
                     'size' => 10,
                 ],
             ],
-            'A10:O10' => [
+            'A11:O11' => [
                 'font' => [
                     'bold' => true,
                 ],
@@ -294,8 +315,11 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
                         // --- Obligation Adjustments ---
                         $obligationAdjustments = $app->obligationAmounts
                             ->flatMap(
-                                fn($oa) => $oa->obligation
-                                    ? $oa->obligation->obligationAdjustments->where('adjustment_date', '<=', $asOfDate)
+                                fn($oa) =>
+                                $oa->obligation
+                                    ? $oa->obligation->obligationAdjustments
+                                    ->where('adjustment_date', '<=', $asOfDate)
+                                    ->where('obligation_amounts_id', $oa->id) // restrict per obligation_amount of this appropriation
                                     : collect()
                             )
                             ->sum('adjustment_amount');

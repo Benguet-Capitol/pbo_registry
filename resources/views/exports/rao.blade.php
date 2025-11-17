@@ -363,7 +363,7 @@
                 {{-- Obligations Header --}}
                 <tr style="background-color: #dbeafe; font-weight: 600;">
                     <td colspan="{{ $totalColumns }}" style="padding: 4px 8px; text-align: left; border: 1px solid #000; font-weight: bold;">
-                        Obligations
+                        Obligations and Adjustments
                     </td>
                 </tr>
                 

@@ -166,7 +166,7 @@ class RAOExport implements FromView, WithStyles, WithEvents
                     $totalReleasedRows[$currentQuarter] = $row;
                 } 
                 elseif ($inQuarterSection && $currentQuarter >= 0 && 
-                        $cellValue === 'Obligations') { // Exact match for "Obligations" header
+                        $cellValue === 'Obligations and Adjustments') { // Exact match for "Obligations" header
                     $obligationsHeaderRows[$currentQuarter] = $row;
                     $inObligationsSection = true;
                 } 
@@ -197,6 +197,14 @@ class RAOExport implements FromView, WithStyles, WithEvents
             }
 
             $columnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+
+            // Define the helper function for Total column formula
+            $applyTotalColumnFormula = function($row, $startCol, $endCol) use ($sheet) {
+                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
+                $endColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+                $formula = "=SUM({$startColLetter}{$row}:{$endColLetter}{$row})";
+                $sheet->setCellValue("D{$row}", $formula);
+            };
 
             // Apply formulas for Total Appropriations row
             if ($appropriationsRow && $supplementalRow && $reversionsRow && $realignmentsRow && $totalAppropriationsRow) {
@@ -252,6 +260,25 @@ class RAOExport implements FromView, WithStyles, WithEvents
                 }
             }
 
+            // Apply formulas for Released Appropriations and Adjustments (per quarter)
+            $quarterStartRowsKeys = array_keys($quarterStartRows);
+            for ($i = 0; $i < count($quarterStartRowsKeys); $i++) {
+                $q = $quarterStartRowsKeys[$i];
+                
+                if (!isset($quarterStartRows[$q]) || !isset($totalReleasedRows[$q])) continue;
+                
+                $quarterStartRow = $quarterStartRows[$q];
+                $totalReleasedRow = $totalReleasedRows[$q];
+                
+                // Apply formula to ALL rows between Quarter header and Total Released Appropriations
+                // This includes: Released Appropriation, Supplemental, Reversion, Realignment rows
+                for ($row = $quarterStartRow + 1; $row < $totalReleasedRow; $row++) {
+                    // Apply SUM formula to Total column (column D) for each row
+                    $endColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex);
+                    $sheet->setCellValue("D{$row}", "=SUM(E{$row}:{$endColLetter}{$row})");
+                }
+            }
+
             // Apply formulas for Total Expenses (sum obligations and adjustments per quarter)
             $totalExpensesRowsKeys = array_keys($totalExpensesRows);
             for ($i = 0; $i < count($totalExpensesRowsKeys); $i++) {
@@ -264,10 +291,28 @@ class RAOExport implements FromView, WithStyles, WithEvents
                 
                 for ($col = 4; $col <= $columnIndex; $col++) {
                     $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                    
                     // Sum from row after "Obligations" header to row before "Total Expenses"
                     $sumRange = "{$colLetter}" . ($obligationsHeaderRow + 1) . ":{$colLetter}" . ($totalRow - 1);
                     $formula = "=SUM({$sumRange})";
                     $sheet->setCellValue("{$colLetter}{$totalRow}", $formula);
+                }
+            }
+
+            // Apply formulas for individual obligations and adjustments (Total column)
+            $obligationsHeaderRowsKeys = array_keys($obligationsHeaderRows);
+            for ($i = 0; $i < count($obligationsHeaderRowsKeys); $i++) {
+                $q = $obligationsHeaderRowsKeys[$i];
+                
+                if (!isset($obligationsHeaderRows[$q]) || !isset($totalExpensesRows[$q])) continue;
+                
+                $obligationsHeaderRow = $obligationsHeaderRows[$q];
+                $totalExpensesRow = $totalExpensesRows[$q];
+                
+                // Apply formula to ALL rows between Obligations header and Total Expenses
+                for ($row = $obligationsHeaderRow + 1; $row < $totalExpensesRow; $row++) {
+                    // Apply SUM formula to Total column (column D) for each obligation/adjustment row
+                    $applyTotalColumnFormula($row, 5, $columnIndex);
                 }
             }
 

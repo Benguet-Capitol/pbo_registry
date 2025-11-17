@@ -46,10 +46,10 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                 $highestRow = $sheet->getHighestRow();
 
                 // Freeze rows above row 11
-                $sheet->freezePane('A11');
+                $sheet->freezePane('A12');
 
                 // Set rows 6 to 10 to repeat on printed pages
-                $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 10);
+                $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(5, 11);
 
                 // Hide specific columns
                 foreach (['C', 'D', 'E', 'B'] as $col) {
@@ -58,7 +58,7 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
 
                 // Identify the certified correct row
                 $certifiedRow = null;
-                for ($row = 11; $row <= $highestRow; $row++) {
+                for ($row = 12; $row <= $highestRow; $row++) {
                     $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
                     if (str_contains($cellValue, 'CERTIFIED CORRECT')) {
                         $certifiedRow = $row;
@@ -91,7 +91,7 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                 $totalRows = [];
                 $grandTotalRow = null;
 
-                for ($row = 11; $row <= $lastDataRow; $row++) {
+                for ($row = 12; $row <= $lastDataRow; $row++) {
                     $firstCellValue = trim((string) $sheet->getCell("A{$row}")->getValue());
 
                     if (
@@ -181,7 +181,7 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                     'size' => 10,
                 ],
             ],
-            'A10:M10' => [
+            'A11:M11' => [
                 'font' => [
                     'bold' => true,
                 ],

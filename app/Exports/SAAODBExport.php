@@ -68,7 +68,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                 // Default to 2 rows above certified correct row, or fallback to highestRow
                 $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
 
-               // Format number columns as Accounting without currency symbol
+            // Format number columns as Accounting without currency symbol
                 foreach (range('D', 'S') as $column) {
                     if (!in_array($column, ['M', 'O', 'Q', 'R'])) {
                         $sheet->getStyle("{$column}13:{$column}{$highestRow}")
@@ -159,6 +159,9 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                     // === TOTAL ROW ===
                     elseif (str_starts_with($label, 'TOTAL')) {
                         $subtotalRows = [];
+                        $contentRows = [];
+                        
+                        // Look backwards to find subtotals or content rows
                         for ($i = $row - 1; $i >= 13; $i--) {
                             $check = strtoupper(trim((string) $sheet->getCell("A{$i}")->getValue()));
                             if (
@@ -166,12 +169,30 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                                 str_contains($check, 'GRAND TOTAL') ||
                                 str_contains($check, 'CERTIFIED CORRECT')
                             ) break;
-                            if (str_starts_with($check, 'SUBTOTAL')) $subtotalRows[] = $i;
+                            
+                            if (str_starts_with($check, 'SUBTOTAL')) {
+                                $subtotalRows[] = $i;
+                            } elseif (!empty($check)) {
+                                // This is a content row
+                                $contentRows[] = $i;
+                            }
                         }
+                        
+                        // If there are subtotals, sum them
                         if (!empty($subtotalRows)) {
                             foreach (range('D', 'S') as $col) {
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($subtotalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
+                            }
+                            applyPercentageFormulas($sheet, $row);
+                        }
+                        // If no subtotals, sum all content rows directly
+                        elseif (!empty($contentRows)) {
+                            $startRow = min($contentRows);
+                            $endRow = max($contentRows);
+                            
+                            foreach (range('D', 'S') as $col) {
+                                $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}{$endRow})");
                             }
                             applyPercentageFormulas($sheet, $row);
                         }

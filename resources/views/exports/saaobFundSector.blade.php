@@ -13,6 +13,9 @@
             <th colspan="14" style="text-align:center; font-size: 11px;">Provincial Budget Office</th>
         </tr>
         <tr>
+            <th colspan="14"> </th>
+        </tr>
+        <tr>
             <th colspan="14" style="text-align:center; font-size: 14px; font-weight: bold; margin-top:10px; text-transform: uppercase;">
                 STATEMENT OF APPROPRIATIONS, ALLOTMENTS, OBLIGATIONS AND BALANCES
             </th>

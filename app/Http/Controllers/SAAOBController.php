@@ -109,11 +109,12 @@ class SAAOBController extends Controller
 
                             // --- Obligation Adjustments ---
                             $obligationAdjustments = $app->obligationAmounts
-                            ->flatMap(fn ($oa) =>
+                            ->flatMap(
+                                fn ($oa) =>
                                 $oa->obligation
                                     ? $oa->obligation->obligationAdjustments
-                                        ->where('adjustment_date', '<=', $asOfDate)
-                                        ->where('obligation_amounts_id', $oa->id) // restrict per obligation_amount of this appropriation
+                                    ->where('adjustment_date', '<=', $asOfDate)
+                                    ->where('obligation_amounts_id', $oa->id) // restrict per obligation_amount of this appropriation
                                     : collect()
                             )
                             ->sum('adjustment_amount');

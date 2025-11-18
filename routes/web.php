@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AccountCodeController;
+use App\Http\Controllers\AccountsSummaryController;
 use App\Http\Controllers\AppropriationController;
 use App\Http\Controllers\ObligationAdjustmentController;
 use App\Http\Controllers\OfficeAllotmentClassController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\SAAOBGFCurrentSummaryController;
 use App\Http\Controllers\SAAODBOfficeController;
 use App\Http\Controllers\SAAODBAllFundsController;
 use App\Http\Controllers\SAAODBGFController;
+use App\Http\Controllers\QFROController;
 
 /*
 |--------------------------------------------------------------------------
@@ -171,6 +173,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/rao', [RAOController::class, 'index'])->name('rao.index');
     // RAO Excel Export
     Route::get('rao/export-excel', [RAOController::class, 'exportExcel'])->name('rao.exportExcel');
+    // QFRO Report Routes
+    Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');
 });
 
 // useless routes

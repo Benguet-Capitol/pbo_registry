@@ -55,6 +55,21 @@
                     @endforeach
                 </x-form.select>
             </div>
+            <!-- Account Code Filter -->
+        <div class="flex items-center space-x-2">
+            <x-form.select
+                name="account_code"
+                id="account_code"
+                class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                onchange="this.form.submit()">
+                <option value="">All Account Codes</option>
+                @foreach($accounts as $accountCode => $accountDisplay)
+                <option value="{{ $accountCode }}" {{ request('account_code') == $accountCode ? 'selected' : '' }}>
+                    {{ $accountDisplay }}
+                </option>
+                @endforeach
+            </x-form.select>
+        </div>
             <!-- As of Filter -->
             <div class="flex items-center space-x-2">
                 <x-form.input

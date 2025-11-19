@@ -201,7 +201,7 @@
         @endforeach
 
         <tr class="subtotal-row-with-program" data-rowtype="subtotal">
-            <td colspan="3" style="padding: 8px 32px; text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">Subtotal ({{ $program }}):</td>
+            <td colspan="3" style="padding: 8px 32px; text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">Subtotal:</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>

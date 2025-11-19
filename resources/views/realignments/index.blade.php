@@ -36,7 +36,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                {{ __('Realignment | Augmentation') }}
+                {{ __('Realignment / Augmentation') }}
 
                 @php
                 $filters = [];
@@ -53,7 +53,7 @@
                 @endphp
 
                 @if (count($filters) > 0)
-                    <span class="text-lg"> > </span>
+                    <span class="text-lg"> | </span>
                     <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
                 @endif
                 <span class="text-blue-800 dark:text-blue-400">

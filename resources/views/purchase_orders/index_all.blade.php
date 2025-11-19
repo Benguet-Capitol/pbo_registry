@@ -16,7 +16,7 @@
                 @endphp
 
                 @if (count($filters) > 0)
-                    <span class="text-lg"> > </span>
+                    <span class="text-lg"> | </span>
                     <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
                 @endif
                 <span class="text-blue-800 dark:text-blue-400">

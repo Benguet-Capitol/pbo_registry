@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\AccountCode;
 use Illuminate\Contracts\View\View;
 use App\Models\Office;
 use Carbon\Carbon;
@@ -20,14 +21,16 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
 {
     protected $selectedYear;
     protected $selectedOffice;
+    protected $accounts;
     protected $asOfDate;
     protected $signatoryName;
     protected $signatoryDesignation;
 
-    public function __construct($selectedYear, $selectedOffice, $asOfDate, $signatoryName, $signatoryDesignation)
+    public function __construct($selectedYear, $selectedOffice, $accounts, $asOfDate, $signatoryName, $signatoryDesignation)
     {
         $this->selectedYear = $selectedYear;
         $this->selectedOffice = $selectedOffice;
+        $this->accounts = $accounts;
         $this->asOfDate = $asOfDate;
         $this->signatoryName = $signatoryName;
         $this->signatoryDesignation = $signatoryDesignation;
@@ -61,8 +64,28 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
                 }
             }
 
+            // Find OVERALL TOTAL row
+            $overallTotalRow = null;
+            for ($row = 13; $row <= $highestRow; $row++) {
+                $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                if (str_contains($cellValue, 'OVERALL TOTAL')) {
+                    $overallTotalRow = $row;
+                    break;
+                }
+            }
+
             // Default to 2 rows above certified correct row, or fallback to highestRow
             $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
+
+            // Find all GRAND TOTAL rows for Overall Total calculation (exclude overall total row itself)
+            $grandTotalRows = [];
+            $searchEndRow = $overallTotalRow ? $overallTotalRow - 1 : $lastDataRow;
+            for ($row = 13; $row <= $searchEndRow; $row++) {
+                $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                if (str_contains($cellValue, 'GRAND TOTAL CURRENT OPERATING')) {
+                    $grandTotalRows[] = $row;
+                }
+            }
 
             // Format number columns
             foreach (range('D', 'O') as $column) {
@@ -206,6 +229,28 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
                     }
                 }
             }
+
+            // === OVERALL TOTAL ROW (after main loop) ===
+            if (!empty($overallTotalRow) && !empty($grandTotalRows)) {
+                foreach (range('D', 'O') as $col) {
+                    $refs = implode(',', array_map(fn($r) => "{$col}{$r}", $grandTotalRows));
+                    $sheet->setCellValue("{$col}{$overallTotalRow}", "=SUM({$refs})");
+                }
+                applyPercentageFormulas($sheet, $overallTotalRow);
+
+                // Format number and percentage columns
+                foreach (range('D', 'O') as $column) {
+                    if (!in_array($column, ['M', 'O'])) {
+                        $sheet->getStyle("{$column}{$overallTotalRow}")
+                            ->getNumberFormat()
+                            ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
+                    } else {
+                        $sheet->getStyle("{$column}{$overallTotalRow}")
+                            ->getNumberFormat()
+                            ->setFormatCode('0.00%');
+                    }
+                }
+            }
         },
     ];
 }
@@ -242,6 +287,7 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
     {
         $selectedYear = $this->selectedYear;
         $selectedOffice = $this->selectedOffice;
+        $accounts = $this->accounts;
         $asOfDate = $this->asOfDate;
 
         $officesQuery = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
@@ -253,22 +299,40 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
         if (!empty($selectedOffice)) {
             $officesQuery->where('id', $selectedOffice);
         }
-        $offices = $officesQuery->with([
-            'officeAllotmentClasses' => function ($query) use ($selectedYear) {
-                $query->where('year', $selectedYear)
-                    ->whereHas('allotmentClass', function ($subQuery) {
-                        $subQuery->where('category', 'Current');
-                    });
-            },
-            'officeAllotmentClasses.allotmentClass',
-            'officeAllotmentClasses.appropriations' => function ($query) {
-                $query->orderByRaw("CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC")
-                    ->orderBy('account_code', 'asc');
-            },
-            'officeAllotmentClasses.appropriations.realignments',
-            'officeAllotmentClasses.appropriations.supplementals',
-            'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
-        ])->get();
+
+        // Get all offices with their OfficeAllotmentClasses and related data
+    $offices = $officesQuery->with([
+        'officeAllotmentClasses' => function ($query) use ($selectedYear) {
+            $query->where('year', $selectedYear)
+                ->whereHas('allotmentClass', function ($subQuery) {
+                    $subQuery->where('category', 'Current');
+                });
+        },
+        'officeAllotmentClasses.allotmentClass',
+        'officeAllotmentClasses.appropriations' => function ($query) use ($accounts) {
+            // Add account code filter here
+            if (!empty($accounts)) {
+                $query->where('account_code', 'LIKE', $accounts . '%');
+            }
+            $query->orderByRaw("CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC")
+                ->orderBy('account_code', 'asc');
+        },
+        'officeAllotmentClasses.appropriations.realignments',
+        'officeAllotmentClasses.appropriations.supplementals',
+        'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
+    ])->get();
+
+    // Filter out offices that have no appropriations after account_code filtering
+    if (!empty($accounts)) {
+        $offices = $offices->filter(function($office) {
+            foreach ($office->officeAllotmentClasses as $oac) {
+                if ($oac->appropriations->isNotEmpty()) {
+                    return true;
+                }
+            }
+            return false;
+        })->values();
+    }
 
         $month = Carbon::parse($asOfDate)->month;
         $currentQuarter = match (true) {
@@ -280,8 +344,11 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
 
         foreach ($offices as $office) {
             $office->officeAllotmentClasses = $office->officeAllotmentClasses
-                ->sortBy(fn($oac) => $oac->allotmentClass->id)
-                ->values();
+            ->filter(function($oac) {
+                return $oac->appropriations->isNotEmpty();
+            })
+            ->sortBy(fn ($oac) => $oac->allotmentClass->id)
+            ->values();
 
             foreach ($office->officeAllotmentClasses as $oac) {
                 $grouped = $oac->appropriations
@@ -386,12 +453,35 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
             $office->grandTotal = $gt;
         }
 
+        // Get account code description
+        $accountCodeDisplay = null;
+        if (!empty($accounts)) {
+            $accountCodeObj = AccountCode::where('code', $accounts)->first();
+            if ($accountCodeObj) {
+                $accountCodeDisplay = $accounts . ' - ' . $accountCodeObj->description;
+            } else {
+                $accountCodeDisplay = $accounts;
+            }
+        }
+
+        // Calculate overall total if all offices are selected
+        $overallTotal = null;
+        if (empty($selectedOffice) && count($offices) > 0) {
+            $allOacs = collect($offices)->flatMap(function($office) {
+                return $office->officeAllotmentClasses;
+            });
+            $overallTotal = $this->computeOfficeTotal($allOacs);
+        }
+
         // Pass signatory info to the view as well
         return view('exports.saaob', [
             'offices' => $offices,
             'selectedYear' => $selectedYear,
             'selectedOffice' => $selectedOffice,
+            'accounts' => $accounts,
+            'accountCodeDisplay' => $accountCodeDisplay,
             'asOfDate' => $asOfDate,
+            'overallTotal' => $overallTotal,
             'signatoryName' => $this->signatoryName,
             'signatoryDesignation' => $this->signatoryDesignation,
         ]);

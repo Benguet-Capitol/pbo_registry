@@ -23,6 +23,7 @@
         <tr>
             <th colspan="15" style="text-align:center; font-size: 11px; margin-top:5px; font-weight: bold; text-transform: uppercase;">
                 {{ isset($selectedOffice) && $selectedOffice ? ($offices->firstWhere('id', $selectedOffice)?->office_name ?? 'All Offices') : 'All Offices' }}
+                @if(!empty($accounts)) ({{ $accountCodeDisplay }}) @endif
             </th>
         </tr>
         <tr>
@@ -181,7 +182,7 @@
         @endforeach
 
         <tr class="subtotal-row-with-program" data-rowtype="subtotal">
-            <td colspan="3" style="padding: 8px 32px; text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">Subtotal {{ $program }}:</td>
+            <td colspan="3" style="padding: 8px 32px; text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">Subtotal:</td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
@@ -237,6 +238,28 @@
             <td colspan="15"></td> {{-- spacing --}}
         </tr>
         @endforeach
+
+        @if(empty($selectedOffice) && $overallTotal)
+        <tr class="bg-blue-900 dark:bg-blue-800 text-white dark:text-gray-100 font-bold border-t-4 border-b-2 text-[11px]">
+            <td colspan="3" style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">OVERALL TOTAL: </td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+            <td style="padding: 4px; text-align: center; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
+        </tr>
+        @endif
+        <tr>
+            <td colspan="15"></td> {{-- spacing --}}
+        </tr>
+
         <tr class="certified-correct-row" data-rowtype="certified">
             <td colspan="8" style="padding-top: 30px; font-size: 12px; text-align: right;"><strong>Certified correct:</strong></td>
             <td colspan="7">

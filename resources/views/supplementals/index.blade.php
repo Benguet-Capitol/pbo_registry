@@ -36,7 +36,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                {{ __('Supplemental Appropriations | Reversions') }}
+                {{ __('Supplemental Appropriations / Reversions') }}
 
                 @php
                 $filters = [];
@@ -53,7 +53,7 @@
                 @endphp
 
                 @if (count($filters) > 0)
-                    <span class="text-lg"> > </span>
+                    <span class="text-lg"> | </span>
                     <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
                 @endif
                 <span class="text-blue-800 dark:text-blue-400">
@@ -103,10 +103,10 @@
                 <!-- Office and Allotment Class Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="officeAllotmentClass" class="sr-only">Office & Class</label>
-                    <x-form.select name="office_allotment_class_filter" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="office_allotment_class_id" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
                         <option value="">All Allotment Classes per Office</option>
                         @foreach($officeAllotmentClasses as $officeAllotmentClass)
-                        <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_filter') == $officeAllotmentClass->id ? 'selected' : '' }}>
+                        <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_id') == $officeAllotmentClass->id ? 'selected' : '' }}>
                             {{ $officeAllotmentClass->offices->office_abbreviation }} - {{ $officeAllotmentClass->allotmentClass->class }}
                         </option>
                         @endforeach

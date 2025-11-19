@@ -228,7 +228,22 @@ class SAAOBController extends Controller
         $office->grandTotal = $gt;
     }
 
-    return view('saaob.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'officesQuery', 'allOffices', 'accounts'))
+    // Calculate overall total if all offices are selected
+    $overallTotal = null;
+    if (empty($selectedOffice) && count($offices) > 0) {
+        $allOacs = $offices->flatMap(function($office) {
+            return $office->officeAllotmentClasses;
+        });
+        $overallTotal = $this->computeOfficeTotal($allOacs);
+        $overallTotal['appropriation_accomplishment'] = ($overallTotal['authorized_appropriation'] > 0)
+            ? ($overallTotal['obligation'] / $overallTotal['authorized_appropriation']) * 100
+            : 0;
+        $overallTotal['allotment_accomplishment'] = ($overallTotal['allotment'] > 0)
+            ? ($overallTotal['obligation'] / $overallTotal['allotment']) * 100
+            : 0;
+    }
+
+    return view('saaob.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'officesQuery', 'allOffices', 'accounts', 'overallTotal'))
         ->with('status', session('status'));
 }
 
@@ -305,30 +320,38 @@ class SAAOBController extends Controller
         }
 
     public function exportExcel(Request $request)
-        {
-            $year = $request->input('year1');
-            $officeId = $request->input('office_filter');
-            $asOf = $request->input('as_of_filter');
-            $signatoryName = $request->input('signatory_name');
-            $signatoryDesignation = $request->input('signatory_designation');
+    {
+        $year = $request->input('year1');
+        $officeId = $request->input('office_filter');
+        $accountCode = $request->input('account_code');
+        $asOf = $request->input('as_of_filter');
+        $signatoryName = $request->input('signatory_name');
+        $signatoryDesignation = $request->input('signatory_designation');
 
-            // Get the office name by ID, or use "All_Offices" if none is selected
-            $officeName = 'All_Offices';
-            if (!empty($officeId)) {
-                $office = Office::find($officeId);
-                if ($office) {
-                    $officeName = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation); // sanitize filename
-                }
+        // Get the office name by ID, or use "All_Offices" if none is selected
+        $officeName = 'All_Offices';
+        if (!empty($officeId)) {
+            $office = Office::find($officeId);
+            if ($office) {
+                $officeName = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation); // sanitize filename
             }
-
-            $fileName = 'SAAOB_' . $officeName . '_' . $year . '.xlsx';
-
-            return Excel::download(new SAAOBExport(
-                $year,
-                $officeId,
-                $asOf,
-                $signatoryName,
-                $signatoryDesignation
-            ), $fileName);
         }
+
+        // Get the account code display (code only, without description)
+        $accountCodeName = '';
+        if (!empty($accountCode)) {
+            $accountCodeName = '_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $accountCode); // sanitize filename
+        }
+
+        $fileName = 'SAAOB_' . $officeName . $accountCodeName . '_' . $year . '.xlsx';
+
+        return Excel::download(new SAAOBExport(
+            $year,
+            $officeId,
+            $accountCode,
+            $asOf,
+            $signatoryName,
+            $signatoryDesignation
+        ), $fileName);
+    }
 }

@@ -22,7 +22,7 @@
         <span id="signatory_error" class="text-red-500 text-xs mb-2 hidden"></span>
 
         <!-- First row: Year, Office, As of -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-center mb-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-center mb-3">
             <!-- Year Filter -->
             <div class="flex items-center space-x-2">
                 <x-form.select
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Second row: Signatories -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <!-- Prepared By -->
             <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-100 mb-2">

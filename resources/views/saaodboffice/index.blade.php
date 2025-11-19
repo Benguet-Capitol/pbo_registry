@@ -29,7 +29,7 @@
         <span id="signatory_error" class="text-red-500 text-xs mb-2 hidden"></span>
 
         <!-- First row: Year, Office, As of -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-center mb-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-center mb-3">
             <!-- Year Filter -->
             <div class="flex items-center space-x-2">
                 <x-form.select
@@ -74,7 +74,7 @@
         </div>
 
         <!-- Second row: Signatories -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <!-- Prepared By -->
             <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-100 mb-2">
@@ -532,7 +532,7 @@
                             @endforeach
 
                             <tr class="bg-gray-500 text-white dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
-                                <td colspan="2" class="px-2 py-2 text-right italic">Subtotal ({{ $program }}): </td>
+                                <td colspan="2" class="px-2 py-2 text-right italic">Subtotal: </td>
                                 @foreach ($programTotals as $key => $val)
                                 <td class="px-2 py-2 
                                     @if(in_array($key, ['appropriation_accomplishment', 'disbursement_to_obligation', 'disbursement_to_appropriation'])) 

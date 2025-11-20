@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\AccountCode;
 use App\Models\Employee;
 use Illuminate\Contracts\View\View;
 use App\Models\Office;
@@ -22,14 +23,16 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
 {
     protected $selectedYear;
     protected $selectedOffice;
+    protected $selectedAccountCode;
     protected $asOfDate;
     protected $signatoryName;
     protected $signatoryDesignation;
 
-    public function __construct($selectedYear, $selectedOffice, $asOfDate, $signatoryName, $signatoryDesignation)
+    public function __construct($selectedYear, $selectedOffice, $selectedAccountCode, $asOfDate, $signatoryName, $signatoryDesignation)
     {
         $this->selectedYear = $selectedYear;
         $this->selectedOffice = $selectedOffice;
+        $this->selectedAccountCode = $selectedAccountCode;
         $this->asOfDate = $asOfDate;
         $this->signatoryName = $signatoryName;
         $this->signatoryDesignation = $signatoryDesignation;
@@ -53,7 +56,6 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                     $sheet->getColumnDimension($col)->setVisible(false);
                 }
 
-
                 // Identify the certified correct row
                 $certifiedRow = null;
                 for ($row = 13; $row <= $highestRow; $row++) {
@@ -64,8 +66,28 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                     }
                 }
 
+                // Find OVERALL TOTAL row
+                $overallTotalRow = null;
+                for ($row = 13; $row <= $highestRow; $row++) {
+                    $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                    if (str_contains($cellValue, 'OVERALL TOTAL')) {
+                        $overallTotalRow = $row;
+                        break;
+                    }
+                }
+
                 // Default to 2 rows above certified correct row, or fallback to highestRow
                 $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
+
+                // Find all GRAND TOTAL rows for Overall Total calculation
+                $grandTotalRows = [];
+                $searchEndRow = $overallTotalRow ? $overallTotalRow - 1 : $lastDataRow;
+                for ($row = 13; $row <= $searchEndRow; $row++) {
+                    $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                    if (str_contains($cellValue, 'GRAND TOTAL')) {
+                        $grandTotalRows[] = $row;
+                    }
+                }
 
                 // Format number columns
                 foreach (range('E', 'P') as $column) {
@@ -164,6 +186,34 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                             applyPercentageFormulas($sheet, $row);
                         }
                     }
+
+                    // === OVERALL TOTAL ROW ===
+                    elseif (str_contains($label, 'OVERALL TOTAL')) {
+                        if (!empty($grandTotalRows)) {
+                            foreach (range('E', 'P') as $col) {
+                                $refs = implode(',', array_map(fn($r) => "{$col}{$r}", $grandTotalRows));
+                                $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
+                            }
+                            applyPercentageFormulas($sheet, $row);
+                        }
+                    }
+                }
+
+                // Apply formatting to Overall Total row
+                if (!empty($overallTotalRow)) {
+
+                    // Format number and percentage columns
+                    foreach (range('E', 'P') as $column) {
+                        if (!in_array($column, ['N', 'P'])) {
+                            $sheet->getStyle("{$column}{$overallTotalRow}")
+                                ->getNumberFormat()
+                                ->setFormatCode('_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
+                        } else {
+                            $sheet->getStyle("{$column}{$overallTotalRow}")
+                                ->getNumberFormat()
+                                ->setFormatCode('0.00%');
+                        }
+                    }
                 }
             },
         ];
@@ -174,7 +224,7 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
         return [
             'A1:Z10000' => [
                 'font' => [
-                    'name' => 'Arial Narrow', // Or 'Calibri', 'Verdana', etc.
+                    'name' => 'Arial Narrow',
                     'size' => 10,
                 ],
             ],
@@ -189,8 +239,8 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                 ],
                 'borders' => [
                     'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN, // or BORDER_MEDIUM for thicker lines
-                        'color' => ['argb' => '000000'], // Black color
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => '000000'],
                     ],
                 ],
             ],
@@ -201,9 +251,10 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
     {
         $selectedYear = $this->selectedYear;
         $selectedOffice = $this->selectedOffice;
+        $selectedAccountCode = $this->selectedAccountCode;
         $asOfDate = $this->asOfDate;
 
-        // Only include offices with OfficeAllotmentClasses for the selected year and “Current” category
+        // Only include offices with OfficeAllotmentClasses for the selected year and "Continuing" category
         $officesQuery = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
             $query->where('year', $selectedYear)
                 ->whereHas('allotmentClass', function ($subQuery) {
@@ -215,15 +266,21 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
         if (!empty($selectedOffice)) {
             $officesQuery->where('id', $selectedOffice);
         }
+        
         // Get all offices with their OfficeAllotmentClasses and related data
         $offices = $officesQuery->with([
-            'officeAllotmentClasses' => function ($query) {
-                $query->whereHas('allotmentClass', function ($subQuery) {
-                    $subQuery->where('category', 'Continuing');
-                });
+            'officeAllotmentClasses' => function ($query) use ($selectedYear) {
+                $query->where('year', $selectedYear)
+                    ->whereHas('allotmentClass', function ($subQuery) {
+                        $subQuery->where('category', 'Continuing');
+                    });
             },
             'officeAllotmentClasses.allotmentClass',
-            'officeAllotmentClasses.appropriations' => function ($query) {
+            'officeAllotmentClasses.appropriations' => function ($query) use ($selectedAccountCode) {
+                // Add account code filter using LIKE
+                if (!empty($selectedAccountCode)) {
+                    $query->where('account_code', 'LIKE', $selectedAccountCode . '%');
+                }
                 $query->orderByRaw("CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC")
                     ->orderBy('account_code', 'asc');
             },
@@ -231,6 +288,18 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
             'officeAllotmentClasses.appropriations.supplementals',
             'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
         ])->get();
+
+        // Filter out offices that have no appropriations after account_code filtering
+        if (!empty($selectedAccountCode)) {
+            $offices = $offices->filter(function($office) {
+                foreach ($office->officeAllotmentClasses as $oac) {
+                    if ($oac->appropriations->isNotEmpty()) {
+                        return true;
+                    }
+                }
+                return false;
+            })->values();
+        }
 
         $month = Carbon::parse($asOfDate)->month;
         $currentQuarter = match (true) {
@@ -387,14 +456,67 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
             ];
         }
 
+        // Calculate overall total if all offices are selected
+        $overallTotal = null;
+        if (empty($selectedOffice) && count($offices) > 0) {
+            $overallTotal = [
+                'appropriation' => 0,
+                'sb' => 0,
+                'rev' => 0,
+                'realignment' => 0,
+                'authorized' => 0,
+                'allotment' => 0,
+                'for_later_release' => 0,
+                'obligation' => 0,
+                'appropriation_balance' => 0,
+                'appropriation_accomplishment' => 0,
+                'allotment_balance' => 0,
+                'allotment_accomplishment' => 0,
+            ];
+
+            foreach ($offices as $office) {
+                $overallTotal['appropriation'] += $office->grandTotal['appropriation'];
+                $overallTotal['sb'] += $office->grandTotal['sb'];
+                $overallTotal['rev'] += $office->grandTotal['rev'];
+                $overallTotal['realignment'] += $office->grandTotal['realignment'];
+                $overallTotal['authorized'] += $office->grandTotal['authorized'];
+                $overallTotal['allotment'] += $office->grandTotal['allotment'];
+                $overallTotal['for_later_release'] += $office->grandTotal['for_later_release'];
+                $overallTotal['obligation'] += $office->grandTotal['obligation'];
+                $overallTotal['appropriation_balance'] += $office->grandTotal['appropriation_balance'];
+                $overallTotal['allotment_balance'] += $office->grandTotal['allotment_balance'];
+                $overallTotal['appropriation_accomplishment'] += $office->grandTotal['appropriation_accomplishment'];
+                $overallTotal['allotment_accomplishment'] += $office->grandTotal['allotment_accomplishment'];
+            }
+
+            if (count($offices) > 0) {
+                $overallTotal['appropriation_accomplishment'] /= count($offices);
+                $overallTotal['allotment_accomplishment'] /= count($offices);
+            }
+        }
+
+        // Get account code description
+        $accountCodeDisplay = null;
+        if (!empty($selectedAccountCode)) {
+            $accountCodeObj = AccountCode::where('code', $selectedAccountCode)->first();
+            if ($accountCodeObj) {
+                $accountCodeDisplay = $selectedAccountCode . ' - ' . $accountCodeObj->description;
+            } else {
+                $accountCodeDisplay = $selectedAccountCode;
+            }
+        }
+
         // Pass signatory info to the view as well
         return view('exports.saaobco', [
             'offices' => $offices,
             'selectedYear' => $selectedYear,
             'selectedOffice' => $selectedOffice,
+            'selectedAccountCode' => $selectedAccountCode,
             'asOfDate' => $asOfDate,
+            'accountCodeDisplay' => $accountCodeDisplay,
             'signatoryName' => $this->signatoryName,
             'signatoryDesignation' => $this->signatoryDesignation,
+            'overallTotal' => $overallTotal,
         ]);
     }
 }

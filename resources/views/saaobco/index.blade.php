@@ -1,20 +1,27 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-
             <div>
                 @php
                 $selectedOffice = null;
                 if(request('office_filter')) {
-                $selectedOffice = $offices->firstWhere('id', request('office_filter'));
+                    $selectedOffice = $allOffices->firstWhere('id', request('office_filter'));
                 }
                 $selectedYear = request('year1', date('Y'));
+                $selectedAccountCode = request('account_code');
+                $selectedAccountDisplay = null;
+                if($selectedAccountCode && isset($accounts[$selectedAccountCode])) {
+                    $selectedAccountDisplay = $accounts[$selectedAccountCode];
+                }
                 @endphp
                 <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                     {{ __('Statement of Appropriations, Allotments, Obligations and Balances') }}
                     |
                     <span class="text-blue-800 dark:text-blue-400">
-                        {{ $selectedOffice ? $selectedOffice->office_abbreviation : 'All Offices' }} - Continuing
+                        {{ $selectedOffice ? $selectedOffice->office_abbreviation : 'All Offices' }} 
+                         @if($selectedAccountDisplay)
+                        ({{ $selectedAccountDisplay }})
+                        @endif - Continuing
                         (CY {{ $selectedYear }})
                     </span>
                 </h3>
@@ -27,7 +34,7 @@
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
         <!-- Shared validation message -->
         <span id="signatory_error" class="text-red-500 text-xs mb-2 hidden"></span>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
             <!-- Year Filter -->
             <div class="flex items-center space-x-2">
                 <x-form.select
@@ -51,6 +58,21 @@
                     @foreach($allOffices as $office)
                     <option value="{{ $office->id }}" data-office-name="{{ $office->office_name }}" {{ request('office_filter') == $office->id ? 'selected' : '' }}>
                         {{ $office->office_abbreviation }}
+                    </option>
+                    @endforeach
+                </x-form.select>
+            </div>
+            <!-- Account Code Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="account_code"
+                    id="account_code"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    onchange="this.form.submit()">
+                    <option value="">All Account Codes</option>
+                    @foreach($accounts as $accountCode => $accountDisplay)
+                    <option value="{{ $accountCode }}" {{ request('account_code') == $accountCode ? 'selected' : '' }}>
+                        {{ $accountDisplay }}
                     </option>
                     @endforeach
                 </x-form.select>
@@ -106,6 +128,7 @@
     <form method="GET" action="{{ route('saaobco.exportExcel') }}" style="display:inline;">
         <input type="hidden" name="year1" value="{{ request('year1') }}">
         <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
+        <input type="hidden" name="account_code" value="{{ request('account_code') }}">
         <input type="hidden" name="as_of_filter" value="{{ request('as_of_filter') }}">
         <input type="hidden" name="signatory_name" value="{{ request('signatory_name') }}">
         <input type="hidden" name="signatory_designation" value="{{ request('signatory_designation') }}">
@@ -398,6 +421,25 @@
                             </td>
                         </tr>
                         @endforeach
+
+                        {{-- Overall Total Row (only if all offices are selected) --}}
+                        @if(empty($selectedOffice) && $overallTotal)
+                        <tr class="bg-blue-900 dark:bg-blue-800 text-white dark:text-gray-100 font-bold border-t-4 border-b-2 text-[11px]">
+                            <td colspan="4" class="px-2 py-3 text-right">OVERALL TOTAL: </td>
+                            <td class="px-2 py-3 text-right" data-key="appropriation">{{ $overallTotal['appropriation'] > 0 ? number_format($overallTotal['appropriation'], 2) : ($overallTotal['appropriation'] < 0 ? '(' . number_format(abs($overallTotal['appropriation']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right" data-key="sb_appropriation">{{ $overallTotal['sb'] > 0 ? number_format($overallTotal['sb'], 2) : ($overallTotal['sb'] < 0 ? '(' . number_format(abs($overallTotal['sb']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right" data-key="reversion">{{ $overallTotal['rev'] > 0 ? number_format($overallTotal['rev'], 2) : ($overallTotal['rev'] < 0 ? '(' . number_format(abs($overallTotal['rev']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right" data-key="realignment">{{ $overallTotal['realignment'] > 0 ? number_format($overallTotal['realignment'], 2) : ($overallTotal['realignment'] < 0 ? '(' . number_format(abs($overallTotal['realignment']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right">{{ $overallTotal['authorized'] > 0 ? number_format($overallTotal['authorized'], 2) : ($overallTotal['authorized'] < 0 ? '(' . number_format(abs($overallTotal['authorized']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right">{{ $overallTotal['allotment'] > 0 ? number_format($overallTotal['allotment'], 2) : ($overallTotal['allotment'] < 0 ? '(' . number_format(abs($overallTotal['allotment']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right">{{ $overallTotal['for_later_release'] > 0 ? number_format($overallTotal['for_later_release'], 2) : ($overallTotal['for_later_release'] < 0 ? '(' . number_format(abs($overallTotal['for_later_release']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right">{{ $overallTotal['obligation'] > 0 ? number_format($overallTotal['obligation'], 2) : ($overallTotal['obligation'] < 0 ? '(' . number_format(abs($overallTotal['obligation']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-right" data-key="appropriation_balance">{{ $overallTotal['appropriation_balance'] > 0 ? number_format($overallTotal['appropriation_balance'], 2) : ($overallTotal['appropriation_balance'] < 0 ? '(' . number_format(abs($overallTotal['appropriation_balance']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-center" data-key="appropriation_accomplishment">{{ number_format($overallTotal['appropriation_accomplishment'], 2) }}%</td>
+                            <td class="px-2 py-3 text-right">{{ $overallTotal['allotment_balance'] > 0 ? number_format($overallTotal['allotment_balance'], 2) : ($overallTotal['allotment_balance'] < 0 ? '(' . number_format(abs($overallTotal['allotment_balance']), 2) . ')' : '-') }}</td>
+                            <td class="px-2 py-3 text-center">{{ number_format($overallTotal['allotment_accomplishment'], 2) }}%</td>
+                        </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -516,7 +558,8 @@
                         if (
                             text.startsWith('SUBTOTAL') ||
                             text.startsWith('TOTAL') ||
-                            text.startsWith('GRAND TOTAL')
+                            text.startsWith('GRAND TOTAL') ||
+                            text.startsWith('OVERALL TOTAL')
                         ) {
                             tr.style.fontWeight = 'bold';
                             cells[0].style.textAlign = 'right';

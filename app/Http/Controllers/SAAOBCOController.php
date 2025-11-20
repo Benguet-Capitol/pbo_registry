@@ -9,6 +9,7 @@ use App\Models\Office;
 use App\Models\AllotmentClass;
 use Carbon\Carbon;
 use App\Exports\SAAOBCOExport;
+use App\Models\AccountCode;
 use App\Models\Employee;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,6 +20,7 @@ class SAAOBCOController extends Controller
         {
             $selectedYear = request('year1', date('Y'));
             $selectedOffice = request('office_filter');
+            $selectedAccountCode = request('account_code');
             $asOfDate = request('as_of_filter', now()->toDateString());
 
             $allOffices = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
@@ -27,12 +29,24 @@ class SAAOBCOController extends Controller
                         $subQuery->where('category', 'Continuing');
                     });
             })->orderBy('id', 'asc')->get();
-            // Get all employees for signatory filter
+
             $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
-            
             $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
-            // Only include offices with OfficeAllotmentClasses for the selected year and “Current” category
+            // Get account codes
+            $usedAccountCodes = Appropriation::whereHas('officeAllotmentClass', function ($query) use ($selectedYear) {
+                $query->where('year', $selectedYear)
+                    ->whereHas('allotmentClass', function ($subQuery) {
+                        $subQuery->where('category', 'Continuing');
+                    });
+            })
+            ->distinct()
+            ->pluck('account_code');
+
+            $accounts = AccountCode::whereIn('code', $usedAccountCodes)
+                ->orderBy('code')
+                ->pluck(DB::raw("CONCAT(code, ' - ', description)"), 'code');
+            
             $officesQuery = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
                 $query->where('year', $selectedYear)
                     ->whereHas('allotmentClass', function ($subQuery) {
@@ -40,20 +54,22 @@ class SAAOBCOController extends Controller
                     });
             });
 
-            // If a specific office is selected, filter it
             if (!empty($selectedOffice)) {
                 $officesQuery->where('id', $selectedOffice);
             }
-            // Get all offices with their OfficeAllotmentClasses and related data
+            
             $offices = $officesQuery->with([
                 'officeAllotmentClasses' => function ($query) use ($selectedYear) {
                     $query->where('year', $selectedYear)
                         ->whereHas('allotmentClass', function ($subQuery) {
-                        $subQuery->where('category', 'Continuing');
-                    });
+                            $subQuery->where('category', 'Continuing');
+                        });
                 },
                 'officeAllotmentClasses.allotmentClass',
-                'officeAllotmentClasses.appropriations' => function ($query) {
+                'officeAllotmentClasses.appropriations' => function ($query) use ($selectedAccountCode) {
+                    if (!empty($selectedAccountCode)) {
+                        $query->where('account_code', 'LIKE', $selectedAccountCode . '%');
+                    }
                     $query->orderByRaw("CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC")
                         ->orderBy('account_code', 'asc');
                 },
@@ -61,6 +77,17 @@ class SAAOBCOController extends Controller
                 'officeAllotmentClasses.appropriations.supplementals',
                 'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
             ])->get();
+
+            if (!empty($selectedAccountCode)) {
+                $offices = $offices->filter(function($office) {
+                    foreach ($office->officeAllotmentClasses as $oac) {
+                        if ($oac->appropriations->isNotEmpty()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })->values();
+            }
 
             $month = Carbon::parse($asOfDate)->month;
             $currentQuarter = match(true) {
@@ -70,156 +97,213 @@ class SAAOBCOController extends Controller
                 default => 4,
             };
 
+            // Process each office with year and CCO year grouping
             foreach ($offices as $office) {
-                // Display OfficeAllotmentClasses for selected year only
-                $office->filteredOfficeAllotmentClasses = $office->officeAllotmentClasses
-                    ->where('year', $selectedYear)
+                $office->officeAllotmentClasses = $office->officeAllotmentClasses
+                    ->filter(function($oac) {
+                        return $oac->appropriations->isNotEmpty();
+                    })
                     ->sortBy(fn ($oac) => $oac->allotmentClass->id)
                     ->values();
 
-                $ccoYears = collect();
+                // Initialize arrays
+                $ccoYears = [];
                 $appropriationsByYear = [];
+                $yearlyTotals = [];
+                $grandTotal = [
+                    'appropriation' => 0,
+                    'sb' => 0,
+                    'rev' => 0,
+                    'realignment' => 0,
+                    'authorized' => 0,
+                    'allotment' => 0,
+                    'for_later_release' => 0,
+                    'obligation' => 0,
+                    'appropriation_balance' => 0,
+                    'appropriation_accomplishment' => 0,
+                    'allotment_balance' => 0,
+                    'allotment_accomplishment' => 0,
+                ];
 
                 foreach ($office->officeAllotmentClasses as $oac) {
                     foreach ($oac->appropriations as $app) {
-                        if (!empty($app->cco_year)) {
-                            $ccoYear = $app->cco_year;
-                            $ccoYears->push($ccoYear);
+                        // Calculate supplementals, realignments, obligations
+                        $sb = $app->supplementals
+                            ->where('type', 'Supplemental')
+                            ->where('supplemental_date', '<=', $asOfDate)
+                            ->sum('amount');
 
-                            // --- Supplementals ---
-                            $sb = $app->supplementals
-                                ->where('type', 'Supplemental')
-                                ->where('supplemental_date', '<=', $asOfDate)
-                                ->sum('amount');
+                        $rev = $app->supplementals
+                            ->where('type', 'Reversion')
+                            ->where('supplemental_date', '<=', $asOfDate)
+                            ->sum('amount') * -1;
 
-                            $rev = $app->supplementals
-                                ->where('type', 'Reversion')
-                                ->where('supplemental_date', '<=', $asOfDate)
-                                ->sum('amount') * -1;
+                        $realignment = $app->realignments
+                            ->where('realignment_date', '<=', $asOfDate)
+                            ->reduce(fn ($carry, $r) =>
+                                $carry + ($r->type === 'Source' ? -$r->amount : $r->amount), 0);
 
-                            // --- Realignments ---
-                            $realignment = $app->realignments
-                                ->where('realignment_date', '<=', $asOfDate)
-                                ->reduce(fn ($carry, $r) =>
-                                    $carry + ($r->type === 'Source' ? -$r->amount : $r->amount), 0);
+                        $obligationBase = $app->obligationAmounts
+                            ->filter(fn ($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
+                            ->sum('obr_amount');
 
-                            // --- Obligations ---
-                            $obligationBase = $app->obligationAmounts
-                                ->filter(fn ($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
-                                ->sum('obr_amount');
-
-                            // --- Obligation Adjustments ---
-                            $obligationAdjustments = $app->obligationAmounts
+                        $obligationAdjustments = $app->obligationAmounts
                             ->flatMap(fn ($oa) =>
                                 $oa->obligation
                                     ? $oa->obligation->obligationAdjustments
                                         ->where('adjustment_date', '<=', $asOfDate)
-                                        ->where('obligation_amounts_id', $oa->id) // restrict per obligation_amount of this appropriation
+                                        ->where('obligation_amounts_id', $oa->id)
                                     : collect()
                             )
                             ->sum('adjustment_amount');
 
-                            $obligation = $obligationBase + $obligationAdjustments;
+                        $obligation = $obligationBase + $obligationAdjustments;
 
-                            $authorized = $app->appropriation + $sb + $rev + $realignment;
+                        $authorized = $app->appropriation + $sb + $rev + $realignment;
+                        $allotment = ($app->quarter1 + $app->quarter2 + $app->quarter3 + $app->quarter4) + $sb + $rev + $realignment;
 
-                            $allotment = ($app->quarter1 + $app->quarter2 + $app->quarter3 + $app->quarter4)
-                                        + $sb + $rev + $realignment;
+                        $forLater = 0;
+                        if ($currentQuarter < 2) $forLater += $app->quarter2;
+                        if ($currentQuarter < 3) $forLater += $app->quarter3;
+                        if ($currentQuarter < 4) $forLater += $app->quarter4;
 
-                            $forLater = 0;
-                            if ($currentQuarter < 2) $forLater += $app->quarter2;
-                            if ($currentQuarter < 3) $forLater += $app->quarter3;
-                            if ($currentQuarter < 4) $forLater += $app->quarter4;
+                        $allotment -= $forLater;
 
-                            $allotment -= $forLater;
+                        $app->sb_appropriation = $sb;
+                        $app->reversion = $rev;
+                        $app->realignment = $realignment;
+                        $app->obligation = $obligation;
+                        $app->authorized_appropriation = $authorized;
+                        $app->allotment = $allotment;
+                        $app->for_later_release = $forLater;
 
-                            $app->sb_appropriation = $sb;
-                            $app->reversion = $rev;
-                            $app->realignment = $realignment;
-                            $app->obligation = $obligation;
-                            $app->authorized_appropriation = $authorized;
-                            $app->allotment = $allotment;
-                            $app->for_later_release = $forLater;
-                            $app->appropriation_balance = $authorized - $obligation;
-                            $app->appropriation_accomplishment = $authorized > 0
-                                ? ($obligation / $authorized) * 100 : 0;
-                            $app->allotment_balance = $allotment - $obligation;
-                            $app->allotment_accomplishment = $allotment > 0
-                                ? ($obligation / $allotment) * 100 : 0;
+                        $app->appropriation_balance = $authorized - $obligation;
+                        $app->appropriation_accomplishment = $authorized > 0 ? ($obligation / $authorized) * 100 : 0;
+                        $app->allotment_balance = $allotment - $obligation;
+                        $app->allotment_accomplishment = $allotment > 0 ? ($obligation / $allotment) * 100 : 0;
 
-                            if (!isset($appropriationsByYear[$ccoYear])) {
-                                $appropriationsByYear[$ccoYear] = [];
-                            }
-
-                            $appropriationsByYear[$ccoYear][] = $app;
-                        }
-                    }
-                }
-
-                $office->ccoYears = $ccoYears->unique()->sort()->values();
-                $office->appropriationsByYear = $appropriationsByYear;
-
-                // ---- Compute totals per cco_year ----
-                $yearlyTotals = [];
-
-                foreach ($office->appropriationsByYear as $ccoYear => $apps) {
-                    $totals = [
-                        'appropriation' => 0,
-                        'sb' => 0,
-                        'rev' => 0,
-                        'realignment' => 0,
-                        'authorized' => 0,
-                        'allotment' => 0,
-                        'for_later_release' => 0,
-                        'obligation' => 0,
-                        'appropriation_balance' => 0,
-                        'appropriation_accomplishment' => 0,
-                        'allotment_balance' => 0,
-                        'allotment_accomplishment' => 0,
-                    ];
-
-                    foreach ($apps as $app) {
-                        $totals['appropriation'] += $app->appropriation;
-                        $totals['sb'] += $app->sb_appropriation;
-                        $totals['rev'] += $app->reversion;
-                        $totals['realignment'] += $app->realignment;
-                        $totals['authorized'] += $app->authorized_appropriation;
-                        $totals['allotment'] += $app->allotment;
-                        $totals['for_later_release'] += $app->for_later_release;
-                        $totals['obligation'] += $app->obligation;
-                        $totals['appropriation_balance'] += $app->appropriation_balance;
-                        $totals['allotment_balance'] += $app->allotment_balance;
+                        // Group by CCO year
+                    $ccoYear = $app->cco_year;
+                    
+                    if (!in_array($ccoYear, $ccoYears)) {
+                        $ccoYears[] = $ccoYear;
+                        $appropriationsByYear[$ccoYear] = [];
+                        $yearlyTotals[$ccoYear] = [
+                            'appropriation' => 0,
+                            'sb' => 0,
+                            'rev' => 0,
+                            'realignment' => 0,
+                            'authorized' => 0,
+                            'allotment' => 0,
+                            'for_later_release' => 0,
+                            'obligation' => 0,
+                            'appropriation_balance' => 0,
+                            'appropriation_accomplishment' => 0,
+                            'allotment_balance' => 0,
+                            'allotment_accomplishment' => 0,
+                        ];
                     }
 
-                    // Compute percentages
-                    $totals['appropriation_accomplishment'] = $totals['authorized'] > 0
-                        ? ($totals['obligation'] / $totals['authorized']) * 100 : 0;
+                    $appropriationsByYear[$ccoYear][] = $app;
 
-                    $totals['allotment_accomplishment'] = $totals['allotment'] > 0
-                        ? ($totals['obligation'] / $totals['allotment']) * 100 : 0;
+                    // Add to yearly totals
+                    $yearlyTotals[$ccoYear]['appropriation'] += $app->appropriation;
+                    $yearlyTotals[$ccoYear]['sb'] += $app->sb_appropriation;
+                    $yearlyTotals[$ccoYear]['rev'] += $app->reversion;
+                    $yearlyTotals[$ccoYear]['realignment'] += $app->realignment;
+                    $yearlyTotals[$ccoYear]['authorized'] += $app->authorized_appropriation;
+                    $yearlyTotals[$ccoYear]['allotment'] += $app->allotment;
+                    $yearlyTotals[$ccoYear]['for_later_release'] += $app->for_later_release;
+                    $yearlyTotals[$ccoYear]['obligation'] += $app->obligation;
+                    $yearlyTotals[$ccoYear]['appropriation_balance'] += $app->appropriation_balance;
+                    $yearlyTotals[$ccoYear]['allotment_balance'] += $app->allotment_balance;
+                    $yearlyTotals[$ccoYear]['appropriation_accomplishment'] += $app->appropriation_accomplishment;
+                    $yearlyTotals[$ccoYear]['allotment_accomplishment'] += $app->allotment_accomplishment;
 
-                    $yearlyTotals[$ccoYear] = $totals;
+                    // Add to grand total
+                    $grandTotal['appropriation'] += $app->appropriation;
+                    $grandTotal['sb'] += $app->sb_appropriation;
+                    $grandTotal['rev'] += $app->reversion;
+                    $grandTotal['realignment'] += $app->realignment;
+                    $grandTotal['authorized'] += $app->authorized_appropriation;
+                    $grandTotal['allotment'] += $app->allotment;
+                    $grandTotal['for_later_release'] += $app->for_later_release;
+                    $grandTotal['obligation'] += $app->obligation;
+                    $grandTotal['appropriation_balance'] += $app->appropriation_balance;
+                    $grandTotal['allotment_balance'] += $app->allotment_balance;
+                    $grandTotal['appropriation_accomplishment'] += $app->appropriation_accomplishment;
+                    $grandTotal['allotment_accomplishment'] += $app->allotment_accomplishment;
                 }
+            }
 
-                $office->yearlyTotals = $yearlyTotals;
+                // Calculate averages for accomplishments per year
+            $appCount = 0;
+            foreach ($appropriationsByYear as $year => $apps) {
+                $appCount += count($apps);
+            }
 
-                $office->grandTotal = [
-                    'appropriation' => collect($office->yearlyTotals)->sum('appropriation'),
-                    'sb' => collect($office->yearlyTotals)->sum('sb'),
-                    'rev' => collect($office->yearlyTotals)->sum('rev'),
-                    'realignment' => collect($office->yearlyTotals)->sum('realignment'),
-                    'authorized' => collect($office->yearlyTotals)->sum('authorized'),
-                    'allotment' => collect($office->yearlyTotals)->sum('allotment'),
-                    'for_later_release' => collect($office->yearlyTotals)->sum('for_later_release'),
-                    'obligation' => collect($office->yearlyTotals)->sum('obligation'),
-                    'appropriation_balance' => collect($office->yearlyTotals)->sum('appropriation_balance'),
-                    'appropriation_accomplishment' => collect($office->yearlyTotals)->avg('appropriation_accomplishment'),
-                    'allotment_balance' => collect($office->yearlyTotals)->sum('allotment_balance'),
-                    'allotment_accomplishment' => collect($office->yearlyTotals)->avg('allotment_accomplishment'),
+            if ($appCount > 0) {
+                foreach ($yearlyTotals as $year => $totals) {
+                    $yearAppCount = count($appropriationsByYear[$year]);
+                    $yearlyTotals[$year]['appropriation_accomplishment'] /= $yearAppCount ?: 1;
+                    $yearlyTotals[$year]['allotment_accomplishment'] /= $yearAppCount ?: 1;
+                }
+                $grandTotal['appropriation_accomplishment'] /= $appCount;
+                $grandTotal['allotment_accomplishment'] /= $appCount;
+            }
+
+            // Assign back to model at the end
+            $office->ccoYears = $ccoYears;
+            $office->appropriationsByYear = $appropriationsByYear;
+            $office->yearlyTotals = $yearlyTotals;
+            $office->grandTotal = $grandTotal;
+        }
+
+            // Calculate overall total if all offices are selected
+            $overallTotal = null;
+            if (empty($selectedOffice) && count($offices) > 0) {
+                $overallTotal = [
+                    'appropriation' => 0,
+                    'sb' => 0,
+                    'rev' => 0,
+                    'realignment' => 0,
+                    'authorized' => 0,
+                    'allotment' => 0,
+                    'for_later_release' => 0,
+                    'obligation' => 0,
+                    'appropriation_balance' => 0,
+                    'appropriation_accomplishment' => 0,
+                    'allotment_balance' => 0,
+                    'allotment_accomplishment' => 0,
                 ];
 
+                $totalAppCount = 0;
+                foreach ($offices as $office) {
+                    $overallTotal['appropriation'] += $office->grandTotal['appropriation'];
+                    $overallTotal['sb'] += $office->grandTotal['sb'];
+                    $overallTotal['rev'] += $office->grandTotal['rev'];
+                    $overallTotal['realignment'] += $office->grandTotal['realignment'];
+                    $overallTotal['authorized'] += $office->grandTotal['authorized'];
+                    $overallTotal['allotment'] += $office->grandTotal['allotment'];
+                    $overallTotal['for_later_release'] += $office->grandTotal['for_later_release'];
+                    $overallTotal['obligation'] += $office->grandTotal['obligation'];
+                    $overallTotal['appropriation_balance'] += $office->grandTotal['appropriation_balance'];
+                    $overallTotal['allotment_balance'] += $office->grandTotal['allotment_balance'];
+                    $overallTotal['appropriation_accomplishment'] += $office->grandTotal['appropriation_accomplishment'];
+                    $overallTotal['allotment_accomplishment'] += $office->grandTotal['allotment_accomplishment'];
+                    
+                    foreach ($office->appropriationsByYear as $apps) {
+                        $totalAppCount += count($apps);
+                    }
+                }
+
+                if ($totalAppCount > 0) {
+                    $overallTotal['appropriation_accomplishment'] /= count($offices);
+                    $overallTotal['allotment_accomplishment'] /= count($offices);
+                }
             }
-            return view('saaobco.index', compact('availableYears', 'offices', 'allOffices', 'selectedYear', 'selectedOffice', 'asOfDate', 'employees', 'currentQuarter', 'ccoYears'))
+
+            return view('saaobco.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'allOffices', 'accounts', 'overallTotal'))
                 ->with('status', session('status'));
         }
 
@@ -229,6 +313,7 @@ class SAAOBCOController extends Controller
         {
             $year = $request->input('year1');
             $officeId = $request->input('office_filter');
+            $accountCode = $request->input('account_code');
             $asOf = $request->input('as_of_filter');
             $signatoryName = $request->input('signatory_name');
             $signatoryDesignation = $request->input('signatory_designation');
@@ -242,11 +327,18 @@ class SAAOBCOController extends Controller
                 }
             }
 
-            $fileName = 'SAAOB_' . $officeName . '_' . $year . '.xlsx';
+            // Get the account code display (code only, without description)
+            $accountCodeName = '';
+            if (!empty($accountCode)) {
+                $accountCodeName = '_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $accountCode); // sanitize filename
+            }
+
+            $fileName = 'SAAOB_' . $officeName . $accountCodeName . '_' . $year . '.xlsx';
 
             return Excel::download(new SAAOBCOExport(
                 $year,
                 $officeId,
+                $accountCode,
                 $asOf,
                 $signatoryName,
                 $signatoryDesignation

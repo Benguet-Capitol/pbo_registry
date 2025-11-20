@@ -23,6 +23,9 @@
         <tr>
             <th colspan="16" style="text-align:center; font-size: 11px; text-transform: uppercase; font-weight: bold;">
                 {{ isset($selectedOffice) && $selectedOffice ? ($offices->firstWhere('id', $selectedOffice)?->office_name ?? 'All Offices') : 'All Offices' }}
+                @if(isset($selectedAccountCode) && $selectedAccountCode)
+                    ({{ $accountCodeDisplay }})
+                @endif
             </th>
         </tr>
         <tr>
@@ -150,6 +153,29 @@
             <td colspan="16"></td> {{-- spacing --}}
         </tr>
         @endforeach
+
+        <!-- Overall Total Row (only if all offices are selected) -->
+        @if(empty($selectedOffice) && $overallTotal)
+        <tr class="overall-total-row" data-rowtype="overall-total">
+            <td colspan="4" style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">OVERALL TOTAL: </td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['appropriation'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['sb'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['rev'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['realignment'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['authorized'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['allotment'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['for_later_release'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['obligation'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['appropriation_balance'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ number_format($overallTotal['appropriation_accomplishment'], 2) }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ $overallTotal['allotment_balance'] }}</td>
+            <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;">{{ number_format($overallTotal['allotment_accomplishment'], 2) }}</td>
+        </tr>
+        <tr>
+            <td colspan="16"></td> {{-- spacing --}}
+        </tr>
+        @endif
+
         <tr class="certified-correct-row" data-rowtype="certified">
             <td colspan="8" style="padding-top: 30px; font-size: 12px; text-align: right;"><strong>Certified correct:</strong></td>
             <td colspan="8">

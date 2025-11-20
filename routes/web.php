@@ -173,7 +173,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/rao', [RAOController::class, 'index'])->name('rao.index');
     // RAO Excel Export
     Route::get('rao/export-excel', [RAOController::class, 'exportExcel'])->name('rao.exportExcel');
-    // QFRO Report Routes
+    // Accounts Summary Report Routes
     Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');
 });
 

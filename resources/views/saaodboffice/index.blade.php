@@ -1,21 +1,28 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-
             <div>
                 @php
                 $selectedOffice = null;
                 if(request('office_filter')) {
-                $selectedOffice = $offices->firstWhere('id', request('office_filter'));
+                    $selectedOffice = $allOffices->firstWhere('id', request('office_filter'));
                 }
                 $selectedYear = request('year1', date('Y'));
+                $selectedAccountCode = request('account_code');
+                $selectedAccountDisplay = null;
+                if($selectedAccountCode && isset($accounts[$selectedAccountCode])) {
+                    $selectedAccountDisplay = $accounts[$selectedAccountCode];
+                }
                 @endphp
                 <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                    {{ __('Statement of Appropriations, Allotments, Obligations, Disbursements and Balances') }}
+                    {{ __('Statement of Appropriations, Allotments, Obligations and Balances') }}
                     |
                     <span class="text-blue-800 dark:text-blue-400">
-                        {{ $selectedOffice ? $selectedOffice->office_abbreviation : 'All Offices' }}
-                        (CY {{ $selectedYear }})
+                        {{ $selectedOffice ? $selectedOffice->office_abbreviation : 'All Offices' }} 
+                        @if($selectedAccountDisplay)
+                        ({{ $selectedAccountDisplay }})
+                        @endif - 
+                        Current (CY {{ $selectedYear }})
                     </span>
                 </h3>
             </div>
@@ -54,6 +61,22 @@
                     @foreach($allOffices as $office)
                     <option value="{{ $office->id }}" data-office-name="{{ $office->office_name }}" {{ request('office_filter') == $office->id ? 'selected' : '' }}>
                         {{ $office->office_abbreviation }}
+                    </option>
+                    @endforeach
+                </x-form.select>
+            </div>
+            
+            <!-- Account Code Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="account_code"
+                    id="account_code"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    onchange="this.form.submit()">
+                    <option value="">All Accounts</option>
+                    @foreach($accounts as $accountCode => $accountDisplay)
+                    <option value="{{ $accountCode }}" {{ request('account_code') == $accountCode ? 'selected' : '' }}>
+                        {{ $accountDisplay }}
                     </option>
                     @endforeach
                 </x-form.select>
@@ -149,6 +172,7 @@
         <input type="hidden" name="year1" value="{{ request('year1') }}">
         <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
         <input type="hidden" name="as_of_filter" value="{{ request('as_of_filter') }}">
+        <input type="hidden" name="account_code" value="{{ request('account_code') }}">
         <input type="hidden" name="prepared_signatory_name" value="{{ request('prepared_signatory_name') }}">
         <input type="hidden" name="prepared_signatory_designation" value="{{ request('prepared_signatory_designation') }}">
         <input type="hidden" name="certified_signatory_name" value="{{ request('certified_signatory_name') }}">
@@ -737,7 +761,38 @@
                             @endforeach
                         </tr>
                         @endforeach
-
+                        {{-- Overall Total Row (only if all offices are selected) --}}
+                        @if(empty($selectedOffice) && $overallTotal)
+                        <tr class="bg-blue-900 dark:bg-blue-800 text-white dark:text-gray-100 font-bold border-t-4 border-b-2 text-[11px]">
+                            <td colspan="2" class="px-2 py-3 text-right">OVERALL TOTAL: </td>
+                            @foreach ($overallTotal as $key => $val)
+                            @if(!in_array($key, ['count']))
+                            <td class="px-2 py-3 
+                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
+                                    text-center 
+                                @else 
+                                    text-right 
+                                @endif" 
+                                data-key="{{ $key }}">
+                                
+                                @if ($key === 'appropriation_accomplishment')
+                                    {{ $overallTotal['authorized_appropriation'] > 0 ? number_format(($overallTotal['obligation'] / $overallTotal['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                @elseif ($key === 'allotment_accomplishment')
+                                    {{ $overallTotal['allotment'] > 0 ? number_format(($overallTotal['obligation'] / $overallTotal['allotment']) * 100, 2) : '0.00' }}%
+                                @else
+                                    @if ($val == 0 || $val === null)
+                                        -
+                                    @elseif ($val < 0)
+                                        ({{ number_format(abs($val), 2) }})
+                                    @else
+                                        {{ number_format($val, 2) }}
+                                    @endif
+                                @endif
+                            </td>
+                            @endif
+                            @endforeach
+                        </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>

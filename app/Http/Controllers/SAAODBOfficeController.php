@@ -10,6 +10,7 @@ use App\Models\Office;
 use App\Models\AllotmentClass;
 use Carbon\Carbon;
 use App\Exports\SAAODBExport;
+use App\Models\AccountCode;
 use App\Models\Employee;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Facades\Excel;
@@ -20,6 +21,7 @@ class SAAODBOfficeController extends Controller
     {
         $selectedYear = request('year1', date('Y'));
         $selectedOffice = request('office_filter');
+        $selectedAccountCode = request('account_code');
         $asOfDate = request('as_of_filter', now()->toDateString());
 
         $allOffices = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
@@ -32,6 +34,18 @@ class SAAODBOfficeController extends Controller
             ->get(['employee_id', 'name', 'designation']);
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
+
+        // Get account codes
+        $usedAccountCodes = Appropriation::whereHas('officeAllotmentClass', function ($query) use ($selectedYear) {
+            $query->where('year', $selectedYear);
+        })
+        ->distinct()
+        ->pluck('account_code');
+
+        // Get account codes from account_codes table that are actually used
+        $accounts = AccountCode::whereIn('code', $usedAccountCodes)
+            ->orderBy('code')
+            ->pluck(DB::raw("CONCAT(code, ' - ', description)"), 'code');
 
         // Only include offices with OfficeAllotmentClasses for the selected year and “Current” category
         $officesQuery = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
@@ -49,7 +63,11 @@ class SAAODBOfficeController extends Controller
                 $query->where('year', $selectedYear);
             },
             'officeAllotmentClasses.allotmentClass',
-            'officeAllotmentClasses.appropriations' => function ($query) {
+            'officeAllotmentClasses.appropriations' => function ($query) use ($selectedAccountCode) {
+                // Add account code filter
+                if (!empty($selectedAccountCode)) {
+                    $query->where('account_code', 'LIKE', $selectedAccountCode . '%');
+                }
                 $query->orderByRaw("CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC")
                     ->orderBy('account_code', 'asc');
             },
@@ -57,6 +75,18 @@ class SAAODBOfficeController extends Controller
             'officeAllotmentClasses.appropriations.supplementals',
             'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
         ])->get();
+
+        // Filter out offices that have no appropriations after account_code filtering
+            if (!empty($selectedAccountCode)) {
+                $offices = $offices->filter(function($office) {
+                    foreach ($office->officeAllotmentClasses as $oac) {
+                        if ($oac->appropriations->isNotEmpty()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })->values();
+            }
 
         $month = Carbon::parse($asOfDate)->month;
         $currentQuarter = match (true) {
@@ -67,9 +97,12 @@ class SAAODBOfficeController extends Controller
         };
 
         foreach ($offices as $office) {
-            $office->officeAllotmentClasses = $office->officeAllotmentClasses
-                ->sortBy(fn($oac) => $oac->allotmentClass->id)
-                ->values();
+                $office->officeAllotmentClasses = $office->officeAllotmentClasses
+                    ->filter(function($oac) {
+                        return $oac->appropriations->isNotEmpty();
+                    })
+                    ->sortBy(fn ($oac) => $oac->allotmentClass->id)
+                    ->values();
 
             foreach ($office->officeAllotmentClasses as $oac) {
                 $grouped = $oac->appropriations
@@ -257,9 +290,22 @@ class SAAODBOfficeController extends Controller
 
             unset($officeCOECoTotals['count']);
             $office->officeCOECoTotals = $officeCOECoTotals;
+            
         }
 
-        return view('saaodboffice.index', compact('availableYears', 'allOffices', 'offices', 'selectedYear', 'selectedOffice', 'asOfDate', 'employees', 'officesQuery'))
+        // Calculate overall total if all offices are selected
+            $overallTotal = null;
+            if (empty($selectedOffice) && count($offices) > 0) {
+                $allOacs = $offices->flatMap(function($office) {
+                    return $office->officeAllotmentClasses;
+                });
+                $overallTotal = $this->computeOfficeTotal($allOacs);
+                $overallTotal['appropriation_accomplishment'] = ($overallTotal['authorized_appropriation'] > 0)
+                    ? ($overallTotal['obligation'] / $overallTotal['authorized_appropriation']) * 100
+                    : 0;
+            }
+
+        return view('saaodboffice.index', compact('availableYears', 'allOffices', 'offices', 'selectedYear', 'selectedOffice', 'asOfDate', 'employees', 'officesQuery', 'accounts', 'selectedAccountCode', 'overallTotal'))
             ->with('status', session('status'));
     }
 

@@ -7,7 +7,7 @@
                 $selectedYear = request('year1', date('Y'));
                 @endphp
                 <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                {{ __('Summary per Accounts') }}
+                {{ __('Accounts Summary') }}
                 <span class="text-blue-800 dark:text-blue-400">
                     (CY {{ $selectedYear }})
                 </span>
@@ -21,7 +21,7 @@
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
         <!-- Shared validation message -->
         <span id="signatory_error" class="text-red-500 text-xs mb-2 hidden"></span>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 items-center">
             <!-- Year Filter -->
             <div class="flex items-center space-x-2">
                 <x-form.select
@@ -31,21 +31,6 @@
                     onchange="this.form.submit()">
                     @foreach($availableYears as $year)
                     <option value="{{ $year }}" {{ request('year1', date('Y')) == $year ? 'selected' : '' }}>{{ $year }}</option>
-                    @endforeach
-                </x-form.select>
-            </div>
-            <!-- Account Code Filter -->
-            <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="account_code"
-                    id="account_code"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                    onchange="this.form.submit()">
-                    <option value="">Select Account Code</option>
-                    @foreach($accounts as $accountCode => $accountDisplay)
-                    <option value="{{ $accountCode }}" {{ request('account_code') == $accountCode ? 'selected' : '' }}>
-                        {{ $accountDisplay }}
-                    </option>
                     @endforeach
                 </x-form.select>
             </div>
@@ -107,16 +92,23 @@
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="overflow-x-auto overflow-y-auto max-h-[700px]">
                 <table id="dashboardTable" class="min-w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
-                    <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900 border border-gray-300 dark:border-gray-600">
+                    <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900">
                         <tr>
-                            <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600">Functions</th>
-                            <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600">Implementing Unit</th>
-                            <th class="px-1 py-1 min-w-[300px] text-center border border-gray-300 dark:border-gray-600">Appropriation</th>
-                            <th class="px-1 py-1 min-w-[300px] text-center border border-gray-300 dark:border-gray-600">Allotment Released</th>
-                            <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600">Balance of Appropriation</th>
-                            <th class="px-1 py-1 min-w-[300px] text-center border border-gray-300 dark:border-gray-600">Obligations Incurred</th>
-                            <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600">Unobligated Allotment</th>
-                            <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600">Remarks</th>
+                            <th class="px-1 py-1 w-[150px] text-center">Functions / Programs / Projects / Activities</th>
+                            <th class="px-1 py-1 w-[140px] text-center">Account Code</th>
+                            <th class="px-1 py-1 w-[70px] text-center">FPP</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved Appropriations</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental Appropriations</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="realignment">Realignments</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Authorized Appropriations</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Allotments</th>
+                            <th class="px-1 py-1 w-[100px] text-center">For Later Release</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Obligations</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balances from Authorized Appropriation</th>
+                            <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">Percent of Utilization</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Balances from Allotment</th>
+                            <th class="px-1 py-1 w-[70px] text-center">Percent of Utilization</th>
                         </tr>
                     </thead>
                     <tbody>

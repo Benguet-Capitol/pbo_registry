@@ -395,6 +395,7 @@ class SAAODBOfficeController extends Controller
     {
         $year = $request->input('year1');
         $officeId = $request->input('office_filter');
+        $accountCode = $request->input('account_code');
         $asOf = $request->input('as_of_filter');
         $preparedSignatoryName = $request->input('prepared_signatory_name');
         $preparedSignatoryDesignation = $request->input('prepared_signatory_designation');
@@ -410,11 +411,18 @@ class SAAODBOfficeController extends Controller
             }
         }
 
-        $fileName = 'SAAODB_' . $officeName . '_' . $year . '.xlsx';
+        // Get the account code display (code only, without description)
+        $accountCodeName = '';
+        if (!empty($accountCode)) {
+            $accountCodeName = '-' . preg_replace('/[^A-Za-z0-9_]/', '_', $accountCode);
+        }
+
+        $fileName = 'SAAODB_' . $officeName . $accountCodeName . '_' . $year . '.xlsx';
 
         return Excel::download(new SAAODBExport(
             $year,
             $officeId,
+            $accountCode,
             $asOf,
             $preparedSignatoryName,
             $preparedSignatoryDesignation,

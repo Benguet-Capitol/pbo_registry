@@ -768,7 +768,7 @@
                             @foreach ($overallTotal as $key => $val)
                             @if(!in_array($key, ['count']))
                             <td class="px-2 py-3 
-                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
+                                @if($key === 'appropriation_accomplishment' || $key === 'disbursement_to_obligation' || $key === 'disbursement_to_appropriation') 
                                     text-center 
                                 @else 
                                     text-right 
@@ -776,9 +776,17 @@
                                 data-key="{{ $key }}">
                                 
                                 @if ($key === 'appropriation_accomplishment')
-                                    {{ $overallTotal['authorized_appropriation'] > 0 ? number_format(($overallTotal['obligation'] / $overallTotal['authorized_appropriation']) * 100, 2) : '0.00' }}%
-                                @elseif ($key === 'allotment_accomplishment')
-                                    {{ $overallTotal['allotment'] > 0 ? number_format(($overallTotal['obligation'] / $overallTotal['allotment']) * 100, 2) : '0.00' }}%
+                                    {{ $overallTotal['authorized_appropriation'] > 0 
+                                        ? number_format(($overallTotal['obligation'] / $overallTotal['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
+                                @elseif ($key === 'disbursement_to_obligation')
+                                    {{ $overallTotal['obligation'] > 0 
+                                        ? number_format(($overallTotal['disbursement'] / $overallTotal['obligation']) * 100, 2) 
+                                        : '0.00' }}%
+                                @elseif ($key === 'disbursement_to_appropriation')
+                                    {{ $overallTotal['authorized_appropriation'] > 0 
+                                        ? number_format(($overallTotal['disbursement'] / $overallTotal['authorized_appropriation']) * 100, 2) 
+                                        : '0.00' }}%
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -

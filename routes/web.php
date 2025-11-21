@@ -175,6 +175,8 @@ Route::middleware('auth')->group(function () {
     Route::get('rao/export-excel', [RAOController::class, 'exportExcel'])->name('rao.exportExcel');
     // Accounts Summary Report Routes
     Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');
+    // Accounts Summary Excel Export
+    Route::get('summaryaccounts/export-excel', [AccountsSummaryController::class, 'exportExcel'])->name('summaryaccounts.exportExcel');
 });
 
 // useless routes

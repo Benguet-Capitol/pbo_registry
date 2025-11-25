@@ -8,7 +8,7 @@
                 $selectedFundLabel = $availableFunds[$selectedFundKey] ?? 'ALL FUNDS';
                 @endphp
                 <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                {{ __('Summary of Accounts') }}
+                {{ __('Summary of Appropriations, Allotments, Obligations and Balances') }}
                 |
                 <span class="text-blue-800 dark:text-blue-400">
                    {{ $selectedFundLabel }} (CY {{ $selectedYear }})

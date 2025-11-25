@@ -35,7 +35,7 @@ use App\Http\Controllers\SAAOBGFCurrentSummaryController;
 use App\Http\Controllers\SAAODBOfficeController;
 use App\Http\Controllers\SAAODBAllFundsController;
 use App\Http\Controllers\SAAODBGFController;
-use App\Http\Controllers\QFROController;
+use App\Http\Controllers\AROController;
 
 /*
 |--------------------------------------------------------------------------
@@ -87,8 +87,23 @@ Route::middleware('auth')->group(function () {
     //Program Routes
     Route::resource('programs', ProgramController::class);
     //Appropriation Routes
+    Route::get('appropriations/account-codes', [AppropriationController::class, 'getAccountCodes'])
+        ->name('appropriations.accountCodes');
+
+    Route::get('appropriations/allotment-class-info', [AppropriationController::class, 'getAllotmentClassInfo'])
+        ->name('appropriations.getAllotmentClassInfo');
+    
+    Route::get('appropriations/last-year', [AppropriationController::class, 'getLastYearappropriations'])
+        ->name('appropriations.getLastYear');
+    
+    Route::post('appropriations/store-from-last-year', [AppropriationController::class, 'storeFromLastYear'])
+        ->name('appropriations.storeFromLastYear');
+    
+    Route::post('appropriations/import', [AppropriationController::class, 'import'])
+        ->name('appropriations.import');
+    
+    // Resource route - MUST BE AFTER custom routes
     Route::resource('appropriations', AppropriationController::class);
-    Route::post('/appropriations/import', [AppropriationController::class, 'import'])->name('appropriations.import');
     //Get Fund
     Route::get('/get-fund/{office_id}', function ($office_id) {
         $office = Office::find($office_id);
@@ -177,6 +192,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');
     // Accounts Summary Excel Export
     Route::get('summaryaccounts/export-excel', [AccountsSummaryController::class, 'exportExcel'])->name('summaryaccounts.exportExcel');
+    // ARO Report Routes
+    Route::get('/aro', [AROController::class, 'index'])->name('aro.index');
 });
 
 // useless routes

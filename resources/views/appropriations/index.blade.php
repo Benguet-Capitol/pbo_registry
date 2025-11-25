@@ -126,11 +126,18 @@
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
-                <div>
+                <div class="flex gap-2">
                     @can('create appropriations')
                     <button onclick="openCreateAppropriationsModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                         <i class="fas fa-plus text-lg mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Create Account') }}
+                    </button>
+                    @endcan
+
+                    @can('create appropriations')
+                    <button onclick="openCopyLastYearModal()" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900">
+                        <i class="fas fa-copy text-lg mr-1 -ml-1 w-5 h-5"></i>
+                        {{ __('Accounts from Last Year') }}
                     </button>
                     @endcan
                 </div>
@@ -328,6 +335,7 @@
     @include('appropriations.modal.create')
     @include('appropriations.modal.delete')
     @include('appropriations.modal.edit')
+    @include('appropriations.modal.copy_last_year')
 
 </x-app-layout>
 

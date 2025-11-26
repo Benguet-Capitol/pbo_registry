@@ -139,15 +139,6 @@
         Reports / Summaries
     </div>
 
-    <!-- <x-sidebar.link
-        title="ARO"
-        href="{{ route('aro.index') }}"
-        :isActive="request()->routeIs('aro.index')">
-        <x-slot name="icon">
-            <i class="fas fa-archive text-base flex-shrink-0 dark:text-gray-100"></i>
-        </x-slot>
-    </x-sidebar.link> -->
-
     <x-sidebar.link
         title="RAO"
         href="{{ route('rao.index') }}"
@@ -255,6 +246,15 @@
             </x-slot>
         </x-sidebar.sublink>
     </x-sidebar.dropdown>
+
+    <x-sidebar.link
+        title="NYDD"
+        href="{{ route('ndd.index') }}"
+        :isActive="request()->routeIs('ndd.index')">
+        <x-slot name="icon">
+            <i class="fas fa-tags text-base flex-shrink-0 dark:text-gray-100"></i>
+        </x-slot>
+    </x-sidebar.link>
 
     <div
         x-transition

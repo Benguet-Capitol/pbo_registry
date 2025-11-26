@@ -15,7 +15,7 @@
                 }
                 @endphp
                 <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
-                    {{ __('Statement of Appropriations, Allotments, Obligations and Balances') }}
+                    {{ __('Statement of Appropriations, Allotments, Obligations, Disbursements and Balances') }}
                     |
                     <span class="text-blue-800 dark:text-blue-400">
                         {{ $selectedOffice ? $selectedOffice->office_abbreviation : 'All Offices' }} 

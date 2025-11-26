@@ -145,7 +145,7 @@ class AppropriationController extends Controller
             if (!$lastYearOfficeAllotment) {
                 return response()->json([
                     'data' => [], 
-                    'message' => "No appropriations found for last year ({$lastYear})",
+                    'message' => "No accounts found for last year ({$lastYear})",
                     'allocation_class' => $allocationClass
                 ], 200);
             }

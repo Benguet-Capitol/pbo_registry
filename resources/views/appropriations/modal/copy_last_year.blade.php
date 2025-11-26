@@ -15,22 +15,27 @@
         <div class="p-6">
             <div id="loadingIndicator" class="text-center py-8 hidden">
                 <i class="fas fa-spinner fa-spin text-3xl text-blue-600 dark:text-blue-400"></i>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Loading appropriations from last year...</p>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Loading accounts from last year...</p>
             </div>
 
             <div id="noDataMessage" class="text-center py-8 hidden">
                 <i class="fas fa-inbox text-4xl text-gray-400 mb-2"></i>
-                <p class="text-gray-600 dark:text-gray-400">No appropriations found for last year</p>
+                <p class="text-gray-600 dark:text-gray-400">No accounts found for last year</p>
             </div>
 
             <div id="validationErrors" class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4 hidden">
-                <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5 mr-3"></i>
-                    <div>
-                        <h3 class="font-semibold text-red-800 dark:text-red-200 mb-2">Please fix the following errors:</h3>
-                        <ul id="errorList" class="list-disc list-inside text-red-700 dark:text-red-300 text-sm space-y-1">
-                        </ul>
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start gap-3 flex-1">
+                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"></i>
+                        <div>
+                            <h3 class="font-semibold text-red-800 dark:text-red-200 mb-2">Please fix the following errors:</h3>
+                            <ul id="errorList" class="list-disc list-inside text-red-700 dark:text-red-300 text-sm space-y-1">
+                            </ul>
+                        </div>
                     </div>
+                    <button type="button" onclick="document.getElementById('validationErrors').classList.add('hidden')" class="flex-shrink-0 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 ml-2">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
                 </div>
             </div>
 
@@ -213,7 +218,7 @@ function fetchLastYearappropriations(officeAllotmentClassId) {
                 populateTableRows(data.data);
                 document.getElementById('tableContainer').classList.remove('hidden');
             } else {
-                const message = data.message || 'No appropriations found for last year';
+                const message = data.message || 'No Accounts found for last year';
                 document.getElementById('noDataMessage').innerHTML = `<i class="fas fa-inbox text-4xl text-gray-400 mb-2"></i><p class="text-gray-600 dark:text-gray-400">${message}</p>`;
                 document.getElementById('noDataMessage').classList.remove('hidden');
             }
@@ -458,7 +463,7 @@ function handleAccountCodeInput(event) {
                 console.error('Error stack:', error.stack);
                 dropdown.classList.add('hidden');
             });
-    }, 300);
+    }, 100);
 }
 
 function selectAccountCode(rowId, account) {
@@ -531,6 +536,24 @@ function addNewRow() {
 }
 
 function deleteRow(rowId) {
+    const allRows = document.querySelectorAll('#appropriationsTableBody tr:not([data-error-row="true"])');
+    
+    // Prevent deleting if it's the last row
+    if (allRows.length <= 1) {
+        // Show error message instead of alert
+        const errorContainer = document.getElementById('validationErrors');
+        const errorList = document.getElementById('errorList');
+        errorList.innerHTML = '';
+        
+        const errorMsg = document.createElement('li');
+        errorMsg.textContent = 'You must keep at least 1 row. Cannot delete the last row.';
+        errorList.appendChild(errorMsg);
+        
+        errorContainer.classList.remove('hidden');
+        errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+    }
+    
     const row = document.getElementById(rowId);
     if (row) {
         row.remove();
@@ -624,6 +647,17 @@ function submitCopyLastYearForm() {
     errorContainer.classList.add('hidden');
 
     const rows = document.querySelectorAll('#appropriationsTableBody tr:not([data-error-row="true"])');
+    
+    // Check if there's at least 1 row
+    if (rows.length === 0) {
+        const errorMsg = document.createElement('li');
+        errorMsg.textContent = 'You must have at least 1 row of appropriation data';
+        errorList.appendChild(errorMsg);
+        errorContainer.classList.remove('hidden');
+        errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+    }
+
     let isValid = true;
     let hasErrors = false;
 

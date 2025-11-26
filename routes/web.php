@@ -35,7 +35,7 @@ use App\Http\Controllers\SAAOBGFCurrentSummaryController;
 use App\Http\Controllers\SAAODBOfficeController;
 use App\Http\Controllers\SAAODBAllFundsController;
 use App\Http\Controllers\SAAODBGFController;
-use App\Http\Controllers\AROController;
+use App\Http\Controllers\NDDController;
 
 /*
 |--------------------------------------------------------------------------
@@ -192,8 +192,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');
     // Accounts Summary Excel Export
     Route::get('summaryaccounts/export-excel', [AccountsSummaryController::class, 'exportExcel'])->name('summaryaccounts.exportExcel');
-    // ARO Report Routes
-    Route::get('/aro', [AROController::class, 'index'])->name('aro.index');
+    // NDD Report Routes
+    Route::get('/ndd', [NDDController::class, 'index'])->name('ndd.index');
 });
 
 // useless routes

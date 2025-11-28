@@ -86,9 +86,9 @@
                     <label for="obr_type" class="sr-only">OBR Type</label>
                     <x-form.select name="obr_type_filter" id="obr_type_filter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
                         <option value="">All Types</option>
-                        <option value="Purchase Request" {{ request('obr_type_filter') == 'Purchase Request' ? 'selected' : '' }}>Purchase Request</option>
                         <option value="Regular" {{ request('obr_type_filter') == 'Regular' ? 'selected' : '' }}>Regular</option>
-                        <option value="Contract" {{ request('obr_type_filter') == 'Contract' ? 'selected' : '' }}>Contract</option>
+                        <option value="Purchase Request" {{ request('obr_type_filter') == 'Purchase Request' ? 'selected' : '' }}>Purchase Request</option>
+                        <option value="Contract" {{ request('obr_type_filter') == 'Contract' ? 'selected' : '' }}>Project/Contract</option>
                     </x-form.select>
                 </div>
 

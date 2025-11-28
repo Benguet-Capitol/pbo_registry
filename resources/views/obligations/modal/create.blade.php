@@ -264,643 +264,618 @@
 </div>
 
 <script>
-    //Open Create Modal
-    function openCreateModal() {
-        closeAllDropdowns();
-        document.getElementById('createModal').classList.remove('hidden');
-    }
-    //Close Create Modal
-    function closeCreateModal() {
-        document.getElementById('createModal').classList.add('hidden');
+    // 1. Open/Close Modal Functions
+function openCreateModal() {
+    closeAllDropdowns();
+    document.getElementById('createModal').classList.remove('hidden');
+}
+
+function closeCreateModal() {
+    document.getElementById('createModal').classList.add('hidden');
+}
+
+// 2. Data Arrays
+const officeAllotmentClasses = [
+    @foreach($office_allotment_classes as $office_allotment_class) {
+        id: "{{ $office_allotment_class->id }}",
+        name: "{{ $office_allotment_class->office_abbreviation }} - {{ $office_allotment_class->class }}",
+        office: "{{ $office_allotment_class->office_abbreviation }}",
+        class: "{{ $office_allotment_class->class }}", 
+        fund: "{{ $office_allotment_class->fund ?? 'General Fund' }}"
+    }, 
+    @endforeach
+];
+
+const allowedObligationTypes = {
+    'PS': ['Regular'],
+    'MOOE': ['Regular', 'Purchase Request'],
+    'CO': ['Purchase Request', 'Project/Contract'],
+    'CCO': ['Purchase Request', 'Project/Contract']
+};
+
+const existingObrNumbers = [
+    @foreach($obligations_check ?? [] as $obligation)
+        "{{ $obligation->obr_no }}",
+    @endforeach
+];
+
+let selectedOfficeAllotmentClass = null;
+
+// 3. Filter Office Allotment Classes
+function filterOfficeAllotmentClasses() {
+    const input = document.getElementById("office_allotment_class");
+    const dropdown = document.getElementById("OfficeAllotmentClassDropdown");
+    const filter = input.value.toLowerCase();
+
+    dropdown.innerHTML = "";
+
+    if (!filter) {
+        dropdown.classList.add("hidden");
+        return;
     }
 
-    // Autocomplete for Office and Allotment Class
-    const officeAllotmentClasses = [
-        @foreach($office_allotment_classes as $office_allotment_class) {
-            id: "{{ $office_allotment_class->id }}",
-            name: "{{ $office_allotment_class->office_abbreviation }} - {{ $office_allotment_class->class }}",
-            office: "{{ $office_allotment_class->office_abbreviation }}",
-            class: "{{ $office_allotment_class->class }}", 
-            fund: "{{ $office_allotment_class->fund ?? 'General Fund' }}"
-        }, 
-        @endforeach
-    ];
+    const filteredClasses = officeAllotmentClasses.filter(item => item.name.toLowerCase().includes(filter));
 
-    const allowedObligationTypes = {
-        'PS': ['Regular'],
-        'MOOE': ['Regular', 'Purchase Request'],
-        'CO': ['Purchase Request', 'Project/Contract'],
-        'CCO': ['Purchase Request', 'Project/Contract']
+    if (filteredClasses.length === 0) {
+        dropdown.classList.add("hidden");
+        return;
+    }
+
+    filteredClasses.forEach(item => {
+        const option = document.createElement("div");
+        option.className = "p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer";
+        option.innerHTML = `${item.name}`;
+        option.onclick = function() {
+            input.value = item.name;
+            document.getElementById("office_allotment_class_id").value = item.id;
+            
+            selectedOfficeAllotmentClass = item;
+            
+            document.querySelectorAll('[name="account_code[]"]').forEach(field => field.value = '');
+            document.querySelectorAll('[name="description[]"]').forEach(field => field.value = '');
+            document.querySelectorAll('[name="programs[]"]').forEach(field => field.value = '');
+            document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
+            document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
+            
+            document.getElementById('obr_type').value = '';
+            
+            updateObligationTypes(item.class);
+            generateObrNumber();
+            
+            dropdown.classList.add("hidden");
+        };
+        dropdown.appendChild(option);
+    });
+
+    dropdown.classList.remove("hidden");
+}
+
+// 4. UPDATE OBLIGATION TYPES
+function updateObligationTypes(classType) {
+    const obrTypeSelect = document.getElementById('obr_type');
+    const allowedTypes = allowedObligationTypes[classType] || [];
+
+    while (obrTypeSelect.options.length > 1) {
+        obrTypeSelect.remove(1);
+    }
+
+    allowedTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        obrTypeSelect.appendChild(option);
+    });
+
+    if (classType === 'PS' && allowedTypes.length === 1) {
+        obrTypeSelect.value = 'Regular';
+        updateTextColor(obrTypeSelect);
+    }
+
+    console.log(`Updated obligation types for ${classType}:`, allowedTypes);
+}
+
+// 5. GENERATE OBR NUMBER
+function generateObrNumber() {
+    const obrNoField = document.getElementById('obr_no');
+    
+    if (!selectedOfficeAllotmentClass) {
+        obrNoField.value = '';
+        console.warn('No office allotment class selected');
+        return;
+    }
+    
+    const date = new Date();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+
+    const fundToSequence = {
+        'General Fund': '100',
+        'Special Education Fund': '200',
+        'Benguet General Hospital Economic Enterprise': '109',
+        'Provincial Development Fund': '107'
     };
 
-    // Existing OBR numbers from the database for the current year
-    const existingObrNumbers = [
-        @foreach($obligations_check ?? [] as $obligation)
-            "{{ $obligation->obr_no }}",
-        @endforeach
-    ];
-
-    // Store selected office allotment class data
-    let selectedOfficeAllotmentClass = null;
-
-    // Filter office allotment classes based on input
-    function filterOfficeAllotmentClasses() {
-        const input = document.getElementById("office_allotment_class");
-        const dropdown = document.getElementById("OfficeAllotmentClassDropdown");
-        const filter = input.value.toLowerCase();
-
-        dropdown.innerHTML = ""; // Clear previous results
-
-        if (!filter) {
-            dropdown.classList.add("hidden");
-            return;
-        }
-
-        const filteredClasses = officeAllotmentClasses.filter(item => item.name.toLowerCase().includes(filter));
-
-        if (filteredClasses.length === 0) {
-            dropdown.classList.add("hidden");
-            return;
-        }
-
-        filteredClasses.forEach(item => {
-            const option = document.createElement("div");
-            option.className = "p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer";
-            option.innerHTML = `${item.name}`;
-            option.onclick = function() {
-                input.value = item.name;
-                document.getElementById("office_allotment_class_id").value = item.id;
-                
-                // Store the selected office allotment class data
-                selectedOfficeAllotmentClass = item;
-                
-                // Reset all account code fields when a new OfficeAllotmentClass is selected
-                document.querySelectorAll('[name="account_code[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="description[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="programs[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
-                document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
-                
-                // Generate OBR number when office allotment class is selected
-                generateObrNumber();
-                
-                dropdown.classList.add("hidden");
-            };
-            dropdown.appendChild(option);
-        });
-
-        dropdown.classList.remove("hidden");
-    }
-
-    document.addEventListener("click", function(event) {
-        const dropdown = document.getElementById("OfficeAllotmentClassDropdown");
-        if (!event.target.closest("#office_allotment_class")) {
-            dropdown.classList.add("hidden");
-        }
-    });
-
-    // Generate the OBR number in the format FundCode-YY-MM-
-    function generateObrNumber() {
-        const obrNoField = document.getElementById('obr_no');
-        
-        // Check if office allotment class is selected
-        if (!selectedOfficeAllotmentClass) {
-            obrNoField.value = '';
-            return;
-        }
-        
-        const date = new Date();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (01-12)
-        const year = String(date.getFullYear()).slice(-2); // Last two digits
-
-        const fundToSequence = {
-            'General Fund': '100',
-            'Special Education Fund': '200',
-            'Benguet General Hospital Economic Enterprise': '109',
-            'Provincial Development Fund': '107'
-        };
-
-        const fundCode = fundToSequence[selectedOfficeAllotmentClass.fund] || '000'; // Default to '000' if fund is unknown
-        
-        // Format: FundCode-YY-MM-
-        const obrNumber = `${fundCode}-${year}-${month}-`;
-        obrNoField.value = obrNumber;
-    }
-
-    // Check if serial number already exists (checks only the serial number part)
-    function checkObrNumberExists() {
-        const obrNoField = document.getElementById('obr_no');
-        const obrNoError = document.getElementById('obrNoError');
-        const obrValue = obrNoField.value.trim();
-        
-        // Clear previous error
+    const fundCode = fundToSequence[selectedOfficeAllotmentClass.fund] || '000';
+    const obrNumber = `${fundCode}-${year}-${month}-`;
+    
+    obrNoField.value = obrNumber;
+    
+    const obrNoError = document.getElementById('obrNoError');
+    if (obrNoError) {
         obrNoError.textContent = '';
-        obrNoField.classList.remove('border-red-500');
-        obrNoField.classList.add('border-gray-300', 'dark:border-gray-700');
-        
-        if (!obrValue) {
-            return false;
-        }
-        
-        // Split by dash to get all parts
-        // Format: FundCode-YY-MM-Serial
-        const parts = obrValue.split('-');
-        if (parts.length < 4) {
-            return false; // Invalid format or no serial yet
-        }
-        
-        // Get the serial number (last part)
-        const serial = parts[parts.length - 1];
-        
-        if (!serial || serial.trim() === '') {
-            return false; // No serial number yet
-        }
-        
-        // Check if any existing OBR number has the same serial (regardless of prefix)
-        const serialExists = existingObrNumbers.some(existingObr => {
-            const existingParts = existingObr.split('-');
-            const existingSerial = existingParts[existingParts.length - 1];
-            return existingSerial === serial;
-        });
-        
-        if (serialExists) {
-            obrNoField.classList.add('border-red-500');
-            obrNoField.classList.remove('border-gray-300', 'dark:border-gray-700');
-            obrNoError.textContent = `Serial number "${serial}" is already used. Please enter a different serial number.`;
-            return true;
-        }
-        
+    }
+    
+    obrNoField.classList.remove('border-red-500');
+    obrNoField.classList.add('border-gray-300', 'dark:border-gray-700');
+    updateTextColor(obrNoField);
+    
+    console.log('Generated OBR Number:', obrNumber);
+}
+
+// 6. CHECK OBR NUMBER EXISTS
+function checkObrNumberExists() {
+    const obrNoField = document.getElementById('obr_no');
+    const obrNoError = document.getElementById('obrNoError');
+    const obrValue = obrNoField.value.trim();
+    
+    obrNoError.textContent = '';
+    obrNoField.classList.remove('border-red-500');
+    obrNoField.classList.add('border-gray-300', 'dark:border-gray-700');
+    
+    if (!obrValue) {
         return false;
     }
-
-    // Add event listener for OBR number field
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add event listener to OBR number field for real-time validation
-        const obrNoField = document.getElementById('obr_no');
-        if (obrNoField) {
-            obrNoField.addEventListener('blur', checkObrNumberExists);
-            obrNoField.addEventListener('input', function() {
-                // Real-time check as user types the serial number
-                const parts = this.value.split('-');
-                if (parts.length >= 4 && parts[3]) {
-                    checkObrNumberExists();
-                }
-            });
-        }
+    
+    const parts = obrValue.split('-');
+    if (parts.length < 4) {
+        return false;
+    }
+    
+    const serial = parts[parts.length - 1];
+    
+    if (!serial || serial.trim() === '') {
+        return false;
+    }
+    
+    const serialExists = existingObrNumbers.some(existingObr => {
+        const existingParts = existingObr.split('-');
+        const existingSerial = existingParts[existingParts.length - 1];
+        return existingSerial === serial;
     });
+    
+    if (serialExists) {
+        obrNoField.classList.add('border-red-500');
+        obrNoField.classList.remove('border-gray-300', 'dark:border-gray-700');
+        obrNoError.textContent = `Serial number "${serial}" is already used. Please enter a different serial number.`;
+        return true;
+    }
+    
+    return false;
+}
 
-    // List of appropriations passed from the backend
-    const appropriations = [
-        @foreach($appropriations as $appropriation) {
-            id: "{{ $appropriation->id }}",
-            account_code: "{{ $appropriation->account_code }}",
-            program: "{{ $appropriation->programs }}",
-            description: "{{ $appropriation->description }}",
-            office_allotment_class_id: "{{ $appropriation->office_allotment_class_id }}",
-            balance: "{{ $appropriation->balance }}" // Include the calculated balance
-        },
-        @endforeach
-    ];
+// 7. ACCOUNT CODES DATA
+const appropriations = [
+    @foreach($appropriations as $appropriation) {
+        id: "{{ $appropriation->id }}",
+        account_code: "{{ $appropriation->account_code }}",
+        program: "{{ $appropriation->programs }}",
+        description: "{{ $appropriation->description }}",
+        office_allotment_class_id: "{{ $appropriation->office_allotment_class_id }}",
+        balance: "{{ $appropriation->balance }}"
+    },
+    @endforeach
+];
 
-    // Filter account codes and display suggestions with description and program
-    function filterAccountCodes(inputElement) {
-        const officeAllotmentClassId = document.getElementById('office_allotment_class_id').value; // Get the selected office_allotment_class_id
-        console.log('Appropriations Data:', appropriations);
-        console.log('Selected Office Allotment Class ID:', officeAllotmentClassId);
-        const dropdown = inputElement.nextElementSibling; // Get the dropdown element
-        const filter = inputElement.value.toLowerCase();
+// 8. FILTER ACCOUNT CODES
+function filterAccountCodes(inputElement) {
+    const officeAllotmentClassId = document.getElementById('office_allotment_class_id').value;
+    const dropdown = inputElement.nextElementSibling;
+    const filter = inputElement.value.toLowerCase();
 
-        dropdown.innerHTML = ''; // Clear previous results
+    dropdown.innerHTML = '';
 
-        if (!filter || !officeAllotmentClassId) {
-            dropdown.classList.add('hidden');
-            return;
-        }
+    if (!filter || !officeAllotmentClassId) {
+        dropdown.classList.add('hidden');
+        return;
+    }
 
-        // Filter account codes based on the input and matching office_allotment_class_id
-        const filteredCodes = appropriations.filter(item =>
-            item.office_allotment_class_id === officeAllotmentClassId && // Match office_allotment_class_id
-            item.account_code.toLowerCase().includes(filter) // Match account code
-        );
+    const filteredCodes = appropriations.filter(item =>
+        item.office_allotment_class_id === officeAllotmentClassId &&
+        item.account_code.toLowerCase().includes(filter)
+    );
 
-        console.log('Filtered Account Codes:', filteredCodes);
+    if (filteredCodes.length === 0) {
+        dropdown.classList.add('hidden');
+        return;
+    }
 
-        if (filteredCodes.length === 0) {
-            dropdown.classList.add('hidden');
-            return;
-        }
-
-        // Populate the dropdown with filtered account codes, descriptions, and programs
-        filteredCodes.forEach(item => {
-            const option = document.createElement('div');
-            option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
-            option.innerHTML = `
+    filteredCodes.forEach(item => {
+        const option = document.createElement('div');
+        option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+        option.innerHTML = `
             <strong>${item.account_code}</strong><br>
             <span class="text-gray-700 dark:text-gray-400">${item.description || 'No description'}</span><br>
             <span class="text-gray-700 dark:text-gray-400">${item.program || 'No program'}</span>
         `;
-            option.onclick = function() {
-                inputElement.value = item.account_code; // Set the selected value
-                populateFields(inputElement, item); // Populate related fields
-                calculateBalance(inputElement, item); // Calculate and populate the balance
-                dropdown.classList.add('hidden');
-            };
-            dropdown.appendChild(option);
-        });
-
-        dropdown.classList.remove('hidden');
-    }
-
-    // Populate related fields (description and program) based on the selected account code
-    function populateFields(inputElement, item) {
-        const row = inputElement.closest('tr'); // Get the current row
-        const programField = row.querySelector('[name="programs[]"]');
-        const descriptionField = row.querySelector('[name="description[]"]');
-
-        // Populate the program and description fields
-        if (programField) programField.value = item.program ? item.program.trim() : '';
-        if (descriptionField) descriptionField.value = item.description ? item.description.trim() : '';
-    }
-
-    // Calculate and populate the balance for the selected account code
-    function calculateBalance(inputElement, item) {
-        const row = inputElement.closest('tr'); // Get the current row
-        const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
-
-        // Use the pre-calculated balance from the appropriations data
-        const balance = parseFloat(item.balance || 0);
-
-        // Format balance with commas and two decimal places for display
-        const formattedBalance = balance.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-
-        // Populate the balance field
-        if (balanceField) balanceField.value = formattedBalance;
-    }
-
-    // Hide dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        const dropdowns = document.querySelectorAll('#AccountCodeDropdown');
-        dropdowns.forEach(dropdown => {
-            if (!event.target.closest('[name="account_code[]"]')) {
-                dropdown.classList.add('hidden');
-            }
-        });
+        option.onclick = function() {
+            inputElement.value = item.account_code;
+            populateFields(inputElement, item);
+            calculateBalance(inputElement, item);
+            dropdown.classList.add('hidden');
+        };
+        dropdown.appendChild(option);
     });
 
-    function validateAmount(inputElement) {
-        const row = inputElement.closest('tr'); // Get the current row
-        const balanceField = row.querySelector('[name="balance_from_allotment[]"]'); // Get the balance field
+    dropdown.classList.remove('hidden');
+}
 
-        if (balanceField) {
-            const maxBalance = parseFloat((balanceField.value || 0).replace(/,/g, ''));; // Get the balance value
-            const currentValue = parseFloat((inputElement.value || 0).replace(/,/g, ''));; // Get the current input value
+// 9. POPULATE FIELDS
+function populateFields(inputElement, item) {
+    const row = inputElement.closest('tr');
+    const programField = row.querySelector('[name="programs[]"]');
+    const descriptionField = row.querySelector('[name="description[]"]');
 
-            // If the input value exceeds the balance, reset it to the balance
-            if (currentValue > maxBalance) {
-                inputElement.value = maxBalance.toFixed(2);
-            }
+    if (programField) programField.value = item.program ? item.program.trim() : '';
+    if (descriptionField) descriptionField.value = item.description ? item.description.trim() : '';
+}
+
+// 10. CALCULATE BALANCE
+function calculateBalance(inputElement, item) {
+    const row = inputElement.closest('tr');
+    const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
+    const balance = parseFloat(item.balance || 0);
+    const formattedBalance = balance.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    if (balanceField) balanceField.value = formattedBalance;
+}
+
+// 11. VALIDATE AMOUNT
+function validateAmount(inputElement) {
+    const row = inputElement.closest('tr');
+    const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
+
+    if (balanceField) {
+        const maxBalance = parseFloat((balanceField.value || 0).replace(/,/g, ''));
+        const currentValue = parseFloat((inputElement.value || 0).replace(/,/g, ''));
+
+        if (currentValue > maxBalance) {
+            inputElement.value = maxBalance.toFixed(2);
         }
     }
+}
 
-    function calculateTotalObligation() {
-        const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]'); // Select all amount fields
-        let total = 0;
+// 12. CALCULATE TOTAL OBLIGATION
+function calculateTotalObligation() {
+    const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
+    let total = 0;
 
-        amountFields.forEach(field => {
-            const value = parseFloat(field.value.replace(/,/g, '') || 0); // Remove commas and parse as float
-            total += value; // Add to total
-        });
-
-        // Update the total obligation display
-        const totalObligationElement = document.getElementById('totalObligation');
-        totalObligationElement.textContent = total.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-
-    function addRow() {
-        const tableBody = document.querySelector('#programs_table tbody'); // Get the table body
-        const lastRow = tableBody.querySelector('tr:last-child'); // Get the last row in the table
-        const newRow = lastRow.cloneNode(true); // Clone the last row
-
-        // Clear the input values in the cloned row
-        newRow.querySelectorAll('input, textarea').forEach(input => {
-            input.value = '';
-        });
-
-        // Append the cloned row to the table body
-        tableBody.appendChild(newRow);
-
-        // Recalculate the total obligation
-        calculateTotalObligation();
-    }
-
-    /* function deleteRow(button) {
-        const row = button.closest('tr'); // Get the row containing the button
-        const tableBody = row.parentNode; // Get the table body
-        const messageDiv = document.getElementById('tableMessage'); // Get the message placeholder
-
-        // Ensure at least one row remains in the table
-        if (tableBody.rows.length > 1) {
-            tableBody.removeChild(row); // Remove the row
-            messageDiv.classList.add('hidden'); // Hide the message if it was visible
-        } else {
-            messageDiv.textContent = "At least one row must remain in the table."; // Set the message
-            messageDiv.classList.remove('hidden'); // Show the message
-        }
-
-        // Recalculate the total obligation
-        calculateTotalObligation();
-    } */
-    //Delete Row Functionality
-    let rowToDelete = null;
-
-    function deleteRow(button) {
-        rowToDelete = button.closest('tr'); // Store the row for deletion
-        document.getElementById('deleteConfirmModal').classList.remove('hidden'); // Show the modal
-    }
-
-    // Confirm delete
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        const tableBody = rowToDelete.parentNode;
-        const messageDiv = document.getElementById('tableMessage');
-
-        if (tableBody.rows.length > 1) {
-            tableBody.removeChild(rowToDelete);
-            messageDiv.classList.add('hidden');
-        } else {
-            messageDiv.textContent = "At least one row must remain in the table.";
-            messageDiv.classList.remove('hidden');
-        }
-
-        rowToDelete = null;
-        document.getElementById('deleteConfirmModal').classList.add('hidden');
-
-        calculateTotalObligation(); // Recompute total
+    amountFields.forEach(field => {
+        const value = parseFloat(field.value.replace(/,/g, '') || 0);
+        total += value;
     });
 
-    // Cancel delete
-    document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
-        rowToDelete = null;
-        document.getElementById('deleteConfirmModal').classList.add('hidden');
+    const totalObligationElement = document.getElementById('totalObligation');
+    totalObligationElement.textContent = total.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// 13. ADD ROW
+function addRow() {
+    const tableBody = document.querySelector('#programs_table tbody');
+    const lastRow = tableBody.querySelector('tr:last-child');
+    const newRow = lastRow.cloneNode(true);
+
+    newRow.querySelectorAll('input, textarea').forEach(input => {
+        input.value = '';
     });
 
-    // Update Text Color Based on Input
-    document.addEventListener("DOMContentLoaded", function() {
-        const fields = document.querySelectorAll("input, select, textarea"); 
+    tableBody.appendChild(newRow);
+    calculateTotalObligation();
+}
 
-        fields.forEach(element => {
-            updateTextColor(element);
+// 14. DELETE ROW
+let rowToDelete = null;
 
-            element.addEventListener("input", function() {
-                updateTextColor(this);
-            });
+function deleteRow(button) {
+    rowToDelete = button.closest('tr');
+    document.getElementById('deleteConfirmModal').classList.remove('hidden');
+}
 
-            if (element.tagName === "SELECT") {
-                element.addEventListener("change", function() {
-                    updateTextColor(this);
-                });
-            }
-        });
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    const tableBody = rowToDelete.parentNode;
+    const messageDiv = document.getElementById('tableMessage');
 
-    function updateTextColor(element) {
+    if (tableBody.rows.length > 1) {
+        tableBody.removeChild(rowToDelete);
+        messageDiv.classList.add('hidden');
+    } else {
+        messageDiv.textContent = "At least one row must remain in the table.";
+        messageDiv.classList.remove('hidden');
+    }
+
+    rowToDelete = null;
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+    calculateTotalObligation();
+});
+
+document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+    rowToDelete = null;
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+});
+
+// 15. UPDATE TEXT COLOR
+function updateTextColor(element) {
+    if (element.value.trim() !== "") {
+        element.classList.remove("text-gray-500");
+        element.classList.add("text-gray-900", "dark:text-gray-100");
+    } else {
+        element.classList.remove("text-gray-900", "dark:text-gray-100");
+        element.classList.add("text-gray-500");
+    }
+
+    if ((element.tagName === "INPUT" || element.tagName === "TEXTAREA") && element.hasAttribute("readonly")) {
+        element.classList.add("text-gray-900", "dark:text-gray-400");
+    }
+
+    if (element.tagName === "SELECT" && element.disabled) {
+        element.classList.add("text-gray-700", "dark:text-gray-500");
+    }
+
+    if (element.tagName === "TEXTAREA") {
         if (element.value.trim() !== "") {
-            element.classList.remove("text-gray-500");
+            element.classList.remove("text-gray-400");
             element.classList.add("text-gray-900", "dark:text-gray-100");
         } else {
             element.classList.remove("text-gray-900", "dark:text-gray-100");
-            element.classList.add("text-gray-500");
+            element.classList.add("text-gray-900");
         }
+    }
+}
 
-        if ((element.tagName === "INPUT" || element.tagName === "TEXTAREA") && element.hasAttribute("readonly")) {
-            element.classList.add("text-gray-900", "dark:text-gray-400");
-        }
+// 16. SETUP TEXT COLOR ON DOM LOAD
+document.addEventListener("DOMContentLoaded", function() {
+    const fields = document.querySelectorAll("input, select, textarea"); 
 
-        if (element.tagName === "SELECT" && element.disabled) {
-            element.classList.add("text-gray-700", "dark:text-gray-500");
-        }
+    fields.forEach(element => {
+        updateTextColor(element);
 
-        if (element.tagName === "TEXTAREA") {
-                if (element.value.trim() !== "") {
-                    element.classList.remove("text-gray-400");
-                    element.classList.add("text-gray-900", "dark:text-gray-100");
-                } else {
-                    element.classList.remove("text-gray-900", "dark:text-gray-100");
-                    element.classList.add("text-gray-900");
-                }
-            }
-        }
-    });
-
-    // Generic keyboard navigation for dropdowns
-    function enableDropdownKeyboardNavigation(inputId, dropdownId) {
-        const input = document.getElementById(inputId);
-        const dropdown = document.getElementById(dropdownId);
-        let currentFocus = -1;
-
-        if (!input || !dropdown) return;
-
-        input.addEventListener("keydown", function (e) {
-            let items = dropdown.querySelectorAll("div, li");
-            if (dropdown.classList.contains("hidden") || items.length === 0) return;
-
-            if (e.key === "ArrowDown") {
-                e.preventDefault();
-                currentFocus++;
-                if (currentFocus >= items.length) currentFocus = 0;
-                setActive(items, currentFocus);
-            } 
-            else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                currentFocus--;
-                if (currentFocus < 0) currentFocus = items.length - 1;
-                setActive(items, currentFocus);
-            } 
-            else if (e.key === "Enter") {
-                e.preventDefault();
-                if (currentFocus > -1 && items[currentFocus]) {
-                    items[currentFocus].click();
-                    currentFocus = -1;
-                }
-            } 
-            else if (e.key === "Escape") {
-                dropdown.classList.add("hidden");
-                currentFocus = -1;
-            }
+        element.addEventListener("input", function() {
+            updateTextColor(this);
         });
 
-        function setActive(items, index) {
-            removeActive(items);
-            if (items[index]) {
-                items[index].classList.add("active");
-                items[index].style.backgroundColor = "#e5e7eb"; // light blue highlight
-                items[index].scrollIntoView({ block: "nearest" });
-            }
-        }
-
-        function removeActive(items) {
-            items.forEach(item => {
-                item.classList.remove("active");
-                item.style.backgroundColor = ""; // reset background
-                item.style.color = ""; // reset text color
+        if (element.tagName === "SELECT") {
+            element.addEventListener("change", function() {
+                updateTextColor(this);
             });
         }
-
-        document.addEventListener("click", function (event) {
-            if (!event.target.closest(`#${inputId}`) && !event.target.closest(`#${dropdownId}`)) {
-                dropdown.classList.add("hidden");
-                currentFocus = -1;
-            }
-        });
-    }
-
-    // Initialize once DOM is loaded
-    document.addEventListener("DOMContentLoaded", function() {
-        enableDropdownKeyboardNavigation("office_allotment_class", "OfficeAllotmentClassDropdown");
-        enableDropdownKeyboardNavigation("account_code", "AccountCodeDropdown");
     });
 
-    function validateForm() {
-        const form = document.getElementById('createObligationsForm');
-        let isValid = true;
-
-        // Clear previous error messages
-        document.querySelectorAll('.text-red-500').forEach(error => error.textContent = '');
-
-        // Validate Office and Allotment Class
-        const officeAllotmentClass = document.getElementById('office_allotment_class');
-        const officeAllotmentClassId = document.getElementById('office_allotment_class_id');
-        if (!officeAllotmentClass.value.trim() || !officeAllotmentClassId.value.trim()) {
-            document.getElementById('OfficeAllotmentClassError').textContent = 'Office and Allotment Class is required.';
-            isValid = false;
-        }
-
-        // Validate Date
-        const obrDate = document.getElementById('obr_date');
-        if (!obrDate.value.trim()) {
-            obrDate.classList.add('border-red-500');
-            obrDate.classList.remove('border-gray-300');
-            isValid = false;
-        } else {
-            obrDate.classList.remove('border-red-500');
-            obrDate.classList.add('border-gray-300');
-        }
-
-        // Validate Obligation Type
-        const obrType = document.getElementById('obr_type');
-        if (!obrType.value.trim()) {
-            document.getElementById('obrTypeError').textContent = 'Obligation Type is required.';
-            isValid = false;
-        }
-        console.log("OBR Type Selected:", obrType.value);
-
-        // Validate OBR Number
-        const obrNo = document.getElementById('obr_no');
-        const obrNoError = document.getElementById('obrNoError');
-        const obrValue = obrNo.value.trim();
-
-        if (!obrValue) {
-            obrNo.classList.add('border-red-500');
-            obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
-            obrNoError.textContent = 'OBR Number is required';
-            isValid = false;
-        } else {
-            const parts = obrValue.split('-');
-            const sequence = parts[parts.length - 1]; // Get last part after last dash
-
-            if (!sequence || sequence.trim() === '') {
-                obrNo.classList.add('border-red-500');
-                obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
-                obrNoError.textContent = 'OBR Number is incomplete. Please enter the serial number.';
-                isValid = false;
-            } else {
-                // Check for duplicate OBR serial numbers
-                const serialExists = existingObrNumbers.some(existingObr => {
-                    const existingParts = existingObr.split('-');
-                    const existingSerial = existingParts[existingParts.length - 1];
-                    return existingSerial === sequence;
-                });
-
-                if (serialExists) {
-                    obrNo.classList.add('border-red-500');
-                    obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
-                    obrNoError.textContent = `Serial number "${sequence}" is already used. Please enter a different serial number.`;
-                    isValid = false;
-                } else {
-                    obrNo.classList.remove('border-red-500');
-                    obrNo.classList.add('border-gray-300', 'dark:border-gray-700');
-                    obrNoError.textContent = '';
-                }
-            }
-        }
-
-        // Validate Particulars
-        const particulars = document.getElementById('particulars');
-        if (!particulars.value.trim()) {
-            document.getElementById('particularsError').textContent = 'Particulars field is required.';
-            isValid = false;
-        } else {
-            particulars.classList.remove('border-red-500');
-            particulars.classList.add('border-gray-300');
-        }
-
-        // Validate at least one row in the Programs Table
-        const tableBody = document.querySelector('#programs_table tbody');
-        if (tableBody.rows.length === 0) {
-            const tableMessage = document.getElementById('tableMessage');
-            tableMessage.textContent = 'At least one row is required in the table.';
-            tableMessage.classList.remove('hidden');
-            isValid = false;
-        }
-
-        // Validate Amount of Obligation
-        const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
-        amountFields.forEach((field, index) => {
-            const value = parseFloat(field.value || 0);
-            if (value <= 0) {
-                field.classList.add('border-red-500');
-                field.classList.remove('border-gray-300');
-                const errorMessage = document.createElement('div');
-                errorMessage.className = 'text-red-500 text-xs mt-1';
-                errorMessage.textContent = `Row ${index + 1}: Amount of Obligation must be greater than 0.`;
-                errorMessage.style.gridColumn = 'span 2'; // Make error message span two columns
-                field.parentNode.appendChild(errorMessage);
-                isValid = false;
-            } else {
-                field.classList.remove('border-red-500');
-                field.classList.add('border-gray-300');
+    // Add event listener to OBR number field
+    const obrNoField = document.getElementById('obr_no');
+    if (obrNoField) {
+        obrNoField.addEventListener('blur', checkObrNumberExists);
+        obrNoField.addEventListener('input', function() {
+            const parts = this.value.split('-');
+            if (parts.length >= 4 && parts[3]) {
+                checkObrNumberExists();
             }
         });
+    }
 
-        // Validate if the total balance from allotment is exhausted
-        const balanceFields = document.querySelectorAll('[name="balance_from_allotment[]"]');
-        let totalBalance = 0;
-        let hasNull = false;
+    // Enable keyboard navigation
+    enableDropdownKeyboardNavigation("office_allotment_class", "OfficeAllotmentClassDropdown");
+    enableDropdownKeyboardNavigation("account_code", "AccountCodeDropdown");
+});
 
-        balanceFields.forEach(field => {
-            const rawValue = field.value;
-            if (rawValue === null || rawValue === '' || typeof rawValue === 'undefined') {
-                hasNull = true;
-            } else {
-                const value = parseFloat(rawValue);
-                totalBalance += value || 0;
+// 17. KEYBOARD NAVIGATION
+function enableDropdownKeyboardNavigation(inputId, dropdownId) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    let currentFocus = -1;
+
+    if (!input || !dropdown) return;
+
+    input.addEventListener("keydown", function (e) {
+        let items = dropdown.querySelectorAll("div, li");
+        if (dropdown.classList.contains("hidden") || items.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            currentFocus++;
+            if (currentFocus >= items.length) currentFocus = 0;
+            setActive(items, currentFocus);
+        } 
+        else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            currentFocus--;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            setActive(items, currentFocus);
+        } 
+        else if (e.key === "Enter") {
+            e.preventDefault();
+            if (currentFocus > -1 && items[currentFocus]) {
+                items[currentFocus].click();
+                currentFocus = -1;
             }
-        });
-
-        if (!hasNull && totalBalance === 0) {
-            const tableMessage = document.getElementById('tableMessage');
-            tableMessage.textContent = 'The Balance from Allotment has been exhausted.';
-            tableMessage.classList.remove('hidden');
-            isValid = false;
+        } 
+        else if (e.key === "Escape") {
+            dropdown.classList.add("hidden");
+            currentFocus = -1;
         }
+    });
 
-        // If the form is valid, submit it
-        if (isValid) {
-            form.submit();
+    function setActive(items, index) {
+        removeActive(items);
+        if (items[index]) {
+            items[index].classList.add("active");
+            items[index].style.backgroundColor = "#e5e7eb";
+            items[index].scrollIntoView({ block: "nearest" });
         }
     }
+
+    function removeActive(items) {
+        items.forEach(item => {
+            item.classList.remove("active");
+            item.style.backgroundColor = "";
+            item.style.color = "";
+        });
+    }
+
+    document.addEventListener("click", function (event) {
+        if (!event.target.closest(`#${inputId}`) && !event.target.closest(`#${dropdownId}`)) {
+            dropdown.classList.add("hidden");
+            currentFocus = -1;
+        }
+    });
+}
+
+// 18. HIDE DROPDOWNS WHEN CLICKING OUTSIDE
+document.addEventListener('click', function(event) {
+    // Hide Office Allotment Class dropdown
+    const officeDropdown = document.getElementById("OfficeAllotmentClassDropdown");
+    if (!event.target.closest("#office_allotment_class") && !event.target.closest("#OfficeAllotmentClassDropdown")) {
+        officeDropdown.classList.add("hidden");
+    }
+
+    // Hide Account Code dropdowns
+    const accountCodeDropdowns = document.querySelectorAll('#AccountCodeDropdown');
+    accountCodeDropdowns.forEach(dropdown => {
+        if (!event.target.closest('[name="account_code[]"]') && !event.target.closest('#AccountCodeDropdown')) {
+            dropdown.classList.add('hidden');
+        }
+    });
+});
+
+// 19. VALIDATE FORM
+function validateForm() {
+    const form = document.getElementById('createObligationsForm');
+    let isValid = true;
+
+    document.querySelectorAll('.text-red-500').forEach(error => error.textContent = '');
+
+    const officeAllotmentClass = document.getElementById('office_allotment_class');
+    const officeAllotmentClassId = document.getElementById('office_allotment_class_id');
+    if (!officeAllotmentClass.value.trim() || !officeAllotmentClassId.value.trim()) {
+        document.getElementById('OfficeAllotmentClassError').textContent = 'Office and Allotment Class is required.';
+        isValid = false;
+    }
+
+    const obrDate = document.getElementById('obr_date');
+    if (!obrDate.value.trim()) {
+        obrDate.classList.add('border-red-500');
+        obrDate.classList.remove('border-gray-300');
+        isValid = false;
+    } else {
+        obrDate.classList.remove('border-red-500');
+        obrDate.classList.add('border-gray-300');
+    }
+
+    const obrType = document.getElementById('obr_type');
+    if (!obrType.value.trim()) {
+        document.getElementById('obrTypeError').textContent = 'Obligation Type is required.';
+        isValid = false;
+    }
+
+    const obrNo = document.getElementById('obr_no');
+    const obrNoError = document.getElementById('obrNoError');
+    const obrValue = obrNo.value.trim();
+
+    if (!obrValue) {
+        obrNo.classList.add('border-red-500');
+        obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
+        obrNoError.textContent = 'OBR Number is required';
+        isValid = false;
+    } else {
+        const parts = obrValue.split('-');
+        const sequence = parts[parts.length - 1];
+
+        if (!sequence || sequence.trim() === '') {
+            obrNo.classList.add('border-red-500');
+            obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
+            obrNoError.textContent = 'OBR Number is incomplete. Please enter the serial number.';
+            isValid = false;
+        } else {
+            const serialExists = existingObrNumbers.some(existingObr => {
+                const existingParts = existingObr.split('-');
+                const existingSerial = existingParts[existingParts.length - 1];
+                return existingSerial === sequence;
+            });
+
+            if (serialExists) {
+                obrNo.classList.add('border-red-500');
+                obrNo.classList.remove('border-gray-300', 'dark:border-gray-700');
+                obrNoError.textContent = `Serial number "${sequence}" is already used. Please enter a different serial number.`;
+                isValid = false;
+            } else {
+                obrNo.classList.remove('border-red-500');
+                obrNo.classList.add('border-gray-300', 'dark:border-gray-700');
+                obrNoError.textContent = '';
+            }
+        }
+    }
+
+    const particulars = document.getElementById('particulars');
+    if (!particulars.value.trim()) {
+        document.getElementById('particularsError').textContent = 'Particulars field is required.';
+        isValid = false;
+    } else {
+        particulars.classList.remove('border-red-500');
+        particulars.classList.add('border-gray-300');
+    }
+
+    const tableBody = document.querySelector('#programs_table tbody');
+    if (tableBody.rows.length === 0) {
+        const tableMessage = document.getElementById('tableMessage');
+        tableMessage.textContent = 'At least one row is required in the table.';
+        tableMessage.classList.remove('hidden');
+        isValid = false;
+    }
+
+    const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
+    amountFields.forEach((field, index) => {
+        const value = parseFloat(field.value || 0);
+        if (value <= 0) {
+            field.classList.add('border-red-500');
+            field.classList.remove('border-gray-300');
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'text-red-500 text-xs mt-1';
+            errorMessage.textContent = `Row ${index + 1}: Amount of Obligation must be greater than 0.`;
+            errorMessage.style.gridColumn = 'span 2';
+            field.parentNode.appendChild(errorMessage);
+            isValid = false;
+        } else {
+            field.classList.remove('border-red-500');
+            field.classList.add('border-gray-300');
+        }
+    });
+
+    const balanceFields = document.querySelectorAll('[name="balance_from_allotment[]"]');
+    let totalBalance = 0;
+    let hasNull = false;
+
+    balanceFields.forEach(field => {
+        const rawValue = field.value;
+        if (rawValue === null || rawValue === '' || typeof rawValue === 'undefined') {
+            hasNull = true;
+        } else {
+            const value = parseFloat(rawValue);
+            totalBalance += value || 0;
+        }
+    });
+
+    if (!hasNull && totalBalance === 0) {
+        const tableMessage = document.getElementById('tableMessage');
+        tableMessage.textContent = 'The Balance from Allotment has been exhausted.';
+        tableMessage.classList.remove('hidden');
+        isValid = false;
+    }
+
+    if (isValid) {
+        form.submit();
+    }
+}
 </script>

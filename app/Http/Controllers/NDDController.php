@@ -12,6 +12,9 @@ use App\Exports\RAOExport;
 use App\Models\Employee;
 use App\Models\Obligation;
 use App\Models\ObligationAdjustment;
+use App\Models\PurchaseOrder;
+use App\Models\Disbursement;
+use App\Models\ObligationAmount;
 use Maatwebsite\Excel\Facades\Excel;
 
 class NDDController extends Controller
@@ -21,17 +24,25 @@ class NDDController extends Controller
         $selectedYear = request('year1', date('Y'));
         $selectedOffice = request('office_filter');
         $asOfDate = request('as_of_filter', now()->toDateString());
-        $selectedOfficeAllotmentClass = request('office_allotment_class_filter');
 
         $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
             ->where('year', $selectedYear)
+            ->whereIn('class', ['MOOE', 'CO'])
             ->orderBy('office', 'asc')
             ->get();
+
+        // Get all offices for the filter
+        $offices = Office::orderBy('id')->get();
 
         // Get all employees for signatory filter
         $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
+
+        // Fetch obligations based on criteria
+        $obligationsData = $this->getObligations($selectedYear, $selectedOffice, $asOfDate);
+        $obligations = $obligationsData['obligations'];
+        $totals = $obligationsData['totals'];
 
         return view('ndd.index', compact(
             'availableYears', 
@@ -39,40 +50,232 @@ class NDDController extends Controller
             'selectedOffice', 
             'asOfDate', 
             'employees', 
-            'officeAllotmentClasses'
+            'officeAllotmentClasses',
+            'offices',
+            'obligations',
+            'totals'
         ))->with('status', session('status'));
+    }
+
+    private function getObligations($year, $officeId, $asOfDate)
+    {
+        $query = Obligation::with([
+            'disbursements',
+            'obligationAdjustments',
+            'obligationAmounts',
+            'officeAllotmentClass.offices',
+            'officeAllotmentClass.allotmentClass'
+        ])
+        ->where('obr_type', 'Purchase Request')
+        ->whereYear('obr_date', $year)
+        ->where('obr_date', '<=', $asOfDate)
+        ->join('office_allotment_classes', 'obligations.office_allotment_class_id', '=', 'office_allotment_classes.id')
+        ->join('offices', 'office_allotment_classes.office', '=', 'offices.id')
+        ->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')
+        ->whereIn('allotment_classes.class', ['MOOE', 'CO'])
+        ->orderBy('offices.id', 'asc')
+        ->orderBy('obligations.obr_date', 'asc')
+        ->select('obligations.*');
+
+        // Filter by office if selected
+        if ($officeId) {
+            $query->where('office_allotment_classes.office', $officeId);
+        }
+
+        $obligations = $query->get()->filter(function ($obligation) {
+            // Calculate obligation balance
+            $obrTotal = $obligation->obligationAmounts->sum('obr_amount');
+            $adjustmentTotal = $obligation->obligationAdjustments->sum('adjustment_amount');
+            $obligationBalance = $obrTotal + $adjustmentTotal;
+            
+            // Exclude obligations with zero balance
+            if ($obligationBalance == 0) {
+                return false;
+            }
+            
+            // Get disbursements for this obligation
+            $disbursements = $obligation->disbursements;
+            
+            // Case 1: No disbursements at all
+            if ($disbursements->isEmpty()) {
+                return true; // Include obligations without disbursements
+            }
+            
+            // Case 2: Has disbursements but at least one is Partial Payment
+            $hasPartialPayment = $disbursements->contains(function ($disbursement) {
+                return $disbursement->status === 'Partial Payment';
+            });
+            
+            return $hasPartialPayment;
+        });
+
+        $results = collect();
+
+        foreach ($obligations as $obligation) {
+            // Calculate obligation balance
+            $obrTotal = $obligation->obligationAmounts->sum('obr_amount');
+            $adjustmentTotal = $obligation->obligationAdjustments->sum('adjustment_amount');
+            $obligationBalance = $obrTotal + $adjustmentTotal;
+
+            // Get office information
+            $office = $obligation->officeAllotmentClass?->offices;
+            $officeName = $office ? $office->office_name : 'Unknown Office';
+            $officeAbbr = $office ? $office->office_abbreviation : 'N/A';
+            $officeId = $office ? $office->id : 999999;
+
+            // Get OBR number from Obligation
+            $obrNumber = $obligation->obr_no ?? '';
+            
+            // Get allotment class
+            $allotmentClass = $obligation->officeAllotmentClass?->allotmentClass?->class ?? '';
+            
+            // Format budget control number with allotment class: MOOE-431-01-25-100
+            $budgetControlNo = $allotmentClass ? $allotmentClass . '-' . $obrNumber : $obrNumber;
+
+            // Remarks - leave blank for now
+            $remarks = '';
+
+            // Default payee from obligation
+            $defaultPayee = $obligation->payee ?? $obligation->particulars ?? 'N/A';
+
+            if ($obligation->obr_type === 'Purchase Request') {
+                // Get all Purchase Orders related to this obligation's ObligationAmounts
+                $obligationAmountIds = $obligation->obligationAmounts->pluck('id');
+                
+                if ($obligationAmountIds->isNotEmpty()) {
+                    $purchaseOrders = PurchaseOrder::whereIn('obligation_amounts_id', $obligationAmountIds)
+                        ->orderBy('po_date', 'asc')
+                        ->get();
+                    
+                    if ($purchaseOrders->isNotEmpty()) {
+                        // If there are Purchase Orders, create a row for each PO
+                        foreach ($purchaseOrders as $po) {
+                            // Use supplier from Purchase Order, fallback to default payee
+                            $poPayee = $po->supplier ?? $defaultPayee;
+                            $poDateFormatted = $po->po_date ? Carbon::parse($po->po_date)->format('m/d/Y') : '';
+
+                            $results->push([
+                                'office_id' => $officeId,
+                                'office_name' => $officeName,
+                                'office_abbr' => $officeAbbr,
+                                'payee' => $poPayee,
+                                'budget_control_no' => $budgetControlNo,
+                                'po_number' => $po->po_number ?? '',
+                                'po_date' => $poDateFormatted,
+                                'po_date_sort' => $po->po_date ? Carbon::parse($po->po_date)->format('Y-m-d') : '',
+                                'obr_date_sort' => $obligation->obr_date ? Carbon::parse($obligation->obr_date)->format('Y-m-d') : '',
+                                'amount' => number_format($po->po_amount ?? 0, 2),
+                                'remarks' => $remarks,
+                                'obligation_id' => $obligation->id,
+                                'obligation_balance' => $obligationBalance
+                            ]);
+                        }
+                    } else {
+                        // No Purchase Orders yet, show obligation with total obr_amount
+                        $totalObrAmount = $obligation->obligationAmounts->sum('obr_amount');
+                        
+                        $results->push([
+                            'office_id' => $officeId,
+                            'office_name' => $officeName,
+                            'office_abbr' => $officeAbbr,
+                            'payee' => $defaultPayee,
+                            'budget_control_no' => $budgetControlNo,
+                            'po_number' => '',
+                            'po_date' => '',
+                            'po_date_sort' => '',
+                            'obr_date_sort' => $obligation->obr_date ? Carbon::parse($obligation->obr_date)->format('Y-m-d') : '',
+                            'amount' => number_format($totalObrAmount, 2),
+                            'remarks' => $remarks,
+                            'obligation_id' => $obligation->id,
+                            'obligation_balance' => $obligationBalance
+                        ]);
+                    }
+                }
+            } else {
+                // Not a Purchase Request, display as normal
+                $totalObrAmount = $obligation->obligationAmounts->sum('obr_amount');
+                
+                $results->push([
+                    'office_id' => $officeId,
+                    'office_name' => $officeName,
+                    'office_abbr' => $officeAbbr,
+                    'payee' => $defaultPayee,
+                    'budget_control_no' => $budgetControlNo,
+                    'po_number' => '',
+                    'po_date' => '',
+                    'po_date_sort' => '',
+                    'obr_date_sort' => $obligation->obr_date ? Carbon::parse($obligation->obr_date)->format('Y-m-d') : '',
+                    'amount' => number_format($totalObrAmount, 2),
+                    'remarks' => $remarks,
+                    'obligation_id' => $obligation->id,
+                    'obligation_balance' => $obligationBalance
+                ]);
+            }
+        }
+
+        // Sort results by office_id, then by obr_date_sort, then by po_date_sort
+        $results = $results->sortBy([
+            ['office_id', 'asc'],
+            ['obr_date_sort', 'asc'],
+            ['po_date_sort', 'asc']
+        ]);
+
+        $groupedResults = $results->groupBy('office_name');
+        
+        // Re-sort each office's group by po_date_sort and obr_date_sort to maintain order after grouping
+        $groupedResults = $groupedResults->map(function ($officeObligations) {
+            return $officeObligations->sortBy([
+                ['po_date_sort', 'asc'],
+                ['obr_date_sort', 'asc']
+            ]);
+        });
+        
+        // Calculate totals per office and grand total
+        $totals = [];
+        $grandTotal = 0;
+        
+        foreach ($groupedResults as $officeName => $officeRows) {
+            $officeTotal = 0;
+            foreach ($officeRows as $row) {
+                // Remove formatting and convert to float
+                $amount = (float) str_replace(',', '', $row['amount']);
+                $officeTotal += $amount;
+            }
+            $totals[$officeName] = number_format($officeTotal, 2);
+            $grandTotal += $officeTotal;
+        }
+        
+        $totals['GRAND_TOTAL'] = number_format($grandTotal, 2);
+        
+        return [
+            'obligations' => $groupedResults,
+            'totals' => $totals
+        ];
     }
 
     public function exportExcel(Request $request)
     {
         $year = $request->input('year1');
-        $officeAllotmentClassId = $request->input('office_allotment_class_filter');
+        $officeId = $request->input('office_filter');
         $asOf = $request->input('as_of_filter');
         $signatoryName = $request->input('signatory_name');
         $signatoryDesignation = $request->input('signatory_designation');
 
-        // Require office allotment class selection
-        if (empty($officeAllotmentClassId)) {
-            return back()->with('error', 'Please select an Office Allotment Class to export the report.');
-        }
-
-        // Get the office and allotment class name
-        $officeAllotmentClass = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
-            ->find($officeAllotmentClassId);
+        // Get the office
+        $office = Office::find($officeId);
         
-        if (!$officeAllotmentClass) {
-            return back()->with('error', 'Office Allotment Class not found.');
+        if (!$office) {
+            return back()->with('error', 'Office not found.');
         }
 
         // Sanitize filename - remove special characters
-        $officeAbbr = preg_replace('/[^A-Za-z0-9_]/', '_', $officeAllotmentClass->offices->office_abbreviation);
-        $className = preg_replace('/[^A-Za-z0-9_]/', '_', $officeAllotmentClass->allotmentClass->class);
+        $officeAbbr = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation);
         
-        $fileName = 'RAO_' . $officeAbbr . '-' . $className . '_' . $year . '.xlsx';
+        $fileName = 'NDD_' . $officeAbbr . '_' . $year . '.xlsx';
 
         return Excel::download(new RAOExport(
             $year,
-            $officeAllotmentClassId,
+            $officeId,
             $asOf,
             $signatoryName,
             $signatoryDesignation

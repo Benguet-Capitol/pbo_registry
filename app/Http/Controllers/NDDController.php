@@ -8,7 +8,7 @@ use App\Models\Appropriation;
 use App\Models\Office;
 use App\Models\AllotmentClass;
 use Carbon\Carbon;
-use App\Exports\RAOExport;
+use App\Exports\NDDExport;
 use App\Models\Employee;
 use App\Models\Obligation;
 use App\Models\ObligationAdjustment;
@@ -27,7 +27,7 @@ class NDDController extends Controller
 
         $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
             ->where('year', $selectedYear)
-            ->whereIn('class', ['MOOE', 'CO'])
+            ->whereIn('class', ['MOOE', 'CO', 'CCO'])
             ->orderBy('office', 'asc')
             ->get();
 
@@ -72,7 +72,7 @@ class NDDController extends Controller
         ->join('office_allotment_classes', 'obligations.office_allotment_class_id', '=', 'office_allotment_classes.id')
         ->join('offices', 'office_allotment_classes.office', '=', 'offices.id')
         ->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')
-        ->whereIn('allotment_classes.class', ['MOOE', 'CO'])
+        ->whereIn('allotment_classes.class', ['MOOE', 'CO', 'CCO'])
         ->orderBy('offices.id', 'asc')
         ->orderBy('obligations.obr_date', 'asc')
         ->select('obligations.*');
@@ -255,27 +255,48 @@ class NDDController extends Controller
 
     public function exportExcel(Request $request)
     {
+        // Validate only required fields
+        $validated = $request->validate([
+            'year1' => 'required',
+            'as_of_filter' => 'required|date',
+            'signatory_name' => 'required',
+            'signatory_designation' => 'required',
+        ], [
+            'signatory_name.required' => 'Please select a signatory name.',
+            'signatory_designation.required' => 'Please select a designation.',
+        ]);
+
         $year = $request->input('year1');
-        $officeId = $request->input('office_filter');
+        $officeId = $request->input('office_filter'); // Can be null
         $asOf = $request->input('as_of_filter');
         $signatoryName = $request->input('signatory_name');
         $signatoryDesignation = $request->input('signatory_designation');
 
-        // Get the office
-        $office = Office::find($officeId);
-        
-        if (!$office) {
-            return back()->with('error', 'Office not found.');
+        // Get obligations data using the same method
+        $obligationsData = $this->getObligations($year, $officeId, $asOf);
+
+        // Check if there's data to export
+        if (empty($obligationsData['obligations']) || count($obligationsData['obligations']) == 0) {
+            return back()->with('error', 'No data available to export for the selected filters.');
         }
 
-        // Sanitize filename - remove special characters
-        $officeAbbr = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation);
+        // Determine filename based on office selection
+        if ($officeId) {
+            $office = Office::find($officeId);
+            $officeAbbr = $office ? preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation) : 'AllOffices';
+            $officeName = $office;
+        } else {
+            $officeAbbr = 'AllOffices';
+            $officeName = (object)['office_name' => 'All Offices', 'office_abbreviation' => 'All'];
+        }
         
         $fileName = 'NDD_' . $officeAbbr . '_' . $year . '.xlsx';
 
-        return Excel::download(new RAOExport(
+        return Excel::download(new NDDExport(
             $year,
-            $officeId,
+            $officeName,
+            $obligationsData['obligations'],
+            $obligationsData['totals'],
             $asOf,
             $signatoryName,
             $signatoryDesignation

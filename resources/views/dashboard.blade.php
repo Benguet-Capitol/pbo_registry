@@ -49,7 +49,7 @@
     {{-- Dashboard Cards Row --}}
     <div class="mb-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-3 md:p-4 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-3 md:p-4 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="approved_appropriations">
                 <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-file-signature text-blue-600 dark:text-blue-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -57,12 +57,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Approved Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalAppropriations, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="supplemental_appropriations">
                 <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-plus-circle text-purple-600 dark:text-purple-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -70,7 +70,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Supplemental Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold break-words
+                    <div class="text-base sm:text-lg md:text-lg font-bold break-words card-value
                         {{ $totalSupplementals > 0 
                             ? 'text-green-600 dark:text-green-400' 
                             : 'text-gray-800 dark:text-gray-100' }}">
@@ -78,7 +78,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="reversions">
                 <div class="flex-shrink-0 bg-red-100 dark:bg-red-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-undo-alt text-red-600 dark:text-red-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -86,7 +86,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Reversions
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold break-words
+                    <div class="text-base sm:text-lg md:text-lg font-bold break-words card-value
                         {{ $totalReversions > 0 
                             ? 'text-red-600 dark:text-red-400' 
                             : 'text-gray-800 dark:text-gray-100' }}">
@@ -94,7 +94,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="realignments">
                 <div class="flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-random text-orange-600 dark:text-orange-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -102,7 +102,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Realignments
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold break-words
+                    <div class="text-base sm:text-lg md:text-lg font-bold break-words card-value
                         {{ $totalRealignments > 0 
                             ? 'text-green-600 dark:text-green-400' 
                             : ($totalRealignments < 0 
@@ -112,7 +112,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="authorized_appropriations">
                 <div class="flex-shrink-0 bg-sky-100 dark:bg-sky-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-check-circle text-sky-600 dark:text-sky-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -120,12 +120,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Authorized Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalAuthorizedAppropriations, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="for_later_release">
                 <div class="flex-shrink-0 bg-fuchsia-100 dark:bg-fuchsia-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-lock text-fuchsia-600 dark:text-fuchsia-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -133,12 +133,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Unreleased Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalForLaterRelease, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="allotments">
                 <div class="flex-shrink-0 bg-green-100 dark:bg-green-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-layer-group text-green-600 dark:text-green-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -146,12 +146,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Allotments
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalAllotments, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="obligations">
                 <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-shopping-cart text-yellow-600 dark:text-yellow-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -159,12 +159,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Obligations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalObligations, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="balance_appropriations">
                 <div class="flex-shrink-0 bg-cyan-100 dark:bg-cyan-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-credit-card text-cyan-600 dark:text-cyan-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -172,7 +172,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Authorized Appropriations Balance
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalAuthorizedAppropriationsBalance, 2) }}
                     </div>
                 </div>
@@ -190,7 +190,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="balance_allotments">
                 <div class="flex-shrink-0 bg-pink-100 dark:bg-pink-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-stream text-pink-600 dark:text-pink-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -198,7 +198,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Allotments Balance
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($allotmentBalance, 2) }}
                     </div>
                 </div>
@@ -216,7 +216,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="disbursements">
                 <div class="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-tasks text-emerald-600 dark:text-emerald-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -224,12 +224,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Disbursements
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalDisbursements, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="disbursement_balance">
                 <div class="flex-shrink-0 bg-rose-100 dark:bg-rose-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-shopping-basket text-rose-600 dark:text-rose-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -237,7 +237,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Obligations Balance
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($disbursementBalance, 2) }}
                     </div>
                 </div>
@@ -391,9 +391,7 @@
 
                 <!-- Search Input -->
                 <div class="flex items-center space-x-2">
-                    <form method="GET" action="" class="flex items-center" id="searchForm">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    </form>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                 </div>
             </div>
             <div class="overflow-auto max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
@@ -429,6 +427,18 @@
                             class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}'"
                             data-class-id="{{ $class->id }}"
+                            data-appropriations="{{ $class->appropriations_sum }}"
+                            data-supplementals="{{ $class->supplemental_sum }}"
+                            data-reversions="{{ $class->reversion_sum }}"
+                            data-realignments="{{ $class->realignments_sum }}"
+                            data-authorized-appropriations="{{ $class->authorized_appropriations }}"
+                            data-allotments="{{ $class->allotments_sum }}"
+                            data-for-later-release="{{ $class->for_later_release }}"
+                            data-obligations="{{ $class->obligations_sum }}"
+                            data-balance-appropriations="{{ $class->balance_appropriations }}"
+                            data-balance-allotments="{{ $class->balance_allotments }}"
+                            data-disbursements="{{ $class->disbursements_sum }}"
+                            data-disbursement-balance="{{ $class->disbursement_balance }}"
                         >
                             <td class="px-1 py-2 text-center">
                                 <div class="relative inline-block text-left">
@@ -499,6 +509,68 @@
     </div>
 
     <script>
+        // Store all card information for dynamic updates
+        const cardConfig = {
+            'approved_appropriations': { column: 'data-appropriations' },
+            'supplemental_appropriations': { column: 'data-supplementals' },
+            'reversions': { column: 'data-reversions' },
+            'realignments': { column: 'data-realignments' },
+            'authorized_appropriations': { column: 'data-authorized-appropriations' },
+            'allotments': { column: 'data-allotments' },
+            'for_later_release': { column: 'data-for-later-release' },
+            'obligations': { column: 'data-obligations' },
+            'balance_appropriations': { column: 'data-balance-appropriations' },
+            'balance_allotments': { column: 'data-balance-allotments' },
+            'disbursements': { column: 'data-disbursements' },
+            'disbursement_balance': { column: 'data-disbursement-balance' }
+        };
+
+        function updateCardValues() {
+            const rows = document.querySelectorAll('#dashboardTable tbody tr');
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+
+            // Calculate totals from visible rows
+            const totals = {};
+            for (const [cardKey, config] of Object.entries(cardConfig)) {
+                let total = 0;
+                visibleRows.forEach(row => {
+                    const value = parseFloat(row.getAttribute(config.column)) || 0;
+                    total += value;
+                });
+                totals[cardKey] = total;
+            }
+
+            // Update card values
+            for (const [cardKey, total] of Object.entries(totals)) {
+                const card = document.querySelector(`[data-card="${cardKey}"]`);
+                if (card) {
+                    const cardValue = card.querySelector('.card-value');
+                    if (cardValue) {
+                        cardValue.textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        
+                        // Update color classes for supplementals and reversions
+                        if (cardKey === 'supplemental_appropriations') {
+                            if (total > 0) {
+                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                                cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                            } else {
+                                cardValue.classList.remove('text-green-600', 'dark:text-green-400');
+                                cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                            }
+                        } else if (cardKey === 'reversions') {
+                            if (total > 0) {
+                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                                cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                            } else {
+                                cardValue.classList.remove('text-red-600', 'dark:text-red-400');
+                                cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         function toggleDropdown(button) {
             const dropdown = button.nextElementSibling;
             const isOpen = !dropdown.classList.contains('hidden'); // true if already open
@@ -522,6 +594,9 @@
                     row.style.display = 'none';
                 }
             });
+
+            // Update card values after filtering
+            updateCardValues();
         }
 
         function CloseAllDropdowns() {

@@ -90,7 +90,7 @@
     </form>
             </div>
             <div class="flex items-center space-x-2">
-                <form method="GET" action="" style="display:inline;">
+                <form method="GET" action="{{ route('ndd.exportExcel') }}" style="display:inline;">
                     <input type="hidden" name="year1" value="{{ request('year1') }}">
                     <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
                     <input type="hidden" name="as_of_filter" value="{{ request('as_of_filter') }}">
@@ -204,7 +204,7 @@
         }
 
         // Intercept Excel Export Submit
-        document.querySelector('form[action=""]')
+        document.querySelector(`form[action="{{ route('ndd.exportExcel') }}"]`)
             .addEventListener('submit', function(e) {
                 if (!validateSignatories()) {
                     e.preventDefault();

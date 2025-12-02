@@ -194,6 +194,8 @@ Route::middleware('auth')->group(function () {
     Route::get('summaryaccounts/export-excel', [AccountsSummaryController::class, 'exportExcel'])->name('summaryaccounts.exportExcel');
     // NDD Report Routes
     Route::get('/ndd', [NDDController::class, 'index'])->name('ndd.index');
+    // NDD Excel Export
+    Route::get('ndd/export-excel', [NDDController::class, 'exportExcel'])->name('ndd.exportExcel');
 });
 
 // useless routes

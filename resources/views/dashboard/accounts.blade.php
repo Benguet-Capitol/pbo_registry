@@ -37,20 +37,20 @@
     {{-- Dashboard Cards Row --}}
     <div class="mb-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-3 md:p-4 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="approved_appropriations" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900 rounded-full p-2 sm:p-3">
-                    <i class="fas fa-coins text-blue-600 dark:text-blue-300 text-lg sm:text-xl md:text-2xl"></i>
+                    <i class="fas fa-file-circle-check text-blue-600 dark:text-blue-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Approved Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->appropriations_sum, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="supplemental_appropriations" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-plus-circle text-purple-600 dark:text-purple-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -58,7 +58,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Supplemental Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold break-words
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold break-words
                         {{ $officeAllotmentClasses->supplemental_sum > 0 
                             ? 'text-green-600 dark:text-green-400' 
                             : 'text-gray-800 dark:text-gray-100' }}">
@@ -66,7 +66,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="reversions" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-red-100 dark:bg-red-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-undo-alt text-red-600 dark:text-red-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -74,7 +74,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Reversions
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold break-words
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold break-words
                         {{ $officeAllotmentClasses->reversion_sum > 0 
                             ? 'text-red-600 dark:text-red-400' 
                             : 'text-gray-800 dark:text-gray-100' }}">
@@ -82,7 +82,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="realignments" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-random text-orange-600 dark:text-orange-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -90,7 +90,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Realignments
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold break-words
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold break-words
                         {{ $officeAllotmentClasses->realignments_sum < 0 
                             ? 'text-red-600 dark:text-red-400' 
                             : ($officeAllotmentClasses->realignments_sum > 0 
@@ -100,7 +100,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="authorized_appropriations" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-sky-100 dark:bg-sky-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-file-signature text-sky-600 dark:text-sky-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -108,12 +108,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Authorized Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->authorized_appropriations, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="for_later_release" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-fuchsia-100 dark:bg-fuchsia-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-lock text-fuchsia-600 dark:text-fuchsia-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -121,12 +121,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Unreleased Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->for_later_release, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="allotments" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-green-100 dark:bg-green-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-layer-group text-green-600 dark:text-green-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -134,12 +134,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Allotments
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->allotments_sum, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="obligations" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-tasks text-yellow-600 dark:text-yellow-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -147,12 +147,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Obligations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->obligations_sum, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="balance_appropriations" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-cyan-100 dark:bg-cyan-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-credit-card text-cyan-600 dark:text-cyan-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -160,7 +160,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Authorized Appropriations Balance
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->balance_appropriations, 2) }}
                     </div>
                 </div>
@@ -178,7 +178,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="balance_allotments" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-pink-100 dark:bg-pink-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-stream text-pink-600 dark:text-pink-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -186,7 +186,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Allotments Balance
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->balance_allotments, 2) }}
                     </div>
                 </div>
@@ -204,7 +204,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="disbursements" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-tasks text-emerald-600 dark:text-emerald-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -212,12 +212,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Disbursements
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->disbursements_sum, 2) }}
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="disbursement_balance" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-rose-100 dark:bg-rose-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-shopping-basket text-rose-600 dark:text-rose-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -225,7 +225,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Disbursements Balance
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->disbursement_balance, 2) }}
                     </div>
                 </div>
@@ -270,9 +270,7 @@
 
                 <!-- Search Input -->
                 <div class="flex items-center space-x-2">
-                    <form method="GET" action="" class="flex items-center" id="searchForm">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    </form>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                 </div>
             </div>
             <div class="overflow-x-auto max-h-[720px] border border-gray-300 dark:border-gray-700 rounded-lg">
@@ -303,8 +301,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($officeAllotmentClasses->appropriations as $appropriation)
-                        <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        @forelse ($officeAllotmentClasses->appropriations as $appropriation)
+                        <tr data-appropriations="{{ $appropriation->appropriation_sum }}"
+                            data-supplementals="{{ $appropriation->supplemental_sum }}"
+                            data-reversions="{{ $appropriation->reversion_sum }}"
+                            data-realignments="{{ $appropriation->realignments_sum }}"
+                            data-authorized-appropriations="{{ $appropriation->authorized_appropriations }}"
+                            data-allotments="{{ $appropriation->allotments_sum }}"
+                            data-for-later-release="{{ $appropriation->for_later_release }}"
+                            data-obligations="{{ $appropriation->obligations_sum }}"
+                            data-balance-appropriations="{{ $appropriation->balance_appropriations }}"
+                            data-balance-allotments="{{ $appropriation->balance_allotments }}"
+                            data-disbursements="{{ $appropriation->disbursements }}"
+                            data-disbursement-balance="{{ $appropriation->disbursement_balance }}"
+                            class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             <!-- <td class="px-1 py-3 text-center">
                                 <div class="relative inline-block text-left">
                                     
@@ -354,7 +364,13 @@
                             <td class="px-1 py-2 text-center">{{ number_format($appropriation->disbursements_to_obligations, 2) }}%</td>
                             <td class="px-1 py-2 text-center">{{ number_format($appropriation->disbursements_to_appropriations, 2) }}%</td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700">
+                            <td colspan="20" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                                No accounts and appropriations found for this Office Allotment Class.
+                            </td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -368,9 +384,45 @@
             dropdown.classList.toggle('hidden');
         }
 
+        const cardConfig = {
+            'approved_appropriations': { column: 'data-appropriations' },
+            'supplemental_appropriations': { column: 'data-supplementals' },
+            'reversions': { column: 'data-reversions' },
+            'realignments': { column: 'data-realignments' },
+            'authorized_appropriations': { column: 'data-authorized-appropriations' },
+            'allotments': { column: 'data-allotments' },
+            'for_later_release': { column: 'data-for-later-release' },
+            'obligations': { column: 'data-obligations' },
+            'balance_appropriations': { column: 'data-balance-appropriations' },
+            'balance_allotments': { column: 'data-balance-allotments' },
+            'disbursements': { column: 'data-disbursements' },
+            'disbursement_balance': { column: 'data-disbursement-balance' }
+        };
+
+        function updateCardValues() {
+            const rows = document.querySelectorAll('#accountsTable tbody tr');
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+
+            for (const [cardKey, config] of Object.entries(cardConfig)) {
+                let total = 0;
+                visibleRows.forEach(row => {
+                    const value = parseFloat(row.getAttribute(config.column)) || 0;
+                    total += value;
+                });
+
+                const card = document.querySelector(`[data-card="${cardKey}"]`);
+                if (card) {
+                    const cardValue = card.querySelector('.card-value');
+                    if (cardValue) {
+                        cardValue.textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+                }
+            }
+        }
+
         function filterTable(searchValue) {
             const rows = document.querySelectorAll('#accountsTable tbody tr');
-            const lowerSearch = String(searchValue).toLowerCase(); // Ensure it's a string
+            const lowerSearch = String(searchValue).toLowerCase();
 
             rows.forEach(row => {
                 const rowText = row.textContent.toLowerCase();
@@ -380,6 +432,8 @@
                     row.style.display = 'none';
                 }
             });
+
+            updateCardValues();
         }
 
         function CloseAllDropdowns() {

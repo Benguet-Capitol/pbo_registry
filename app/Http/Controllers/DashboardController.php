@@ -449,7 +449,7 @@ class DashboardController extends Controller
         // Calculate Allotment Balance
         $officeAllotmentClasses->balance_allotments = $officeAllotmentClasses->allotments_sum - $obrSum;
         // Calculate Allotment Accomplishment
-        $officeAllotmentClasses->allotment_accomplishment = ($obrSum / $officeAllotmentClasses->allotments_sum) * 100;
+        $officeAllotmentClasses->allotment_accomplishment =$officeAllotmentClasses->allotments_sum > 0 ? ($obrSum / $officeAllotmentClasses->allotments_sum) * 100 : 0;
         // Calculate Disbursements
         $officeAllotmentClasses->disbursements_sum =
             $obligationAmountIds->isNotEmpty()
@@ -554,8 +554,7 @@ class DashboardController extends Controller
         return view('dashboard.accounts', compact(
             'officeAllotmentClasses',
             'obrSum',
-            'appropriation',
-            'breadcrumb'
+            'breadcrumb',
         ));
     }
 }

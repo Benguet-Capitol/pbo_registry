@@ -28,6 +28,26 @@ class RAOController extends Controller
             ->orderBy('office', 'asc')
             ->get();
 
+        // Get calculated data
+        $calculatedData = $this->getCalculatedData($selectedYear, $selectedOfficeAllotmentClass, $asOfDate);
+
+        // Get all employees for signatory filter
+        $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
+
+        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
+
+        return view('rao.index', array_merge([
+            'availableYears' => $availableYears,
+            'selectedYear' => $selectedYear,
+            'selectedOffice' => $selectedOffice,
+            'asOfDate' => $asOfDate,
+            'employees' => $employees,
+            'officeAllotmentClasses' => $officeAllotmentClasses,
+        ], $calculatedData))->with('status', session('status'));
+    }
+
+    private function getCalculatedData($selectedYear, $selectedOfficeAllotmentClass, $asOfDate)
+    {
         // Initialize variables
         $appropriations = collect();
         $obligations = collect();
@@ -235,6 +255,7 @@ class RAOController extends Controller
                         'type' => 'obligation',
                         'date' => $obligation->obr_date,
                         'obr_no' => $obligation->obr_no,
+                        'obr_date' => $obligation->obr_date,
                         'particulars' => $obligation->particulars ?? '',
                         'total_amount' => $totalObligationAmount,
                         'amounts_by_appropriation' => $obligationAmountsByAppropriationId,
@@ -267,6 +288,7 @@ class RAOController extends Controller
                         $quarterlyObligations[$quarter]->push([
                             'type' => 'adjustment',
                             'date' => $adjustment->adjustment_date,
+                            'adjustment_date' => $adjustment->adjustment_date,
                             'obr_no' => $adjustment->obligation ? $adjustment->obligation->obr_no : 'N/A',
                             'particulars' => $adjustment->adjustment_remarks ?? '',
                             'total_amount' => $amount,
@@ -282,33 +304,22 @@ class RAOController extends Controller
             }
         }
 
-        // Get all employees for signatory filter
-        $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
-
-        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
-
-        return view('rao.index', compact(
-            'availableYears', 
-            'selectedYear', 
-            'selectedOffice', 
-            'asOfDate', 
-            'employees', 
-            'officeAllotmentClasses', 
-            'appropriations', 
-            'obligations',
-            'appropriationData',
-            'totalAppropriations',
-            'totalSupplemental',
-            'totalReversions',
-            'totalRealignments',
-            'grandTotal',
-            'totalQuarter1',
-            'totalQuarter2',
-            'totalQuarter3',
-            'totalQuarter4',
-            'quarterlyAdjustments',
-            'quarterlyObligations'
-        ))->with('status', session('status'));
+        return [
+            'appropriations' => $appropriations,
+            'obligations' => $obligations,
+            'appropriationData' => $appropriationData,
+            'totalAppropriations' => $totalAppropriations,
+            'totalSupplemental' => $totalSupplemental,
+            'totalReversions' => $totalReversions,
+            'totalRealignments' => $totalRealignments,
+            'grandTotal' => $grandTotal,
+            'totalQuarter1' => $totalQuarter1,
+            'totalQuarter2' => $totalQuarter2,
+            'totalQuarter3' => $totalQuarter3,
+            'totalQuarter4' => $totalQuarter4,
+            'quarterlyAdjustments' => $quarterlyAdjustments,
+            'quarterlyObligations' => $quarterlyObligations,
+        ];
     }
 
     public function exportExcel(Request $request)
@@ -332,6 +343,9 @@ class RAOController extends Controller
             return back()->with('error', 'Office Allotment Class not found.');
         }
 
+        // Get pre-calculated data
+        $calculatedData = $this->getCalculatedData($year, $officeAllotmentClassId, $asOf);
+
         // Sanitize filename - remove special characters
         $officeAbbr = preg_replace('/[^A-Za-z0-9_]/', '_', $officeAllotmentClass->offices->office_abbreviation);
         $className = preg_replace('/[^A-Za-z0-9_]/', '_', $officeAllotmentClass->allotmentClass->class);
@@ -340,10 +354,11 @@ class RAOController extends Controller
 
         return Excel::download(new RAOExport(
             $year,
-            $officeAllotmentClassId,
+            $officeAllotmentClass,
             $asOf,
             $signatoryName,
-            $signatoryDesignation
+            $signatoryDesignation,
+            $calculatedData
         ), $fileName);
     }
 }

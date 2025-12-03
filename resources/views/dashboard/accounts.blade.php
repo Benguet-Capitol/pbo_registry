@@ -165,7 +165,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="appropriation_accomplishment" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percent text-indigo-600 dark:text-indigo-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -173,7 +173,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Obligations / Authorized Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->appropriation_accomplishment, 2) }}%
                     </div>
                 </div>
@@ -191,7 +191,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="allotment_accomplishment" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-teal-100 dark:bg-teal-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percentage text-teal-600 dark:text-teal-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -199,7 +199,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                        Obligations / Allotments
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->allotment_accomplishment, 2) }}%
                     </div>
                 </div>
@@ -230,7 +230,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="disbursements_to_obligations" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-lime-100 dark:bg-lime-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percentage text-lime-600 dark:text-lime-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -238,12 +238,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Disbursements / Obligations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->disbursements_to_obligations, 2) }}%
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div data-card="disbursements_to_appropriations" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-amber-100 dark:bg-amber-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percentage text-amber-600 dark:text-amber-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -251,7 +251,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Disbursements / Authorized Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->disbursements_to_appropriations, 2) }}%
                     </div>
                 </div>
@@ -314,6 +314,11 @@
                             data-balance-allotments="{{ $appropriation->balance_allotments }}"
                             data-disbursements="{{ $appropriation->disbursements }}"
                             data-disbursement-balance="{{ $appropriation->disbursement_balance }}"
+                            data-appropriation-accomplishment="{{ $appropriation->appropriation_accomplishment }}"
+                            data-allotment-accomplishment="{{ $appropriation->allotment_accomplishment }}"
+                            data-disbursements-to-obligations="{{ $appropriation->disbursements_to_obligations }}"
+                            data-disbursements-to-appropriations="{{ $appropriation->disbursements_to_appropriations }}"
+
                             class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             <!-- <td class="px-1 py-3 text-center">
                                 <div class="relative inline-block text-left">
@@ -396,7 +401,11 @@
             'balance_appropriations': { column: 'data-balance-appropriations' },
             'balance_allotments': { column: 'data-balance-allotments' },
             'disbursements': { column: 'data-disbursements' },
-            'disbursement_balance': { column: 'data-disbursement-balance' }
+            'disbursement_balance': { column: 'data-disbursement-balance' },
+            'disbursements_to_obligations': { column: 'data-disbursements-to-obligations' },
+            'disbursements_to_appropriations': { column: 'data-disbursements-to-appropriations' },
+            'appropriation_accomplishment': { column: 'data-appropriation-accomplishment' },
+            'allotment_accomplishment': { column: 'data-allotment-accomplishment' }
         };
 
         function updateCardValues() {

@@ -46,6 +46,127 @@
         </div>
     </x-slot>
 
+    {{-- Allotment Class Distribution Graph --}}
+    <div class="mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                Allotment Class Distribution by Authorized Appropriations
+            </h3>
+            
+            <!-- Stacked Bar -->
+            <div id="stackedBarContainer" class="mb-6">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 overflow-hidden flex">
+                    @php
+                        // Calculate total authorized appropriations for percentage calculation
+                        $totalForPercentage = $officeAllotmentClasses->sum('authorized_appropriations');
+                        
+                        // Group by allotment class and sum authorized appropriations
+                        $classDistribution = $officeAllotmentClasses->groupBy('class')->map(function($items) {
+                            return [
+                                'description' => $items->first()->allotmentClass->description ?? 'Unknown',
+                                'total' => $items->sum('authorized_appropriations'),
+                                'class_code' => $items->first()->class
+                            ];
+                        })->sortByDesc('total');
+                        
+                        // Assign colors
+                        $colors = [
+                            'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 
+                            'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-cyan-500',
+                            'bg-orange-500', 'bg-teal-500', 'bg-lime-500', 'bg-amber-500'
+                        ];
+                    @endphp
+
+                    @foreach($classDistribution as $index => $class)
+                        @php
+                            $percentage = $totalForPercentage > 0 ? ($class['total'] / $totalForPercentage) * 100 : 0;
+                            $colorIndex = crc32($class['class_code']) % count($colors);
+                            $barColor = $colors[$colorIndex];
+                        @endphp
+                        
+                        <div 
+                            class="{{ $barColor }} h-12 transition-all duration-500 ease-out flex items-center justify-center relative group stacked-segment"
+                            style="width: {{ $percentage }}%"
+                            data-class="{{ $class['class_code'] }}"
+                            data-description="{{ $class['description'] }}"
+                            data-total="{{ $class['total'] }}"
+                            data-percentage="{{ $percentage }}"
+                        >
+                            @if($percentage > 3)
+                                <span class="text-white text-xs font-semibold px-1 text-center truncate">
+                                    {{ $class['class_code'] }}
+                                </span>
+                            @endif
+                            
+                            <!-- Tooltip on hover -->
+                            <div class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap z-20 shadow-lg">
+                                <div class="font-semibold">{{ $class['class_code'] }} - {{ $class['description'] }}</div>
+                                <div>{{ number_format($percentage, 2) }}%</div>
+                                <div>₱{{ number_format($class['total'], 2) }}</div>
+                                <!-- Arrow -->
+                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div id="graphLegend" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                @foreach($classDistribution as $index => $class)
+                    @php
+                        $percentage = $totalForPercentage > 0 ? ($class['total'] / $totalForPercentage) * 100 : 0;
+                        $colorIndex = crc32($class['class_code']) % count($colors);
+                        $barColor = $colors[$colorIndex];
+                    @endphp
+                    
+                    <div class="flex items-center space-x-2 text-xs">
+                        <div class="w-4 h-4 {{ $barColor }} rounded flex-shrink-0"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-gray-700 dark:text-gray-300 truncate">
+                                {{ $class['class_code'] }}
+                            </div>
+                            <div class="text-gray-500 dark:text-gray-400">
+                                {{ number_format($percentage, 1) }}%
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div id="graphSummaryStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Classes</div>
+                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                            {{ $classDistribution->count() }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Amount</div>
+                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                            ₱{{ number_format($totalForPercentage, 2) }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest Class</div>
+                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                            {{ $classDistribution->first()['class_code'] ?? 'N/A' }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest %</div>
+                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                            {{ $classDistribution->isNotEmpty() && $totalForPercentage > 0 ? number_format(($classDistribution->first()['total'] / $totalForPercentage) * 100, 2) : '0.00' }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
     {{-- Dashboard Cards Row --}}
     <div class="mb-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -177,7 +298,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="appropriation_accomplishment">
                 <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percent text-indigo-600 dark:text-indigo-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -185,7 +306,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Obligation / Authorized Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalAuthorizedAppropriationsAccomplishment, 2) }}%
                     </div>
                 </div>
@@ -203,7 +324,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="allotment_accomplishment">
                 <div class="flex-shrink-0 bg-teal-100 dark:bg-teal-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percentage text-teal-600 dark:text-teal-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -211,7 +332,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Obligations / Allotments
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($allotmentAccomplishment, 2) }}%
                     </div>
                 </div>
@@ -242,7 +363,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="disbursements_to_obligations">
                 <div class="flex-shrink-0 bg-lime-100 dark:bg-lime-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percentage text-lime-600 dark:text-lime-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -250,12 +371,12 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Disbursements / Obligations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalDisbursementsToObligations, 2) }}%
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="disbursements_to_appropriations">
                 <div class="flex-shrink-0 bg-amber-100 dark:bg-amber-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-percentage text-amber-600 dark:text-amber-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
@@ -263,7 +384,7 @@
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
                         Disbursements / Authorized Appropriations
                     </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
+                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
                         {{ number_format($totalDisbursementsToAppropriations, 2) }}%
                     </div>
                 </div>
@@ -439,6 +560,10 @@
                             data-balance-allotments="{{ $class->balance_allotments }}"
                             data-disbursements="{{ $class->disbursements_sum }}"
                             data-disbursement-balance="{{ $class->disbursement_balance }}"
+                            data-appropriation-accomplishment="{{ $class->appropriation_accomplishment }}"
+                            data-allotment-accomplishment="{{ $class->allotment_accomplishment }}"
+                            data-disbursements-to-obligations="{{ $class->disbursements_to_obligations }}"
+                            data-disbursements-to-appropriations="{{ $class->disbursements_to_appropriations }}"
                         >
                             <td class="px-1 py-2 text-center">
                                 <div class="relative inline-block text-left">
@@ -522,7 +647,11 @@
             'balance_appropriations': { column: 'data-balance-appropriations' },
             'balance_allotments': { column: 'data-balance-allotments' },
             'disbursements': { column: 'data-disbursements' },
-            'disbursement_balance': { column: 'data-disbursement-balance' }
+            'disbursement_balance': { column: 'data-disbursement-balance' },
+            'appropriation_accomplishment': { column: 'data-appropriation-accomplishment' },
+            'allotment_accomplishment': { column: 'data-allotment-accomplishment' },
+            'disbursements_to_obligations': { column: 'data-disbursements-to-obligations' },
+            'disbursements_to_appropriations': { column: 'data-disbursements-to-appropriations' }
         };
 
         function updateCardValues() {
@@ -597,55 +726,282 @@
 
             // Update card values after filtering
             updateCardValues();
+            
+            // Update graph after filtering
+            updateGraph();
         }
 
-        function CloseAllDropdowns() {
-            const dropdowns = document.querySelectorAll('.dropdown-menu');
-            dropdowns.forEach(dropdown => {
-                dropdown.classList.add('hidden');
-            });
-        }
-
-        // Close dropdown if click happens outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.relative.inline-block')) {
-                CloseAllDropdowns();
-            }
-        });
-
+        // Also update your DOMContentLoaded event listener
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
             searchInput.addEventListener('input', function() {
                 filterTable(this.value);
             });
-
         });
 
-        document.addEventListener('click', () => {
-        document.getElementById('classContextMenu').classList.add('hidden');
-        
-    });
-
-        function updateSelectColors() {
-            document.querySelectorAll('.filter-select').forEach(select => {
-                const defaultValue = select.getAttribute('data-default') ?? "";
-                const selectedValue = select.value;
-
-                if (selectedValue === defaultValue) {
-                    select.classList.remove('text-gray-900');
-                    select.classList.add('text-gray-500');
-                } else {
-                    select.classList.remove('text-gray-500');
-                    select.classList.add('text-gray-900');
+                function CloseAllDropdowns() {
+                    const dropdowns = document.querySelectorAll('.dropdown-menu');
+                    dropdowns.forEach(dropdown => {
+                        dropdown.classList.add('hidden');
+                    });
                 }
+
+                // Close dropdown if click happens outside
+                document.addEventListener('click', function(event) {
+                    if (!event.target.closest('.relative.inline-block')) {
+                        CloseAllDropdowns();
+                    }
+                });
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    const searchInput = document.getElementById('searchInput');
+                    searchInput.addEventListener('input', function() {
+                        filterTable(this.value);
+                    });
+
+                });
+
+                document.addEventListener('click', () => {
+                document.getElementById('classContextMenu').classList.add('hidden');
+                
+            });
+
+                function updateSelectColors() {
+                    document.querySelectorAll('.filter-select').forEach(select => {
+                        const defaultValue = select.getAttribute('data-default') ?? "";
+                        const selectedValue = select.value;
+
+                        if (selectedValue === defaultValue) {
+                            select.classList.remove('text-gray-900');
+                            select.classList.add('text-gray-500');
+                        } else {
+                            select.classList.remove('text-gray-500');
+                            select.classList.add('text-gray-900');
+                        }
+                    });
+                }
+
+                document.addEventListener('DOMContentLoaded', updateSelectColors);
+
+                document.querySelectorAll('.filter-select').forEach(select => {
+                    select.addEventListener('change', updateSelectColors);
+                });
+
+        // BAR GRAPH LOGIC
+
+    // Fixed color palette - each class gets a specific color
+    const fixedColorAssignments = {
+        'PS': 'bg-blue-500',           // Personnel Services - Blue
+        'MOOE': 'bg-green-500',        // Maintenance & Other Operating Expenses - Green
+        'CO': 'bg-cyan-500',         // Capital Outlay - Yellow
+        'FE': 'bg-red-500',            // Financial Expenses - Red
+        'CCO': 'bg-violet-500',        // Capital and Capital Outlay - Purple
+    };
+    
+    // Fallback color palette for any additional unknown classes
+    const fallbackColorPalette = [
+        'bg-pink-600', 'bg-indigo-600', 'bg-cyan-600', 'bg-orange-600',
+        'bg-teal-600', 'bg-lime-600', 'bg-amber-600', 'bg-rose-600', 
+        'bg-emerald-600', 'bg-fuchsia-600', 'bg-sky-600', 'bg-violet-600'
+    ];
+
+    // Hash function for consistent color assignment for unknown classes
+    function hashCode(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return Math.abs(hash);
+    }
+
+    function getColorForClass(classCode) {
+        // First check if we have a fixed assignment for this class
+        if (fixedColorAssignments[classCode]) {
+            return fixedColorAssignments[classCode];
+        }
+        
+        // Otherwise use hash-based assignment from fallback palette
+        const index = hashCode(classCode) % fallbackColorPalette.length;
+        return fallbackColorPalette[index];
+    }
+
+    function updateGraph() {
+        const rows = document.querySelectorAll('#dashboardTable tbody tr');
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+        
+        // Recalculate class distribution based on visible rows
+        const classData = {};
+        let totalAmount = 0;
+        
+        visibleRows.forEach(row => {
+            const authorizedApprop = parseFloat(row.getAttribute('data-authorized-appropriations')) || 0;
+            const classCode = row.cells[2].textContent.trim();
+            
+            if (!classData[classCode]) {
+                classData[classCode] = {
+                    total: 0,
+                    code: classCode
+                };
+            }
+            classData[classCode].total += authorizedApprop;
+            totalAmount += authorizedApprop;
+        });
+        
+        // Sort by total amount descending
+        const sortedClasses = Object.values(classData).sort((a, b) => b.total - a.total);
+        
+        // Update stacked bar
+        const stackedBarContainer = document.getElementById('stackedBarContainer');
+        if (!stackedBarContainer) return;
+        
+        let barHTML = '<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 overflow-hidden flex">';
+        
+        if (sortedClasses.length === 0 || totalAmount === 0) {
+            barHTML = `
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 flex items-center justify-center">
+                    <span class="text-gray-500 dark:text-gray-400 text-sm italic">No data available</span>
+                </div>
+            `;
+        } else {
+            sortedClasses.forEach(classItem => {
+                const percentage = totalAmount > 0 ? (classItem.total / totalAmount) * 100 : 0;
+                const color = getColorForClass(classItem.code);
+                
+                barHTML += `
+                    <div 
+                        class="${color} h-12 transition-all duration-500 ease-out flex items-center justify-center relative group"
+                        style="width: ${percentage}%"
+                    >
+                        ${percentage > 3 ? `<span class="text-white text-xs font-semibold px-1 text-center truncate">${classItem.code}</span>` : ''}
+                        
+                        <div class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap z-20 shadow-lg">
+                            <div class="font-semibold">${classItem.code}</div>
+                            <div>${percentage.toFixed(2)}%</div>
+                            <div>₱${classItem.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                    </div>
+                `;
             });
         }
+        
+        barHTML += '</div>';
+        stackedBarContainer.innerHTML = barHTML;
+        
+        // Update legend
+        updateLegend(sortedClasses, totalAmount);
+        
+        // Update summary stats
+        updateSummaryStats(sortedClasses, totalAmount);
+    }
 
-        document.addEventListener('DOMContentLoaded', updateSelectColors);
-
-        document.querySelectorAll('.filter-select').forEach(select => {
-            select.addEventListener('change', updateSelectColors);
+    function updateLegend(sortedClasses, totalAmount) {
+        const legendContainer = document.getElementById('graphLegend');
+        if (!legendContainer) return;
+        
+        let legendHTML = '';
+        sortedClasses.forEach(classItem => {
+            const percentage = totalAmount > 0 ? (classItem.total / totalAmount) * 100 : 0;
+            const color = getColorForClass(classItem.code);
+            
+            legendHTML += `
+                <div class="flex items-center space-x-2 text-xs">
+                    <div class="w-4 h-4 ${color} rounded flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-gray-700 dark:text-gray-300 truncate">
+                            ${classItem.code}
+                        </div>
+                        <div class="text-gray-500 dark:text-gray-400">
+                            ${percentage.toFixed(3)}%
+                        </div>
+                    </div>
+                </div>
+            `;
         });
+        
+        legendContainer.innerHTML = legendHTML;
+    }
+
+    function updateSummaryStats(sortedClasses, totalAmount) {
+        const summaryContainer = document.getElementById('graphSummaryStats');
+        if (!summaryContainer) return;
+        
+        const largestClass = sortedClasses[0];
+        const largestPercentage = largestClass && totalAmount > 0 
+            ? (largestClass.total / totalAmount) * 100 
+            : 0;
+        
+        summaryContainer.innerHTML = `
+            <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Classes</div>
+                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    ${sortedClasses.length}
+                </div>
+            </div>
+            <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Amount</div>
+                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    ₱${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </div>
+            </div>
+            <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest Class</div>
+                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    ${largestClass ? largestClass.code : 'N/A'}
+                </div>
+            </div>
+            <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest %</div>
+                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                    ${largestPercentage.toFixed(2)}%
+                </div>
+            </div>
+        `;
+    }
+
+    // Store the original filterTable and updateCardValues functions
+    document.addEventListener('DOMContentLoaded', function() {
+        // Override filterTable to include graph updates
+        const originalFilterTable = window.filterTable;
+        
+        window.filterTable = function(searchValue) {
+            const rows = document.querySelectorAll('#dashboardTable tbody tr');
+            const lowerSearch = String(searchValue).toLowerCase();
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                if (rowText.includes(lowerSearch)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update card values
+            if (typeof updateCardValues === 'function') {
+                updateCardValues();
+            }
+            
+            // Update graph
+            updateGraph();
+        };
+        
+        // Also add direct listener to search input as backup
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                updateGraph();
+            });
+        }
+        
+        // Trigger initial graph render
+        setTimeout(() => {
+            updateGraph();
+        }, 100);
+    });
+
     </script>
 
 </x-app-layout>

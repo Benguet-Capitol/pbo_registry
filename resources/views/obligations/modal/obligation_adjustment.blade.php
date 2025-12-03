@@ -230,7 +230,7 @@
                                                             </td>
                                                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 w-40">
                                                                 <x-form.input type="number" name="adjusted_amount[{{ $obligationAmount->id }}]" autocomplete="off" oninput="validateAmountAdjustment(this)" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" placeholder="" />
-                                                                <span id="adjustmentAmountError" class="text-red-500 text-xs"></span>
+                                                                <span class="adjustmentAmountError text-red-500 text-xs hidden"></span>
                                                             </td>
                                                         </tr>
                                                         @endforeach

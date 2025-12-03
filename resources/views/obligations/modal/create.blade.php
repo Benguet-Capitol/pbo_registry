@@ -288,7 +288,7 @@ const officeAllotmentClasses = [
 
 const allowedObligationTypes = {
     'PS': ['Regular'],
-    'MOOE': ['Regular', 'Purchase Request'],
+    'MOOE': ['Regular', 'Purchase Request', 'Project/Contract'],
     'CO': ['Purchase Request', 'Project/Contract'],
     'CCO': ['Purchase Request', 'Project/Contract']
 };

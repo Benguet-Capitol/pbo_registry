@@ -21,7 +21,7 @@
                 @endphp
 
                 @if (count($filters) > 0)
-                    <span class="text-lg"> | </span>
+                    <span class="text-lg"> > </span>
                     <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
                 @endif
                 <span class="text-blue-800 dark:text-blue-400">
@@ -50,6 +50,35 @@
             @endif
         </div>
     </x-slot>
+
+    <!-- Display Success Message -->
+    @if(session('status'))
+    @php
+    $status = session('status');
+    $color = match ($status['type'] ?? 'info') {
+    'delete' => 'red',
+    'update' => 'blue',
+    default => 'green'
+    };
+    @endphp
+
+    <div class="bg-{{ $color }}-100 border border-{{ $color }}-400 text-{{ $color }}-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{!! $status['message'] ?? $status !!}</span>
+        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
+            <span class="text-{{ $color }}-700">&times;</span>
+        </button>
+    </div>
+    @endif
+
+    <!-- Display Error Message -->
+    @if(session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{!! session('error') !!}</span>
+        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
+            <span class="text-red-700">&times;</span>
+        </button>
+    </div>
+    @endif
 
     <!-- Filter Section -->
     <div class="bg-white p-4 rounded-lg shadow-md mb-3 dark:bg-gray-800">
@@ -106,35 +135,6 @@
             </div>
         </form>
     </div>
-
-    <!-- Display Success Message -->
-    @if(session('status'))
-    @php
-    $status = session('status');
-    $color = match ($status['type'] ?? 'info') {
-    'delete' => 'red',
-    'update' => 'blue',
-    default => 'green'
-    };
-    @endphp
-
-    <div class="bg-{{ $color }}-100 border border-{{ $color }}-400 text-{{ $color }}-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline">{!! $status['message'] ?? $status !!}</span>
-        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
-            <span class="text-{{ $color }}-700">&times;</span>
-        </button>
-    </div>
-    @endif
-
-    <!-- Display Error Message -->
-    @if(session('error'))
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline">{!! session('error') !!}</span>
-        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none';">
-            <span class="text-red-700">&times;</span>
-        </button>
-    </div>
-    @endif
     
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-2 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
@@ -599,9 +599,10 @@
 
 <script>
 
-    (function() {
     const menu = document.getElementById('obligationContextMenu');
     let scrollTimeout;
+
+    (function() {
 
     // Function to handle scroll events with debouncing
     function handleScroll() {
@@ -952,15 +953,21 @@
     function validateCreateObligationAdjustmentForm() {
         const remarks = document.getElementById('adjustment_remarks');
         const adjustmentAmounts = document.querySelectorAll("input[name^='adjusted_amount']");
+        const tableMessage = document.getElementById('tableMessage');
 
         let isValid = true;
+
+        // Clear previous messages
+        if (tableMessage) {
+            tableMessage.innerText = '';
+            tableMessage.classList.add('hidden');
+        }
+        document.getElementById('remarksError').innerText = '';
 
         // Validate remarks
         if (!remarks.value.trim()) {
             document.getElementById('remarksError').innerText = 'Remarks are required.';
             isValid = false;
-        } else {
-            document.getElementById('remarksError').innerText = '';
         }
 
         // Validate at least one adjustment amount is non-zero
@@ -972,10 +979,57 @@
             }
         });
         if (!atLeastOneNonZero) {
-            document.getElementById('adjustmentAmountError').innerText = 'At least one adjustment amount must be non-zero.';
+            if (tableMessage) {
+                tableMessage.innerText = 'At least one adjustment amount must be non-zero.';
+                tableMessage.classList.remove('hidden');
+            }
             isValid = false;
         } else {
-            document.getElementById('adjustmentAmountError').innerText = '';
+            // Check if no actual adjustment was made (adjusted amount equals current obligation amount)
+            let allAdjustmentsNoChange = true;
+            adjustmentAmounts.forEach(input => {
+                const val = parseFloat(input.value);
+                if (!isNaN(val) && val !== 0) {
+                    const row = input.closest('tr');
+                    const obrAmountCell = row.querySelector("td:nth-child(5)");
+                    const currentObrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
+                    if (val !== currentObrAmount) {
+                        allAdjustmentsNoChange = false;
+                    }
+                }
+            });
+
+            if (allAdjustmentsNoChange) {
+                if (tableMessage) {
+                    tableMessage.innerText = 'No adjustment was made. The adjusted amounts are the same as the current obligation amounts.';
+                    tableMessage.classList.remove('hidden');
+                }
+                isValid = false;
+            } else {
+                // Check PO minimum validation for all non-zero adjustments
+                let poValidationFailed = false;
+                adjustmentAmounts.forEach(input => {
+                    const val = parseFloat(input.value);
+                    if (!isNaN(val) && val !== 0) {
+                        const row = input.closest('tr');
+                        const poAmountCell = row.querySelector('.po-amount-cell');
+                        if (poAmountCell) {
+                            const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
+                            if (poAmount > 0 && val < poAmount) {
+                                poValidationFailed = true;
+                            }
+                        }
+                    }
+                });
+
+                if (poValidationFailed) {
+                    if (tableMessage) {
+                        tableMessage.innerText = 'Adjusted amount cannot be less than Purchase Order amount.';
+                        tableMessage.classList.remove('hidden');
+                    }
+                    isValid = false;
+                }
+            }
         }
 
         if (isValid) {
@@ -1002,30 +1056,37 @@
 
     function validateAmountAdjustment(inputElement) {
         const row = inputElement.closest('tr');
-        const allotmentCell = row.querySelector('.allotment-cell');
         const poAmountCell = row.querySelector('.po-amount-cell');
+        const errorSpan = row.querySelector('.adjustmentAmountError');
 
-        let maxAllowed = 0;
+        let minAllowed = 0;
+        let poAmount = 0;
 
-        // Check if PO amount exists and is > 0
+        // Check if PO amount exists and is > 0 - sets minimum constraint only (can exceed)
         if (poAmountCell) {
-            const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
+            poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
             if (poAmount > 0) {
-                maxAllowed = poAmount;
-            } else if (allotmentCell) {
-                maxAllowed = parseFloat(allotmentCell.textContent.replace(/,/g, '')) || 0;
+                minAllowed = poAmount;
             }
-        }
-        // Otherwise fallback to allotment
-        else if (allotmentCell) {
-            maxAllowed = parseFloat(allotmentCell.textContent.replace(/,/g, '')) || 0;
         }
 
         const currentValue = parseFloat(inputElement.value) || 0;
 
-        // Enforce maxAllowed
-        if (currentValue > maxAllowed) {
-            inputElement.value = maxAllowed.toFixed(2);
+        // Show warning if below minimum but don't auto-correct
+        if (currentValue > 0 && currentValue < minAllowed) {
+            inputElement.classList.add('border-red-500');
+            if (errorSpan && minAllowed > 0) {
+                errorSpan.innerText = `Adjustment amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
+                errorSpan.classList.remove('hidden');
+            }
+            return;
+        }
+
+        // Clear error if valid
+        inputElement.classList.remove('border-red-500');
+        if (errorSpan) {
+            errorSpan.innerText = '';
+            errorSpan.classList.add('hidden');
         }
     }
 

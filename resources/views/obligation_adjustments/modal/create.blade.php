@@ -173,13 +173,13 @@
                                                 <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">
                                                     <span class="adjustment-amount">0.00</span>
                                                 </td>
-                                                <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 w-40">
+                                                <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">
                                                     <x-form.input type="number" 
                                                         name="adjusted_amount[{{ $obligationAmount->id }}]" 
                                                         autocomplete="off" 
                                                         oninput="validateAmount(this)"  
                                                         class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"/>
-                                                            <span id="adjustmentAmountError" class="text-red-500 text-xs"></span>
+                                                    <span class="adjustmentAmountError text-red-500 text-xs hidden"></span>
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -202,16 +202,18 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-4 p-4 flex items-center border-t border-gray-200 rounded-b dark:border-gray-600">
+                <div class="justify-center items-center mt-4 p-4 border-t border-gray-200 rounded-b dark:border-gray-600">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateCreateObligationAdjustmentForm()" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                        <i class="fas fa-save text-xl mr-2"></i>
-                        {{ __('Save') }}
-                    </button>
-                    <button type="button" onclick="closeCreateObligationAdjustmentModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                        <i class="fas fa-times text-xl mr-2"></i>
-                        {{ __('Cancel') }}
-                    </button>
+                    <div class="flex items-center justify-center">
+                        <button type="button" onclick="validateCreateObligationAdjustmentForm()" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
+                            <i class="fas fa-save text-xl mr-2"></i>
+                            {{ __('Save') }}
+                        </button>
+                        <button type="button" onclick="closeCreateObligationAdjustmentModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
+                            <i class="fas fa-times text-xl mr-2"></i>
+                            {{ __('Cancel') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -265,30 +267,38 @@
 
     function validateAmount(inputElement) {
         const row = inputElement.closest('tr'); 
-        const allotmentCell = row.querySelector('.allotment-cell'); 
         const poAmountCell = row.querySelector('.po-amount-cell'); 
+        const errorSpan = row.querySelector('span.adjustmentAmountError');
 
-        let maxAllowed = 0;
+        let minAllowed = 0;
 
-        // Check if PO amount exists and is > 0
+        // Check if PO amount exists - sets minimum constraint only (can exceed)
         if (poAmountCell) {
             const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
+            
+            // If PO amount > 0, it's an active PO
             if (poAmount > 0) {
-                maxAllowed = poAmount;
-            } else if (allotmentCell) {
-                maxAllowed = parseFloat(allotmentCell.textContent.replace(/,/g, '')) || 0;
+                minAllowed = poAmount; // Adjusted amount cannot be less than PO amount
             }
-        } 
-        // Otherwise fallback to allotment
-        else if (allotmentCell) {
-            maxAllowed = parseFloat(allotmentCell.textContent.replace(/,/g, '')) || 0;
         }
 
         const currentValue = parseFloat(inputElement.value) || 0;
 
-        // Enforce maxAllowed
-        if (currentValue > maxAllowed) {
-            inputElement.value = maxAllowed.toFixed(2);
+        // Show warning if below minimum but don't auto-correct
+        if (currentValue > 0 && currentValue < minAllowed) {
+            inputElement.classList.add('border-red-500');
+            
+            // Show warning message
+            if (errorSpan && minAllowed > 0) {
+                errorSpan.innerText = `Adjustment amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
+                errorSpan.classList.remove('hidden');
+            }
+        } else {
+            inputElement.classList.remove('border-red-500');
+            if (errorSpan) {
+                errorSpan.innerText = '';
+                errorSpan.classList.add('hidden');
+            }
         }
     }
 
@@ -317,25 +327,88 @@
             document.getElementById('remarksError').innerText = '';
         }
 
-         // Validate at least one adjustment amount is non-zero
+        // Validate at least one adjustment amount is non-zero
         let atLeastOneNonZero = false;
+        let poValidationFailed = false;
+        let allAdjustmentsNoChange = true;
+        
         adjustmentAmounts.forEach(input => {
             const val = parseFloat(input.value);
             if (!isNaN(val) && val !== 0) {
                 atLeastOneNonZero = true;
+                
+                // Check if adjusted amount is different from current obligation amount
+                const row = input.closest('tr');
+                const obrAmountCell = row.querySelector("td:nth-child(5)");
+                const currentObrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
+                
+                // If adjusted amount is different from current, there's an actual change
+                if (val !== currentObrAmount) {
+                    allAdjustmentsNoChange = false;
+                }
+                
+                // Check PO validation
+                const poAmountCell = row.querySelector('.po-amount-cell');
+                
+                if (poAmountCell) {
+                    const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
+                    
+                    // If active PO exists (amount > 0), adjusted amount cannot be less
+                    if (poAmount > 0 && val < poAmount) {
+                        poValidationFailed = true;
+                        input.classList.add('border-red-500');
+                        
+                        const errorSpan = row.querySelector('.adjustmentAmountError');
+                        if (errorSpan) {
+                            errorSpan.innerText = `Adjustment amount must be at least ${poAmount.toFixed(2)} (Purchase Order amount)`;
+                            errorSpan.classList.remove('hidden');
+                        }
+                    } else {
+                        input.classList.remove('border-red-500');
+                        const errorSpan = row.querySelector('.adjustmentAmountError');
+                        if (errorSpan) {
+                            errorSpan.innerText = '';
+                            errorSpan.classList.add('hidden');
+                        }
+                    }
+                }
             }
         });
+        
         if (!atLeastOneNonZero) {
-            document.getElementById('adjustmentAmountError').innerText = 'At least one adjustment amount must be non-zero.';
+            const errorContainer = document.getElementById('tableMessage');
+            if (errorContainer) {
+                errorContainer.innerText = 'At least one adjustment amount must be non-zero.';
+                errorContainer.classList.remove('hidden');
+            }
+            isValid = false;
+        } else if (allAdjustmentsNoChange) {
+            const errorContainer = document.getElementById('tableMessage');
+            if (errorContainer) {
+                errorContainer.innerText = 'No adjustment was made. The adjusted amounts are the same as the current obligation amounts.';
+                errorContainer.classList.remove('hidden');
+            }
+            isValid = false;
+        } else if (poValidationFailed) {
+            const errorContainer = document.getElementById('tableMessage');
+            if (errorContainer) {
+                errorContainer.innerText = 'Adjusted amount cannot be less than Purchase Order amount for active POs.';
+                errorContainer.classList.remove('hidden');
+            }
             isValid = false;
         } else {
-            document.getElementById('adjustmentAmountError').innerText = '';
+            const errorContainer = document.getElementById('tableMessage');
+            if (errorContainer) {
+                errorContainer.innerText = '';
+                errorContainer.classList.add('hidden');
+            }
         }
 
         if (isValid) {
             document.getElementById('createObligationAdjustmentForm').submit();
         }
     }
+    
     // Function to compute adjustment amount for each row
     function computeAdjustmentAmountForRow(row) {
         const obrAmountCell = row.querySelector("td:nth-child(5)");

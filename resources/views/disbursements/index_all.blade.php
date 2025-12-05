@@ -102,7 +102,7 @@
     <!-- Disbursements Table -->
      <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-end items-center mb-4">
                 <!-- @can('create purchase orders')
                 <button onclick="openCreateModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
@@ -110,9 +110,7 @@
                 </button>
                 @endcan -->
                 <div class="flex items-center space-x-2">
-                    <form method="GET" action="{{ route('disbursements.all') }}" class="flex items-center">
                         <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    </form>
                 </div>
             </div>
             <table id="disbursementsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">

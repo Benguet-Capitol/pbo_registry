@@ -1,4 +1,5 @@
 {{-- Payment Remarks Modal --}}
+<div id="createPaymentRemarksContainer"></div>
 <div id="paymentRemarksModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="relative w-full max-w-md p-6 bg-white rounded-lg shadow-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
@@ -6,7 +7,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                     Payment Remarks
                 </h3>
-                <button onclick="closePaymentRemarksModal()" class="text-gray-400 hover:text-gray-600 dark:text-gray-200 dark:hover:text-gray-400">
+                <button type="button" onclick="closePaymentRemarksModal()" class="text-gray-400 hover:text-gray-600 dark:text-gray-200 dark:hover:text-gray-400">
                     <i class="fas fa-times h-6 w-6"></i>
                 </button>
             </div>
@@ -60,16 +61,23 @@
 
 <script>
     function openPaymentRemarksModal(obligationId, obrNo, paymentRemarks) {
-        closeAllDropdowns();
+        // Close any open dropdowns/menus
+        if (typeof closeAllDropdowns === 'function') {
+            closeAllDropdowns();
+        }
         
         const modal = document.getElementById('paymentRemarksModal');
         const form = document.getElementById('paymentRemarksForm');
         const obrNoSpan = document.getElementById('paymentRemarksObrNo');
         const remarksTextarea = document.getElementById('payment_remarks');
         
+        if (!modal || !form || !obrNoSpan || !remarksTextarea) {
+            console.error('Payment remarks modal elements not found');
+            return;
+        }
+        
         // Set form action
         form.action = `/obligations/${obligationId}/payment-remarks`;
-        
         
         // Set OBR No display
         obrNoSpan.textContent = obrNo;
@@ -86,23 +94,15 @@
 
     function closePaymentRemarksModal() {
         const modal = document.getElementById('paymentRemarksModal');
-        modal.classList.add('hidden');
-        
-        // Reset form
-        document.getElementById('paymentRemarksForm').reset();
-    }
-
-    // Inside your showObligationContextMenu function, update the Payment Remarks button:
-    const paymentRemarksBtn = menu.querySelector('#contextPaymentRemarks');
-    if (paymentRemarksBtn && obligationId) {
-        paymentRemarksBtn.onclick = () => {
-            hideObligationContextMenu();
-            openPaymentRemarksModal(
-                obligationId,
-                obligationObr,
-                obligationPaymentRemarks
-            );
-        };
+        if (modal) {
+            modal.classList.add('hidden');
+            
+            // Reset form
+            const form = document.getElementById('paymentRemarksForm');
+            if (form) {
+                form.reset();
+            }
+        }
     }
 
     // Close modal on ESC key
@@ -116,9 +116,12 @@
     });
 
     // Close modal when clicking outside
-    document.getElementById('paymentRemarksModal')?.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closePaymentRemarksModal();
-        }
-    });
+    const paymentRemarksModalElement = document.getElementById('paymentRemarksModal');
+    if (paymentRemarksModalElement) {
+        paymentRemarksModalElement.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePaymentRemarksModal();
+            }
+        });
+    }
 </script>

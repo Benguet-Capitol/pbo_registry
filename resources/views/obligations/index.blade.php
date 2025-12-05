@@ -148,9 +148,7 @@
                 @endcan
                 <!-- Search Input -->
                 <div class="flex items-center space-x-2">
-                    <form method="GET" action="{{ route('account_codes.index') }}" class="flex items-center">
                         <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for obligations" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    </form>
                 </div>
             </div>
 
@@ -943,6 +941,23 @@
             .then(html => {
                 document.getElementById('createObligationAdjustmentModalContainer').innerHTML = html;
                 document.getElementById('createObligationAdjustmentModal').classList.remove('hidden');
+                
+                // Prevent form submission on Enter key
+                const form = document.getElementById('createObligationAdjustmentForm');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        validateCreateObligationAdjustmentForm();
+                    });
+                    
+                    // Also prevent Enter key from submitting
+                    form.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+                }
             });
     }
 
@@ -951,9 +966,17 @@
     }
 
     function validateCreateObligationAdjustmentForm() {
-        const remarks = document.getElementById('adjustment_remarks');
-        const adjustmentAmounts = document.querySelectorAll("input[name^='adjusted_amount']");
-        const tableMessage = document.getElementById('tableMessage');
+        const modal = document.getElementById('createObligationAdjustmentModal');
+        
+        if (!modal) {
+            console.error('Modal not found!');
+            return;
+        }
+        
+        const remarks = modal.querySelector('#adjustment_remarks');
+        const adjustmentAmounts = modal.querySelectorAll("input[name^='adjusted_amount']");
+        const tableMessage = modal.querySelector('#tableMessage');
+        const remarksError = modal.querySelector('#remarksError');
 
         let isValid = true;
 
@@ -962,23 +985,38 @@
             tableMessage.innerText = '';
             tableMessage.classList.add('hidden');
         }
-        document.getElementById('remarksError').innerText = '';
+        if (remarksError) {
+            remarksError.innerText = '';
+        }
 
         // Validate remarks
         if (!remarks.value.trim()) {
-            document.getElementById('remarksError').innerText = 'Remarks are required.';
+            if (remarksError) {
+                remarksError.innerText = 'Remarks are required.';
+            }
             isValid = false;
         }
 
-        // Validate at least one adjustment amount is non-zero
+        // Validate at least one adjustment amount is non-zero and greater than zero
         let atLeastOneNonZero = false;
+        let hasNegativeOrZero = false;
         adjustmentAmounts.forEach(input => {
             const val = parseFloat(input.value);
             if (!isNaN(val) && val !== 0) {
+                if (val <= 0) {
+                    hasNegativeOrZero = true;
+                }
                 atLeastOneNonZero = true;
             }
         });
-        if (!atLeastOneNonZero) {
+
+        if (hasNegativeOrZero) {
+            if (tableMessage) {
+                tableMessage.innerText = 'Adjusted amounts must be greater than zero.';
+                tableMessage.classList.remove('hidden');
+            }
+            isValid = false;
+        } else if (!atLeastOneNonZero) {
             if (tableMessage) {
                 tableMessage.innerText = 'At least one adjustment amount must be non-zero.';
                 tableMessage.classList.remove('hidden');
@@ -1033,9 +1071,16 @@
         }
 
         if (isValid) {
-            document.getElementById('createObligationAdjustmentForm').submit();
+            const form = modal.querySelector('#createObligationAdjustmentForm');
+            if (form) {
+                // Temporarily remove submit event listener to allow actual submission
+                const newForm = form.cloneNode(true);
+                form.parentNode.replaceChild(newForm, form);
+                newForm.submit();
+            }
         }
     }
+
     // Function to compute adjustment amount for each row
     function computeAdjustmentAmountForRow(row) {
         const obrAmountCell = row.querySelector("td:nth-child(5)");

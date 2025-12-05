@@ -60,8 +60,9 @@
                     @endcan
                 </div>
                 <div class="flex items-center">
-                    <form method="GET" action="{{ route('funds.index') }}" class="flex items-center">
+                    <div class="flex items-center">
                         <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for fund sources" class="border border-gray-300 rounded-lg px-4 py-2 mr-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                        <form method="GET" action="{{ route('fund_sources.index') }}">
                         <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                             <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
@@ -70,7 +71,8 @@
                             <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
                         </x-form.select>
                         <button type="submit" class="hidden"></button>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
             <table id="fundSourcesTable" class="text-center w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -146,7 +148,7 @@
         var input, filter, table, tr, td, i, j, txtValue;
         input = document.getElementById("searchInput");
         filter = input.value.toLowerCase();
-        table = document.getElementById("fundSourceTable");
+        table = document.getElementById("fundSourcesTable");
         tr = table.getElementsByTagName("tr");
 
         // Loop through all table rows, and hide those who don't match the search query

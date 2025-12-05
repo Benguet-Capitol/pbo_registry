@@ -352,6 +352,15 @@
         Reports / Summaries
     </div>
 
+    <x-sidebar.link
+        title="RAO"
+        href="{{ route('rao.index') }}"
+        :isActive="request()->routeIs('rao.index')">
+        <x-slot name="icon">
+            <i class="fas fa-sticky-note text-base flex-shrink-0 dark:text-gray-100"></i>
+        </x-slot>
+    </x-sidebar.link>
+
     <x-sidebar.dropdown
         title="SAAOB"
         :active="request()->routeIs('saaob.index') || request()->routeIs('saaobco.index') || request()->routeIs('saaobfundsector.index') || 
@@ -411,11 +420,11 @@
     </x-sidebar.dropdown>
 
     <x-sidebar.link
-        title="RAO"
-        href="{{ route('rao.index') }}"
-        :isActive="request()->routeIs('rao.index')">
+        title="NYDD"
+        href="{{ route('ndd.index') }}"
+        :isActive="request()->routeIs('ndd.index')">
         <x-slot name="icon">
-            <i class="fas fa-sticky-note text-base flex-shrink-0 dark:text-gray-100"></i>
+            <i class="fas fa-tags text-base flex-shrink-0 dark:text-gray-100"></i>
         </x-slot>
     </x-sidebar.link>
 

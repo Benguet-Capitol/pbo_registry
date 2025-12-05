@@ -151,10 +151,7 @@
                     @endcan
                 </div>
                 <div class="flex items-center">
-                    <form method="GET" action="{{ route('supplementals.index') }}" class="flex items-center">
                         <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="form-control border border-gray-300 rounded-lg px-4 py-2 mr-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                        <button type="submit" class="hidden"></button>
-                    </form>
                 </div>
             </div>
             <table id="supplementalTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">

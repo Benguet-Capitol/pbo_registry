@@ -270,7 +270,7 @@
         const poAmountCell = row.querySelector('.po-amount-cell'); 
         const errorSpan = row.querySelector('span.adjustmentAmountError');
 
-        let minAllowed = 0;
+        let minAllowed = 0.01; // Minimum value must be greater than 0
 
         // Check if PO amount exists - sets minimum constraint only (can exceed)
         if (poAmountCell) {
@@ -284,57 +284,88 @@
 
         const currentValue = parseFloat(inputElement.value) || 0;
 
-        // Show warning if below minimum but don't auto-correct
-        if (currentValue > 0 && currentValue < minAllowed) {
+        // Clear error first
+        inputElement.classList.remove('border-red-500');
+        if (errorSpan) {
+            errorSpan.innerText = '';
+            errorSpan.classList.add('hidden');
+        }
+
+        // Check if value is zero or empty
+        if (currentValue === 0 || inputElement.value.trim() === '') {
             inputElement.classList.add('border-red-500');
-            
-            // Show warning message
-            if (errorSpan && minAllowed > 0) {
-                errorSpan.innerText = `Adjustment amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
+            if (errorSpan) {
+                errorSpan.innerText = 'Adjusted amount must be greater than 0';
                 errorSpan.classList.remove('hidden');
             }
-        } else {
-            inputElement.classList.remove('border-red-500');
-            if (errorSpan) {
-                errorSpan.innerText = '';
-                errorSpan.classList.add('hidden');
-            }
+            return false;
         }
+
+        // Check if value is less than minimum allowed
+        if (currentValue < minAllowed) {
+            inputElement.classList.add('border-red-500');
+            if (errorSpan) {
+                if (minAllowed > 0.01) {
+                    errorSpan.innerText = `Adjustment amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
+                } else {
+                    errorSpan.innerText = 'Adjusted amount must be greater than 0';
+                }
+                errorSpan.classList.remove('hidden');
+            }
+            return false;
+        }
+
+        return true;
     }
 
     function validateCreateObligationAdjustmentForm() {
-        const remarks = document.getElementById('adjustment_remarks');
-        const adjustmentDate = document.getElementById('adjustment_date');
-        const adjustmentAmounts = document.querySelectorAll("input[name^='adjusted_amount']");
+    const remarks = document.getElementById('adjustment_remarks');
+    const adjustmentDate = document.getElementById('adjustment_date');
+    const adjustmentAmounts = document.querySelectorAll("input[name^='adjusted_amount']");
 
-        let isValid = true;
+    let isValid = true;
 
-        // Validate adjustment date
-        if (!adjustmentDate.value.trim()) {
-            adjustmentDate.classList.add('border-red-500');
-            adjustmentDate.title = 'Adjustment date is required.';
-            isValid = false;
-        } else {
-            adjustmentDate.classList.remove('border-red-500');
-            adjustmentDate.title = '';
-        }
+    // Validate adjustment date
+    if (!adjustmentDate.value.trim()) {
+        adjustmentDate.classList.add('border-red-500');
+        adjustmentDate.title = 'Adjustment date is required.';
+        isValid = false;
+    } else {
+        adjustmentDate.classList.remove('border-red-500');
+        adjustmentDate.title = '';
+    }
 
-        // Validate remarks
-        if (!remarks.value.trim()) {
-            document.getElementById('remarksError').innerText = 'Remarks are required.';
-            isValid = false;
-        } else {
-            document.getElementById('remarksError').innerText = '';
-        }
+    // Validate remarks
+    if (!remarks.value.trim()) {
+        document.getElementById('remarksError').innerText = 'Remarks are required.';
+        isValid = false;
+    } else {
+        document.getElementById('remarksError').innerText = '';
+    }
 
-        // Validate at least one adjustment amount is non-zero
-        let atLeastOneNonZero = false;
-        let poValidationFailed = false;
-        let allAdjustmentsNoChange = true;
+    // Validate adjustment amounts
+    let atLeastOneNonZero = false;
+    let hasZeroValue = false;
+    let poValidationFailed = false;
+    let allAdjustmentsNoChange = true;
+    
+    adjustmentAmounts.forEach(input => {
+        const val = parseFloat(input.value);
+        const inputTrimmed = input.value.trim();
         
-        adjustmentAmounts.forEach(input => {
-            const val = parseFloat(input.value);
-            if (!isNaN(val) && val !== 0) {
+        // Check if input has a value entered (even if it's 0)
+        if (inputTrimmed !== '') {
+            // Check for zero value
+            if (val === 0) {
+                hasZeroValue = true;
+                input.classList.add('border-red-500');
+                const row = input.closest('tr');
+                const errorSpan = row.querySelector('.adjustmentAmountError');
+                if (errorSpan) {
+                    errorSpan.innerText = 'Adjusted amount must be greater than 0';
+                    errorSpan.classList.remove('hidden');
+                }
+            } else if (!isNaN(val) && val > 0) {
                 atLeastOneNonZero = true;
                 
                 // Check if adjusted amount is different from current obligation amount
@@ -373,41 +404,46 @@
                     }
                 }
             }
-        });
-        
-        if (!atLeastOneNonZero) {
-            const errorContainer = document.getElementById('tableMessage');
-            if (errorContainer) {
-                errorContainer.innerText = 'At least one adjustment amount must be non-zero.';
-                errorContainer.classList.remove('hidden');
-            }
-            isValid = false;
-        } else if (allAdjustmentsNoChange) {
-            const errorContainer = document.getElementById('tableMessage');
-            if (errorContainer) {
-                errorContainer.innerText = 'No adjustment was made. The adjusted amounts are the same as the current obligation amounts.';
-                errorContainer.classList.remove('hidden');
-            }
-            isValid = false;
-        } else if (poValidationFailed) {
-            const errorContainer = document.getElementById('tableMessage');
-            if (errorContainer) {
-                errorContainer.innerText = 'Adjusted amount cannot be less than Purchase Order amount for active POs.';
-                errorContainer.classList.remove('hidden');
-            }
-            isValid = false;
-        } else {
-            const errorContainer = document.getElementById('tableMessage');
-            if (errorContainer) {
-                errorContainer.innerText = '';
-                errorContainer.classList.add('hidden');
-            }
         }
-
-        if (isValid) {
-            document.getElementById('createObligationAdjustmentForm').submit();
+    });
+    
+    const errorContainer = document.getElementById('tableMessage');
+    
+    if (hasZeroValue) {
+        if (errorContainer) {
+            errorContainer.innerText = 'Adjusted amounts cannot be zero. Please enter a value greater than 0 or leave the field empty.';
+            errorContainer.classList.remove('hidden');
+        }
+        isValid = false;
+    } else if (!atLeastOneNonZero) {
+        if (errorContainer) {
+            errorContainer.innerText = 'At least one adjustment amount must be entered.';
+            errorContainer.classList.remove('hidden');
+        }
+        isValid = false;
+    } else if (allAdjustmentsNoChange) {
+        if (errorContainer) {
+            errorContainer.innerText = 'No adjustment was made. The adjusted amounts are the same as the current obligation amounts.';
+            errorContainer.classList.remove('hidden');
+        }
+        isValid = false;
+    } else if (poValidationFailed) {
+        if (errorContainer) {
+            errorContainer.innerText = 'Adjusted amount cannot be less than Purchase Order amount for active POs.';
+            errorContainer.classList.remove('hidden');
+        }
+        isValid = false;
+    } else {
+        if (errorContainer) {
+            errorContainer.innerText = '';
+            errorContainer.classList.add('hidden');
         }
     }
+
+    if (isValid) {
+        document.getElementById('createObligationAdjustmentForm').submit();
+    }
+}
     
     // Function to compute adjustment amount for each row
     function computeAdjustmentAmountForRow(row) {
@@ -436,20 +472,21 @@
         }
     });
 
-    function updateAdjustedAmountTotal() {
-        const adjustedInputs = document.querySelectorAll("input[name^='adjusted_amount']");
-        let total = 0;
-        adjustedInputs.forEach(input => {
-            const val = parseFloat(input.value);
-            if (!isNaN(val) && val !== 0) {
-                total += val;
-            }
-        });
-        const totalCell = document.getElementById('adjustedAmountTotalCell');
-        if (totalCell) {
-            totalCell.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Update the total calculation to only include non-zero values
+function updateAdjustedAmountTotal() {
+    const adjustedInputs = document.querySelectorAll("input[name^='adjusted_amount']");
+    let total = 0;
+    adjustedInputs.forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val > 0) { // Changed from !== 0 to > 0
+            total += val;
         }
+    });
+    const totalCell = document.getElementById('adjustedAmountTotalCell');
+    if (totalCell) {
+        totalCell.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+}
 
     document.addEventListener('input', function(event) {
         if (event.target.name && event.target.name.startsWith('adjusted_amount')) {

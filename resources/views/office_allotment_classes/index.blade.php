@@ -177,9 +177,7 @@
                 @endcan
                 <!-- Search Input -->
                 <div class="flex items-center space-x-2">
-                    <form method="GET" action="{{ route('office_allotment_classes.index') }}" class="flex items-center">
                     <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    </form>
                 </div>
             </div>
 

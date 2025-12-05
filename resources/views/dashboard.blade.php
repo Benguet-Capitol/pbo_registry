@@ -46,16 +46,136 @@
         </div>
     </x-slot>
 
+    <!-- Unified Filter Section -->
+     <div class="bg-white p-4 rounded-lg shadow-md mb-2 dark:bg-gray-800">
+    <form method="GET" action=""  id="filterForm">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center mb-2">
+
+            <!-- Year Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="year1"
+                    id="year1"
+                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    data-default="{{ date('Y') }}"
+                    onchange="this.form.submit()">
+                    @foreach($availableYears as $year)
+                    <option value="{{ $year }}" {{ request('year1', date('Y')) == $year ? 'selected' : '' }}>{{ $year }}</option>
+                    @endforeach
+                </x-form.select>
+            </div>
+            <!-- Office Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="office_filter"
+                    id="office_filter"
+                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    data-default=""
+                    onchange="this.form.submit()">
+                    <option value="">All Office</option>
+
+                    @foreach($offices as $office)
+                    <option value="{{ $office->id }}" {{ request('office_filter') == $office->id ? 'selected' : '' }}>{{ $office->office_abbreviation }}</option>
+                    @endforeach
+
+                </x-form.select>
+            </div>
+            <!-- Allotment Class Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="allotment_class_filter"
+                    id="allotment_class_filter"
+                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    data-default=""
+                    onchange="this.form.submit()">
+                    <option value="">All Allotment Class</option>
+                    @foreach($allotmentClasses as $class)
+                    <option value="{{ $class->class }}" {{ request('allotment_class_filter') == $class->class ? 'selected' : '' }}>{{ $class->allotmentClass->description }}</option>
+                    @endforeach
+                </x-form.select>
+            </div>
+            <!-- Group Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="group_filter"
+                    id="group_filter"
+                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    data-default=""
+                    onchange="this.form.submit()">
+                    <option value="">All Group</option>
+                    @foreach($branches as $branch)
+                    <option value="{{ $branch }}" {{ request('group_filter') == $branch ? 'selected' : '' }}>{{ $branch }}</option>
+                    @endforeach
+                </x-form.select>
+            </div>
+            <!-- Fund Type Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="fund_type_filter"
+                    id="fund_type_filter"
+                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    data-default=""
+                    onchange="this.form.submit()">
+                    <option value="">All Fund Type</option>
+                    @foreach($fundTypes as $fundType)
+                    <option value="{{ $fundType }}" {{ request('fund_type_filter') == $fundType ? 'selected' : '' }}>{{ $fundType }}</option>
+                    @endforeach
+
+                </x-form.select>
+            </div>
+            <!-- Fund Filter -->
+            <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="fund_filter"
+                    id="fund_filter"
+                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    data-default=""
+                    onchange="this.form.submit()">
+                    <option value="">All Fund</option>
+                    @foreach($funds as $fund)
+                    <option value="{{ $fund }}" {{ request('fund_filter') == $fund ? 'selected' : '' }}>{{ $fund }}</option>
+                    @endforeach
+
+                </x-form.select>
+            </div>
+           
+            <!-- Per Page Dropdown -->
+            <!-- <div class="flex items-center space-x-2">
+                <x-form.select
+                    name="per_page"
+                    id="perPage"
+                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                    data-default="all"
+                    onchange="this.form.submit()"
+                >
+                    <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
+                    <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
+                    <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
+                    <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
+                    <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>Show All</option>
+                </x-form.select>
+            </div> -->
+        </div>
+    </form>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
+     <!-- Search Input -->
+            <div class="flex items-center space-x-2 lg:col-span-3">
+                <x-form.input type="text" name="search" id="searchInput" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+            </div>
+    </div>
+    </div>
+
     {{-- Allotment Class Distribution Graph --}}
-    <div class="mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+    <div class="mb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
                 Allotment Class Distribution by Authorized Appropriations
             </h3>
             
-            <!-- Stacked Bar -->
-            <div id="stackedBarContainer" class="mb-6">
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 overflow-hidden flex">
+            <!-- Stacked Bar - Reduced height -->
+            <div id="stackedBarContainer" class="mb-2 relative">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">
                     @php
                         // Calculate total authorized appropriations for percentage calculation
                         $totalForPercentage = $officeAllotmentClasses->sum('authorized_appropriations');
@@ -69,40 +189,63 @@
                             ];
                         })->sortByDesc('total');
                         
-                        // Assign colors
-                        $colors = [
-                            'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 
-                            'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-cyan-500',
-                            'bg-orange-500', 'bg-teal-500', 'bg-lime-500', 'bg-amber-500'
+                        // Fixed color assignments
+                        $fixedColors = [
+                            'PS' => ['color' => 'bg-blue-500', 'hover' => 'hover:bg-blue-600'],
+                            'MOOE' => ['color' => 'bg-green-500', 'hover' => 'hover:bg-green-600'],
+                            'CO' => ['color' => 'bg-cyan-500', 'hover' => 'hover:bg-cyan-600'],
+                            'FE' => ['color' => 'bg-red-500', 'hover' => 'hover:bg-red-600'],
+                            'CCO' => ['color' => 'bg-violet-500', 'hover' => 'hover:bg-violet-600'],
                         ];
+                        
+                        // Fallback colors for unknown classes
+                        $fallbackColors = [
+                            ['color' => 'bg-pink-600', 'hover' => 'hover:bg-pink-700'],
+                            ['color' => 'bg-indigo-600', 'hover' => 'hover:bg-indigo-700'],
+                            ['color' => 'bg-orange-600', 'hover' => 'hover:bg-orange-700'],
+                            ['color' => 'bg-teal-600', 'hover' => 'hover:bg-teal-700'],
+                            ['color' => 'bg-lime-600', 'hover' => 'hover:bg-lime-700'],
+                            ['color' => 'bg-amber-600', 'hover' => 'hover:bg-amber-700'],
+                        ];
+                        
+                        function getClassColors($classCode, $fixedColors, $fallbackColors) {
+                            if (isset($fixedColors[$classCode])) {
+                                return $fixedColors[$classCode];
+                            }
+                            $index = abs(crc32($classCode)) % count($fallbackColors);
+                            return $fallbackColors[$index];
+                        }
                     @endphp
 
                     @foreach($classDistribution as $index => $class)
                         @php
                             $percentage = $totalForPercentage > 0 ? ($class['total'] / $totalForPercentage) * 100 : 0;
-                            $colorIndex = crc32($class['class_code']) % count($colors);
-                            $barColor = $colors[$colorIndex];
+                            $colors = getClassColors($class['class_code'], $fixedColors, $fallbackColors);
+                            $barColor = $colors['color'];
+                            $hoverColor = $colors['hover'];
                         @endphp
                         
                         <div 
-                            class="{{ $barColor }} h-12 transition-all duration-500 ease-out flex items-center justify-center relative group stacked-segment"
+                            class="{{ $barColor }} {{ $hoverColor }} h-8 transition-all duration-200 ease-out flex items-center justify-center relative stacked-segment cursor-pointer"
                             style="width: {{ $percentage }}%"
                             data-class="{{ $class['class_code'] }}"
                             data-description="{{ $class['description'] }}"
                             data-total="{{ $class['total'] }}"
                             data-percentage="{{ $percentage }}"
+                            onmouseenter="showTooltip(this)"
+                            onmouseleave="hideTooltip(this)"
                         >
-                            @if($percentage > 3)
-                                <span class="text-white text-xs font-semibold px-1 text-center truncate">
+                            @if($percentage > 5)
+                                <span class="text-white text-xs font-semibold px-1 text-center truncate pointer-events-none">
                                     {{ $class['class_code'] }}
                                 </span>
                             @endif
                             
-                            <!-- Tooltip on hover -->
-                            <div class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap z-20 shadow-lg">
+                            <!-- Tooltip -->
+                            <div class="tooltip-box absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap shadow-xl" style="display: none; z-index: 9999;">
                                 <div class="font-semibold">{{ $class['class_code'] }} - {{ $class['description'] }}</div>
                                 <div>{{ number_format($percentage, 2) }}%</div>
-                                <div>₱{{ number_format($class['total'], 2) }}</div>
+                                <div>{{ number_format($class['total'], 2) }}</div>
                                 <!-- Arrow -->
                                 <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                             </div>
@@ -111,68 +254,40 @@
                 </div>
             </div>
 
-            <!-- Legend -->
-            <div id="graphLegend" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-                @foreach($classDistribution as $index => $class)
+            <!-- Legend with amounts added -->
+            <div id="graphLegend" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mx-auto justify-items-center">
+                @foreach($classDistribution as $index => $classItem)
                     @php
-                        $percentage = $totalForPercentage > 0 ? ($class['total'] / $totalForPercentage) * 100 : 0;
-                        $colorIndex = crc32($class['class_code']) % count($colors);
-                        $barColor = $colors[$colorIndex];
+                        $percentage = $totalForPercentage > 0 ? ($classItem['total'] / $totalForPercentage) * 100 : 0;
+                        $colors = getClassColors($classItem['class_code'], $fixedColors, $fallbackColors);
+                        $barColor = $colors['color'];
                     @endphp
                     
                     <div class="flex items-center space-x-2 text-xs">
                         <div class="w-4 h-4 {{ $barColor }} rounded flex-shrink-0"></div>
                         <div class="flex-1 min-w-0">
-                            <div class="font-medium text-gray-700 dark:text-gray-300 truncate">
-                                {{ $class['class_code'] }}
+                            <div class="font-bold text-gray-700 dark:text-gray-300 truncate">
+                                {{ $classItem['class_code'] }}
                             </div>
                             <div class="text-gray-500 dark:text-gray-400">
-                                {{ number_format($percentage, 1) }}%
+                                {{ number_format($percentage, 2) }}%
+                            </div>
+                            <div class="text-gray-600 dark:text-gray-400 text-[10px]">
+                                {{ number_format($classItem['total'], 2) }}
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
-
-            <!-- Summary Stats -->
-            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div id="graphSummaryStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Classes</div>
-                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                            {{ $classDistribution->count() }}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Amount</div>
-                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                            ₱{{ number_format($totalForPercentage, 2) }}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest Class</div>
-                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                            {{ $classDistribution->first()['class_code'] ?? 'N/A' }}
-                        </div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest %</div>
-                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                            {{ $classDistribution->isNotEmpty() && $totalForPercentage > 0 ? number_format(($classDistribution->first()['total'] / $totalForPercentage) * 100, 2) : '0.00' }}%
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
-    
     {{-- Dashboard Cards Row --}}
-    <div class="mb-6">
+    <div class="mb-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-3 md:p-4 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="approved_appropriations">
                 <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900 rounded-full p-2 sm:p-3">
-                    <i class="fas fa-file-signature text-blue-600 dark:text-blue-300 text-lg sm:text-xl md:text-2xl"></i>
+                    <i class="fas fa-file-circle-check text-blue-600 dark:text-blue-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
@@ -235,7 +350,7 @@
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="authorized_appropriations">
                 <div class="flex-shrink-0 bg-sky-100 dark:bg-sky-900 rounded-full p-2 sm:p-3">
-                    <i class="fas fa-check-circle text-sky-600 dark:text-sky-300 text-lg sm:text-xl md:text-2xl"></i>
+                    <i class="fas fa-file-signature text-sky-600 dark:text-sky-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
@@ -394,126 +509,10 @@
         </div>
     </div>
 
-    <!-- Unified Filter Section -->
-    <form method="GET" action="" class="bg-white p-4 rounded-lg shadow-md mb-3 dark:bg-gray-800" id="filterForm">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-center">
-
-            <!-- Year Filter -->
-            <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="year1"
-                    id="year1"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                    data-default="{{ date('Y') }}"
-                    onchange="this.form.submit()">
-                    @foreach($availableYears as $year)
-                    <option value="{{ $year }}" {{ request('year1', date('Y')) == $year ? 'selected' : '' }}>{{ $year }}</option>
-                    @endforeach
-                </x-form.select>
-            </div>
-            <!-- Office Filter -->
-            <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="office_filter"
-                    id="office_filter"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                    data-default=""
-                    onchange="this.form.submit()">
-                    <option value="">All Office</option>
-
-                    @foreach($offices as $office)
-                    <option value="{{ $office->id }}" {{ request('office_filter') == $office->id ? 'selected' : '' }}>{{ $office->office_abbreviation }}</option>
-                    @endforeach
-
-                </x-form.select>
-            </div>
-            <!-- Allotment Class Filter -->
-            <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="allotment_class_filter"
-                    id="allotment_class_filter"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                    data-default=""
-                    onchange="this.form.submit()">
-                    <option value="">All Allotment Class</option>
-                    @foreach($allotmentClasses as $class)
-                    <option value="{{ $class->class }}" {{ request('allotment_class_filter') == $class->class ? 'selected' : '' }}>{{ $class->allotmentClass->description }}</option>
-                    @endforeach
-                </x-form.select>
-            </div>
-            <!-- Group Filter -->
-            <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="group_filter"
-                    id="group_filter"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                    data-default=""
-                    onchange="this.form.submit()">
-                    <option value="">All Group</option>
-                    @foreach($branches as $branch)
-                    <option value="{{ $branch }}" {{ request('group_filter') == $branch ? 'selected' : '' }}>{{ $branch }}</option>
-                    @endforeach
-                </x-form.select>
-            </div>
-            <!-- Fund Type Filter -->
-            <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="fund_type_filter"
-                    id="fund_type_filter"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                    data-default=""
-                    onchange="this.form.submit()">
-                    <option value="">All Fund Type</option>
-                    @foreach($fundTypes as $fundType)
-                    <option value="{{ $fundType }}" {{ request('fund_type_filter') == $fundType ? 'selected' : '' }}>{{ $fundType }}</option>
-                    @endforeach
-
-                </x-form.select>
-            </div>
-            <!-- Fund Filter -->
-            <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="fund_filter"
-                    id="fund_filter"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                    data-default=""
-                    onchange="this.form.submit()">
-                    <option value="">All Fund</option>
-                    @foreach($funds as $fund)
-                    <option value="{{ $fund }}" {{ request('fund_filter') == $fund ? 'selected' : '' }}>{{ $fund }}</option>
-                    @endforeach
-
-                </x-form.select>
-            </div>
-            <!-- Per Page Dropdown -->
-            <!-- <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="per_page"
-                    id="perPage"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    data-default="all"
-                    onchange="this.form.submit()"
-                >
-                    <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
-                    <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
-                    <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
-                    <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>Show All</option>
-                </x-form.select>
-            </div> -->
-        </div>
-    </form>
-
-    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-6 mb-6 dark:bg-gray-800">
+    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4 mb-4 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
                 <label for="dashboardTable" class="ml-4 block text-md font-semibold text-gray-700 dark:text-gray-200">Allotment Classes</label>
-
-                <!-- Search Input -->
-                <div class="flex items-center space-x-2">
-                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                </div>
             </div>
             <div class="overflow-auto max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
@@ -655,50 +654,111 @@
         };
 
         function updateCardValues() {
-            const rows = document.querySelectorAll('#dashboardTable tbody tr');
-            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+        const rows = document.querySelectorAll('#dashboardTable tbody tr');
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
 
-            // Calculate totals from visible rows
-            const totals = {};
-            for (const [cardKey, config] of Object.entries(cardConfig)) {
-                let total = 0;
-                visibleRows.forEach(row => {
-                    const value = parseFloat(row.getAttribute(config.column)) || 0;
-                    total += value;
-                });
-                totals[cardKey] = total;
-            }
+        // Calculate totals from visible rows
+        const totals = {};
+        for (const [cardKey, config] of Object.entries(cardConfig)) {
+            let total = 0;
+            visibleRows.forEach(row => {
+                const value = parseFloat(row.getAttribute(config.column)) || 0;
+                total += value;
+            });
+            totals[cardKey] = total;
+        }
 
-            // Update card values
-            for (const [cardKey, total] of Object.entries(totals)) {
-                const card = document.querySelector(`[data-card="${cardKey}"]`);
-                if (card) {
-                    const cardValue = card.querySelector('.card-value');
-                    if (cardValue) {
-                        cardValue.textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                        
-                        // Update color classes for supplementals and reversions
-                        if (cardKey === 'supplemental_appropriations') {
-                            if (total > 0) {
-                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
-                                cardValue.classList.add('text-green-600', 'dark:text-green-400');
-                            } else {
-                                cardValue.classList.remove('text-green-600', 'dark:text-green-400');
-                                cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
-                            }
-                        } else if (cardKey === 'reversions') {
-                            if (total > 0) {
-                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
-                                cardValue.classList.add('text-red-600', 'dark:text-red-400');
-                            } else {
-                                cardValue.classList.remove('text-red-600', 'dark:text-red-400');
-                                cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
-                            }
+        // Calculate percentage cards properly based on base values
+        const obligations = totals['obligations'] || 0;
+        const authorizedAppropriations = totals['authorized_appropriations'] || 0;
+        const allotments = totals['allotments'] || 0;
+        const disbursements = totals['disbursements'] || 0;
+
+        // Calculate percentages using correct formulas
+        const appropriationAccomplishment = authorizedAppropriations > 0 
+            ? (obligations / authorizedAppropriations) * 100 
+            : 0;
+        
+        const allotmentAccomplishment = allotments > 0 
+            ? (obligations / allotments) * 100 
+            : 0;
+        
+        const disbursementsToObligations = obligations > 0 
+            ? (disbursements / obligations) * 100 
+            : 0;
+        
+        const disbursementsToAppropriations = authorizedAppropriations > 0 
+            ? (disbursements / authorizedAppropriations) * 100 
+            : 0;
+
+        // Update card values
+        for (const [cardKey, total] of Object.entries(totals)) {
+            const card = document.querySelector(`[data-card="${cardKey}"]`);
+            if (card) {
+                const cardValue = card.querySelector('.card-value');
+                if (cardValue) {
+                    // Handle percentage cards specially
+                    if (cardKey === 'appropriation_accomplishment') {
+                        cardValue.textContent = appropriationAccomplishment.toLocaleString('en-US', {
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2
+                        }) + '%';
+                    } else if (cardKey === 'allotment_accomplishment') {
+                        cardValue.textContent = allotmentAccomplishment.toLocaleString('en-US', {
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2
+                        }) + '%';
+                    } else if (cardKey === 'disbursements_to_obligations') {
+                        cardValue.textContent = disbursementsToObligations.toLocaleString('en-US', {
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2
+                        }) + '%';
+                    } else if (cardKey === 'disbursements_to_appropriations') {
+                        cardValue.textContent = disbursementsToAppropriations.toLocaleString('en-US', {
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2
+                        }) + '%';
+                    } else {
+                        // Handle regular number cards
+                        cardValue.textContent = total.toLocaleString('en-US', {
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2
+                        });
+                    }
+                    
+                    // Update color classes for supplementals and reversions
+                    if (cardKey === 'supplemental_appropriations') {
+                        if (total > 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                            cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                        } else {
+                            cardValue.classList.remove('text-green-600', 'dark:text-green-400');
+                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                        }
+                    } else if (cardKey === 'reversions') {
+                        if (total > 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                            cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                        } else {
+                            cardValue.classList.remove('text-red-600', 'dark:text-red-400');
+                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                        }
+                    } else if (cardKey === 'realignments') {
+                        if (total > 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-red-600', 'dark:text-red-400');
+                            cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                        } else if (total < 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-green-600', 'dark:text-green-400');
+                            cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                        } else {
+                            cardValue.classList.remove('text-green-600', 'dark:text-green-400', 'text-red-600', 'dark:text-red-400');
+                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
                         }
                     }
                 }
             }
         }
+    }
 
         function toggleDropdown(button) {
             const dropdown = button.nextElementSibling;
@@ -789,23 +849,45 @@
 
         // BAR GRAPH LOGIC
 
-    // Fixed color palette - each class gets a specific color
+    // Tooltip functions
+    function showTooltip(element) {
+        const tooltip = element.querySelector('.tooltip-box');
+        if (tooltip) {
+            tooltip.style.display = 'block';
+        }
+    }
+
+    function hideTooltip(element) {
+        const tooltip = element.querySelector('.tooltip-box');
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
+    }
+
+    // Fixed color palette with hover colors
     const fixedColorAssignments = {
-        'PS': 'bg-blue-500',           // Personnel Services - Blue
-        'MOOE': 'bg-green-500',        // Maintenance & Other Operating Expenses - Green
-        'CO': 'bg-cyan-500',         // Capital Outlay - Yellow
-        'FE': 'bg-red-500',            // Financial Expenses - Red
-        'CCO': 'bg-violet-500',        // Capital and Capital Outlay - Purple
+        'PS': { color: 'bg-blue-500', hover: 'hover:bg-blue-600' },
+        'MOOE': { color: 'bg-green-500', hover: 'hover:bg-green-600' },
+        'CO': { color: 'bg-cyan-500', hover: 'hover:bg-cyan-600' },
+        'FE': { color: 'bg-red-500', hover: 'hover:bg-red-600' },
+        'CCO': { color: 'bg-violet-500', hover: 'hover:bg-violet-600' },
     };
-    
-    // Fallback color palette for any additional unknown classes
+
     const fallbackColorPalette = [
-        'bg-pink-600', 'bg-indigo-600', 'bg-cyan-600', 'bg-orange-600',
-        'bg-teal-600', 'bg-lime-600', 'bg-amber-600', 'bg-rose-600', 
-        'bg-emerald-600', 'bg-fuchsia-600', 'bg-sky-600', 'bg-violet-600'
+        { color: 'bg-pink-600', hover: 'hover:bg-pink-700' },
+        { color: 'bg-indigo-600', hover: 'hover:bg-indigo-700' },
+        { color: 'bg-cyan-600', hover: 'hover:bg-cyan-700' },
+        { color: 'bg-orange-600', hover: 'hover:bg-orange-700' },
+        { color: 'bg-teal-600', hover: 'hover:bg-teal-700' },
+        { color: 'bg-lime-600', hover: 'hover:bg-lime-700' },
+        { color: 'bg-amber-600', hover: 'hover:bg-amber-700' },
+        { color: 'bg-rose-600', hover: 'hover:bg-rose-700' },
+        { color: 'bg-emerald-600', hover: 'hover:bg-emerald-700' },
+        { color: 'bg-fuchsia-600', hover: 'hover:bg-fuchsia-700' },
+        { color: 'bg-sky-600', hover: 'hover:bg-sky-700' },
+        { color: 'bg-violet-600', hover: 'hover:bg-violet-700' }
     ];
 
-    // Hash function for consistent color assignment for unknown classes
     function hashCode(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -817,21 +899,25 @@
     }
 
     function getColorForClass(classCode) {
-        // First check if we have a fixed assignment for this class
         if (fixedColorAssignments[classCode]) {
-            return fixedColorAssignments[classCode];
+            return fixedColorAssignments[classCode].color;
         }
-        
-        // Otherwise use hash-based assignment from fallback palette
         const index = hashCode(classCode) % fallbackColorPalette.length;
-        return fallbackColorPalette[index];
+        return fallbackColorPalette[index].color;
+    }
+
+    function getHoverColorForClass(classCode) {
+        if (fixedColorAssignments[classCode]) {
+            return fixedColorAssignments[classCode].hover;
+        }
+        const index = hashCode(classCode) % fallbackColorPalette.length;
+        return fallbackColorPalette[index].hover;
     }
 
     function updateGraph() {
         const rows = document.querySelectorAll('#dashboardTable tbody tr');
         const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
         
-        // Recalculate class distribution based on visible rows
         const classData = {};
         let totalAmount = 0;
         
@@ -849,18 +935,16 @@
             totalAmount += authorizedApprop;
         });
         
-        // Sort by total amount descending
         const sortedClasses = Object.values(classData).sort((a, b) => b.total - a.total);
         
-        // Update stacked bar
         const stackedBarContainer = document.getElementById('stackedBarContainer');
         if (!stackedBarContainer) return;
         
-        let barHTML = '<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 overflow-hidden flex">';
+        let barHTML = '<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">';
         
         if (sortedClasses.length === 0 || totalAmount === 0) {
             barHTML = `
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 flex items-center justify-center">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 flex items-center justify-center">
                     <span class="text-gray-500 dark:text-gray-400 text-sm italic">No data available</span>
                 </div>
             `;
@@ -868,18 +952,21 @@
             sortedClasses.forEach(classItem => {
                 const percentage = totalAmount > 0 ? (classItem.total / totalAmount) * 100 : 0;
                 const color = getColorForClass(classItem.code);
+                const hoverColor = getHoverColorForClass(classItem.code);
                 
                 barHTML += `
                     <div 
-                        class="${color} h-12 transition-all duration-500 ease-out flex items-center justify-center relative group"
+                        class="${color} ${hoverColor} h-8 transition-all duration-200 ease-out flex items-center justify-center relative cursor-pointer"
                         style="width: ${percentage}%"
+                        onmouseenter="showTooltip(this)"
+                        onmouseleave="hideTooltip(this)"
                     >
-                        ${percentage > 3 ? `<span class="text-white text-xs font-semibold px-1 text-center truncate">${classItem.code}</span>` : ''}
+                        ${percentage > 5 ? `<span class="text-white text-xs font-semibold px-1 text-center truncate pointer-events-none">${classItem.code}</span>` : ''}
                         
-                        <div class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap z-20 shadow-lg">
+                        <div class="tooltip-box absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap shadow-xl" style="display: none; z-index: 9999;">
                             <div class="font-semibold">${classItem.code}</div>
                             <div>${percentage.toFixed(2)}%</div>
-                            <div>₱${classItem.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div>${classItem.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                         </div>
                     </div>
@@ -890,11 +977,7 @@
         barHTML += '</div>';
         stackedBarContainer.innerHTML = barHTML;
         
-        // Update legend
         updateLegend(sortedClasses, totalAmount);
-        
-        // Update summary stats
-        updateSummaryStats(sortedClasses, totalAmount);
     }
 
     function updateLegend(sortedClasses, totalAmount) {
@@ -910,11 +993,14 @@
                 <div class="flex items-center space-x-2 text-xs">
                     <div class="w-4 h-4 ${color} rounded flex-shrink-0"></div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-medium text-gray-700 dark:text-gray-300 truncate">
+                        <div class="font-bold text-gray-700 dark:text-gray-300 truncate">
                             ${classItem.code}
                         </div>
                         <div class="text-gray-500 dark:text-gray-400">
-                            ${percentage.toFixed(3)}%
+                            ${percentage.toFixed(1)}%
+                        </div>
+                        <div class="text-gray-600 dark:text-gray-400 text-[10px]">
+                            ${classItem.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </div>
                     </div>
                 </div>
@@ -923,85 +1009,6 @@
         
         legendContainer.innerHTML = legendHTML;
     }
-
-    function updateSummaryStats(sortedClasses, totalAmount) {
-        const summaryContainer = document.getElementById('graphSummaryStats');
-        if (!summaryContainer) return;
-        
-        const largestClass = sortedClasses[0];
-        const largestPercentage = largestClass && totalAmount > 0 
-            ? (largestClass.total / totalAmount) * 100 
-            : 0;
-        
-        summaryContainer.innerHTML = `
-            <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Classes</div>
-                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                    ${sortedClasses.length}
-                </div>
-            </div>
-            <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total Amount</div>
-                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                    ₱${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                </div>
-            </div>
-            <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest Class</div>
-                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                    ${largestClass ? largestClass.code : 'N/A'}
-                </div>
-            </div>
-            <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Largest %</div>
-                <div class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                    ${largestPercentage.toFixed(2)}%
-                </div>
-            </div>
-        `;
-    }
-
-    // Store the original filterTable and updateCardValues functions
-    document.addEventListener('DOMContentLoaded', function() {
-        // Override filterTable to include graph updates
-        const originalFilterTable = window.filterTable;
-        
-        window.filterTable = function(searchValue) {
-            const rows = document.querySelectorAll('#dashboardTable tbody tr');
-            const lowerSearch = String(searchValue).toLowerCase();
-
-            rows.forEach(row => {
-                const rowText = row.textContent.toLowerCase();
-                if (rowText.includes(lowerSearch)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Update card values
-            if (typeof updateCardValues === 'function') {
-                updateCardValues();
-            }
-            
-            // Update graph
-            updateGraph();
-        };
-        
-        // Also add direct listener to search input as backup
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                updateGraph();
-            });
-        }
-        
-        // Trigger initial graph render
-        setTimeout(() => {
-            updateGraph();
-        }, 100);
-    });
-
     </script>
 
 </x-app-layout>

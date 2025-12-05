@@ -29,60 +29,53 @@
 
    <!-- Filter Section -->
     <div class="bg-white p-4 rounded-lg shadow-md mb-3 dark:bg-gray-800">
-        <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
-        <form method="GET" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="md:col-span-2">
-                    <input 
-                        type="text" 
-                        name="search" 
-                        value="{{ request('search') }}"
-                        placeholder="Search logs..." 
-                        class="text-sm w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <select 
-                        name="event_type" 
-                        class="text-sm w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                        <option value="">All Event Types</option>
-                        @foreach($eventTypes as $type)
-                            <option value="{{ $type }}" {{ request('event_type') == $type ? 'selected' : '' }}>
-                                {{ ucfirst($type) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+    <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
+    <form method="GET" id="filterForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="md:col-span-2">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ request('search') }}"
+                    placeholder="Search logs..." 
+                    class="text-xs w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
-                    <input 
-                        type="date" 
-                        name="date_from" 
-                        value="{{ request('date_from') }}"
-                        class="text-sm w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To Date</label>
-                    <input 
-                        type="date" 
-                        name="date_to" 
-                        value="{{ request('date_to') }}"
-                        class="text-sm w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div class="md:col-span-2 flex items-end justify-end space-x-2">
-                    <button type="submit" class="text-sm px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
-                        Filter
-                    </button>
-                    @if(request()->hasAny(['search', 'event_type', 'date_from', 'date_to']))
-                        <a href="{{ route('activity-logs.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
-                            Clear
-                        </a>
-                    @endif
-                </div>
+
+            <div>
+                <select 
+                    name="event_type" 
+                    class="text-xs w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All Event Types</option>
+                    @foreach($eventTypes as $type)
+                        <option value="{{ $type }}" {{ request('event_type') == $type ? 'selected' : '' }}>
+                            {{ ucfirst($type) }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
+                <input 
+                    type="date" 
+                    name="date_from" 
+                    value="{{ request('date_from') }}"
+                    class="text-xs w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">To Date</label>
+                <input 
+                    type="date" 
+                    name="date_to" 
+                    value="{{ request('date_to') }}"
+                    class="text-xs w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
+            </div>
+        </div>
+    </form>
+</div>
 
                     <!-- Table -->
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
@@ -137,5 +130,13 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.querySelectorAll('#filterForm input, #filterForm select').forEach(element => {
+        element.addEventListener('change', () => {
+            document.getElementById('filterForm').submit();
+        });
+    });
+</script>
 
 </x-app-layout>

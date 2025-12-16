@@ -933,225 +933,248 @@
         }
     });
 
-    /* Modal Create ObligationAdjustment */
-    function openCreateObligationAdjustmentModal(obligationId) {
-        closeAllDropdowns();
-        fetch(`/obligations/${obligationId}/obligation-adjustment-modal`)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('createObligationAdjustmentModalContainer').innerHTML = html;
-                document.getElementById('createObligationAdjustmentModal').classList.remove('hidden');
-                
-                // Prevent form submission on Enter key
-                const form = document.getElementById('createObligationAdjustmentForm');
-                if (form) {
-                    form.addEventListener('submit', function(e) {
+    /* Modal Create ObligationAdjustment - FIXED VERSION */
+let isSubmittingObligationAdjustment = false;
+
+function openCreateObligationAdjustmentModal(obligationId) {
+    closeAllDropdowns();
+    isSubmittingObligationAdjustment = false;
+    
+    fetch(`/obligations/${obligationId}/obligation-adjustment-modal`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('createObligationAdjustmentModalContainer').innerHTML = html;
+            const modal = document.getElementById('createObligationAdjustmentModal');
+            
+            // Remove aria-hidden when modal is shown
+            modal.removeAttribute('aria-hidden');
+            modal.classList.remove('hidden');
+            
+            // Prevent form submission on Enter key
+            const form = document.getElementById('createObligationAdjustmentForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (!isSubmittingObligationAdjustment) {
                         e.preventDefault();
                         validateCreateObligationAdjustmentForm();
-                    });
-                    
-                    // Also prevent Enter key from submitting
-                    form.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                            e.preventDefault();
-                            return false;
-                        }
-                    });
-                }
-            });
-    }
-
-    function closeCreateObligationAdjustmentModal() {
-        document.getElementById('createObligationAdjustmentModal').classList.add('hidden');
-    }
-
-    function validateCreateObligationAdjustmentForm() {
-        const modal = document.getElementById('createObligationAdjustmentModal');
-        
-        if (!modal) {
-            console.error('Modal not found!');
-            return;
-        }
-        
-        const remarks = modal.querySelector('#adjustment_remarks');
-        const adjustmentAmounts = modal.querySelectorAll("input[name^='adjusted_amount']");
-        const tableMessage = modal.querySelector('#tableMessage');
-        const remarksError = modal.querySelector('#remarksError');
-
-        let isValid = true;
-
-        // Clear previous messages
-        if (tableMessage) {
-            tableMessage.innerText = '';
-            tableMessage.classList.add('hidden');
-        }
-        if (remarksError) {
-            remarksError.innerText = '';
-        }
-
-        // Validate remarks
-        if (!remarks.value.trim()) {
-            if (remarksError) {
-                remarksError.innerText = 'Remarks are required.';
+                    }
+                });
+                
+                // Also prevent Enter key from submitting
+                form.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
             }
-            isValid = false;
-        }
+        });
+}
 
-        // Validate at least one adjustment amount is non-zero and greater than zero
-        let atLeastOneNonZero = false;
-        let hasNegativeOrZero = false;
+function closeCreateObligationAdjustmentModal() {
+    const modal = document.getElementById('createObligationAdjustmentModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function validateCreateObligationAdjustmentForm() {
+    const modal = document.getElementById('createObligationAdjustmentModal');
+    
+    if (!modal) {
+        console.error('Modal not found!');
+        return;
+    }
+    
+    const remarks = modal.querySelector('#adjustment_remarks');
+    const adjustmentAmounts = modal.querySelectorAll("input[name^='adjusted_amount']");
+    const tableMessage = modal.querySelector('#tableMessage');
+    const remarksError = modal.querySelector('#remarksError');
+
+    let isValid = true;
+
+    // Clear previous messages
+    if (tableMessage) {
+        tableMessage.innerText = '';
+        tableMessage.classList.add('hidden');
+    }
+    if (remarksError) {
+        remarksError.innerText = '';
+    }
+
+    // Validate remarks
+    if (!remarks.value.trim()) {
+        if (remarksError) {
+            remarksError.innerText = 'Remarks are required.';
+        }
+        isValid = false;
+    }
+
+    // Validate at least one adjustment amount is non-zero and greater than zero
+    let atLeastOneNonZero = false;
+    let hasNegativeOrZero = false;
+    adjustmentAmounts.forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val !== 0) {
+            if (val <= 0) {
+                hasNegativeOrZero = true;
+            }
+            atLeastOneNonZero = true;
+        }
+    });
+
+    if (hasNegativeOrZero) {
+        if (tableMessage) {
+            tableMessage.innerText = 'Adjusted amounts must be greater than zero.';
+            tableMessage.classList.remove('hidden');
+        }
+        isValid = false;
+    } else if (!atLeastOneNonZero) {
+        if (tableMessage) {
+            tableMessage.innerText = 'At least one adjustment amount must be non-zero.';
+            tableMessage.classList.remove('hidden');
+        }
+        isValid = false;
+    } else {
+        // Check if no actual adjustment was made (adjusted amount equals current obligation amount)
+        let allAdjustmentsNoChange = true;
         adjustmentAmounts.forEach(input => {
             const val = parseFloat(input.value);
             if (!isNaN(val) && val !== 0) {
-                if (val <= 0) {
-                    hasNegativeOrZero = true;
+                const row = input.closest('tr');
+                const obrAmountCell = row.querySelector("td:nth-child(5)");
+                const currentObrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
+                
+                // FIX: Use toFixed(2) for comparison to avoid floating-point precision issues
+                if (val.toFixed(2) !== currentObrAmount.toFixed(2)) {
+                    allAdjustmentsNoChange = false;
                 }
-                atLeastOneNonZero = true;
             }
         });
 
-        if (hasNegativeOrZero) {
+        if (allAdjustmentsNoChange) {
             if (tableMessage) {
-                tableMessage.innerText = 'Adjusted amounts must be greater than zero.';
-                tableMessage.classList.remove('hidden');
-            }
-            isValid = false;
-        } else if (!atLeastOneNonZero) {
-            if (tableMessage) {
-                tableMessage.innerText = 'At least one adjustment amount must be non-zero.';
+                tableMessage.innerText = 'No adjustment was made. The adjusted amounts are the same as the current obligation amounts.';
                 tableMessage.classList.remove('hidden');
             }
             isValid = false;
         } else {
-            // Check if no actual adjustment was made (adjusted amount equals current obligation amount)
-            let allAdjustmentsNoChange = true;
+            // Check PO minimum validation for all non-zero adjustments
+            let poValidationFailed = false;
             adjustmentAmounts.forEach(input => {
                 const val = parseFloat(input.value);
                 if (!isNaN(val) && val !== 0) {
                     const row = input.closest('tr');
-                    const obrAmountCell = row.querySelector("td:nth-child(5)");
-                    const currentObrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
-                    if (val !== currentObrAmount) {
-                        allAdjustmentsNoChange = false;
+                    const poAmountCell = row.querySelector('.po-amount-cell');
+                    if (poAmountCell) {
+                        const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
+                        // FIX: Use toFixed(2) for comparison
+                        if (poAmount > 0 && parseFloat(val.toFixed(2)) < parseFloat(poAmount.toFixed(2))) {
+                            poValidationFailed = true;
+                        }
                     }
                 }
             });
 
-            if (allAdjustmentsNoChange) {
+            if (poValidationFailed) {
                 if (tableMessage) {
-                    tableMessage.innerText = 'No adjustment was made. The adjusted amounts are the same as the current obligation amounts.';
+                    tableMessage.innerText = 'Adjusted amount cannot be less than Purchase Order amount.';
                     tableMessage.classList.remove('hidden');
                 }
                 isValid = false;
-            } else {
-                // Check PO minimum validation for all non-zero adjustments
-                let poValidationFailed = false;
-                adjustmentAmounts.forEach(input => {
-                    const val = parseFloat(input.value);
-                    if (!isNaN(val) && val !== 0) {
-                        const row = input.closest('tr');
-                        const poAmountCell = row.querySelector('.po-amount-cell');
-                        if (poAmountCell) {
-                            const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
-                            if (poAmount > 0 && val < poAmount) {
-                                poValidationFailed = true;
-                            }
-                        }
-                    }
-                });
-
-                if (poValidationFailed) {
-                    if (tableMessage) {
-                        tableMessage.innerText = 'Adjusted amount cannot be less than Purchase Order amount.';
-                        tableMessage.classList.remove('hidden');
-                    }
-                    isValid = false;
-                }
-            }
-        }
-
-        if (isValid) {
-            const form = modal.querySelector('#createObligationAdjustmentForm');
-            if (form) {
-                // Temporarily remove submit event listener to allow actual submission
-                const newForm = form.cloneNode(true);
-                form.parentNode.replaceChild(newForm, form);
-                newForm.submit();
             }
         }
     }
 
-    // Function to compute adjustment amount for each row
-    function computeAdjustmentAmountForRow(row) {
-        const obrAmountCell = row.querySelector("td:nth-child(5)");
-        const adjustedAmountInput = row.querySelector("input[name^='adjusted_amount']");
-        const adjustmentAmountCell = row.querySelector("td:nth-child(7)");
-
-        if (obrAmountCell && adjustedAmountInput && adjustmentAmountCell) {
-            const obrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
-            const adjustedAmount = parseFloat(adjustedAmountInput.value.replace(/,/g, '')) || 0;
-            const adjustmentAmount = adjustedAmount - obrAmount;
-
-            adjustmentAmountCell.textContent = adjustmentAmount.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+    if (isValid) {
+        console.log('Form validation passed, submitting...');
+        const form = document.getElementById('createObligationAdjustmentForm');
+        if (form) {
+            console.log('Form found, setting flag and submitting...');
+            // Set flag to allow submission
+            isSubmittingObligationAdjustment = true;
+            // Submit the form
+            form.submit();
+        } else {
+            console.error('Form not found for submission!');
         }
+    } else {
+        console.log('Form validation failed');
     }
+}
 
-    function validateAmountAdjustment(inputElement) {
-        const row = inputElement.closest('tr');
-        const poAmountCell = row.querySelector('.po-amount-cell');
-        const errorSpan = row.querySelector('.adjustmentAmountError');
+// Function to compute adjustment amount for each row
+function computeAdjustmentAmountForRow(row) {
+    const obrAmountCell = row.querySelector("td:nth-child(5)");
+    const adjustedAmountInput = row.querySelector("input[name^='adjusted_amount']");
+    const adjustmentAmountCell = row.querySelector("td:nth-child(7)");
 
-        let minAllowed = 0;
-        let poAmount = 0;
+    if (obrAmountCell && adjustedAmountInput && adjustmentAmountCell) {
+        const obrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
+        const adjustedAmount = parseFloat(adjustedAmountInput.value.replace(/,/g, '')) || 0;
+        const adjustmentAmount = adjustedAmount - obrAmount;
 
-        // Check if PO amount exists and is > 0 - sets minimum constraint only (can exceed)
-        if (poAmountCell) {
-            poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
-            if (poAmount > 0) {
-                minAllowed = poAmount;
-            }
-        }
-
-        const currentValue = parseFloat(inputElement.value) || 0;
-
-        // Show warning if below minimum but don't auto-correct
-        if (currentValue > 0 && currentValue < minAllowed) {
-            inputElement.classList.add('border-red-500');
-            if (errorSpan && minAllowed > 0) {
-                errorSpan.innerText = `Adjustment amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
-                errorSpan.classList.remove('hidden');
-            }
-            return;
-        }
-
-        // Clear error if valid
-        inputElement.classList.remove('border-red-500');
-        if (errorSpan) {
-            errorSpan.innerText = '';
-            errorSpan.classList.add('hidden');
-        }
-    }
-
-    function updateAdjustedAmountTotal() {
-        const adjustedInputs = document.querySelectorAll("input[name^='adjusted_amount']");
-        let total = 0;
-        adjustedInputs.forEach(input => {
-            const val = parseFloat(input.value);
-            if (!isNaN(val) && val !== 0) {
-                total += val;
-            }
+        adjustmentAmountCell.textContent = adjustmentAmount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
         });
-        const totalCell = document.getElementById('adjustedAmountTotalCell');
-        if (totalCell) {
-            totalCell.textContent = total.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+    }
+}
+
+function validateAmountAdjustment(inputElement) {
+    const row = inputElement.closest('tr');
+    const poAmountCell = row.querySelector('.po-amount-cell');
+    const errorSpan = row.querySelector('.adjustmentAmountError');
+
+    let minAllowed = 0;
+    let poAmount = 0;
+
+    // Check if PO amount exists and is > 0 - sets minimum constraint only (can exceed)
+    if (poAmountCell) {
+        poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
+        if (poAmount > 0) {
+            minAllowed = poAmount;
         }
     }
+
+    const currentValue = parseFloat(inputElement.value) || 0;
+
+    // Show warning if below minimum but don't auto-correct
+    if (currentValue > 0 && currentValue < minAllowed) {
+        inputElement.classList.add('border-red-500');
+        if (errorSpan && minAllowed > 0) {
+            errorSpan.innerText = `Adjustment amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
+            errorSpan.classList.remove('hidden');
+        }
+        return;
+    }
+
+    // Clear error if valid
+    inputElement.classList.remove('border-red-500');
+    if (errorSpan) {
+        errorSpan.innerText = '';
+        errorSpan.classList.add('hidden');
+    }
+}
+
+function updateAdjustedAmountTotal() {
+    const adjustedInputs = document.querySelectorAll("input[name^='adjusted_amount']");
+    let total = 0;
+    adjustedInputs.forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val !== 0) {
+            total += val;
+        }
+    });
+    const totalCell = document.getElementById('adjustedAmountTotalCell');
+    if (totalCell) {
+        totalCell.textContent = total.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+}
 
     document.addEventListener('input', function(event) {
         if (event.target.name && event.target.name.startsWith('adjusted_amount')) {

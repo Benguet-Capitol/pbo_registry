@@ -147,7 +147,7 @@
                         <div class="w-4 h-4 {{ $barColor }} rounded flex-shrink-0"></div>
                         <div class="flex-1 min-w-0">
                             <div class="font-medium text-gray-700 dark:text-gray-300 truncate" title="{{ $accountItem['account_code'] }} - {{ $accountItem['description'] }}">
-                                {{ $accountItem['account_code'] }} - {{ Str::limit($accountItem['description'], 30, '...') }}
+                                {{ $accountItem['account_code'] }} - {{ Str::limit($accountItem['description'], 40, '...') }}
                             </div>
                             <div class="text-gray-500 dark:text-gray-400">
                                 {{ number_format($percentage, 1) }}%
@@ -509,8 +509,9 @@
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4 mb-4 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
-                <label for="dashboardTable" class="ml-4 block text-md font-semibold text-gray-700 dark:text-gray-200">
-                    Office Accounts
+                <label for="dashboardTable" class="ml-4 block text-md font-semibold text-blue-800 dark:text-blue-400">
+                    {{ $officeAllotmentClasses->offices->office_name ?? 'Office N/A' }} -
+                    {{ $officeAllotmentClasses->class ?? 'Class N/A' }} Accounts
                 </label>
             </div>
             <div class="overflow-x-auto max-h-[720px] border border-gray-300 dark:border-gray-700 rounded-lg">
@@ -850,8 +851,8 @@
             displayAccounts.forEach(accountItem => {
                 const percentage = totalAmount > 0 ? (accountItem.total / totalAmount) * 100 : 0;
                 const color = getColorForAccount(accountItem.code);
-                const truncatedDesc = accountItem.description.length > 30 
-                    ? accountItem.description.substring(0, 30) + '...' 
+                const truncatedDesc = accountItem.description.length > 40 
+                    ? accountItem.description.substring(0, 40) + '...' 
                     : accountItem.description;
                 const legendText = `${accountItem.code} - ${truncatedDesc}`;
                 const fullText = `${accountItem.code} - ${accountItem.description}`;

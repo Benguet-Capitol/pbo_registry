@@ -259,9 +259,9 @@ function toggleCCOColumns() {
         showProjectNo = false;
         showCcoYear = false;
     } else if (classType === 'MOOE' || classType === 'CO') {
-        // MOOE: Show Project Location, hide Project No and CCO Year
+        // MOOE: Show Project Location and Project No, hide and CCO Year
         showProjectLocation = true;
-        showProjectNo = false;
+        showProjectNo = true;
         showCcoYear = false;
     } else if (classType === 'CCO') {
         // CCO: Show all columns

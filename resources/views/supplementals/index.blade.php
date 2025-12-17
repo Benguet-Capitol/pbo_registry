@@ -157,7 +157,7 @@
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <table id="supplementalTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
+                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                             <a href="{{ route('supplementals.index', ['sort_by' => 'supplemental_date', 'sort_order' => $sortBy == 'supplemental_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">

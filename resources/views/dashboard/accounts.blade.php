@@ -511,7 +511,7 @@
             <div class="flex justify-between items-center mb-4">
                 <label for="dashboardTable" class="ml-4 block text-md font-semibold text-blue-800 dark:text-blue-400">
                     {{ $officeAllotmentClasses->offices->office_name ?? 'Office N/A' }} -
-                    {{ $officeAllotmentClasses->class ?? 'Class N/A' }} Accounts
+                    {{ $officeAllotmentClasses->allotmentClass->description ?? 'Class N/A' }} Accounts
                 </label>
             </div>
             <div class="overflow-x-auto max-h-[720px] border border-gray-300 dark:border-gray-700 rounded-lg">

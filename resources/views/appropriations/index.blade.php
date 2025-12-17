@@ -156,6 +156,9 @@
                     </form>
                 </div>
             </div>
+
+            <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
+            <div class="max-h-[720px] overflow-y-auto">
             <table id="appropriationsTable" class="table-auto text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
@@ -305,6 +308,8 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
+            </div>
             <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
                 @if ($perPage != 'all')
                 {{ $appropriations->appends(request()->query())->links() }}

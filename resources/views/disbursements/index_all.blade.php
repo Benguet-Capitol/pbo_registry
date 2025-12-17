@@ -113,6 +113,9 @@
                         <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                 </div>
             </div>
+
+            <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
+            <div class="max-h-[720px] overflow-y-auto">
             <table id="disbursementsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
@@ -220,6 +223,8 @@
                     </tr>
                 </tfoot>
             </table>
+            </div>
+            </div>
         </div>
     </div>
 

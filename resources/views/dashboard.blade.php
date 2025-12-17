@@ -290,7 +290,7 @@
                     <i class="fas fa-file-circle-check text-blue-600 dark:text-blue-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
+                    <div class="text-[10px] sm:text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase">
                         Approved Appropriations
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
@@ -353,7 +353,7 @@
                     <i class="fas fa-file-signature text-sky-600 dark:text-sky-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
+                    <div class="text-[10px] sm:text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase">
                         Authorized Appropriations
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
@@ -379,7 +379,7 @@
                     <i class="fas fa-layer-group text-green-600 dark:text-green-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
+                    <div class="text-[10px] sm:text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase">
                         Allotments
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
@@ -405,7 +405,7 @@
                     <i class="fas fa-credit-card text-cyan-600 dark:text-cyan-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
+                    <div class="text-[10px] sm:text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase">
                         Authorized Appropriations Balance
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
@@ -413,17 +413,45 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="appropriation_accomplishment">
-                <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-2 sm:p-3">
-                    <i class="fas fa-percent text-indigo-600 dark:text-indigo-300 text-lg sm:text-xl md:text-2xl"></i>
+            <!-- Authorized Appropriations Utilization Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center justify-between transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer relative group" data-card="appropriation_accomplishment">
+                <div class="flex items-center flex-1">
+                    <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900 rounded-full p-2 sm:p-3">
+                        <i class="fas fa-percent text-indigo-600 dark:text-indigo-300 text-lg sm:text-xl md:text-2xl"></i>
+                    </div>
+                    <div class="ml-3 sm:ml-4 flex-1 min-w-0">
+                        <div class="text-[10px] sm:text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase">
+                            Authorized Appropriations Utilization
+                        </div>
+                        <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
+                            {{ number_format($totalAuthorizedAppropriationsAccomplishment, 2) }}%
+                        </div>
+                    </div>
                 </div>
-                <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Obligation / Authorized Appropriations
-                    </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
-                        {{ number_format($totalAuthorizedAppropriationsAccomplishment, 2) }}%
-                    </div>
+                
+                <!-- Circular Progress -->
+                <div class="flex-shrink-0 ml-4">
+                    <svg class="circular-progress" width="60" height="60" viewBox="0 0 60 60">
+                        <circle class="circular-progress-bg" cx="30" cy="30" r="24" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+                        <circle class="circular-progress-bar" cx="30" cy="30" r="24" fill="none" stroke="#6366f1" stroke-width="6"
+                                stroke-dasharray="{{ min($totalAuthorizedAppropriationsAccomplishment, 100) * 1.507 }} 150.7"
+                                stroke-linecap="round"
+                                transform="rotate(-90 30 30)"
+                                data-percentage="{{ $totalAuthorizedAppropriationsAccomplishment }}"/>
+                        <text x="30" y="35" text-anchor="middle" class="text-xs font-bold fill-gray-800 dark:fill-gray-100">
+                            {{ number_format(min($totalAuthorizedAppropriationsAccomplishment, 100), 0) }}%
+                        </text>
+                    </svg>
+                </div>
+                
+                <!-- Tooltip -->
+                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                    <div class="font-semibold">Appropriation Utilization</div>
+                    <div class="text-indigo-300">{{ number_format($totalAuthorizedAppropriationsAccomplishment, 2) }}%</div>
+                    <div class="text-gray-300 text-[10px] mt-1">Obligations: <span class="card-tooltip-obligations">{{ number_format($totalObligations, 2) }}</span></div>
+                    <div class="text-gray-300 text-[10px]">Authorized Appropriations: <span class="card-tooltip-auth-approp">{{ number_format($totalAuthorizedAppropriations, 2) }}</span></div>
+                    <!-- Arrow -->
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
                 </div>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="balance_allotments">
@@ -431,7 +459,7 @@
                     <i class="fas fa-stream text-pink-600 dark:text-pink-300 text-lg sm:text-xl md:text-2xl"></i>
                 </div>
                 <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
+                    <div class="text-[10px] sm:text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase">
                         Allotments Balance
                     </div>
                     <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
@@ -439,19 +467,48 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="allotment_accomplishment">
-                <div class="flex-shrink-0 bg-teal-100 dark:bg-teal-900 rounded-full p-2 sm:p-3">
-                    <i class="fas fa-percentage text-teal-600 dark:text-teal-300 text-lg sm:text-xl md:text-2xl"></i>
+            <!-- Allotments Utilization Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center justify-between transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer relative group" data-card="allotment_accomplishment">
+                <div class="flex items-center flex-1">
+                    <div class="flex-shrink-0 bg-teal-100 dark:bg-teal-900 rounded-full p-2 sm:p-3">
+                        <i class="fas fa-percentage text-teal-600 dark:text-teal-300 text-lg sm:text-xl md:text-2xl"></i>
+                    </div>
+                    <div class="ml-3 sm:ml-4 flex-1 min-w-0">
+                        <div class="text-[10px] sm:text-xs text-gray-700 dark:text-gray-400 font-semibold uppercase">
+                            Allotments Utilization
+                        </div>
+                        <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
+                            {{ number_format($allotmentAccomplishment, 2) }}%
+                        </div>
+                    </div>
                 </div>
-                <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Obligations / Allotments
-                    </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
-                        {{ number_format($allotmentAccomplishment, 2) }}%
-                    </div>
+                
+                <!-- Circular Progress -->
+                <div class="flex-shrink-0 ml-4">
+                    <svg class="circular-progress" width="60" height="60" viewBox="0 0 60 60">
+                        <circle class="circular-progress-bg" cx="30" cy="30" r="24" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+                        <circle class="circular-progress-bar" cx="30" cy="30" r="24" fill="none" stroke="#14b8a6" stroke-width="6"
+                                stroke-dasharray="{{ min($allotmentAccomplishment, 100) * 1.507 }} 150.7"
+                                stroke-linecap="round"
+                                transform="rotate(-90 30 30)"
+                                data-percentage="{{ $allotmentAccomplishment }}"/>
+                        <text x="30" y="35" text-anchor="middle" class="text-xs font-bold fill-gray-800 dark:fill-gray-100">
+                            {{ number_format(min($allotmentAccomplishment, 100), 0) }}%
+                        </text>
+                    </svg>
+                </div>
+                
+                <!-- Tooltip -->
+                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                    <div class="font-semibold">Allotments Utilization</div>
+                    <div class="text-teal-300">{{ number_format($allotmentAccomplishment, 2) }}%</div>
+                    <div class="text-gray-300 text-[10px] mt-1">Obligations: <span class="card-tooltip-obligations-allot">{{ number_format($totalObligations, 2) }}</span></div>
+                    <div class="text-gray-300 text-[10px]">Allotments: <span class="card-tooltip-allotments">{{ number_format($totalAllotments, 2) }}</span></div>
+                    <!-- Arrow -->
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
                 </div>
             </div>
+            @role('Disbursement|Administrator|Developer')
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="disbursements">
                 <div class="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-tasks text-emerald-600 dark:text-emerald-300 text-lg sm:text-xl md:text-2xl"></i>
@@ -478,32 +535,89 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="disbursements_to_obligations">
-                <div class="flex-shrink-0 bg-lime-100 dark:bg-lime-900 rounded-full p-2 sm:p-3">
-                    <i class="fas fa-percentage text-lime-600 dark:text-lime-300 text-lg sm:text-xl md:text-2xl"></i>
+            <!-- Disbursements / Obligations Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center justify-between transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer relative group" data-card="disbursements_to_obligations">
+                <div class="flex items-center flex-1">
+                    <div class="flex-shrink-0 bg-lime-100 dark:bg-lime-900 rounded-full p-2 sm:p-3">
+                        <i class="fas fa-percentage text-lime-600 dark:text-lime-300 text-lg sm:text-xl md:text-2xl"></i>
+                    </div>
+                    <div class="ml-3 sm:ml-4 flex-1 min-w-0">
+                        <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
+                            Disbursements / Obligations
+                        </div>
+                        <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
+                            {{ number_format($totalDisbursementsToObligations, 2) }}%
+                        </div>
+                    </div>
                 </div>
-                <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Disbursements / Obligations
-                    </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
-                        {{ number_format($totalDisbursementsToObligations, 2) }}%
-                    </div>
+                
+                <!-- Circular Progress -->
+                <div class="flex-shrink-0 ml-4">
+                    <svg class="circular-progress" width="60" height="60" viewBox="0 0 60 60">
+                        <circle class="circular-progress-bg" cx="30" cy="30" r="24" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+                        <circle class="circular-progress-bar" cx="30" cy="30" r="24" fill="none" stroke="#84cc16" stroke-width="6"
+                                stroke-dasharray="{{ min($totalDisbursementsToObligations, 100) * 1.507 }} 150.7"
+                                stroke-linecap="round"
+                                transform="rotate(-90 30 30)"
+                                data-percentage="{{ $totalDisbursementsToObligations }}"/>
+                        <text x="30" y="35" text-anchor="middle" class="text-xs font-bold fill-gray-800 dark:fill-gray-100">
+                            {{ number_format(min($totalDisbursementsToObligations, 100), 0) }}%
+                        </text>
+                    </svg>
+                </div>
+                
+                <!-- Tooltip -->
+                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                    <div class="font-semibold">Disbursements / Obligations</div>
+                    <div class="text-lime-300">{{ number_format($totalDisbursementsToObligations, 2) }}%</div>
+                    <div class="text-gray-300 text-[10px] mt-1">Disbursements: <span class="card-tooltip-disbursements-ob">{{ number_format($totalDisbursements, 2) }}</span></div>
+                    <div class="text-gray-300 text-[10px]">Obligations: <span class="card-tooltip-obligations-disb">{{ number_format($totalObligations, 2) }}</span></div>
+                    <!-- Arrow -->
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" data-card="disbursements_to_appropriations">
-                <div class="flex-shrink-0 bg-amber-100 dark:bg-amber-900 rounded-full p-2 sm:p-3">
-                    <i class="fas fa-percentage text-amber-600 dark:text-amber-300 text-lg sm:text-xl md:text-2xl"></i>
+            <!-- Disbursements / Authorized Appropriations Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center justify-between transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer relative group" data-card="disbursements_to_appropriations">
+                <div class="flex items-center flex-1">
+                    <div class="flex-shrink-0 bg-amber-100 dark:bg-amber-900 rounded-full p-2 sm:p-3">
+                        <i class="fas fa-percentage text-amber-600 dark:text-amber-300 text-lg sm:text-xl md:text-2xl"></i>
+                    </div>
+                    <div class="ml-3 sm:ml-4 flex-1 min-w-0">
+                        <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
+                            Disbursements / Authorized Appropriations
+                        </div>
+                        <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
+                            {{ number_format($totalDisbursementsToAppropriations, 2) }}%
+                        </div>
+                    </div>
                 </div>
-                <div class="ml-3 sm:ml-4">
-                    <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Disbursements / Authorized Appropriations
-                    </div>
-                    <div class="text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words card-value">
-                        {{ number_format($totalDisbursementsToAppropriations, 2) }}%
-                    </div>
+                
+                <!-- Circular Progress -->
+                <div class="flex-shrink-0 ml-4">
+                    <svg class="circular-progress" width="60" height="60" viewBox="0 0 60 60">
+                        <circle class="circular-progress-bg" cx="30" cy="30" r="24" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+                        <circle class="circular-progress-bar" cx="30" cy="30" r="24" fill="none" stroke="#f59e0b" stroke-width="6"
+                                stroke-dasharray="{{ min($totalDisbursementsToAppropriations, 100) * 1.507 }} 150.7"
+                                stroke-linecap="round"
+                                transform="rotate(-90 30 30)"
+                                data-percentage="{{ $totalDisbursementsToAppropriations }}"/>
+                        <text x="30" y="35" text-anchor="middle" class="text-xs font-bold fill-gray-800 dark:fill-gray-100">
+                            {{ number_format(min($totalDisbursementsToAppropriations, 100), 0) }}%
+                        </text>
+                    </svg>
+                </div>
+                
+                <!-- Tooltip -->
+                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                    <div class="font-semibold">Disbursements / Appropriations</div>
+                    <div class="text-amber-300">{{ number_format($totalDisbursementsToAppropriations, 2) }}%</div>
+                    <div class="text-gray-300 text-[10px] mt-1">Disbursements: <span class="card-tooltip-disbursements-ap">{{ number_format($totalDisbursements, 2) }}</span></div>
+                    <div class="text-gray-300 text-[10px]">Authorized Approp.: <span class="card-tooltip-auth-approp-disb">{{ number_format($totalAuthorizedAppropriations, 2) }}</span></div>
+                    <!-- Arrow -->
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
                 </div>
             </div>
+            @endrole
 
             {{-- Add more cards here if needed --}}
         </div>
@@ -512,7 +626,7 @@
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4 mb-4 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
-                <label for="dashboardTable" class="ml-4 block text-md font-semibold text-gray-700 dark:text-gray-200">Allotment Classes</label>
+                <label for="dashboardTable" class="ml-4 block text-md font-semibold text-gray-700 dark:text-gray-200">Office Allotment Classes</label>
             </div>
             <div class="overflow-auto max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
@@ -521,24 +635,30 @@
                             <th class="px-2 py-2 w-[70px] text-center">View Details</th>
                             <th class="px-2 py-2 w-[100px] text-center">Office</th>
                             <th class="px-2 py-2 w-[120px] text-center">Allotment Class</th>
+                            @role('Disbursement|Administrator|Developer|Obligation')
                             <th class="px-2 py-2 w-[120px] text-center">Fund Type</th>
                             <th class="px-2 py-2 w-[100px] text-center">FPP Code</th>
+                            @endrole
                             <th class="px-2 py-2 w-[100px] text-center">Approved Appropriations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Supplemental Appropriations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Reversions</th>
                             <th class="px-2 py-2 w-[100px] text-center">Realignments</th>
                             <th class="px-2 py-2 w-[100px] text-center">Authorized Appropriations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Allotments</th>
+                            @role('Disbursement|Administrator|Developer|Obligation')
                             <th class="px-2 py-2 w-[100px] text-center">For Later Release</th>
+                            @endrole
                             <th class="px-2 py-2 w-[100px] text-center">Obligations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Authorized Appropriations Balance</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Appropriation Accomp.</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Appropriation Utilization</th>
                             <th class="px-2 py-2 w-[100px] text-center">Allotments Balance</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Allotments Accomp.</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Allotments Utilization</th>
+                            @role('Disbursement|Administrator|Developer')
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements</th>
                             <th class="px-2 py-2 w-[100px] text-center">Obligations Balance</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Oblgations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Approp.</th>
+                            @endrole
                         </tr>
                     </thead>
                     <tbody>
@@ -590,29 +710,115 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-1 py-2 text-center">{{ $class->office_abbreviation }}</td>
-                            <td class="px-1 py-2 text-center">{{ $class->class }}</td>
+                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $class->office_abbreviation }}</td>
+                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $class->class }}</td>
+                            @role('Disbursement|Administrator|Developer|Obligation')
                             <td class="px-1 py-2 text-center">{{ $class->fundSourceRelation->category ?? '-' }}</td>
                             <td class="px-1 py-2 text-center">{{ $class->fpp_code }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($class->appropriations_sum, 2) }}</td>
+                            @endrole
+                            <td class="px-1 py-2 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($class->appropriations_sum, 2) }}</td>
                             <td class="px-1 py-2 text-right {{ $class->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->supplemental_sum, 2) }}</td>
                             <td class="px-1 py-2 text-right {{ $class->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">{{ number_format($class->reversion_sum, 2) }}</td>
                             <td class="px-1 py-2 text-right 
                                     {{ $class->realignments_sum < 0 ? 'text-red-600 font-semibold' : ($class->realignments_sum > 0 ? 'text-green-600 font-semibold' : 'text-gray-700 dark:text-gray-300') }}">
                                 {{ number_format($class->realignments_sum, 2) }}
                             </td>
-                            <td class="px-1 py-2 text-right">{{ number_format($class->authorized_appropriations, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($class->allotments_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($class->authorized_appropriations, 2) }}</td>
+                            <td class="px-1 py-2 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($class->allotments_sum, 2) }}</td>
+                            @role('Disbursement|Administrator|Developer|Obligation')
                             <td class="px-1 py-2 text-right">{{ number_format($class->for_later_release, 2) }}</td>
+                            @endrole
                             <td class="px-1 py-2 text-right">{{ number_format($class->obligations_sum, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($class->balance_appropriations, 2) }}</td>
-                            <td class="px-1 py-2 text-center">{{ number_format($class->appropriation_accomplishment, 2) }}%</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($class->balance_allotments, 2) }}</td>
-                            <td class="px-1 py-2 text-center">{{ number_format($class->allotment_accomplishment, 2) }}%</td>
+                            <td class="px-1 py-2 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($class->balance_appropriations, 2) }}</td>
+                            <!-- Appropriation Utilization -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                            style="width: {{ min($class->appropriation_accomplishment, 100) }}%">
+                                            @if($class->appropriation_accomplishment > 15)
+                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->appropriation_accomplishment, 1) }}%</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Appropriation Utilization</div>
+                                        <div>{{ number_format($class->appropriation_accomplishment, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($class->obligations_sum, 2) }} / {{ number_format($class->authorized_appropriations, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-1 py-2 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($class->balance_allotments, 2) }}</td>
+                            <!-- Allotments Utilization Cell -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                            style="width: {{ min($class->allotment_accomplishment, 100) }}%">
+                                            @if($class->allotment_accomplishment > 15)
+                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->allotment_accomplishment, 1) }}%</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Allotments Utilization</div>
+                                        <div>{{ number_format($class->allotment_accomplishment, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($class->obligations_sum, 2) }} / {{ number_format($class->allotments_sum, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            @role('Disbursement|Administrator|Developer')
                             <td class="px-1 py-2 text-right">{{ number_format($class->disbursements_sum, 2) }}</td>
                             <td class="px-1 py-2 text-right">{{ number_format($class->disbursement_balance, 2) }}</td>
-                            <td class="px-1 py-2 text-center">{{ number_format($class->disbursements_to_obligations, 2) }}%</td>
-                            <td class="px-1 py-2 text-center">{{ number_format($class->disbursements_to_appropriations, 2) }}%</td>
+                            <!-- Disbursements / Obligations Cell (if role allowed) -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                            style="width: {{ min($class->disbursements_to_obligations, 100) }}%">
+                                            @if($class->disbursements_to_obligations > 15)
+                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->disbursements_to_obligations, 1) }}%</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Disbursements / Obligations</div>
+                                        <div>{{ number_format($class->disbursements_to_obligations, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($class->disbursements_sum, 2) }} / {{ number_format($class->obligations_sum, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- Disbursements / Appropriations Cell (if role allowed) -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                            style="width: {{ min($class->disbursements_to_appropriations, 100) }}%">
+                                            @if($class->disbursements_to_appropriations > 15)
+                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->disbursements_to_appropriations, 1) }}%</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Disbursements / Appropriations</div>
+                                        <div>{{ number_format($class->disbursements_to_appropriations, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($class->disbursements_sum, 2) }} / {{ number_format($class->authorized_appropriations, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            @endrole
                         </tr>
                         @empty
                             <tr>
@@ -631,6 +837,18 @@
             </div>
         </div>
     </div>
+
+    <style>
+    /* Circular progress animation */
+    .circular-progress-bar {
+        transition: stroke-dasharray 0.6s ease-in-out;
+    }
+
+    /* Dark mode stroke color adjustments */
+    .dark .circular-progress-bg {
+        stroke: #374151;
+    }
+    </style>
 
     <script>
         // Store all card information for dynamic updates
@@ -653,112 +871,134 @@
             'disbursements_to_appropriations': { column: 'data-disbursements-to-appropriations' }
         };
 
+        // updateCardValues function to also update circular progress bars
         function updateCardValues() {
-        const rows = document.querySelectorAll('#dashboardTable tbody tr');
-        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+            const rows = document.querySelectorAll('#dashboardTable tbody tr');
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
 
-        // Calculate totals from visible rows
-        const totals = {};
-        for (const [cardKey, config] of Object.entries(cardConfig)) {
-            let total = 0;
-            visibleRows.forEach(row => {
-                const value = parseFloat(row.getAttribute(config.column)) || 0;
-                total += value;
-            });
-            totals[cardKey] = total;
-        }
+            // Calculate totals from visible rows
+            const totals = {};
+            for (const [cardKey, config] of Object.entries(cardConfig)) {
+                let total = 0;
+                visibleRows.forEach(row => {
+                    const value = parseFloat(row.getAttribute(config.column)) || 0;
+                    total += value;
+                });
+                totals[cardKey] = total;
+            }
 
-        // Calculate percentage cards properly based on base values
-        const obligations = totals['obligations'] || 0;
-        const authorizedAppropriations = totals['authorized_appropriations'] || 0;
-        const allotments = totals['allotments'] || 0;
-        const disbursements = totals['disbursements'] || 0;
+            // Calculate percentage cards properly based on base values
+            const obligations = totals['obligations'] || 0;
+            const authorizedAppropriations = totals['authorized_appropriations'] || 0;
+            const allotments = totals['allotments'] || 0;
+            const disbursements = totals['disbursements'] || 0;
 
-        // Calculate percentages using correct formulas
-        const appropriationAccomplishment = authorizedAppropriations > 0 
-            ? (obligations / authorizedAppropriations) * 100 
-            : 0;
-        
-        const allotmentAccomplishment = allotments > 0 
-            ? (obligations / allotments) * 100 
-            : 0;
-        
-        const disbursementsToObligations = obligations > 0 
-            ? (disbursements / obligations) * 100 
-            : 0;
-        
-        const disbursementsToAppropriations = authorizedAppropriations > 0 
-            ? (disbursements / authorizedAppropriations) * 100 
-            : 0;
+            // Calculate percentages using correct formulas
+            const appropriationAccomplishment = authorizedAppropriations > 0 
+                ? (obligations / authorizedAppropriations) * 100 
+                : 0;
+            
+            const allotmentAccomplishment = allotments > 0 
+                ? (obligations / allotments) * 100 
+                : 0;
+            
+            const disbursementsToObligations = obligations > 0 
+                ? (disbursements / obligations) * 100 
+                : 0;
+            
+            const disbursementsToAppropriations = authorizedAppropriations > 0 
+                ? (disbursements / authorizedAppropriations) * 100 
+                : 0;
 
-        // Update card values
-        for (const [cardKey, total] of Object.entries(totals)) {
-            const card = document.querySelector(`[data-card="${cardKey}"]`);
-            if (card) {
-                const cardValue = card.querySelector('.card-value');
-                if (cardValue) {
-                    // Handle percentage cards specially
-                    if (cardKey === 'appropriation_accomplishment') {
-                        cardValue.textContent = appropriationAccomplishment.toLocaleString('en-US', {
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2
-                        }) + '%';
-                    } else if (cardKey === 'allotment_accomplishment') {
-                        cardValue.textContent = allotmentAccomplishment.toLocaleString('en-US', {
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2
-                        }) + '%';
-                    } else if (cardKey === 'disbursements_to_obligations') {
-                        cardValue.textContent = disbursementsToObligations.toLocaleString('en-US', {
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2
-                        }) + '%';
-                    } else if (cardKey === 'disbursements_to_appropriations') {
-                        cardValue.textContent = disbursementsToAppropriations.toLocaleString('en-US', {
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2
-                        }) + '%';
-                    } else {
-                        // Handle regular number cards
-                        cardValue.textContent = total.toLocaleString('en-US', {
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2
-                        });
-                    }
+            // Update card values
+            for (const [cardKey, total] of Object.entries(totals)) {
+                const card = document.querySelector(`[data-card="${cardKey}"]`);
+                if (card) {
+                    const cardValue = card.querySelector('.card-value');
+                    const circularProgress = card.querySelector('.circular-progress-bar');
+                    const progressText = card.querySelector('text');
                     
-                    // Update color classes for supplementals and reversions
-                    if (cardKey === 'supplemental_appropriations') {
-                        if (total > 0) {
-                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
-                            cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                    if (cardValue) {
+                        let percentage = 0;
+                        
+                        // Handle percentage cards specially
+                        if (cardKey === 'appropriation_accomplishment') {
+                            percentage = appropriationAccomplishment;
+                            cardValue.textContent = percentage.toLocaleString('en-US', {
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2
+                            }) + '%';
+                        } else if (cardKey === 'allotment_accomplishment') {
+                            percentage = allotmentAccomplishment;
+                            cardValue.textContent = percentage.toLocaleString('en-US', {
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2
+                            }) + '%';
+                        } else if (cardKey === 'disbursements_to_obligations') {
+                            percentage = disbursementsToObligations;
+                            cardValue.textContent = percentage.toLocaleString('en-US', {
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2
+                            }) + '%';
+                        } else if (cardKey === 'disbursements_to_appropriations') {
+                            percentage = disbursementsToAppropriations;
+                            cardValue.textContent = percentage.toLocaleString('en-US', {
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2
+                            }) + '%';
                         } else {
-                            cardValue.classList.remove('text-green-600', 'dark:text-green-400');
-                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                            // Handle regular number cards
+                            cardValue.textContent = total.toLocaleString('en-US', {
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2
+                            });
                         }
-                    } else if (cardKey === 'reversions') {
-                        if (total > 0) {
-                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
-                            cardValue.classList.add('text-red-600', 'dark:text-red-400');
-                        } else {
-                            cardValue.classList.remove('text-red-600', 'dark:text-red-400');
-                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                        
+                        // Update circular progress for percentage cards
+                        if (circularProgress && percentage !== undefined) {
+                            const cappedPercentage = Math.min(percentage, 100);
+                            const dashArray = (cappedPercentage * 1.507).toFixed(2);
+                            circularProgress.setAttribute('stroke-dasharray', `${dashArray} 150.7`);
+                            circularProgress.setAttribute('data-percentage', percentage);
+                            
+                            if (progressText) {
+                                progressText.textContent = Math.round(cappedPercentage) + '%';
+                            }
                         }
-                    } else if (cardKey === 'realignments') {
-                        if (total > 0) {
-                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-red-600', 'dark:text-red-400');
-                            cardValue.classList.add('text-green-600', 'dark:text-green-400');
-                        } else if (total < 0) {
-                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-green-600', 'dark:text-green-400');
-                            cardValue.classList.add('text-red-600', 'dark:text-red-400');
-                        } else {
-                            cardValue.classList.remove('text-green-600', 'dark:text-green-400', 'text-red-600', 'dark:text-red-400');
-                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                        
+                        // Update color classes for supplementals and reversions
+                        if (cardKey === 'supplemental_appropriations') {
+                            if (total > 0) {
+                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                                cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                            } else {
+                                cardValue.classList.remove('text-green-600', 'dark:text-green-400');
+                                cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                            }
+                        } else if (cardKey === 'reversions') {
+                            if (total > 0) {
+                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                                cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                            } else {
+                                cardValue.classList.remove('text-red-600', 'dark:text-red-400');
+                                cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                            }
+                        } else if (cardKey === 'realignments') {
+                            if (total > 0) {
+                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-red-600', 'dark:text-red-400');
+                                cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                            } else if (total < 0) {
+                                cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-green-600', 'dark:text-green-400');
+                                cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                            } else {
+                                cardValue.classList.remove('text-green-600', 'dark:text-green-400', 'text-red-600', 'dark:text-red-400');
+                                cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
         function toggleDropdown(button) {
             const dropdown = button.nextElementSibling;

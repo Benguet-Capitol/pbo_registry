@@ -62,17 +62,24 @@
 
                         <!-- Office -->
                         <div class="space-y-2">
-                            <x-form.label for="office" :value="__('Office')" />
+                            <x-form.label for="edit_office" :value="__('Office')" />
                             <x-form.input-with-icon-wrapper>
-                                <x-slot name="icon"><i class="fas fa-qrcode"></i></x-slot>
-                                <x-form.select withicon id="edit_office" class="block w-full" name="edit_office" autocomplete="off">
-                                <option value="PBO" {{ old('office', $user->office) == 'PBO' ? 'selected' : '' }}>Provincial Budget Office</option>
-                                <option value="PAccO" {{ old('office', $user->office) == 'PAccO' ? 'selected' : '' }}>Provincial Accounting Office</option>
-                                <option value="PGO" {{ old('office', $user->office) == 'PGO' ? 'selected' : '' }}>Provincial Governor's Office</option>
+                                <x-slot name="icon">
+                                    <i class="fas fa-building"></i>
+                                </x-slot>
+                                <x-form.select withicon id="edit_office" class="block w-full" name="edit_office" placeholder="{{ __('Office') }}">
+                                    <option value="">{{ __('Select Office') }}</option>
+                                    @foreach($offices as $office)
+                                        <option value="{{ $office->id }}">
+                                            {{ $office->office_abbreviation }} - {{ $office->office_name }}
+                                        </option>
+                                    @endforeach
                                 </x-form.select>
                             </x-form.input-with-icon-wrapper>
-                            <span id="officeError" class="text-red-500 text-sm"></span>
+                            <span id="editOfficeError" class="text-red-500 text-sm"></span>
                         </div>
+
+
                     </div>
                 </div>
                 <!-- Modal footer -->

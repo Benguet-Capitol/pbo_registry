@@ -27,7 +27,7 @@ class SAAOBGFCurrentSummaryController extends Controller
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
         $offices = Office::all();
-        $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
+        $employees = Employee::where('office', '12')->orderBy('employee_id')->get();
 
         // Per Fund and Allotment Class
         $funds = Fund::where('fund_type', 'General Fund')

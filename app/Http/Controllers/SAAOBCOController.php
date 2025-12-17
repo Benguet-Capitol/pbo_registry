@@ -30,7 +30,7 @@ class SAAOBCOController extends Controller
                     });
             })->orderBy('id', 'asc')->get();
 
-            $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
+            $employees = Employee::where('office', '12')->orderBy('employee_id')->get();
             $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
             // Get account codes

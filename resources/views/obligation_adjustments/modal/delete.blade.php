@@ -1,4 +1,4 @@
-<div id="deleteAdjustmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+<div id="deleteAdjustmentModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="relative w-full max-w-md p-4 bg-white rounded-lg shadow-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center pb-3">

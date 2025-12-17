@@ -26,7 +26,7 @@ class SAAOBFundSourceController extends Controller
 
             $allFundSources = FundSource::select('category')->distinct()->orderBy('id')->pluck('category');
             // Get all employees for signatory filter
-            $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
+            $employees = Employee::where('office', '12')->orderBy('employee_id')->get();
             
             $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 

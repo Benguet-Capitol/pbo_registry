@@ -24,7 +24,7 @@ class SAAOBFundSectorController extends Controller
         $selectedFund = request('fund_filter');
         $asOfDate = request('as_of_filter', now()->toDateString());
 
-        $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
+        $employees = Employee::where('office', '12')->orderBy('employee_id')->get();
         $sectors = Sector::all();
         $allFunds = Fund::select('fund_type')->distinct()->orderBy('id')->pluck('fund_type');
         $fundsQuery = Fund::query();

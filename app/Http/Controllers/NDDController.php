@@ -35,7 +35,7 @@ class NDDController extends Controller
         $offices = Office::orderBy('id')->get();
 
         // Get all employees for signatory filter
-        $employees = Employee::where('office', 'PBO')->orderBy('employee_id')->get();
+        $employees = Employee::where('office', '12')->orderBy('employee_id')->get();
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 

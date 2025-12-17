@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\User;
+use App\Models\Office;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
@@ -24,14 +25,30 @@ class EmployeeController extends Controller
         $sortOrder = $request->query('sort_order', 'desc');
 
         // Query employees
-        $query = Employee::query();
+        $query = Employee::with('officeRelation'); // Eager load the office relationship
 
         if ($search) {
-            $query->where('name', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
                 ->orWhere('designation', 'like', "%{$search}%")
-                ->orWhere('office', 'like', "%{$search}%")
                 ->orWhere('employee_id', 'like', "%{$search}%")
                 ->orWhere('created_at', 'like', "%{$search}%");
+            })
+            ->orWhereHas('officeRelation', function($q) use ($search) {
+                $q->where('office_abbreviation', 'like', "%{$search}%")
+                ->orWhere('office_name', 'like', "%{$search}%");
+            });
+        }
+
+        // Handle sorting for office
+        if ($sortBy === 'office') {
+            // Join with offices table for sorting by office_abbreviation
+            $query->leftJoin('offices', 'employees.office', '=', 'offices.id')
+                ->select('employees.*')
+                ->orderBy('offices.office_abbreviation', $sortOrder);
+        } else {
+            // Apply regular sorting
+            $query->orderBy($sortBy, $sortOrder);
         }
 
         // Apply sorting before pagination
@@ -41,12 +58,14 @@ class EmployeeController extends Controller
             $employees = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
         }
 
+        $offices = Office::orderBy('id')->get();
+
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'Employees']
         ];
 
-        return view('employees.index', compact('employees', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb'))->with('status', session('status'));
+        return view('employees.index', compact('employees', 'offices', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb'))->with('status', session('status'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -55,7 +74,7 @@ class EmployeeController extends Controller
             'employee_id' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'designation' => 'required|string|max:255',
-            'office' => 'required|string|max:255',
+            'office' => 'required|integer|exists:offices,id',
         ]);
 
         $employee = Employee::create([
@@ -65,7 +84,11 @@ class EmployeeController extends Controller
             'office' => $validated['office'],
         ]);
 
-        return redirect(route('employees.index'))->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $employee->office . '</strong> has been created successfully!');
+        // Load the office relationship to get the office abbreviation
+        $employee->load('officeRelation');
+        $officeAbbr = $employee->office_abbreviation;
+
+        return redirect(route('employees.index'))->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been created successfully!');
     }
 
     public function edit(Employee $employee): View
@@ -88,18 +111,24 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             'edit_employee_id' => 'required|string|max:255',
             'edit_name' => 'required|string|max:255',
-            'edit_office' => 'required|string|max:255',
+            'edit_office' => 'required|integer|exists:offices,id',
             'edit_designation' => 'required|string|max:255'
         ]);
 
-        $employee->update([
+        $updateData = [
             'employee_id' => $validated['edit_employee_id'],
             'name' => $validated['edit_name'],
             'office' => $validated['edit_office'],
             'designation' => $validated['edit_designation']
-        ]);
+        ];
 
-        return redirect()->route('employees.index')->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $employee->office . '</strong> has been updated successfully!');
+        $employee->update($updateData);
+
+        // Load the office relationship to get the office abbreviation
+        $employee->load('officeRelation');
+        $officeAbbr = $employee->office_abbreviation;
+
+        return redirect()->route('employees.index')->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been updated successfully!');
     }
 
     public function destroy(Request $request, Employee $employee): RedirectResponse
@@ -127,11 +156,15 @@ class EmployeeController extends Controller
             // All validations passed - proceed with deletion
             $employee->delete();
 
+            // Load the office relationship to get the office abbreviation
+            $employee->load('officeRelation');
+            $officeAbbr = $employee->office_abbreviation;
+
             DB::commit();
 
             return redirect()->route('employees.index', array_filter($request->only(['per_page', 'search'])))
                 ->with('status', 
-                    'Employee <strong>' . $employeeName . '</strong> from <strong>' . $employeeOffice . '</strong> has been deleted successfully!'
+                    'Employee <strong>' . $employeeName . '</strong> from <strong>' . $officeAbbr . '</strong> has been deleted successfully!'
                 );
 
         } catch (\Throwable $e) {

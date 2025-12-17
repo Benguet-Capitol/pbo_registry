@@ -132,7 +132,7 @@
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $employee->employee_id }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $employee->name }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $employee->designation }}</td>
-                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $employee->office }}</td>
+                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300" title="{{ $employee->office_name }}">{{ $employee->office_abbreviation }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                             @canany(['edit employees', 'delete employees'])
                             <div class="relative inline-block text-left">
@@ -147,7 +147,7 @@
                                     </button>
                                     @endcan
                                     @can('delete employees')
-                                    <button onclick="openDeleteModal({{ $employee->id }}, '{{ $employee->name }}', '{{ $employee->office }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
+                                    <button onclick="openDeleteModal({{ $employee->id }}, '{{ $employee->name }}', '{{ $employee->office_abbreviation }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
                                         <i class="fas fa-trash mr-2"></i>Delete
                                     </button>
                                     @endcan

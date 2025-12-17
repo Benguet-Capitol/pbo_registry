@@ -29,7 +29,7 @@ class SAAODBOfficeController extends Controller
         })->orderBy('id', 'asc')->get();
 
         // Get all employees for signatory filter
-        $employees = Employee::where('office', 'PAccO')
+        $employees = Employee::where('office', '10')
             ->orderBy('employee_id')
             ->get(['employee_id', 'name', 'designation']);
 

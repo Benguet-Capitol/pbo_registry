@@ -30,7 +30,7 @@ class SAAOBGFCurrentController extends Controller
             ->orderByDesc('year')
             ->pluck('year');
 
-        $employees = Employee::where('office', 'PBO')
+        $employees = Employee::where('office', '12')
             ->orderBy('employee_id')
             ->get();
         $allotmentClasses = AllotmentClass::all()

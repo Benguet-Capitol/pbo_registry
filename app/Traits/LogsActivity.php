@@ -150,39 +150,66 @@ trait LogsActivity
     }
 
     protected static function formatChanges($model, array $changes): string
-{
-    $formattedChanges = [];
-    
-    // Using $model->getOriginal() is the safe way to access the original data 
-    // stored by the 'updating' event, regardless of trait property access.
-    $originalState = $model->getOriginal() ?? []; 
+    {
+        $formattedChanges = [];
+        
+        // Using $model->getOriginal() is the safe way to access the original data 
+        // stored by the 'updating' event, regardless of trait property access.
+        $originalState = $model->getOriginal() ?? []; 
 
-    foreach ($changes as $attribute => $newValue) {
-        // Skip keys that aren't user-facing or helpful for logging
-        if (in_array($attribute, ['created_at', 'updated_at', 'deleted_at'])) {
-            continue;
-        }
-        
-        // Get the old value from the stored original state
-        $oldValue = array_key_exists($attribute, $originalState) ? $originalState[$attribute] : 'N/A';
-        
-        // Format for readability (using snake_case to Title Case)
-        $attributeName = Str::title(Str::replace('_', ' ', Str::snake($attribute)));
-        
-        // Simple string comparison for log, or use number_format if dealing with currency/numeric fields
-        if (is_numeric($oldValue) && is_numeric($newValue)) {
-             $oldValue = is_null($oldValue) ? 'null' : number_format($oldValue, 2);
-             $newValue = is_null($newValue) ? 'null' : number_format($newValue, 2);
-        } elseif (is_bool($oldValue) || is_bool($newValue)) {
-            $oldValue = $oldValue ? 'True' : 'False';
-            $newValue = $newValue ? 'True' : 'False';
+        foreach ($changes as $attribute => $newValue) {
+            // Skip keys that aren't user-facing or helpful for logging
+            if (in_array($attribute, ['created_at', 'updated_at', 'deleted_at'])) {
+                continue;
+            }
+            
+            // Get the old value from the stored original state
+            $oldValue = array_key_exists($attribute, $originalState) ? $originalState[$attribute] : 'N/A';
+            
+            // Special handling for office field - convert ID to abbreviation
+            if ($attribute === 'office') {
+                $oldValue = static::getOfficeAbbreviation($oldValue);
+                $newValue = static::getOfficeAbbreviation($newValue);
+            }
+            
+            // Format for readability (using snake_case to Title Case)
+            $attributeName = Str::title(Str::replace('_', ' ', Str::snake($attribute)));
+            
+            // Simple string comparison for log, or use number_format if dealing with currency/numeric fields
+            if (is_numeric($oldValue) && is_numeric($newValue) && $attribute !== 'office') {
+                $oldValue = is_null($oldValue) ? 'null' : number_format($oldValue, 2);
+                $newValue = is_null($newValue) ? 'null' : number_format($newValue, 2);
+            } elseif (is_bool($oldValue) || is_bool($newValue)) {
+                $oldValue = $oldValue ? 'True' : 'False';
+                $newValue = $newValue ? 'True' : 'False';
+            }
+
+            $formattedChanges[] = "{$attributeName}: '{$oldValue}' to '{$newValue}'";
         }
 
-        $formattedChanges[] = "{$attributeName}: '{$oldValue}' to '{$newValue}'";
+        return implode('; ', $formattedChanges);
     }
 
-    return implode('; ', $formattedChanges);
-}
+    /**
+     * Get office abbreviation from office ID
+     * 
+     * @param mixed $officeId
+     * @return string
+     */
+    protected static function getOfficeAbbreviation($officeId)
+    {
+        if (is_null($officeId) || $officeId === 'N/A') {
+            return 'Not Assigned';
+        }
+        
+        try {
+            $office = \App\Models\Office::find($officeId);
+            return $office ? $office->office_abbreviation : "ID: {$officeId}";
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error getting office abbreviation: ' . $e->getMessage());
+            return "ID: {$officeId}";
+        }
+    }
 
     protected static function getObligationDescription($model, $action, $changes = [])
     {
@@ -782,7 +809,15 @@ trait LogsActivity
             $roles = $model->getRoleNames()->implode(', ');
             $userInfo = "{$model->name} ({$model->username})";
             $userType = ucfirst($model->usertype ?? 'Standard');
-            $office = $model->office ?? 'Not Assigned';
+            
+            // Load office relationship if not already loaded
+            if (!$model->relationLoaded('officeRelation')) {
+                $model->load('officeRelation');
+            }
+            
+            // Get office abbreviation, fallback to 'Not Assigned' if null
+            $office = $model->office_abbreviation ?? 'Not Assigned';
+            
             $baseDetails = "User: {$userInfo} - Type: {$userType}, Office: {$office}" . ($roles ? ", Roles: {$roles}" : "");
             
             switch ($action) {
@@ -812,7 +847,15 @@ trait LogsActivity
         try {
             $employeeInfo = "{$model->name} ({$model->employee_id})";
             $designation = $model->designation ?? 'No Designation';
-            $office = $model->office ?? 'Not Assigned';
+
+            // Load office relationship if not already loaded
+            if (!$model->relationLoaded('officeRelation')) {
+                $model->load('officeRelation');
+            }
+            
+            // Get office abbreviation, fallback to 'Not Assigned' if null
+            $office = $model->office_abbreviation ?? 'Not Assigned';
+            
             $baseDetails = "Employee: {$employeeInfo} - {$designation} at {$office}";
             
             switch ($action) {

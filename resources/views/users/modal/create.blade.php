@@ -65,18 +65,20 @@
                                 <span id="usertypeError" class="text-red-500 text-sm"></span>
                             </div>
 
-                            <!-- Office -->
+                           <!-- Office -->
                             <div class="space-y-2">
                                 <x-form.label for="office" :value="__('Office')" />
                                 <x-form.input-with-icon-wrapper>
                                     <x-slot name="icon">
-                                        <i class="fas fa-qrcode"></i>
+                                        <i class="fas fa-building"></i>
                                     </x-slot>
                                     <x-form.select withicon id="office" class="block w-full" name="office" :value="old('office')" placeholder="{{ __('Office') }}">
                                         <option value="">{{ __('Select Office') }}</option>
-                                        <option value="PBO">{{ __('Provincial Budget Office') }}</option>
-                                        <option value="PAccO">{{ __('Provincial Accounting Office') }}</option>
-                                        <option value="PGO">{{ __('Provincial Governors Office') }}</option>
+                                        @foreach($offices as $office)
+                                            <option value="{{ $office->id }}" {{ old('office') == $office->id ? 'selected' : '' }}>
+                                                {{ $office->office_abbreviation }} - {{ $office->office_name }}
+                                            </option>
+                                        @endforeach
                                     </x-form.select>
                                 </x-form.input-with-icon-wrapper>
                                 <span id="officeError" class="text-red-500 text-sm"></span>

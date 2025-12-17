@@ -192,6 +192,14 @@
                             </a>
                         </th>
                         <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_no', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
+                                Project No.
+                                @if($sortBy == 'project_no')
+                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                @endif
+                            </a>
+                        </th>
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_location', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 Project Location
                                 @if($sortBy == 'project_location')
@@ -200,14 +208,6 @@
                             </a>
                         </th>
                         @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_no', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Project No.
-                                @if($sortBy == 'project_no')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
                         <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'cco_year', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
                                 CCO Year
@@ -284,9 +284,9 @@
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->account_code }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->description }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->fpp_code }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_no }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_location }}</td>
                         @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_no }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->cco_year }}</td>
                         @endif
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->appropriation, 2) }}</td>

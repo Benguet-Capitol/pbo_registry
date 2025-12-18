@@ -65,7 +65,8 @@
                     @endforeach
                 </x-form.select>
             </div>
-            <!-- Office Filter -->
+            <!-- Office Filter - Hidden for Guest role -->
+            @if(!$isGuest)
             <div class="flex items-center space-x-2">
                 <x-form.select
                     name="office_filter"
@@ -81,6 +82,7 @@
 
                 </x-form.select>
             </div>
+            @endif
             <!-- Allotment Class Filter -->
             <div class="flex items-center space-x-2">
                 <x-form.select

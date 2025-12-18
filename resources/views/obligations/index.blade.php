@@ -214,6 +214,17 @@
                                         @endif
                                     </a>
                                 </th>
+                                @hasanyrole('Obligation|Administrator|Developer')
+                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'remarks', 'sort_order' => $sortBy == 'remarks' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        Remarks
+                                        @if($sortBy == 'remarks')
+                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
+                                </th>
+                                @endhasanyrole
+                                @hasanyrole('Disbursement|Administrator|Developer')
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     <a href="{{ route('obligations.index', ['sort_by' => 'dv_amount', 'sort_order' => $sortBy == 'dv_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                         Disbursement
@@ -230,10 +241,9 @@
                                         @endif
                                     </a>
                                 </th>
-                                @hasanyrole('Disbursement|Administrator|Developer')
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     <a href="{{ route('obligations.index', ['sort_by' => 'payment_remarks', 'sort_order' => $sortBy == 'payment_remarks' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Remarks
+                                        Payment Remarks
                                         @if($sortBy == 'payment_remarks')
                                             {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                         @endif
@@ -263,7 +273,7 @@
                                 <td class="px-1 py-2">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
                                 <td class="px-1 py-2">{{ $obligation->obr_type }}</td>
                                 <td class="px-1 py-2">{{ $obligation->obr_no }}</td>
-                                <td class="px-1 py-2 text-left max-w-sm">{{ $obligation->particulars }}</td>
+                                <td class="px-1 py-2 text-center max-w-sm">{{ $obligation->particulars }}</td>
 
                                 <td class="px-1 py-2 text-right obligation-amount">
                                     <div class="relative inline-block group">
@@ -345,6 +355,11 @@
                                         N/A
                                     @endif
                                 </td>
+                                @hasanyrole('Obligation|Administrator|Developer')
+                                <td class="px-1 py-2 text-center max-w-48">{{ $obligation->remarks ? : '-' }}</td>
+                                @endhasanyrole
+
+                                @hasanyrole('Disbursement|Administrator|Developer')
                                 <td class="px-1 py-2 text-right dv-amount">
                                 @php
                                     $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
@@ -357,24 +372,6 @@
                                 @endphp
 
                                 <div class="relative inline-block group">
-                                    @role('Obligation')
-                                        <span
-                                            class="px-2 py-1
-                                                @if ($isOBRZero)
-                                                    text-gray-700 dark:text-gray-400
-                                                @elseif ($isEqual)
-                                                    bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold
-                                                @elseif ($isLower)
-                                                    bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 font-semibold
-                                                @elseif ($isZero)
-                                                    text-gray-700 dark:text-gray-400
-                                                @else
-                                                    text-gray-700 dark:text-gray-400
-                                                @endif
-                                            ">
-                                            {{ number_format($disbursementAmount, 2) }}
-                                        </span>
-                                    @else
                                         <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
                                             type="button"
                                             class="hover:underline px-2 py-1
@@ -398,7 +395,6 @@
                                                     bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
                                             Add Disbursement
                                         </span>
-                                    @endrole
                                 </div>
                             </td>
 
@@ -426,7 +422,6 @@
                                     @endif
                                 </div>
                             </td>
-                            @hasanyrole('Disbursement|Administrator|Developer')
                             <td class="px-1 py-2 text-center max-w-sm payment-remarks">
                                 <div class="relative inline-block group">
                                     {{ $obligation->payment_remarks ? Str::limit($obligation->payment_remarks, 50) : '-' }}

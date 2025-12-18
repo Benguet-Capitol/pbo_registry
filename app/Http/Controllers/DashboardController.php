@@ -34,9 +34,23 @@ class DashboardController extends Controller
         $officeFilter = $request->input('office_filter');
         $allotmentClassFilter = $request->input('allotment_class_filter');
 
+        // Check if user is a Guest and automatically filter by their office
+        $isGuest = auth()->user()->hasRole('Guest');
+        $userOfficeId = auth()->user()->office;
+
+        if ($isGuest && $userOfficeId) {
+            // Force office filter for guests
+            $officeFilter = $userOfficeId;
+        }
 
         // Fetch all offices for group_filter (branch) dropdown
         $offices = Office::all();
+
+        // For guests, only show their office in the office filter dropdown
+        if ($isGuest && $userOfficeId) {
+            $offices = Office::where('id', $userOfficeId)->get();
+        }
+
         $branches = $offices->pluck('branch')->unique()->filter()->sort()->values();
         $fundTypes = FundSource::select('category')->orderBy('category')->pluck('category')->unique()->values();
         $funds = Fund::select('fund_type')->distinct()->pluck('fund_type')->filter()->unique()->sort()->values();
@@ -54,6 +68,10 @@ class DashboardController extends Controller
         $officeAllotmentClassesQuery = OfficeAllotmentClass::with(['appropriations', 'obligationAmounts', 'fundSourceRelation', 'allotmentClass', 'offices', 'realignments'])
             ->where('year', $currentYear);
 
+        // Apply office filter for guests automatically
+        if ($isGuest && $userOfficeId) {
+            $officeAllotmentClassesQuery->where('office', $userOfficeId);
+        }
         if ($groupFilter) {
             $officeIds = $offices->where('branch', $groupFilter)->pluck('id');
             $officeAllotmentClassesQuery->whereIn('office', $officeIds);
@@ -66,7 +84,7 @@ class DashboardController extends Controller
             $fundType = Fund::where('fund_type', $fundFilter)->pluck('fund');
             $officeAllotmentClassesQuery->whereIn('fund', $fundType);
         }
-        if ($officeFilter) {
+        if ($officeFilter && !$isGuest) {
             $officeAllotmentClassesQuery->where('office', $officeFilter);
         }
         if ($allotmentClassFilter) {
@@ -337,7 +355,8 @@ class DashboardController extends Controller
             'selectedAllotmentClassDesc',
             'selectedGroup',
             'selectedFundType',
-            'selectedFund'
+            'selectedFund',
+            'isGuest'
         ));
     }
 
@@ -361,6 +380,14 @@ class DashboardController extends Controller
             'supplementals',
             'realignments',
         ])->findOrFail($id);
+
+        // Check if user is a Guest and verify they have access to this office
+        $isGuest = auth()->user()->hasRole('Guest');
+        $userOfficeId = auth()->user()->office;
+
+        if ($isGuest && $userOfficeId && $officeAllotmentClasses->office != $userOfficeId) {
+            abort(403, 'Unauthorized access to this office data.');
+        }
 
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
@@ -555,6 +582,7 @@ class DashboardController extends Controller
             'officeAllotmentClasses',
             'obrSum',
             'breadcrumb',
+            'isGuest'
         ));
     }
 }

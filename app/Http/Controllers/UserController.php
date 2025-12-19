@@ -153,6 +153,11 @@ class UserController extends Controller
         $userName = $user->name;
         $officeAbbr = $user->office_abbreviation;
 
+        // Check if user has activity logs
+        if ($user->activityLogs()->exists()) {
+            return redirect()->route('users.index')->with('error', 'Cannot delete user <strong>' . $userName . '</strong> from <strong>' . $officeAbbr . '</strong> because they have associated activity logs. Please archive or reassign the logs first.');
+        }
+
         $user->delete();
 
         return redirect()->route('users.index')->with('status', 'User <strong>' . $userName . '</strong> from <strong>' . $officeAbbr . '</strong> has been deleted successfully!');

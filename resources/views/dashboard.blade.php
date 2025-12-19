@@ -850,6 +850,24 @@
     .dark .circular-progress-bg {
         stroke: #374151;
     }
+
+    /* Stacked bar animation */
+    @keyframes barSlideIn {
+        from {
+            opacity: 0;
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+        to {
+            opacity: 1;
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+    }
+
+    .stacked-segment {
+        animation: barSlideIn 0.6s ease-out forwards;
+    }
     </style>
 
     <script>
@@ -1198,7 +1216,7 @@
                 
                 barHTML += `
                     <div 
-                        class="${color} ${hoverColor} h-8 transition-all duration-200 ease-out flex items-center justify-center relative cursor-pointer"
+                        class="${color} ${hoverColor} h-8 transition-all duration-200 ease-out flex items-center justify-center relative cursor-pointer stacked-segment"
                         style="width: ${percentage}%"
                         onmouseenter="showTooltip(this)"
                         onmouseleave="hideTooltip(this)"
@@ -1218,6 +1236,9 @@
         
         barHTML += '</div>';
         stackedBarContainer.innerHTML = barHTML;
+        
+        // Animate the bar segments
+        animateStackedBar();
         
         updateLegend(sortedClasses, totalAmount);
     }
@@ -1251,6 +1272,854 @@
         
         legendContainer.innerHTML = legendHTML;
     }
+
+    // ============================================
+    // ANIMATED COUNTER ENHANCEMENT
+    // ============================================
+
+    /**
+     * Animates a number from start to end value
+     * @param {HTMLElement} element - The element containing the number
+     * @param {number} start - Starting value
+     * @param {number} end - Ending value
+     * @param {number} duration - Animation duration in milliseconds
+     * @param {boolean} isPercentage - Whether the value is a percentage
+     */
+    function animateCounter(element, start, end, duration = 1000, isPercentage = false) {
+        const startTime = performance.now();
+        const difference = end - start;
+        
+        function updateCounter(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function for smooth animation (easeOutExpo)
+            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            
+            const currentValue = start + (difference * easeProgress);
+            
+            // Format the number
+            const formattedValue = currentValue.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            
+            element.textContent = formattedValue + (isPercentage ? '%' : '');
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            }
+        }
+        
+        requestAnimationFrame(updateCounter);
+    }
+
+    /**
+     * Parse formatted number string to float
+     */
+    function parseFormattedNumber(str) {
+        if (!str) return 0;
+        return parseFloat(str.replace(/,/g, '').replace('%', '')) || 0;
+    }
+
+    /**
+     * Animate all card values with staggered timing
+     */
+    function animateAllCards() {
+        const cards = document.querySelectorAll('[data-card]');
+        
+        cards.forEach((card, index) => {
+            const valueElement = card.querySelector('.card-value');
+            if (!valueElement) return;
+            
+            const currentText = valueElement.textContent;
+            const isPercentage = currentText.includes('%');
+            const endValue = parseFormattedNumber(currentText);
+            
+            // Stagger animations slightly for visual effect
+            setTimeout(() => {
+                animateCounter(valueElement, 0, endValue, 1200, isPercentage);
+            }, index * 50);
+            
+            // Also animate circular progress bars
+            const circularProgress = card.querySelector('.circular-progress-bar');
+            if (circularProgress) {
+                const percentage = parseFloat(circularProgress.getAttribute('data-percentage')) || 0;
+                animateCircularProgress(circularProgress, percentage);
+            }
+        });
+    }
+
+    /**
+     * Animate circular progress bar
+     */
+    function animateCircularProgress(element, targetPercentage, duration = 1200) {
+        const startTime = performance.now();
+        const cappedPercentage = Math.min(targetPercentage, 100);
+        
+        function updateProgress(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            const currentPercentage = cappedPercentage * easeProgress;
+            const dashArray = (currentPercentage * 1.507).toFixed(2);
+            
+            element.setAttribute('stroke-dasharray', `${dashArray} 150.7`);
+            
+            // Update text inside circle
+            const textElement = element.parentElement.querySelector('text');
+            if (textElement) {
+                textElement.textContent = Math.round(currentPercentage) + '%';
+            }
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateProgress);
+            }
+        }
+        
+        requestAnimationFrame(updateProgress);
+    }
+
+    // ============================================
+    // HEATMAP TABLE ENHANCEMENT
+    // ============================================
+
+    /**
+     * Apply heatmap coloring to numeric table cells
+     */
+    function applyHeatmap() {
+        const table = document.getElementById('dashboardTable');
+        if (!table) return;
+        
+        const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+        
+        // Define which columns should have heatmap (by index or class)
+        const heatmapColumns = [
+            { index: 5, name: 'approved_appropriations', color: 'blue' },
+            { index: 6, name: 'supplemental_appropriations', color: 'green' },
+            { index: 7, name: 'reversions', color: 'red' },
+            { index: 9, name: 'authorized_appropriations', color: 'blue' },
+            { index: 10, name: 'allotments', color: 'green' },
+            { index: 12, name: 'obligations', color: 'yellow' },
+        ];
+        
+        heatmapColumns.forEach(col => {
+            const values = [];
+            
+            // Collect all values for this column
+            rows.forEach(row => {
+                const cell = row.cells[col.index];
+                if (cell) {
+                    const value = parseFormattedNumber(cell.textContent);
+                    values.push({ cell, value });
+                }
+            });
+            
+            if (values.length === 0) return;
+            
+            // Calculate min and max
+            const max = Math.max(...values.map(v => v.value));
+            const min = Math.min(...values.map(v => v.value));
+            const range = max - min;
+            
+            // Apply colors based on value
+            values.forEach(({ cell, value }) => {
+                if (range === 0) return;
+                
+                const normalized = (value - min) / range;
+                const intensity = Math.round(normalized * 100);
+                
+                // Apply background color with varying opacity
+                cell.style.transition = 'background-color 0.3s ease';
+                
+                switch(col.color) {
+                    case 'blue':
+                        cell.style.backgroundColor = `rgba(59, 130, 246, ${0.1 + (intensity / 100) * 0.3})`;
+                        break;
+                    case 'green':
+                        cell.style.backgroundColor = `rgba(34, 197, 94, ${0.1 + (intensity / 100) * 0.3})`;
+                        break;
+                    case 'red':
+                        cell.style.backgroundColor = `rgba(239, 68, 68, ${0.1 + (intensity / 100) * 0.3})`;
+                        break;
+                    case 'yellow':
+                        cell.style.backgroundColor = `rgba(234, 179, 8, ${0.1 + (intensity / 100) * 0.3})`;
+                        break;
+                }
+                
+                // Add dark mode support
+                if (document.documentElement.classList.contains('dark')) {
+                    cell.style.backgroundColor = cell.style.backgroundColor.replace('0.1', '0.05');
+                }
+            });
+        });
+    }
+
+    /**
+     * Remove heatmap coloring
+     */
+    function removeHeatmap() {
+        const table = document.getElementById('dashboardTable');
+        if (!table) return;
+        
+        const cells = table.querySelectorAll('tbody td');
+        cells.forEach(cell => {
+            cell.style.backgroundColor = '';
+        });
+    }
+
+    /**
+     * Toggle heatmap on/off
+     */
+    let heatmapEnabled = true;
+    function toggleHeatmap() {
+        heatmapEnabled = !heatmapEnabled;
+        
+        if (heatmapEnabled) {
+            applyHeatmap();
+        } else {
+            removeHeatmap();
+        }
+        
+        // Update toggle button if it exists
+        const toggleBtn = document.getElementById('heatmapToggle');
+        if (toggleBtn) {
+            toggleBtn.textContent = heatmapEnabled ? '🎨 Disable Heatmap' : '🎨 Enable Heatmap';
+        }
+    }
+
+    // ============================================
+    // STACKED BAR GRAPH ANIMATION
+    // ============================================
+
+    /**
+     * Animate stacked bar segments on update
+     */
+    function animateStackedBar() {
+        const stackedSegments = document.querySelectorAll('.stacked-segment');
+        
+        stackedSegments.forEach((segment, index) => {
+            // Reset animation by removing and re-adding the class
+            segment.style.animation = 'none';
+            
+            // Trigger reflow to restart animation
+            void segment.offsetWidth;
+            
+            // Apply animation with staggered timing
+            setTimeout(() => {
+                segment.style.animation = `barSlideIn 0.6s ease-out ${index * 0.1}s forwards`;
+            }, 10);
+        });
+    }
+
+    // ============================================
+    // ENHANCED UPDATE FUNCTION
+    // ============================================
+
+    /**
+     * Enhanced version of updateCardValues with animation
+     */
+    function updateCardValuesAnimated() {
+        const rows = document.querySelectorAll('#dashboardTable tbody tr');
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+
+        // Card configuration (same as original)
+        const cardConfig = {
+            'approved_appropriations': { column: 'data-appropriations' },
+            'supplemental_appropriations': { column: 'data-supplementals' },
+            'reversions': { column: 'data-reversions' },
+            'realignments': { column: 'data-realignments' },
+            'authorized_appropriations': { column: 'data-authorized-appropriations' },
+            'allotments': { column: 'data-allotments' },
+            'for_later_release': { column: 'data-for-later-release' },
+            'obligations': { column: 'data-obligations' },
+            'balance_appropriations': { column: 'data-balance-appropriations' },
+            'balance_allotments': { column: 'data-balance-allotments' },
+            'disbursements': { column: 'data-disbursements' },
+            'disbursement_balance': { column: 'data-disbursement-balance' },
+            'appropriation_accomplishment': { column: 'data-appropriation-accomplishment' },
+            'allotment_accomplishment': { column: 'data-allotment-accomplishment' },
+            'disbursements_to_obligations': { column: 'data-disbursements-to-obligations' },
+            'disbursements_to_appropriations': { column: 'data-disbursements-to-appropriations' }
+        };
+
+        // Calculate totals
+        const totals = {};
+        for (const [cardKey, config] of Object.entries(cardConfig)) {
+            let total = 0;
+            visibleRows.forEach(row => {
+                const value = parseFloat(row.getAttribute(config.column)) || 0;
+                total += value;
+            });
+            totals[cardKey] = total;
+        }
+
+        // Calculate percentages
+        const obligations = totals['obligations'] || 0;
+        const authorizedAppropriations = totals['authorized_appropriations'] || 0;
+        const allotments = totals['allotments'] || 0;
+        const disbursements = totals['disbursements'] || 0;
+
+        const appropriationAccomplishment = authorizedAppropriations > 0 
+            ? (obligations / authorizedAppropriations) * 100 
+            : 0;
+        
+        const allotmentAccomplishment = allotments > 0 
+            ? (obligations / allotments) * 100 
+            : 0;
+        
+        const disbursementsToObligations = obligations > 0 
+            ? (disbursements / obligations) * 100 
+            : 0;
+        
+        const disbursementsToAppropriations = authorizedAppropriations > 0 
+            ? (disbursements / authorizedAppropriations) * 100 
+            : 0;
+
+        // Update cards with animation
+        let delay = 0;
+        for (const [cardKey, total] of Object.entries(totals)) {
+            const card = document.querySelector(`[data-card="${cardKey}"]`);
+            if (card) {
+                const cardValue = card.querySelector('.card-value');
+                const circularProgress = card.querySelector('.circular-progress-bar');
+                
+                if (cardValue) {
+                    let targetValue = 0;
+                    let isPercentage = false;
+                    
+                    // Handle percentage cards specially
+                    if (cardKey === 'appropriation_accomplishment') {
+                        targetValue = appropriationAccomplishment;
+                        isPercentage = true;
+                    } else if (cardKey === 'allotment_accomplishment') {
+                        targetValue = allotmentAccomplishment;
+                        isPercentage = true;
+                    } else if (cardKey === 'disbursements_to_obligations') {
+                        targetValue = disbursementsToObligations;
+                        isPercentage = true;
+                    } else if (cardKey === 'disbursements_to_appropriations') {
+                        targetValue = disbursementsToAppropriations;
+                        isPercentage = true;
+                    } else {
+                        targetValue = total;
+                    }
+                    
+                    // Get current value
+                    const currentValue = parseFormattedNumber(cardValue.textContent);
+                    
+                    // Animate from current to target
+                    setTimeout(() => {
+                        animateCounter(cardValue, currentValue, targetValue, 800, isPercentage);
+                    }, delay);
+                    
+                    delay += 30;
+                    
+                    // Update circular progress
+                    if (circularProgress && isPercentage) {
+                        setTimeout(() => {
+                            animateCircularProgress(circularProgress, targetValue, 800);
+                        }, delay - 30);
+                    }
+                    
+                    // Update color classes (same as original)
+                    if (cardKey === 'supplemental_appropriations') {
+                        if (total > 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                            cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                        } else {
+                            cardValue.classList.remove('text-green-600', 'dark:text-green-400');
+                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                        }
+                    } else if (cardKey === 'reversions') {
+                        if (total > 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                            cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                        } else {
+                            cardValue.classList.remove('text-red-600', 'dark:text-red-400');
+                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                        }
+                    } else if (cardKey === 'realignments') {
+                        if (total > 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-red-600', 'dark:text-red-400');
+                            cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                        } else if (total < 0) {
+                            cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-green-600', 'dark:text-green-400');
+                            cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                        } else {
+                            cardValue.classList.remove('text-green-600', 'dark:text-green-400', 'text-red-600', 'dark:text-red-400');
+                            cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Apply heatmap after update
+        if (heatmapEnabled) {
+            setTimeout(() => applyHeatmap(), delay + 200);
+        }
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    // Add heatmap toggle button to the page (insert after filter section)
+    function addHeatmapToggle() {
+        const filterSection = document.querySelector('.bg-white.p-4.rounded-lg.shadow-md.mb-2');
+        if (filterSection && !document.getElementById('heatmapToggle')) {
+            const toggleContainer = document.createElement('div');
+            toggleContainer.className = 'mt-3 flex items-center justify-end';
+            toggleContainer.innerHTML = `
+                <button 
+                    id="heatmapToggle" 
+                    onclick="toggleHeatmap()"
+                    class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors duration-200 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+                >
+                    🎨 Disable Heatmap
+                </button>
+            `;
+            filterSection.appendChild(toggleContainer);
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add heatmap toggle button
+        addHeatmapToggle();
+        
+        // Initial animation
+        setTimeout(() => {
+            animateAllCards();
+            if (heatmapEnabled) {
+                applyHeatmap();
+            }
+        }, 300);
+        
+        // Make toggleHeatmap available globally
+        window.toggleHeatmap = toggleHeatmap;
+    });
+
+    // Override the original updateCardValues function
+    if (typeof updateCardValues === 'function') {
+        const originalUpdateCardValues = updateCardValues;
+        updateCardValues = function() {
+            updateCardValuesAnimated();
+        };
+    }
+
+    // Override filterTable to include heatmap update
+    const originalFilterTable = window.filterTable;
+    if (typeof originalFilterTable === 'function') {
+        window.filterTable = function(searchValue) {
+            originalFilterTable(searchValue);
+            if (heatmapEnabled) {
+                setTimeout(() => applyHeatmap(), 100);
+            }
+        };
+    }
+
+    // ============================================
+    // MICRO-INTERACTIONS & CARD ANIMATIONS
+    // ============================================
+
+    /**
+     * Add pulse animation to cards on data update
+     */
+    function pulseCard(card) {
+        card.style.transform = 'scale(1.02)';
+        card.style.transition = 'transform 0.3s ease';
+        
+        setTimeout(() => {
+            card.style.transform = 'scale(1)';
+        }, 300);
+    }
+
+    /**
+     * Add ripple effect on card click
+     */
+    function createRipple(event) {
+        const card = event.currentTarget;
+        const ripple = document.createElement('span');
+        const rect = card.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.classList.add('ripple');
+        
+        card.style.position = 'relative';
+        card.style.overflow = 'hidden';
+        card.appendChild(ripple);
+        
+        setTimeout(() => ripple.remove(), 600);
+    }
+
+    // ============================================
+    // TOP PERFORMERS WIDGET
+    // ============================================
+
+    /**
+     * Create and display top performers widget
+     */
+    function createTopPerformersWidget() {
+        const rows = document.querySelectorAll('#dashboardTable tbody tr');
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+        
+        // Collect data grouped by office
+        const officeData = {};
+        
+        visibleRows.forEach(row => {
+            const office = row.cells[1]?.textContent.trim() || 'N/A';
+            const obligations = parseFloat(row.getAttribute('data-obligations')) || 0;
+            const authorized = parseFloat(row.getAttribute('data-authorized-appropriations')) || 0;
+            
+            if (!officeData[office]) {
+                officeData[office] = {
+                    office: office,
+                    totalObligations: 0,
+                    totalAuthorized: 0
+                };
+            }
+            
+            officeData[office].totalObligations += obligations;
+            officeData[office].totalAuthorized += authorized;
+        });
+        
+        // Calculate utilization per office and sort
+        const performanceData = Object.values(officeData).map(data => ({
+            office: data.office,
+            utilization: data.totalAuthorized > 0 ? (data.totalObligations / data.totalAuthorized) * 100 : 0,
+            obligations: data.totalObligations,
+            authorized: data.totalAuthorized
+        }));
+        
+        // Sort by utilization (top 5)
+        const topPerformers = performanceData
+            .sort((a, b) => b.utilization - a.utilization)
+            .slice(0, 5);
+        
+        // Check if widget already exists
+        let widget = document.getElementById('topPerformersWidget');
+        if (!widget) {
+            widget = document.createElement('div');
+            widget.id = 'topPerformersWidget';
+            widget.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4';
+            
+            // Insert after the graph
+            const graphSection = document.querySelector('.mb-4');
+            if (graphSection && graphSection.nextElementSibling) {
+                graphSection.parentNode.insertBefore(widget, graphSection.nextElementSibling);
+            }
+        }
+        
+        // Build widget HTML - Default collapsed (hidden)
+        let html = `
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                    <span class="text-2xl mr-2">🏆</span>
+                    Top 5 Highest Utilization
+                </h3>
+                <button onclick="toggleWidget('topPerformersWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-chevron-down" id="topPerformersToggle"></i>
+                </button>
+            </div>
+            <div id="topPerformersContent" class="space-y-2" style="display: none;">
+        `;
+        
+        topPerformers.forEach((item, index) => {
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+            const barWidth = Math.min(item.utilization, 100);
+            
+            // Color based on performance
+            let barColor = 'bg-green-500';
+            if (item.utilization < 50) barColor = 'bg-yellow-500';
+            if (item.utilization < 25) barColor = 'bg-red-500';
+            
+            html += `
+                <div class="performance-item bg-gray-50 dark:bg-gray-700 rounded-lg p-3 hover:shadow-md transition-shadow duration-200">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">${medal}</span>
+                            <span class="font-semibold text-gray-800 dark:text-gray-100">${item.office}</span>
+                        </div>
+                        <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">${item.utilization.toFixed(2)}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
+                        <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        <span>Obligations: ${item.obligations.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                        <span>Authorized Appropriation: ${item.authorized.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        widget.innerHTML = html;
+    }
+
+    /**
+     * Toggle widget visibility
+     */
+    function toggleWidget(widgetId) {
+        const content = document.getElementById(widgetId.replace('Widget', 'Content'));
+        const toggle = document.getElementById(widgetId.replace('Widget', 'Toggle'));
+        
+        if (content && toggle) {
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            toggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        }
+    }
+
+    // Budget Alerts Widget removed - redundant with Top Performers
+
+    // ============================================
+    // COMPARISON YEAR-OVER-YEAR (YOY) INDICATORS
+    // ============================================
+
+    /**
+     * Add YoY comparison indicators to cards (simulated - would need actual previous year data)
+     */
+    function addComparisonIndicators() {
+        const cards = document.querySelectorAll('[data-card]');
+        
+        cards.forEach(card => {
+            const valueElement = card.querySelector('.card-value');
+            if (!valueElement || card.querySelector('.comparison-indicator')) return;
+            
+            // Simulate YoY change (in real scenario, fetch from backend)
+            const change = (Math.random() - 0.5) * 20; // -10% to +10%
+            const isIncrease = change > 0;
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'comparison-indicator flex items-center text-xs mt-1 space-x-1';
+            indicator.innerHTML = `
+                <i class="fas fa-arrow-${isIncrease ? 'up' : 'down'} ${isIncrease ? 'text-green-500' : 'text-red-500'}"></i>
+                <span class="${isIncrease ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} font-semibold">
+                    ${Math.abs(change).toFixed(1)}%
+                </span>
+                <span class="text-gray-500 dark:text-gray-400">vs last year</span>
+            `;
+            
+            valueElement.parentElement.appendChild(indicator);
+        });
+    }
+
+    // ============================================
+    // SKELETON LOADER
+    // ============================================
+
+    /**
+     * Show skeleton loader during data updates
+     */
+    function showSkeletonLoader() {
+        const cards = document.querySelectorAll('[data-card]');
+        
+        cards.forEach(card => {
+            const valueElement = card.querySelector('.card-value');
+            if (valueElement && !card.querySelector('.skeleton')) {
+                const skeleton = document.createElement('div');
+                skeleton.className = 'skeleton animate-pulse bg-gray-300 dark:bg-gray-600 h-6 w-32 rounded';
+                valueElement.style.display = 'none';
+                valueElement.parentElement.appendChild(skeleton);
+            }
+        });
+    }
+
+    function hideSkeletonLoader() {
+        document.querySelectorAll('.skeleton').forEach(skeleton => {
+            const valueElement = skeleton.previousElementSibling;
+            if (valueElement) {
+                valueElement.style.display = 'block';
+            }
+            skeleton.remove();
+        });
+    }
+
+    // ============================================
+    // SPARKLINE TREND CHARTS
+    // ============================================
+
+    /**
+     * Add mini sparkline charts to cards showing trend
+     */
+    function addSparklines() {
+        const cards = document.querySelectorAll('[data-card]');
+        
+        cards.forEach(card => {
+            if (card.querySelector('.sparkline-container')) return;
+            
+            const sparklineContainer = document.createElement('div');
+            sparklineContainer.className = 'sparkline-container mt-2';
+            
+            // Generate sample data (in real scenario, fetch from backend)
+            const dataPoints = Array.from({length: 12}, () => Math.random() * 100);
+            const max = Math.max(...dataPoints);
+            const min = Math.min(...dataPoints);
+            const range = max - min;
+            
+            // Create SVG sparkline
+            const svgHeight = 30;
+            const svgWidth = 100;
+            const points = dataPoints.map((value, index) => {
+                const x = (index / (dataPoints.length - 1)) * svgWidth;
+                const y = svgHeight - ((value - min) / range) * svgHeight;
+                return `${x},${y}`;
+            }).join(' ');
+            
+            sparklineContainer.innerHTML = `
+                <svg width="${svgWidth}" height="${svgHeight}" class="sparkline">
+                    <polyline
+                        points="${points}"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        class="text-indigo-500 dark:text-indigo-400"
+                    />
+                </svg>
+            `;
+            
+            const mlDiv = card.querySelector('.ml-3, .ml-4');
+            if (mlDiv) {
+                mlDiv.appendChild(sparklineContainer);
+            }
+        });
+    }
+
+    // ============================================
+    // SMOOTH SCROLL TO ROW
+    // ============================================
+
+    /**
+     * Smooth scroll and highlight when clicking card
+     */
+    function setupCardClickHandlers() {
+        const cards = document.querySelectorAll('[data-card]');
+        
+        cards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Don't trigger if clicking toggle button
+                if (e.target.closest('button')) return;
+                
+                createRipple(e);
+                
+                // Scroll to table
+                const table = document.getElementById('dashboardTable');
+                if (table) {
+                    table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // Highlight all rows briefly
+                    setTimeout(() => {
+                        const rows = table.querySelectorAll('tbody tr');
+                        rows.forEach(row => {
+                            row.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+                            setTimeout(() => {
+                                row.style.backgroundColor = '';
+                            }, 1000);
+                        });
+                    }, 500);
+                }
+            });
+        });
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add ripple CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            .ripple {
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.6);
+                transform: scale(0);
+                animation: ripple-animation 0.6s ease-out;
+                pointer-events: none;
+            }
+            
+            @keyframes ripple-animation {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+            
+            .performance-item {
+                animation: slideIn 0.3s ease-out;
+            }
+            
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+            
+            .alert-item {
+                animation: fadeIn 0.3s ease-out;
+            }
+            
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .sparkline {
+                opacity: 0.7;
+                transition: opacity 0.3s ease;
+            }
+            
+            .sparkline:hover {
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Initialize all enhancements
+        setTimeout(() => {
+            createTopPerformersWidget();
+            // addComparisonIndicators(); // Uncomment when you have real YoY data
+            // addSparklines(); // Uncomment if you want sparklines
+            setupCardClickHandlers();
+        }, 500);
+        
+        // Make functions available globally
+        window.toggleWidget = toggleWidget;
+        window.createTopPerformersWidget = createTopPerformersWidget;
+    });
+
+    // Update widgets when filtering
+    const originalFilterTable2 = window.filterTable;
+    if (typeof originalFilterTable2 === 'function') {
+        window.filterTable = function(searchValue) {
+            originalFilterTable2(searchValue);
+            setTimeout(() => {
+                createTopPerformersWidget();
+            }, 200);
+        };
+    }
+    
     </script>
 
 </x-app-layout>

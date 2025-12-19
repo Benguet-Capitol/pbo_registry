@@ -312,6 +312,27 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                     applyPercentageFormulas($sheet, $insertRow);
                 }
 
+                // === RE-FIND OVERALL TOTAL ROW AND GRAND TOTAL ROWS AFTER ROW INSERTIONS ===
+                $highestRow = $sheet->getHighestRow();
+                
+                $overallTotalRow = null;
+                for ($row = 13; $row <= $highestRow; $row++) {
+                    $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                    if (str_contains($cellValue, 'OVERALL TOTAL')) {
+                        $overallTotalRow = $row;
+                        break;
+                    }
+                }
+
+                $grandTotalRows = [];
+                $searchEndRow = $overallTotalRow ? $overallTotalRow - 1 : $highestRow;
+                for ($row = 13; $row <= $searchEndRow; $row++) {
+                    $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                    if (str_contains($cellValue, 'GRAND TOTAL')) {
+                        $grandTotalRows[] = $row;
+                    }
+                }
+
                 // === OVERALL TOTAL ROW ===
                 if (!empty($overallTotalRow) && !empty($grandTotalRows)) {
                     foreach (range('D', 'S') as $col) {

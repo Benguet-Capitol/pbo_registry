@@ -368,7 +368,7 @@
                                     $isEqual = bccomp($disbursementAmount, $obligationAmount, 2) === 0;
                                     $isLower = $disbursementAmount < $obligationAmount && $disbursementAmount > 0;
                                     $isZero = $disbursementAmount == 0;
-                                    $isOBRZero = $obligationAmount == 0; // ✅ New condition
+                                    $isOBRZero = $obligationAmount == 0;
                                 @endphp
 
                                 <div class="relative inline-block group">

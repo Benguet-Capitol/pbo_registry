@@ -1666,22 +1666,17 @@
     // INITIALIZATION
     // ============================================
 
-    // Add heatmap toggle button to the page (insert after filter section)
+    // Add heatmap toggle button to the page
     function addHeatmapToggle() {
-        const filterSection = document.querySelector('.bg-white.p-4.rounded-lg.shadow-md.mb-2');
-        if (filterSection && !document.getElementById('heatmapToggle')) {
-            const toggleContainer = document.createElement('div');
-            toggleContainer.className = 'mt-3 flex items-center justify-end';
-            toggleContainer.innerHTML = `
-                <button 
-                    id="heatmapToggle" 
-                    onclick="toggleHeatmap()"
-                    class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors duration-200 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-                >
-                    🎨 Disable Heatmap
-                </button>
-            `;
-            filterSection.appendChild(toggleContainer);
+        const tableHeader = document.querySelector('.bg-white.overflow-hidden.shadow-sm.sm\\:rounded-lg.mt-4.mb-4 .flex.justify-between.items-center.mb-4');
+        if (tableHeader && !document.getElementById('heatmapToggle')) {
+            const toggleButton = document.createElement('button');
+            toggleButton.id = 'heatmapToggle';
+            toggleButton.onclick = toggleHeatmap;
+            toggleButton.className = 'px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors duration-200 dark:bg-indigo-500 dark:hover:bg-indigo-600';
+            toggleButton.innerHTML = '🎨 Disable Heatmap';
+            
+            tableHeader.appendChild(toggleButton);
         }
     }
 

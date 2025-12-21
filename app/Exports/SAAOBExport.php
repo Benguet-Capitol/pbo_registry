@@ -352,8 +352,12 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
 
             foreach ($office->officeAllotmentClasses as $oac) {
                 $grouped = $oac->appropriations
-                    ->sortBy(fn($a) => [$a->programs === null ? 0 : 1, $a->account_code])
-                    ->groupBy(fn($a) => $a->programs ?? '');
+                    ->sortBy(fn ($a) => [
+                        $a->id,
+                        $a->programs === null ? 0 : 1,
+                        $a->account_code,
+                    ])
+                    ->groupBy(fn ($a) => $a->programs ?? '');
 
                 foreach ($grouped as $program => $appropriations) {
                     foreach ($appropriations as $app) {

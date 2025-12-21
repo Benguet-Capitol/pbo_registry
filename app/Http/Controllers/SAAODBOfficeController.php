@@ -97,17 +97,21 @@ class SAAODBOfficeController extends Controller
         };
 
         foreach ($offices as $office) {
-                $office->officeAllotmentClasses = $office->officeAllotmentClasses
-                    ->filter(function($oac) {
-                        return $oac->appropriations->isNotEmpty();
-                    })
-                    ->sortBy(fn ($oac) => $oac->allotmentClass->id)
-                    ->values();
+            $office->officeAllotmentClasses = $office->officeAllotmentClasses
+                ->filter(function($oac) {
+                    return $oac->appropriations->isNotEmpty();
+                })
+                ->sortBy(fn ($oac) => $oac->allotmentClass->id)
+                ->values();
 
             foreach ($office->officeAllotmentClasses as $oac) {
-                $grouped = $oac->appropriations
-                    ->sortBy(fn($a) => [$a->programs === null ? 0 : 1, $a->account_code])
-                    ->groupBy(fn($a) => $a->programs ?? '');
+                    $grouped = $oac->appropriations
+                        ->sortBy(fn ($a) => [
+                            $a->id,
+                            $a->programs === null ? 0 : 1,
+                            $a->account_code,
+                        ])
+                        ->groupBy(fn ($a) => $a->programs ?? '');
 
                 foreach ($grouped as $program => $appropriations) {
                     foreach ($appropriations as $app) {

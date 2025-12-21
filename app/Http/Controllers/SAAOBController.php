@@ -115,7 +115,11 @@ class SAAOBController extends Controller
 
                 foreach ($office->officeAllotmentClasses as $oac) {
                     $grouped = $oac->appropriations
-                        ->sortBy(fn ($a) => [$a->programs === null ? 0 : 1, $a->account_code])
+                        ->sortBy(fn ($a) => [
+                            $a->id,
+                            $a->programs === null ? 0 : 1,
+                            $a->account_code,
+                        ])
                         ->groupBy(fn ($a) => $a->programs ?? '');
 
                     foreach ($grouped as $program => $appropriations) {

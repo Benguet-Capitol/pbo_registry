@@ -1082,6 +1082,551 @@
                 updateGraph();
             }, 100);
         });
+
+// ============================================
+// ANIMATED COUNTER FOR ACCOUNTS PAGE
+// ============================================
+
+/**
+ * Animates a number from start to end value
+ */
+function animateCounter(element, start, end, duration = 1000, isPercentage = false) {
+    const startTime = performance.now();
+    const difference = end - start;
+    
+    function updateCounter(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation (easeOutExpo)
+        const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        
+        const currentValue = start + (difference * easeProgress);
+        
+        // Format the number
+        const formattedValue = currentValue.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        
+        element.textContent = formattedValue + (isPercentage ? '%' : '');
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateCounter);
+        }
+    }
+    
+    requestAnimationFrame(updateCounter);
+}
+
+/**
+ * Parse formatted number string to float
+ */
+function parseFormattedNumber(str) {
+    if (!str) return 0;
+    return parseFloat(str.replace(/,/g, '').replace('%', '')) || 0;
+}
+
+/**
+ * Animate all card values with staggered timing
+ */
+function animateAllCards() {
+    const cards = document.querySelectorAll('[data-card]');
+    
+    cards.forEach((card, index) => {
+        const valueElement = card.querySelector('.card-value');
+        if (!valueElement) return;
+        
+        const currentText = valueElement.textContent;
+        const isPercentage = currentText.includes('%');
+        const endValue = parseFormattedNumber(currentText);
+        
+        // Stagger animations slightly for visual effect
+        setTimeout(() => {
+            animateCounter(valueElement, 0, endValue, 1200, isPercentage);
+        }, index * 50);
+        
+        // Also animate circular progress bars
+        const circularProgress = card.querySelector('.circular-progress-bar');
+        if (circularProgress) {
+            const percentage = parseFloat(circularProgress.getAttribute('data-percentage')) || 0;
+            animateCircularProgress(circularProgress, percentage);
+        }
+    });
+}
+
+/**
+ * Animate circular progress bar
+ */
+function animateCircularProgress(element, targetPercentage, duration = 1200) {
+    const startTime = performance.now();
+    const cappedPercentage = Math.min(targetPercentage, 100);
+    
+    function updateProgress(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        const currentPercentage = cappedPercentage * easeProgress;
+        const dashArray = (currentPercentage * 1.507).toFixed(2);
+        
+        element.setAttribute('stroke-dasharray', `${dashArray} 150.7`);
+        
+        // Update text inside circle
+        const textElement = element.parentElement.querySelector('text');
+        if (textElement) {
+            textElement.textContent = Math.round(currentPercentage) + '%';
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateProgress);
+        }
+    }
+    
+    requestAnimationFrame(updateProgress);
+}
+
+// ============================================
+// HEATMAP TABLE ENHANCEMENT FOR ACCOUNTS
+// ============================================
+
+/**
+ * Apply heatmap coloring to numeric table cells
+ */
+function applyHeatmap() {
+    const table = document.getElementById('accountsTable');
+    if (!table) return;
+    
+    const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+    
+    // Define which columns should have heatmap (by index or class)
+    const heatmapColumns = [
+        { index: 4, name: 'approved_appropriations', color: 'blue' },      // Approved Appropriations
+        { index: 5, name: 'supplemental_appropriations', color: 'green' }, // Supplemental
+        { index: 6, name: 'reversions', color: 'red' },                    // Reversions
+        { index: 8, name: 'authorized_appropriations', color: 'blue' },    // Authorized Appropriations
+        { index: 9, name: 'allotments', color: 'green' },                  // Allotments
+        { index: 11, name: 'obligations', color: 'yellow' },               // Obligations
+    ];
+    
+    heatmapColumns.forEach(col => {
+        const values = [];
+        
+        // Collect all values for this column
+        rows.forEach(row => {
+            const cell = row.cells[col.index];
+            if (cell) {
+                const value = parseFormattedNumber(cell.textContent);
+                values.push({ cell, value });
+            }
+        });
+        
+        if (values.length === 0) return;
+        
+        // Calculate min and max
+        const max = Math.max(...values.map(v => v.value));
+        const min = Math.min(...values.map(v => v.value));
+        const range = max - min;
+        
+        // Apply colors based on value
+        values.forEach(({ cell, value }) => {
+            if (range === 0) return;
+            
+            const normalized = (value - min) / range;
+            const intensity = Math.round(normalized * 100);
+            
+            // Apply background color with varying opacity
+            cell.style.transition = 'background-color 0.3s ease';
+            
+            switch(col.color) {
+                case 'blue':
+                    cell.style.backgroundColor = `rgba(59, 130, 246, ${0.1 + (intensity / 100) * 0.3})`;
+                    break;
+                case 'green':
+                    cell.style.backgroundColor = `rgba(34, 197, 94, ${0.1 + (intensity / 100) * 0.3})`;
+                    break;
+                case 'red':
+                    cell.style.backgroundColor = `rgba(239, 68, 68, ${0.1 + (intensity / 100) * 0.3})`;
+                    break;
+                case 'yellow':
+                    cell.style.backgroundColor = `rgba(234, 179, 8, ${0.1 + (intensity / 100) * 0.3})`;
+                    break;
+            }
+            
+            // Add dark mode support
+            if (document.documentElement.classList.contains('dark')) {
+                cell.style.backgroundColor = cell.style.backgroundColor.replace('0.1', '0.05');
+            }
+        });
+    });
+}
+
+/**
+ * Remove heatmap coloring
+ */
+function removeHeatmap() {
+    const table = document.getElementById('accountsTable');
+    if (!table) return;
+    
+    const cells = table.querySelectorAll('tbody td');
+    cells.forEach(cell => {
+        cell.style.backgroundColor = '';
+    });
+}
+
+/**
+ * Toggle heatmap on/off
+ */
+let heatmapEnabled = true;
+function toggleHeatmap() {
+    heatmapEnabled = !heatmapEnabled;
+    
+    if (heatmapEnabled) {
+        applyHeatmap();
+    } else {
+        removeHeatmap();
+    }
+    
+    // Update toggle button if it exists
+    const toggleBtn = document.getElementById('heatmapToggle');
+    if (toggleBtn) {
+        toggleBtn.textContent = heatmapEnabled ? '🎨 Disable Heatmap' : '🎨 Enable Heatmap';
+    }
+}
+
+// ============================================
+// ANIMATED STACKED GRAPH
+// ============================================
+
+/**
+ * Animate the stacked bar graph segments
+ */
+function animateStackedGraph() {
+    const container = document.getElementById('stackedBarContainer');
+    if (!container) return;
+    
+    const segments = container.querySelectorAll('[class*="bg-"]');
+    
+    segments.forEach((segment, index) => {
+        // Store the target width from the inline style
+        const targetWidth = segment.style.width || '0%';
+        
+        // Set initial state
+        segment.style.width = '0%';
+        segment.style.opacity = '0';
+        segment.style.transition = 'none';
+        
+        // Force reflow to ensure initial state is applied
+        void segment.offsetWidth;
+        
+        // Animate to target width with stagger
+        setTimeout(() => {
+            segment.style.transition = 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-out';
+            segment.style.width = targetWidth;
+            segment.style.opacity = '1';
+        }, index * 80 + 50);
+    });
+}
+
+/**
+ * Animate graph segments on initial load
+ */
+function animateGraphOnLoad() {
+    const container = document.getElementById('stackedBarContainer');
+    if (!container) return;
+    
+    // Wait for graph to be rendered first
+    setTimeout(() => {
+        const segments = container.querySelectorAll('[onmouseenter="showTooltip(this)"]');
+        
+        if (segments.length === 0) return;
+        
+        segments.forEach((segment, index) => {
+            const targetWidth = segment.style.width || '0%';
+            
+            // Save original state
+            const originalTransition = segment.style.transition;
+            
+            // Set to zero
+            segment.style.transition = 'none';
+            segment.style.width = '0%';
+            segment.style.opacity = '0';
+            
+            // Force reflow
+            void segment.offsetWidth;
+            
+            // Animate
+            setTimeout(() => {
+                segment.style.transition = 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-out';
+                segment.style.width = targetWidth;
+                segment.style.opacity = '1';
+                
+                // Restore original transition after animation
+                setTimeout(() => {
+                    segment.style.transition = originalTransition;
+                }, 800);
+            }, index * 80 + 100);
+        });
+    }, 200);
+}
+
+// ============================================
+// ENHANCED UPDATE FUNCTIONS WITH ANIMATION
+// ============================================
+
+/**
+ * Enhanced version of updateCardValues with animation
+ */
+function updateCardValuesAnimated() {
+    const rows = document.querySelectorAll('#accountsTable tbody tr');
+    const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+
+    // Calculate totals from visible rows
+    const totals = {};
+    for (const [cardKey, config] of Object.entries(cardConfig)) {
+        let total = 0;
+        visibleRows.forEach(row => {
+            const value = parseFloat(row.getAttribute(config.column)) || 0;
+            total += value;
+        });
+        totals[cardKey] = total;
+    }
+
+    // Calculate percentage cards properly based on base values
+    const obligations = totals['obligations'] || 0;
+    const authorizedAppropriations = totals['authorized_appropriations'] || 0;
+    const allotments = totals['allotments'] || 0;
+    const disbursements = totals['disbursements'] || 0;
+
+    const appropriationAccomplishment = authorizedAppropriations > 0 
+        ? (obligations / authorizedAppropriations) * 100 
+        : 0;
+    
+    const allotmentAccomplishment = allotments > 0 
+        ? (obligations / allotments) * 100 
+        : 0;
+    
+    const disbursementsToObligations = obligations > 0 
+        ? (disbursements / obligations) * 100 
+        : 0;
+    
+    const disbursementsToAppropriations = authorizedAppropriations > 0 
+        ? (disbursements / authorizedAppropriations) * 100 
+        : 0;
+
+    // Update cards with animation
+    let delay = 0;
+    for (const [cardKey, total] of Object.entries(totals)) {
+        const card = document.querySelector(`[data-card="${cardKey}"]`);
+        if (card) {
+            const cardValue = card.querySelector('.card-value');
+            const circularProgress = card.querySelector('.circular-progress-bar');
+            
+            if (cardValue) {
+                let targetValue = 0;
+                let isPercentage = false;
+                
+                // Handle percentage cards specially
+                if (cardKey === 'appropriation_accomplishment') {
+                    targetValue = appropriationAccomplishment;
+                    isPercentage = true;
+                    
+                    const tooltipObl = card.querySelector('.card-tooltip-obligations');
+                    const tooltipAuthApprop = card.querySelector('.card-tooltip-auth-approp');
+                    if (tooltipObl) tooltipObl.textContent = obligations.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if (tooltipAuthApprop) tooltipAuthApprop.textContent = authorizedAppropriations.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else if (cardKey === 'allotment_accomplishment') {
+                    targetValue = allotmentAccomplishment;
+                    isPercentage = true;
+                    
+                    const tooltipObl = card.querySelector('.card-tooltip-obligations-allot');
+                    const tooltipAllot = card.querySelector('.card-tooltip-allotments');
+                    if (tooltipObl) tooltipObl.textContent = obligations.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if (tooltipAllot) tooltipAllot.textContent = allotments.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else if (cardKey === 'disbursements_to_obligations') {
+                    targetValue = disbursementsToObligations;
+                    isPercentage = true;
+                    
+                    const tooltipDisb = card.querySelector('.card-tooltip-disbursements-ob');
+                    const tooltipObl = card.querySelector('.card-tooltip-obligations-disb');
+                    if (tooltipDisb) tooltipDisb.textContent = disbursements.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if (tooltipObl) tooltipObl.textContent = obligations.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else if (cardKey === 'disbursements_to_appropriations') {
+                    targetValue = disbursementsToAppropriations;
+                    isPercentage = true;
+                    
+                    const tooltipDisb = card.querySelector('.card-tooltip-disbursements-ap');
+                    const tooltipAuthApprop = card.querySelector('.card-tooltip-auth-approp-disb');
+                    if (tooltipDisb) tooltipDisb.textContent = disbursements.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if (tooltipAuthApprop) tooltipAuthApprop.textContent = authorizedAppropriations.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else {
+                    targetValue = total;
+                }
+                
+                // Get current value
+                const currentValue = parseFormattedNumber(cardValue.textContent);
+                
+                // Animate from current to target
+                setTimeout(() => {
+                    animateCounter(cardValue, currentValue, targetValue, 800, isPercentage);
+                }, delay);
+                
+                delay += 30;
+                
+                // Update circular progress
+                if (circularProgress && isPercentage) {
+                    setTimeout(() => {
+                        animateCircularProgress(circularProgress, targetValue, 800);
+                    }, delay - 30);
+                }
+                
+                // Update color classes
+                if (cardKey === 'supplemental_appropriations') {
+                    if (total > 0) {
+                        cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                        cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                    } else {
+                        cardValue.classList.remove('text-green-600', 'dark:text-green-400');
+                        cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                    }
+                } else if (cardKey === 'reversions') {
+                    if (total > 0) {
+                        cardValue.classList.remove('text-gray-800', 'dark:text-gray-100');
+                        cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                    } else {
+                        cardValue.classList.remove('text-red-600', 'dark:text-red-400');
+                        cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                    }
+                } else if (cardKey === 'realignments') {
+                    if (total < 0) {
+                        cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-green-600', 'dark:text-green-400');
+                        cardValue.classList.add('text-red-600', 'dark:text-red-400');
+                    } else if (total > 0) {
+                        cardValue.classList.remove('text-gray-800', 'dark:text-gray-100', 'text-red-600', 'dark:text-red-400');
+                        cardValue.classList.add('text-green-600', 'dark:text-green-400');
+                    } else {
+                        cardValue.classList.remove('text-red-600', 'dark:text-red-400', 'text-green-600', 'dark:text-green-400');
+                        cardValue.classList.add('text-gray-800', 'dark:text-gray-100');
+                    }
+                }
+            }
+        }
+    }
+    
+    // Apply heatmap after update
+    if (heatmapEnabled) {
+        setTimeout(() => applyHeatmap(), delay + 200);
+    }
+}
+
+/**
+ * Enhanced updateGraph with animation
+ */
+function updateGraphAnimated() {
+    // Get all segments before updating
+    const container = document.getElementById('stackedBarContainer');
+    if (container) {
+        const oldSegments = container.querySelectorAll('[onmouseenter="showTooltip(this)"]');
+        
+        // Store old widths for animation reference
+        const oldWidths = Array.from(oldSegments).map(seg => seg.style.width);
+    }
+    
+    updateGraph(); // Call original function to rebuild graph
+    
+    // Animate the new segments
+    setTimeout(() => {
+        const newSegments = container.querySelectorAll('[onmouseenter="showTooltip(this)"]');
+        
+        newSegments.forEach((segment, index) => {
+            const targetWidth = segment.style.width || '0%';
+            
+            // Set initial state
+            segment.style.transition = 'none';
+            segment.style.width = '0%';
+            segment.style.opacity = '0.5';
+            
+            // Force reflow
+            void segment.offsetWidth;
+            
+            // Animate to target
+            setTimeout(() => {
+                segment.style.transition = 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-out';
+                segment.style.width = targetWidth;
+                segment.style.opacity = '1';
+            }, index * 60);
+        });
+    }, 50);
+}
+
+// ============================================
+// HEATMAP TOGGLE BUTTON
+// ============================================
+
+function addHeatmapToggle() {
+    const tableHeader = document.querySelector('.bg-white.overflow-hidden.shadow-sm.sm\\:rounded-lg.mt-4.mb-4 .flex.justify-between.items-center.mb-4');
+    if (tableHeader && !document.getElementById('heatmapToggle')) {
+        const toggleButton = document.createElement('button');
+        toggleButton.id = 'heatmapToggle';
+        toggleButton.onclick = toggleHeatmap;
+        toggleButton.className = 'px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors duration-200 dark:bg-indigo-500 dark:hover:bg-indigo-600';
+        toggleButton.innerHTML = '🎨 Disable Heatmap';
+        
+        tableHeader.appendChild(toggleButton);
+    }
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add heatmap toggle button
+    addHeatmapToggle();
+    
+    // Initial animations on page load
+    setTimeout(() => {
+        animateAllCards();
+        animateGraphOnLoad(); // Use the specific graph animation function
+        if (heatmapEnabled) {
+            applyHeatmap();
+        }
+    }, 300);
+    
+    // Make functions available globally
+    window.toggleHeatmap = toggleHeatmap;
+    window.animateStackedGraph = animateStackedGraph;
+    window.animateGraphOnLoad = animateGraphOnLoad;
+});
+
+// Override the original updateCardValues function
+const originalUpdateCardValues = window.updateCardValues;
+if (typeof originalUpdateCardValues === 'function') {
+    window.updateCardValues = function() {
+        updateCardValuesAnimated();
+    };
+}
+
+// Override filterTable to include animations
+const originalFilterTable = window.filterTable;
+if (typeof originalFilterTable === 'function') {
+    window.filterTable = function(searchValue) {
+        const rows = document.querySelectorAll('#accountsTable tbody tr');
+        const lowerSearch = String(searchValue).toLowerCase();
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            if (rowText.includes(lowerSearch)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        updateCardValuesAnimated();
+        updateGraphAnimated();
+    };
+}
     </script>
 
 </x-app-layout>

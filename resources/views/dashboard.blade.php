@@ -284,6 +284,24 @@
         </div>
     </div>
 
+    {{-- Top 5 Highest Utilization Widget --}}
+    @role('Disbursement|Administrator|Developer|Obligation')
+    <div id="topPerformersWidget" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                <span class="text-2xl mr-2">🏆</span>
+                Top 5 Highest Utilization
+            </h3>
+            <button onclick="toggleWidget('topPerformersWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <i class="fas fa-chevron-down" id="topPerformersToggle"></i>
+            </button>
+        </div>
+        <div id="topPerformersContent" class="space-y-2" style="display: none;">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+    @endrole
+
     {{-- Dashboard Cards Row --}}
     <div class="mb-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -1763,102 +1781,87 @@
      * Create and display top performers widget
      */
     function createTopPerformersWidget() {
-        const rows = document.querySelectorAll('#dashboardTable tbody tr');
-        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+    // Check if widget exists (role-based)
+    const widget = document.getElementById('topPerformersWidget');
+    if (!widget) {
+        // User doesn't have permission
+        return;
+    }
+    
+    const rows = document.querySelectorAll('#dashboardTable tbody tr');
+    const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+    
+    // Collect data grouped by office
+    const officeData = {};
+    
+    visibleRows.forEach(row => {
+        const office = row.cells[1]?.textContent.trim() || 'N/A';
+        const obligations = parseFloat(row.getAttribute('data-obligations')) || 0;
+        const authorized = parseFloat(row.getAttribute('data-authorized-appropriations')) || 0;
         
-        // Collect data grouped by office
-        const officeData = {};
-        
-        visibleRows.forEach(row => {
-            const office = row.cells[1]?.textContent.trim() || 'N/A';
-            const obligations = parseFloat(row.getAttribute('data-obligations')) || 0;
-            const authorized = parseFloat(row.getAttribute('data-authorized-appropriations')) || 0;
-            
-            if (!officeData[office]) {
-                officeData[office] = {
-                    office: office,
-                    totalObligations: 0,
-                    totalAuthorized: 0
-                };
-            }
-            
-            officeData[office].totalObligations += obligations;
-            officeData[office].totalAuthorized += authorized;
-        });
-        
-        // Calculate utilization per office and sort
-        const performanceData = Object.values(officeData).map(data => ({
-            office: data.office,
-            utilization: data.totalAuthorized > 0 ? (data.totalObligations / data.totalAuthorized) * 100 : 0,
-            obligations: data.totalObligations,
-            authorized: data.totalAuthorized
-        }));
-        
-        // Sort by utilization (top 5)
-        const topPerformers = performanceData
-            .sort((a, b) => b.utilization - a.utilization)
-            .slice(0, 5);
-        
-        // Check if widget already exists
-        let widget = document.getElementById('topPerformersWidget');
-        if (!widget) {
-            widget = document.createElement('div');
-            widget.id = 'topPerformersWidget';
-            widget.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4';
-            
-            // Insert after the graph
-            const graphSection = document.querySelector('.mb-4');
-            if (graphSection && graphSection.nextElementSibling) {
-                graphSection.parentNode.insertBefore(widget, graphSection.nextElementSibling);
-            }
+        if (!officeData[office]) {
+            officeData[office] = {
+                office: office,
+                totalObligations: 0,
+                totalAuthorized: 0
+            };
         }
         
-        // Build widget HTML - Default collapsed (hidden)
-        let html = `
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                    <span class="text-2xl mr-2">🏆</span>
-                    Top 5 Highest Utilization
-                </h3>
-                <button onclick="toggleWidget('topPerformersWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                    <i class="fas fa-chevron-down" id="topPerformersToggle"></i>
-                </button>
-            </div>
-            <div id="topPerformersContent" class="space-y-2" style="display: none;">
-        `;
+        officeData[office].totalObligations += obligations;
+        officeData[office].totalAuthorized += authorized;
+    });
+    
+    // Calculate utilization per office and sort
+    const performanceData = Object.values(officeData).map(data => ({
+        office: data.office,
+        utilization: data.totalAuthorized > 0 ? (data.totalObligations / data.totalAuthorized) * 100 : 0,
+        obligations: data.totalObligations,
+        authorized: data.totalAuthorized
+    }));
+    
+    // Sort by utilization (top 5)
+    const topPerformers = performanceData
+        .sort((a, b) => b.utilization - a.utilization)
+        .slice(0, 5);
+    
+    // Build ONLY the content HTML (not the container)
+    let html = '';
+    
+    topPerformers.forEach((item, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        const barWidth = Math.min(item.utilization, 100);
         
-        topPerformers.forEach((item, index) => {
-            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-            const barWidth = Math.min(item.utilization, 100);
-            
-            // Color based on performance
-            let barColor = 'bg-green-500';
-            if (item.utilization < 50) barColor = 'bg-yellow-500';
-            if (item.utilization < 25) barColor = 'bg-red-500';
-            
-            html += `
-                <div class="performance-item bg-gray-50 dark:bg-gray-700 rounded-lg p-3 hover:shadow-md transition-shadow duration-200">
-                    <div class="flex justify-between items-center mb-1">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-lg">${medal}</span>
-                            <span class="font-semibold text-gray-800 dark:text-gray-100">${item.office}</span>
-                        </div>
-                        <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">${item.utilization.toFixed(2)}%</span>
+        // Color based on performance
+        let barColor = 'bg-green-500';
+        if (item.utilization < 50) barColor = 'bg-yellow-500';
+        if (item.utilization < 25) barColor = 'bg-red-500';
+        
+        html += `
+            <div class="performance-item bg-gray-50 dark:bg-gray-700 rounded-lg p-3 hover:shadow-md transition-shadow duration-200">
+                <div class="flex justify-between items-center mb-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">${medal}</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-100">${item.office}</span>
                     </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
-                        <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        <span>Obligations: ${item.obligations.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                        <span>Authorized Appropriation: ${item.authorized.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                    </div>
+                    <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">${item.utilization.toFixed(2)}%</span>
                 </div>
-            `;
-        });
-        
-        html += '</div>';
-        widget.innerHTML = html;
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
+                    <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    <span>Obligations: ${item.obligations.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    <span>Authorized: ${item.authorized.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Update only the content div
+    const contentDiv = document.getElementById('topPerformersContent');
+    if (contentDiv) {
+        contentDiv.innerHTML = html;
     }
+}
 
     /**
      * Toggle widget visibility

@@ -143,7 +143,10 @@
 
     <div class="bg-white overflow-hidden shadow-md sm:rounded-lg mt-6 mb-6 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
+            <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
+            <div class="max-h-[720px] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
+            
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900">
                         <tr>
@@ -518,6 +521,7 @@
                 </table>
             </div>
         </div>
+    </div>
     </div>
 
     <script>

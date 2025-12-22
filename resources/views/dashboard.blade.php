@@ -862,6 +862,18 @@
     /* Circular progress animation */
     .circular-progress-bar {
         transition: stroke-dasharray 0.6s ease-in-out;
+        opacity: 0;
+        animation: progressBarFadeIn 0.8s ease-out forwards;
+    }
+
+    @keyframes progressBarFadeIn {
+        from {
+            opacity: 0;
+            stroke-dasharray: 0 150.7;
+        }
+        to {
+            opacity: 1;
+        }
     }
 
     /* Dark mode stroke color adjustments */
@@ -885,6 +897,21 @@
 
     .stacked-segment {
         animation: barSlideIn 0.6s ease-out forwards;
+    }
+
+    /* Linear progress bar fade animation */
+    .progress-bar-fade {
+        animation: linearProgressFadeIn 0.7s ease-out forwards;
+    }
+
+    @keyframes linearProgressFadeIn {
+        from {
+            opacity: 0;
+            width: 0 !important;
+        }
+        to {
+            opacity: 1;
+        }
     }
     </style>
 
@@ -1414,13 +1441,23 @@
         
         // Define which columns should have heatmap (by index or class)
         const heatmapColumns = [
-            { index: 5, name: 'approved_appropriations', color: 'blue' },
-            { index: 6, name: 'supplemental_appropriations', color: 'green' },
-            { index: 7, name: 'reversions', color: 'red' },
+            { index: 5, name: 'approved_appropriations', color: 'green' },
             { index: 9, name: 'authorized_appropriations', color: 'blue' },
             { index: 10, name: 'allotments', color: 'green' },
             { index: 12, name: 'obligations', color: 'yellow' },
+            { index: 14, name: 'appropriation_utilization', color: 'blue', type: 'percentage' },
+            { index: 16, name: 'allotments_utilization', color: 'green', type: 'percentage' },
         ];
+
+        // Check if disbursement columns exist (role-based)
+        const firstRow = rows[0];
+        if (firstRow && firstRow.cells.length > 20) {
+            heatmapColumns.push(
+                { index: 17, name: 'disbursements', color: 'lime', type: 'value' },
+                { index: 19, name: 'disbursements_to_obligations', color: 'purple', type: 'percentage' },
+                { index: 20, name: 'disbursements_to_appropriations', color: 'amber', type: 'percentage' }
+            );
+        }
         
         heatmapColumns.forEach(col => {
             const values = [];
@@ -1429,7 +1466,22 @@
             rows.forEach(row => {
                 const cell = row.cells[col.index];
                 if (cell) {
-                    const value = parseFormattedNumber(cell.textContent);
+                    let value;
+                    
+                    if (col.type === 'percentage') {
+                        // For percentage columns, extract from the progress bar data attribute or calculate
+                        const progressBar = cell.querySelector('.bg-gradient-to-r');
+                        if (progressBar) {
+                            const widthStr = progressBar.style.width;
+                            value = parseFloat(widthStr) || 0;
+                        } else {
+                            value = 0;
+                        }
+                    } else {
+                        // For regular value columns
+                        value = parseFormattedNumber(cell.textContent);
+                    }
+                    
                     values.push({ cell, value });
                 }
             });
@@ -1448,28 +1500,50 @@
                 const normalized = (value - min) / range;
                 const intensity = Math.round(normalized * 100);
                 
+                // For percentage cells, apply background to the container
+                const targetElement = col.type === 'percentage' ? cell : cell;
+                
                 // Apply background color with varying opacity
-                cell.style.transition = 'background-color 0.3s ease';
+                targetElement.style.transition = 'background-color 0.3s ease';
                 
-                switch(col.color) {
-                    case 'blue':
-                        cell.style.backgroundColor = `rgba(59, 130, 246, ${0.1 + (intensity / 100) * 0.3})`;
-                        break;
-                    case 'green':
-                        cell.style.backgroundColor = `rgba(34, 197, 94, ${0.1 + (intensity / 100) * 0.3})`;
-                        break;
-                    case 'red':
-                        cell.style.backgroundColor = `rgba(239, 68, 68, ${0.1 + (intensity / 100) * 0.3})`;
-                        break;
-                    case 'yellow':
-                        cell.style.backgroundColor = `rgba(234, 179, 8, ${0.1 + (intensity / 100) * 0.3})`;
-                        break;
-                }
+                // Define color palettes for different types
+                const colorPalettes = {
+                    'blue': { light: 'rgba(59, 130, 246, OPACITY)', dark: 'rgba(96, 165, 250, OPACITY)' },
+                    'green': { light: 'rgba(34, 197, 94, OPACITY)', dark: 'rgba(74, 222, 128, OPACITY)' },
+                    'red': { light: 'rgba(239, 68, 68, OPACITY)', dark: 'rgba(248, 113, 113, OPACITY)' },
+                    'yellow': { light: 'rgba(234, 179, 8, OPACITY)', dark: 'rgba(250, 204, 21, OPACITY)' },
+                    'purple': { light: 'rgba(221, 214, 254, OPACITY)', dark: 'rgba(168, 85, 247, OPACITY)' },
+                    'teal': { light: 'rgba(20, 184, 166, OPACITY)', dark: 'rgba(45, 212, 191, OPACITY)' },
+                    'emerald': { light: 'rgba(16, 185, 129, OPACITY)', dark: 'rgba(52, 211, 153, OPACITY)' },
+                    'lime': { light: 'rgba(132, 204, 22, OPACITY)', dark: 'rgba(163, 230, 53, OPACITY)' },
+                    'amber': { light: 'rgba(245, 158, 11, OPACITY)', dark: 'rgba(251, 191, 36, OPACITY)' },
+                    'pink': { light: 'rgba(236, 72, 153, OPACITY)', dark: 'rgba(249, 168, 212, OPACITY)' },
+                    'cyan': { light: 'rgba(6, 182, 212, OPACITY)', dark: 'rgba(34, 211, 238, OPACITY)' },
+                    'orange': { light: 'rgba(249, 115, 22, OPACITY)', dark: 'rgba(251, 191, 36, OPACITY)' },
+                    'indigo': { light: 'rgba(99, 102, 241, OPACITY)', dark: 'rgba(129, 140, 248, OPACITY)' },
+                };
                 
-                // Add dark mode support
+                const palette = colorPalettes[col.color] || colorPalettes['blue'];
+                const baseOpacity = col.type === 'percentage' ? 0.15 : 0.1;
+                const maxOpacity = col.type === 'percentage' ? 0.4 : 0.3;
+                const opacity = baseOpacity + (intensity / 100) * maxOpacity;
+                
+                // Apply light mode color
+                const lightColor = palette.light.replace('OPACITY', opacity);
+                targetElement.style.backgroundColor = lightColor;
+                
+                // Add dark mode support with data attribute
+                targetElement.setAttribute('data-dark-bg', palette.dark.replace('OPACITY', opacity * 0.6));
+                
+                // Apply dark mode color if currently in dark mode
                 if (document.documentElement.classList.contains('dark')) {
-                    cell.style.backgroundColor = cell.style.backgroundColor.replace('0.1', '0.05');
+                    targetElement.style.backgroundColor = palette.dark.replace('OPACITY', opacity * 0.6);
                 }
+                
+                // Add fade animation class with staggered timing
+                targetElement.classList.add('heatmap-cell-fade');
+                const delayMs = (values.indexOf({ cell, value }) % 10) * 30;
+                targetElement.style.animationDelay = delayMs + 'ms';
             });
         });
     }
@@ -1850,7 +1924,7 @@
                 </div>
                 <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
                     <span>Obligations: ${item.obligations.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                    <span>Authorized: ${item.authorized.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    <span>Authorized Appropriations: ${item.authorized.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                 </div>
             </div>
         `;
@@ -2030,6 +2104,28 @@
     }
 
     // ============================================
+    // PROGRESS BAR ANIMATION
+    // ============================================
+
+    /**
+     * Apply fade animation to all progress bars on page load
+     */
+    function animateProgressBars() {
+        // Animate circular progress bars
+        const circularBars = document.querySelectorAll('.circular-progress-bar');
+        circularBars.forEach((bar) => {
+            bar.style.animationDelay = '0ms';
+        });
+
+        // Animate linear progress bars (percentage columns)
+        const linearBars = document.querySelectorAll('.bg-gradient-to-r');
+        linearBars.forEach((bar) => {
+            bar.classList.add('progress-bar-fade');
+            bar.style.animationDelay = '0ms';
+        });
+    }
+
+    // ============================================
     // INITIALIZATION
     // ============================================
 
@@ -2091,8 +2187,27 @@
             .sparkline:hover {
                 opacity: 1;
             }
+            
+            .heatmap-cell-fade {
+                animation: heatmapFadeIn 0.6s ease-out forwards;
+            }
+            
+            @keyframes heatmapFadeIn {
+                from {
+                    opacity: 0;
+                    background-color: transparent !important;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
         `;
         document.head.appendChild(style);
+        
+        // Initialize progress bar animations
+        setTimeout(() => {
+            animateProgressBars();
+        }, 200);
         
         // Initialize all enhancements
         setTimeout(() => {

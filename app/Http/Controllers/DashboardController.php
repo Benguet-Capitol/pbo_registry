@@ -190,7 +190,7 @@ class DashboardController extends Controller
                 ->sum('disbursement_amount') : 0;
 
             // Disbursements / Obligation
-            $class->disbursements_to_obligations = $class->obligation_sum > 0
+            $class->disbursements_to_obligations = $class->obligations_sum > 0
                 ? ($class->disbursements_sum / $class->obligations_sum) * 100
                 : 0;
 

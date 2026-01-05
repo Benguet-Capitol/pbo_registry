@@ -209,12 +209,12 @@ class ObligationController extends Controller
 
         $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
             ->select('id', 'office_abbreviation', 'class', 'fund')
-            ->where('year', $currentYear)
+            ->where('year', $selectedYear)
             ->get();
 
         $obligations_check = Obligation::select('obr_no')
-        ->whereHas('officeAllotmentClass', function($q) use ($currentYear) {
-            $q->where('year', $currentYear);
+        ->whereHas('officeAllotmentClass', function($q) use ($selectedYear) {
+            $q->where('year', $selectedYear);
         })
         ->get();
 
@@ -1136,4 +1136,188 @@ class ObligationController extends Controller
         }
     }
 
+    /**
+     * Get obligations by office allotment class ID (API endpoint)
+     */
+    public function getByOfficeAllotmentClass($classId): JsonResponse
+    {
+        try {
+            // Fetch office allotment class with relationships
+            $officeAllotmentClass = OfficeAllotmentClass::with([
+                'offices',
+                'allotmentClass'
+            ])->findOrFail($classId);
+
+            $obligations = Obligation::with([
+                'officeAllotmentClass.offices',
+                'officeAllotmentClass.allotmentClass',
+                'obligationAmounts.appropriation',
+                'obligationAmounts.obligationAdjustments',
+                'obligationAmounts.purchaseOrders',
+                'obligationAdjustments',
+                'purchaseOrders',
+                'disbursements'
+            ])->where('office_allotment_class_id', $classId)
+                ->orderBy('obr_date', 'asc')
+                ->get();
+
+            // Transform obligations data
+            $obligationsData = $obligations->map(function ($obligation) {
+                // Calculate total amount from obligation_amounts
+                $obligationAmountsTotal = $obligation->obligationAmounts->sum('obr_amount') ?? 0;
+                
+                // Calculate total adjustments from obligation_adjustments
+                $adjustmentsTotal = $obligation->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                
+                // Total amount is obligation amounts + adjustments
+                $totalAmount = $obligationAmountsTotal + $adjustmentsTotal;
+                
+                // Get total PO amount if obr_type is "Purchase Request"
+                $poAmount = '-';
+                if ($obligation->obr_type === 'Purchase Request' && $obligation->purchaseOrders->count() > 0) {
+                    $totalPoAmount = $obligation->purchaseOrders->sum('po_amount');
+                    $poAmount = number_format($totalPoAmount, 2);
+                }
+                
+                // Get appropriations from obligation_amounts with related adjustments and purchase orders
+                $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) {
+                    // Get adjustment amount for this obligation_amount
+                    $adjustmentAmount = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                    $originalAmount = $obrAmount->obr_amount ?? 0;
+                    $adjustedAmount = $originalAmount + $adjustmentAmount;
+                    
+                    // Get PO amount for this obligation_amount
+                    $poAmount = $obrAmount->purchaseOrders->sum('po_amount') ?? 0;
+                    
+                    return [
+                        'id' => $obrAmount->appropriation->id ?? null,
+                        'programs' => $obrAmount->appropriation->programs ?? '-',
+                        'code' => $obrAmount->appropriation->account_code ?? '-',
+                        'description' => $obrAmount->appropriation->description ?? '-',
+                        'amount' => number_format($originalAmount, 2) ?? '0.00',
+                        'adjustment_amount' => number_format($adjustmentAmount, 2) ?? '0.00',
+                        'adjusted_amount' => number_format($adjustedAmount, 2) ?? '0.00',
+                        'purchase_order_amount' => $poAmount > 0 ? number_format($poAmount, 2) : '-',
+                    ];
+                })->toArray();
+                
+                return [
+                    'id' => $obligation->id,
+                    'obr_no' => $obligation->obr_no,
+                    'obr_date' => $obligation->obr_date ? \Carbon\Carbon::parse($obligation->obr_date)->format('M d, Y') : '-',
+                    'obr_type' => $obligation->obr_type ?? '-',
+                    'payee' => $obligation->particulars ?? '-',
+                    'amount' => number_format($totalAmount, 2) ?? '0.00',
+                    'purchase_order' => $poAmount,
+                    'appropriations' => $appropriations,
+                    'office' => $obligation->officeAllotmentClass->offices->office_abbreviation ?? '-',
+                    'class' => $obligation->officeAllotmentClass->allotmentClass->description ?? '-',
+                ];
+            })->toArray();
+
+            return response()->json([
+                'success' => true,
+                'data' => $obligationsData,
+                'count' => count($obligationsData),
+                'office' => $officeAllotmentClass->offices->office_abbreviation ?? '-',
+                'allotmentClass' => $officeAllotmentClass->allotmentClass->description ?? '-',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data' => [],
+                'count' => 0,
+                'message' => 'Error fetching obligations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get obligations by appropriation ID (API endpoint)
+     */
+    public function getByAppropriation($appropriationId): JsonResponse
+    {
+        try {
+            $appropriation = Appropriation::findOrFail($appropriationId);
+
+            $obligations = Obligation::whereHas('obligationAmounts', function ($query) use ($appropriationId) {
+                $query->where('appropriation_id', $appropriationId);
+            })->with([
+                'obligationAmounts.appropriation',
+                'obligationAmounts.obligationAdjustments',
+                'obligationAmounts.purchaseOrders',
+                'obligationAdjustments',
+                'purchaseOrders',
+                'disbursements'
+            ])->orderBy('obr_date', 'asc')->get();
+
+            // Transform obligations data
+            $obligationsData = $obligations->map(function ($obligation) {
+                // Calculate total amount from obligation_amounts
+                $obligationAmountsTotal = $obligation->obligationAmounts->sum('obr_amount') ?? 0;
+                
+                // Calculate total adjustments from obligation_adjustments
+                $adjustmentsTotal = $obligation->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                
+                // Total amount is obligation amounts + adjustments
+                $totalAmount = $obligationAmountsTotal + $adjustmentsTotal;
+                
+                // Get total PO amount if obr_type is "Purchase Request"
+                $poAmount = 'N/A';
+                if ($obligation->obr_type === 'Purchase Request' && $obligation->purchaseOrders->count() > 0) {
+                    $totalPoAmount = $obligation->purchaseOrders->sum('po_amount');
+                    $poAmount = number_format($totalPoAmount, 2);
+                }
+                
+                // Get appropriations from obligation_amounts with related adjustments and purchase orders
+                $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) {
+                    // Get adjustment amount for this obligation_amount
+                    $adjustmentAmount = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                    $originalAmount = $obrAmount->obr_amount ?? 0;
+                    $adjustedAmount = $originalAmount + $adjustmentAmount;
+                    
+                    // Get PO amount for this obligation_amount
+                    $poAmount = $obrAmount->purchaseOrders->sum('po_amount') ?? 0;
+                    
+                    return [
+                        'id' => $obrAmount->appropriation->id ?? null,
+                        'programs' => $obrAmount->appropriation->programs ?? '-',
+                        'code' => $obrAmount->appropriation->account_code ?? '-',
+                        'description' => $obrAmount->appropriation->description ?? '-',
+                        'amount' => number_format($originalAmount, 2) ?? '0.00',
+                        'adjustment_amount' => number_format($adjustmentAmount, 2) ?? '0.00',
+                        'adjusted_amount' => number_format($adjustedAmount, 2) ?? '0.00',
+                        'purchase_order_amount' => $poAmount > 0 ? number_format($poAmount, 2) : '-',
+                    ];
+                })->toArray();
+                
+                return [
+                    'id' => $obligation->id,
+                    'obr_no' => $obligation->obr_no,
+                    'obr_date' => $obligation->obr_date ? \Carbon\Carbon::parse($obligation->obr_date)->format('M d, Y') : '-',
+                    'obr_type' => $obligation->obr_type ?? '-',
+                    'payee' => $obligation->particulars ?? '-',
+                    'amount' => number_format($totalAmount, 2) ?? '0.00',
+                    'purchase_order' => $poAmount,
+                    'appropriations' => $appropriations,
+                ];
+            })->toArray();
+
+            return response()->json([
+                'success' => true,
+                'data' => $obligationsData,
+                'count' => count($obligationsData),
+                'appropriation' => $appropriation->description ?? '-',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data' => [],
+                'count' => 0,
+                'message' => 'Error fetching obligations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
+

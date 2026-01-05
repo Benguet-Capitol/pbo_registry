@@ -46,123 +46,131 @@
     {{-- Account Distribution Graph --}}
     <div class="mb-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                Account Distribution by Authorized Appropriations
-            </h3>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                    Account Distribution by Authorized Appropriations
+                </h3>
+                <button onclick="toggleWidget('accountDistributionWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-chevron-down" id="accountDistributionToggle"></i>
+                </button>
+            </div>
             
-            <!-- Stacked Bar -->
-            <div id="stackedBarContainer" class="mb-4 relative">
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">
-                    @php
-                        // Calculate total authorized appropriations for percentage calculation
-                        $totalForPercentage = $officeAllotmentClasses->appropriations->sum('authorized_appropriations');
-                        
-                        // Group by account code and sum authorized appropriations
-                        $accountDistribution = $officeAllotmentClasses->appropriations->groupBy('account_code')->map(function($items) {
-                            return [
-                                'description' => $items->first()->description ?? 'Unknown',
-                                'total' => $items->sum('authorized_appropriations'),
-                                'account_code' => $items->first()->account_code
-                            ];
-                        })->sortByDesc('total');
-                        
-                        // Fixed color assignments for common accounts
-                        $fixedColors = [
-                            '5010101000' => ['color' => 'bg-blue-500', 'hover' => 'hover:bg-blue-600'],      // Salaries
-                            '5010201000' => ['color' => 'bg-green-500', 'hover' => 'hover:bg-green-600'],    // Other Compensation
-                            '5010301000' => ['color' => 'bg-cyan-500', 'hover' => 'hover:bg-cyan-600'],      // Personnel Benefits
-                            '5010402000' => ['color' => 'bg-purple-500', 'hover' => 'hover:bg-purple-600'],  // Traveling Expenses
-                            '5010499000' => ['color' => 'bg-orange-500', 'hover' => 'hover:bg-orange-600'],  // Other MOOE
-                            '5020101000' => ['color' => 'bg-red-500', 'hover' => 'hover:bg-red-600'],        // Office Equipment
-                            '5020321000' => ['color' => 'bg-violet-500', 'hover' => 'hover:bg-violet-600'],  // ICT Equipment
-                        ];
-                        
-                        // Fallback colors for unknown accounts
-                        $fallbackColors = [
-                            ['color' => 'bg-pink-600', 'hover' => 'hover:bg-pink-700'],
-                            ['color' => 'bg-indigo-600', 'hover' => 'hover:bg-indigo-700'],
-                            ['color' => 'bg-teal-600', 'hover' => 'hover:bg-teal-700'],
-                            ['color' => 'bg-lime-600', 'hover' => 'hover:bg-lime-700'],
-                            ['color' => 'bg-amber-600', 'hover' => 'hover:bg-amber-700'],
-                            ['color' => 'bg-rose-600', 'hover' => 'hover:bg-rose-700'],
-                        ];
-                        
-                        function getAccountColors($accountCode, $fixedColors, $fallbackColors) {
-                            if (isset($fixedColors[$accountCode])) {
-                                return $fixedColors[$accountCode];
-                            }
-                            $index = abs(crc32($accountCode)) % count($fallbackColors);
-                            return $fallbackColors[$index];
-                        }
-                    @endphp
-
-                    @foreach($accountDistribution as $index => $account)
+            <!-- Collapsible Content -->
+            <div id="accountDistributionContent" style="display: none;">
+                <!-- Stacked Bar -->
+                <div id="stackedBarContainer" class="mb-4 relative">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">
                         @php
-                            $percentage = $totalForPercentage > 0 ? ($account['total'] / $totalForPercentage) * 100 : 0;
-                            $colors = getAccountColors($account['account_code'], $fixedColors, $fallbackColors);
+                            // Calculate total authorized appropriations for percentage calculation
+                            $totalForPercentage = $officeAllotmentClasses->appropriations->sum('authorized_appropriations');
+                            
+                            // Group by account code and sum authorized appropriations
+                            $accountDistribution = $officeAllotmentClasses->appropriations->groupBy('account_code')->map(function($items) {
+                                return [
+                                    'description' => $items->first()->description ?? 'Unknown',
+                                    'total' => $items->sum('authorized_appropriations'),
+                                    'account_code' => $items->first()->account_code
+                                ];
+                            })->sortByDesc('total');
+                            
+                            // Fixed color assignments for common accounts
+                            $fixedColors = [
+                                '5010101000' => ['color' => 'bg-blue-500', 'hover' => 'hover:bg-blue-600'],      // Salaries
+                                '5010201000' => ['color' => 'bg-green-500', 'hover' => 'hover:bg-green-600'],    // Other Compensation
+                                '5010301000' => ['color' => 'bg-cyan-500', 'hover' => 'hover:bg-cyan-600'],      // Personnel Benefits
+                                '5010402000' => ['color' => 'bg-purple-500', 'hover' => 'hover:bg-purple-600'],  // Traveling Expenses
+                                '5010499000' => ['color' => 'bg-orange-500', 'hover' => 'hover:bg-orange-600'],  // Other MOOE
+                                '5020101000' => ['color' => 'bg-red-500', 'hover' => 'hover:bg-red-600'],        // Office Equipment
+                                '5020321000' => ['color' => 'bg-violet-500', 'hover' => 'hover:bg-violet-600'],  // ICT Equipment
+                            ];
+                            
+                            // Fallback colors for unknown accounts
+                            $fallbackColors = [
+                                ['color' => 'bg-pink-600', 'hover' => 'hover:bg-pink-700'],
+                                ['color' => 'bg-indigo-600', 'hover' => 'hover:bg-indigo-700'],
+                                ['color' => 'bg-teal-600', 'hover' => 'hover:bg-teal-700'],
+                                ['color' => 'bg-lime-600', 'hover' => 'hover:bg-lime-700'],
+                                ['color' => 'bg-amber-600', 'hover' => 'hover:bg-amber-700'],
+                                ['color' => 'bg-rose-600', 'hover' => 'hover:bg-rose-700'],
+                            ];
+                            
+                            function getAccountColors($accountCode, $fixedColors, $fallbackColors) {
+                                if (isset($fixedColors[$accountCode])) {
+                                    return $fixedColors[$accountCode];
+                                }
+                                $index = abs(crc32($accountCode)) % count($fallbackColors);
+                                return $fallbackColors[$index];
+                            }
+                        @endphp
+
+                        @foreach($accountDistribution as $index => $account)
+                            @php
+                                $percentage = $totalForPercentage > 0 ? ($account['total'] / $totalForPercentage) * 100 : 0;
+                                $colors = getAccountColors($account['account_code'], $fixedColors, $fallbackColors);
+                                $barColor = $colors['color'];
+                                $hoverColor = $colors['hover'];
+                            @endphp
+                            
+                            <div 
+                                class="{{ $barColor }} {{ $hoverColor }} h-8 transition-all duration-200 ease-out flex items-center justify-center relative stacked-segment cursor-pointer"
+                                style="width: {{ $percentage }}%"
+                                data-account="{{ $account['account_code'] }}"
+                                data-description="{{ $account['description'] }}"
+                                data-total="{{ $account['total'] }}"
+                                data-percentage="{{ $percentage }}"
+                                onmouseenter="showTooltip(this)"
+                                onmouseleave="hideTooltip(this)"
+                            >
+                                @if($percentage > 8)
+                                    <span class="text-white text-xs font-semibold px-1 text-center truncate pointer-events-none">
+                                        {{ Str::limit($account['description'], 25, '...') }}
+                                    </span>
+                                @endif
+                                
+                                <!-- Tooltip -->
+                                <div class="tooltip-box absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap shadow-xl" style="display: none; z-index: 9999;">
+                                    <div class="font-semibold">{{ $account['account_code'] }}</div>
+                                    <div class="text-[10px] max-w-xs truncate">{{ $account['description'] }}</div>
+                                    <div>{{ number_format($percentage, 2) }}%</div>
+                                    <div>{{ number_format($account['total'], 2) }}</div>
+                                    <!-- Arrow -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Legend with amounts added -->
+                <div id="graphLegend" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    @foreach($accountDistribution->take(5) as $index => $accountItem)
+                        @php
+                            $percentage = $totalForPercentage > 0 ? ($accountItem['total'] / $totalForPercentage) * 100 : 0;
+                            $colors = getAccountColors($accountItem['account_code'], $fixedColors, $fallbackColors);
                             $barColor = $colors['color'];
-                            $hoverColor = $colors['hover'];
                         @endphp
                         
-                        <div 
-                            class="{{ $barColor }} {{ $hoverColor }} h-8 transition-all duration-200 ease-out flex items-center justify-center relative stacked-segment cursor-pointer"
-                            style="width: {{ $percentage }}%"
-                            data-account="{{ $account['account_code'] }}"
-                            data-description="{{ $account['description'] }}"
-                            data-total="{{ $account['total'] }}"
-                            data-percentage="{{ $percentage }}"
-                            onmouseenter="showTooltip(this)"
-                            onmouseleave="hideTooltip(this)"
-                        >
-                            @if($percentage > 8)
-                                <span class="text-white text-xs font-semibold px-1 text-center truncate pointer-events-none">
-                                    {{ Str::limit($account['description'], 25, '...') }}
-                                </span>
-                            @endif
-                            
-                            <!-- Tooltip -->
-                            <div class="tooltip-box absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap shadow-xl" style="display: none; z-index: 9999;">
-                                <div class="font-semibold">{{ $account['account_code'] }}</div>
-                                <div class="text-[10px] max-w-xs truncate">{{ $account['description'] }}</div>
-                                <div>{{ number_format($percentage, 2) }}%</div>
-                                <div>{{ number_format($account['total'], 2) }}</div>
-                                <!-- Arrow -->
-                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                        <div class="flex items-center space-x-2 text-xs">
+                            <div class="w-4 h-4 {{ $barColor }} rounded flex-shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-gray-700 dark:text-gray-300 truncate" title="{{ $accountItem['account_code'] }} - {{ $accountItem['description'] }}">
+                                    {{ $accountItem['account_code'] }} - {{ Str::limit($accountItem['description'], 40, '...') }}
+                                </div>
+                                <div class="text-gray-500 dark:text-gray-400">
+                                    {{ number_format($percentage, 1) }}%
+                                </div>
+                                <div class="text-gray-600 dark:text-gray-400 text-[10px]">
+                                    {{ number_format($accountItem['total'], 2) }}
+                                </div>
                             </div>
                         </div>
                     @endforeach
-                </div>
-            </div>
-
-            <!-- Legend with amounts added -->
-            <div id="graphLegend" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                @foreach($accountDistribution->take(5) as $index => $accountItem)
-                    @php
-                        $percentage = $totalForPercentage > 0 ? ($accountItem['total'] / $totalForPercentage) * 100 : 0;
-                        $colors = getAccountColors($accountItem['account_code'], $fixedColors, $fallbackColors);
-                        $barColor = $colors['color'];
-                    @endphp
-                    
-                    <div class="flex items-center space-x-2 text-xs">
-                        <div class="w-4 h-4 {{ $barColor }} rounded flex-shrink-0"></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-medium text-gray-700 dark:text-gray-300 truncate" title="{{ $accountItem['account_code'] }} - {{ $accountItem['description'] }}">
-                                {{ $accountItem['account_code'] }} - {{ Str::limit($accountItem['description'], 40, '...') }}
-                            </div>
-                            <div class="text-gray-500 dark:text-gray-400">
-                                {{ number_format($percentage, 1) }}%
-                            </div>
-                            <div class="text-gray-600 dark:text-gray-400 text-[10px]">
-                                {{ number_format($accountItem['total'], 2) }}
-                            </div>
+                    @if($accountDistribution->count() > 5)
+                        <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 italic">
+                            +{{ $accountDistribution->count() - 5 }} more accounts
                         </div>
-                    </div>
-                @endforeach
-                @if($accountDistribution->count() > 5)
-                    <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 italic">
-                        +{{ $accountDistribution->count() - 5 }} more accounts
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -565,6 +573,8 @@
                             data-disbursements-to-obligations="{{ $appropriation->disbursements_to_obligations }}"
                             data-disbursements-to-appropriations="{{ $appropriation->disbursements_to_appropriations }}"
                             data-account-code="{{ $appropriation->account_code }}"
+                            data-description="{{ $appropriation->description }}"
+                            data-appropriation-id="{{ $appropriation->id }}"
                             class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->programs }}</td>
                             <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->account_code }}</td>
@@ -691,6 +701,46 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right-Click Context Menu for Accounts Table -->
+    <div id="accountContextMenu" class="hidden fixed text-xs bg-white dark:bg-gray-800 rounded-lg shadow-lg z-[10000] text-gray-900 dark:text-gray-200 min-w-max border border-gray-200 dark:border-gray-700">
+        <!-- <a href="#" id="contextObligate" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600">
+            <i class="fas fa-plus-circle mr-2"></i> Obligate
+        </a> -->
+        <a href="#" onclick="event.preventDefault(); handleAccountMenuOption('obligations')" class="block px-4 py-2 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer">
+            <i class="fas fa-list mr-2"></i>Obligations
+        </a>
+    </div>
+
+    <!-- Obligations Modal for Accounts -->
+    <div id="accountObligationsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-[80%] max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Obligations <span id="accountObligationsHeaderInfo" class="text-blue-600 dark:text-blue-400"></span></h3>
+                <button onclick="closeAccountObligationsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="px-6 py-4 max-h-[calc(90vh-200px)] overflow-y-auto">
+                <div id="accountObligationsContent" class="space-y-4">
+                    <!-- Loading spinner -->
+                    <div id="accountObligationsLoading" class="flex justify-center items-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="border-t border-gray-300 dark:border-gray-700 px-6 py-3 bg-gray-50 dark:bg-gray-700 flex justify-end">
+                <button onclick="closeAccountObligationsModal()" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500">
+                    Close
+                </button>
             </div>
         </div>
     </div>
@@ -1429,6 +1479,27 @@ function animateGraphOnLoad() {
     }, 200);
 }
 
+// toggleWidget function for accounts blade (only handles account distribution)
+function toggleWidget(widgetId) {
+    if (widgetId === 'accountDistributionWidget') {
+        const content = document.getElementById('accountDistributionContent');
+        const toggle = document.getElementById('accountDistributionToggle');
+        
+        if (content && toggle) {
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            toggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            
+            // If opening the account distribution, trigger animation
+            if (isHidden) {
+                setTimeout(() => {
+                    animateGraphOnLoad();
+                }, 100);
+            }
+        }
+    }
+}
+
 // ============================================
 // ENHANCED UPDATE FUNCTIONS WITH ANIMATION
 // ============================================
@@ -1711,6 +1782,233 @@ if (typeof originalUpdateCardValues === 'function') {
         updateCardValuesAnimated();
     };
 }
+
+    
+    // Store current appropriation context
+    let currentAccountAppropriation = null;
+
+    // Right-click context menu handler for accounts table
+    document.addEventListener('DOMContentLoaded', function() {
+        const accountsTable = document.getElementById('accountsTable');
+        const contextMenu = document.getElementById('accountContextMenu');
+
+        if (accountsTable) {
+            accountsTable.addEventListener('contextmenu', function(event) {
+                event.preventDefault();
+                
+                // Find the closest row
+                const row = event.target.closest('tr');
+                if (row && row.querySelector('td')) {
+                    const appropriationId = row.dataset.appropriationId;
+                    const accountCode = row.getAttribute('data-account-code');
+                    const programs = row.querySelector('td:nth-child(1)')?.textContent?.trim();
+                    const description = row.getAttribute('data-description');
+                    
+                    // Store context
+                    currentAccountAppropriation = {
+                        accountCode: accountCode,
+                        description: description,
+                        appropriationId: appropriationId,
+                        programs: programs
+                    };
+                    
+                    // Position the context menu
+                        contextMenu.style.left = event.clientX + 'px';
+                        contextMenu.style.top = event.clientY + 'px';
+                    contextMenu.classList.remove('hidden');
+                }
+            });
+
+            // Hide context menu on click
+            document.addEventListener('click', function(e) {
+                if (!contextMenu.contains(e.target) && !e.target.closest('tr')) {
+                    contextMenu.classList.add('hidden');
+                }
+            });
+        }
+    });
+
+    function handleAccountMenuOption(option) {
+        const contextMenu = document.getElementById('accountContextMenu');
+        contextMenu.classList.add('hidden');
+
+        if (option === 'obligations') {
+            showAccountObligationsModal();
+        }
+    }
+
+    function showAccountObligationsModal() {
+        if (!currentAccountAppropriation || !currentAccountAppropriation.appropriationId) {
+            alert('Could not retrieve appropriation information');
+            return;
+        }
+
+        const modal = document.getElementById('accountObligationsModal');
+        const headerInfo = document.getElementById('accountObligationsHeaderInfo');
+        const content = document.getElementById('accountObligationsContent');
+        const loading = document.getElementById('accountObligationsLoading');
+
+        modal.classList.remove('hidden');
+        
+        // Clear previous content
+        headerInfo.textContent = ' | ' + (currentAccountAppropriation.accountCode || 'N/A') + ' - ' + (currentAccountAppropriation.description || 'N/A');
+        if (loading) loading.style.display = 'flex';
+
+        // Fetch obligations for this appropriation
+        fetch(`/api/obligations/by-appropriation/${currentAccountAppropriation.appropriationId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (loading) loading.style.display = 'none';
+                
+                if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
+                    // Create table with obligations
+                    let tableHTML = `
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-gray-700 dark:text-gray-300">
+                                <thead class="sticky top-0 bg-gray-200 dark:bg-gray-700 z-10 border-b border-t border-gray-400 dark:border-gray-600">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left w-12"></th>
+                                        <th class="px-3 py-2 text-left">OBR No.</th>
+                                        <th class="px-3 py-2 text-left">Date</th>
+                                        <th class="px-3 py-2 text-left">OBR Type</th>
+                                        <th class="px-3 py-2 text-left">Particulars</th>
+                                        <th class="px-3 py-2 text-right">Obligation</th>
+                                        <th class="px-3 py-2 text-right">Purchase Order</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-300 dark:divide-gray-600">
+                    `;
+                    
+                    let totalAmount = 0;
+                    let totalPurchaseOrder = 0;
+                    let recordCount = 0;
+
+                    data.data.forEach((obligation, index) => {
+                        // Filter to get only the selected appropriation
+                        const selectedApps = obligation.appropriations.filter(app => app.id == currentAccountAppropriation.appropriationId);
+                        
+                        // Calculate amount for only the selected appropriation
+                        let appropriationAmount = 0;
+                        let purchaseOrderAmount = 0;
+
+                        selectedApps.forEach(app => {
+                            appropriationAmount += parseFloat(app.amount.replace(/,/g, ''));
+
+                            const poAmount = parseFloat(app.purchase_order_amount.replace(/,/g, ''));
+                            purchaseOrderAmount += isNaN(poAmount) ? 0 : poAmount;
+                        });
+                        const formattedAppAmount = appropriationAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const formattedPOAmount = purchaseOrderAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        
+                        tableHTML += `
+                            <tr class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer obligation-row" data-obligation-index="${index}">
+                                <td class="px-3 py-2 text-center"><i class="fas fa-chevron-right text-gray-500 transition-transform duration-200 expand-icon"></i></td>
+                                <td class="px-3 py-2">${obligation.obr_no}</td>
+                                <td class="px-3 py-2">${obligation.obr_date}</td>
+                                <td class="px-3 py-2">${obligation.obr_type}</td>
+                                <td class="px-3 py-2">${obligation.payee}</td>
+                                <td class="px-3 py-2 text-right font-semibold">${formattedAppAmount}</td>
+                                <td class="px-3 py-2 text-right">${formattedPOAmount}</td>
+                            </tr>
+                            <tr class="hidden appropriations-row" data-obligation-index="${index}">
+                                <td colspan="7" class="px-2 py-2">
+                                        <table class="w-full text-xs text-gray-600 dark:text-gray-400">
+                                            <thead class="border border-gray-400 dark:border-gray-600">
+                                                <tr class="bg-gray-100 dark:bg-gray-800">
+                                                    <th class="px-3 py-2 text-left">Programs</th>
+                                                    <th class="px-3 py-2 text-left">Account Code</th>
+                                                    <th class="px-3 py-2 text-left">Description</th>
+                                                    <th class="px-3 py-2 text-right">Amount</th>
+                                                    <th class="px-3 py-2 text-right">Adjustment Amount</th>
+                                                    <th class="px-3 py-2 text-right">Adjusted Amount</th>
+                                                    <th class="px-3 py-2 text-right">Purchase Order</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-400 dark:border-gray-600">
+                        `;
+                        
+                        // Display all appropriations in the detail row, but calculate amount only for selected
+                        obligation.appropriations.forEach(app => {
+                            tableHTML += `
+                                                <tr>
+                                                    <td class="px-3 py-2">${app.programs}</td>
+                                                    <td class="px-3 py-2">${app.code}</td>
+                                                    <td class="px-3 py-2">${app.description}</td>
+                                                    <td class="px-3 py-2 text-right font-semibold">${app.amount}</td>
+                                                    <td class="px-3 py-2 text-right">${app.adjustment_amount}</td>
+                                                    <td class="px-3 py-2 text-right font-semibold">${app.adjusted_amount}</td>
+                                                    <td class="px-3 py-2 text-right">${app.purchase_order_amount}</td>
+                                                </tr>
+                            `;
+                        });
+                        
+                        tableHTML += `
+                                            </tbody>
+                                        </table>
+                                </td>
+                            </tr>
+                        `;
+                        
+                        // Add to total for the selected appropriation only
+                        totalAmount += appropriationAmount;
+                        totalPurchaseOrder += purchaseOrderAmount;
+                        recordCount++;
+                    });
+                    
+                    tableHTML += `
+                                </tbody>
+                                <tfoot class="sticky bottom-0 bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600 z-10">
+                                    <tr>
+                                        <td colspan="2" class="px-3 py-2">Total Records: ${recordCount} ${recordCount === 1 ? 'record' : 'records'}</td>
+                                        <td colspan="3" class="px-3 py-2 text-right">Total:</td>
+                                        <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `;
+                    
+                    if (content) {
+                        content.innerHTML = tableHTML;
+                        
+                        // Add click event listeners to obligation rows
+                        document.querySelectorAll('.obligation-row').forEach(row => {
+                            row.addEventListener('click', function() {
+                                const obligationIndex = this.dataset.obligationIndex;
+                                const appRow = document.querySelector(`.appropriations-row[data-obligation-index="${obligationIndex}"]`);
+                                const expandIcon = this.querySelector('.expand-icon');
+                                
+                                if (appRow) {
+                                    appRow.classList.toggle('hidden');
+                                    expandIcon.style.transform = appRow.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+                                }
+                            });
+                        });
+                    }
+                } else if (data.success && content) {
+                    content.innerHTML = '<div class="text-center py-8 text-gray-500 italic dark:text-gray-400">No Obligations found for this Account.</div>';
+                } else if (content) {
+                    content.innerHTML = '<div class="text-center py-8 text-red-500">Error: ' + (data.message || 'Unknown error') + '</div>';
+                }
+            })
+            .catch(error => {
+                if (loading) loading.style.display = 'none';
+                if (content) {
+                    content.innerHTML = '<div class="text-center py-8 text-red-500">Error loading obligations: ' + error.message + '</div>';
+                }
+                console.error('Error fetching obligations:', error);
+            });
+    }
+
+    function closeAccountObligationsModal() {
+        const modal = document.getElementById('accountObligationsModal');
+        modal.classList.add('hidden');
+    }
+
+    window.handleAccountMenuOption = handleAccountMenuOption;
+    window.showAccountObligationsModal = showAccountObligationsModal;
+    window.closeAccountObligationsModal = closeAccountObligationsModal;
 
 // Override filterTable to include animations
 const originalFilterTable = window.filterTable;

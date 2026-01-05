@@ -128,6 +128,8 @@ Route::middleware('auth')->group(function () {
     Route::get('obligations/{obligation}/disbursement-modal', [ObligationController::class, 'showDisbursementModal'])->name('obligations.disbursement_modal');
     Route::post('/obligations/{obligation}/store-disbursement', [ObligationController::class, 'storeDisbursement'])->name('obligations.storeDisbursement');
     Route::post('/obligations/{obligation}/payment-remarks', [ObligationController::class, 'updatePaymentRemarks'])->name('obligations.updatePaymentRemarks');
+    Route::get('/api/obligations/by-office-allotment-class/{classId}', [ObligationController::class, 'getByOfficeAllotmentClass'])->name('obligations.api.byOfficeAllotmentClass');
+    Route::get('/api/obligations/by-appropriation/{appropriationId}', [ObligationController::class, 'getByAppropriation'])->name('obligations.api.byAppropriation');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);

@@ -47,10 +47,15 @@
     </x-slot>
 
     <!-- Unified Filter Section -->
-     <div class="bg-white p-4 rounded-lg shadow-md mb-2 dark:bg-gray-800">
+     <div class="bg-white p-4 rounded-lg shadow-md mb-4 dark:bg-gray-800">
     <form method="GET" action=""  id="filterForm">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center mb-2">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Filters</h4>
+            <button type="button" onclick="toggleFilters()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <i class="fas fa-chevron-down" id="filterToggle"></i>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center mb-2" id="filterContent" style="display: none;">
 
             <!-- Year Filter -->
             <div class="flex items-center space-x-2">
@@ -160,6 +165,7 @@
             </div> -->
         </div>
     </form>
+    <!-- Search Input - Always Visible -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
      <!-- Search Input -->
             <div class="flex items-center space-x-2 lg:col-span-3">
@@ -171,115 +177,123 @@
     {{-- Allotment Class Distribution Graph --}}
     <div class="mb-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                Allotment Class Distribution by Authorized Appropriations
-            </h3>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                    Allotment Class Distribution by Authorized Appropriations
+                </h3>
+                <button onclick="toggleWidget('allotmentDistributionWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-chevron-down" id="allotmentDistributionToggle"></i>
+                </button>
+            </div>
             
-            <!-- Stacked Bar - Reduced height -->
-            <div id="stackedBarContainer" class="mb-2 relative">
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">
-                    @php
-                        // Calculate total authorized appropriations for percentage calculation
-                        $totalForPercentage = $officeAllotmentClasses->sum('authorized_appropriations');
-                        
-                        // Group by allotment class and sum authorized appropriations
-                        $classDistribution = $officeAllotmentClasses->groupBy('class')->map(function($items) {
-                            return [
-                                'description' => $items->first()->allotmentClass->description ?? 'Unknown',
-                                'total' => $items->sum('authorized_appropriations'),
-                                'class_code' => $items->first()->class
-                            ];
-                        })->sortByDesc('total');
-                        
-                        // Fixed color assignments
-                        $fixedColors = [
-                            'PS' => ['color' => 'bg-blue-500', 'hover' => 'hover:bg-blue-600'],
-                            'MOOE' => ['color' => 'bg-green-500', 'hover' => 'hover:bg-green-600'],
-                            'CO' => ['color' => 'bg-cyan-500', 'hover' => 'hover:bg-cyan-600'],
-                            'FE' => ['color' => 'bg-red-500', 'hover' => 'hover:bg-red-600'],
-                            'CCO' => ['color' => 'bg-violet-500', 'hover' => 'hover:bg-violet-600'],
-                        ];
-                        
-                        // Fallback colors for unknown classes
-                        $fallbackColors = [
-                            ['color' => 'bg-pink-600', 'hover' => 'hover:bg-pink-700'],
-                            ['color' => 'bg-indigo-600', 'hover' => 'hover:bg-indigo-700'],
-                            ['color' => 'bg-orange-600', 'hover' => 'hover:bg-orange-700'],
-                            ['color' => 'bg-teal-600', 'hover' => 'hover:bg-teal-700'],
-                            ['color' => 'bg-lime-600', 'hover' => 'hover:bg-lime-700'],
-                            ['color' => 'bg-amber-600', 'hover' => 'hover:bg-amber-700'],
-                        ];
-                        
-                        function getClassColors($classCode, $fixedColors, $fallbackColors) {
-                            if (isset($fixedColors[$classCode])) {
-                                return $fixedColors[$classCode];
-                            }
-                            $index = abs(crc32($classCode)) % count($fallbackColors);
-                            return $fallbackColors[$index];
-                        }
-                    @endphp
-
-                    @foreach($classDistribution as $index => $class)
+            <!-- Collapsible Content -->
+            <div id="allotmentDistributionContent" style="display: none;">
+                <!-- Stacked Bar - Reduced height -->
+                <div id="stackedBarContainer" class="mb-2 relative">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">
                         @php
-                            $percentage = $totalForPercentage > 0 ? ($class['total'] / $totalForPercentage) * 100 : 0;
-                            $colors = getClassColors($class['class_code'], $fixedColors, $fallbackColors);
+                            // Calculate total authorized appropriations for percentage calculation
+                            $totalForPercentage = $officeAllotmentClasses->sum('authorized_appropriations');
+                            
+                            // Group by allotment class and sum authorized appropriations
+                            $classDistribution = $officeAllotmentClasses->groupBy('class')->map(function($items) {
+                                return [
+                                    'description' => $items->first()->allotmentClass->description ?? 'Unknown',
+                                    'total' => $items->sum('authorized_appropriations'),
+                                    'class_code' => $items->first()->class
+                                ];
+                            })->sortByDesc('total');
+                            
+                            // Fixed color assignments
+                            $fixedColors = [
+                                'PS' => ['color' => 'bg-blue-500', 'hover' => 'hover:bg-blue-600'],
+                                'MOOE' => ['color' => 'bg-green-500', 'hover' => 'hover:bg-green-600'],
+                                'CO' => ['color' => 'bg-cyan-500', 'hover' => 'hover:bg-cyan-600'],
+                                'FE' => ['color' => 'bg-red-500', 'hover' => 'hover:bg-red-600'],
+                                'CCO' => ['color' => 'bg-violet-500', 'hover' => 'hover:bg-violet-600'],
+                            ];
+                            
+                            // Fallback colors for unknown classes
+                            $fallbackColors = [
+                                ['color' => 'bg-pink-600', 'hover' => 'hover:bg-pink-700'],
+                                ['color' => 'bg-indigo-600', 'hover' => 'hover:bg-indigo-700'],
+                                ['color' => 'bg-orange-600', 'hover' => 'hover:bg-orange-700'],
+                                ['color' => 'bg-teal-600', 'hover' => 'hover:bg-teal-700'],
+                                ['color' => 'bg-lime-600', 'hover' => 'hover:bg-lime-700'],
+                                ['color' => 'bg-amber-600', 'hover' => 'hover:bg-amber-700'],
+                            ];
+                            
+                            function getClassColors($classCode, $fixedColors, $fallbackColors) {
+                                if (isset($fixedColors[$classCode])) {
+                                    return $fixedColors[$classCode];
+                                }
+                                $index = abs(crc32($classCode)) % count($fallbackColors);
+                                return $fallbackColors[$index];
+                            }
+                        @endphp
+
+                        @foreach($classDistribution as $index => $class)
+                            @php
+                                $percentage = $totalForPercentage > 0 ? ($class['total'] / $totalForPercentage) * 100 : 0;
+                                $colors = getClassColors($class['class_code'], $fixedColors, $fallbackColors);
+                                $barColor = $colors['color'];
+                                $hoverColor = $colors['hover'];
+                            @endphp
+                            
+                            <div 
+                                class="{{ $barColor }} {{ $hoverColor }} h-8 transition-all duration-200 ease-out flex items-center justify-center relative stacked-segment cursor-pointer"
+                                style="width: {{ $percentage }}%"
+                                data-class="{{ $class['class_code'] }}"
+                                data-description="{{ $class['description'] }}"
+                                data-total="{{ $class['total'] }}"
+                                data-percentage="{{ $percentage }}"
+                                onmouseenter="showTooltip(this)"
+                                onmouseleave="hideTooltip(this)"
+                            >
+                                @if($percentage > 5)
+                                    <span class="text-white text-xs font-semibold px-1 text-center truncate pointer-events-none">
+                                        {{ $class['class_code'] }}
+                                    </span>
+                                @endif
+                                
+                                <!-- Tooltip -->
+                                <div class="tooltip-box absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap shadow-xl" style="display: none; z-index: 9999;">
+                                    <div class="font-semibold">{{ $class['class_code'] }} - {{ $class['description'] }}</div>
+                                    <div>{{ number_format($percentage, 2) }}%</div>
+                                    <div>{{ number_format($class['total'], 2) }}</div>
+                                    <!-- Arrow -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Legend with amounts added -->
+                <div id="graphLegend" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mx-auto justify-items-center">
+                    @foreach($classDistribution as $index => $classItem)
+                        @php
+                            $percentage = $totalForPercentage > 0 ? ($classItem['total'] / $totalForPercentage) * 100 : 0;
+                            $colors = getClassColors($classItem['class_code'], $fixedColors, $fallbackColors);
                             $barColor = $colors['color'];
-                            $hoverColor = $colors['hover'];
                         @endphp
                         
-                        <div 
-                            class="{{ $barColor }} {{ $hoverColor }} h-8 transition-all duration-200 ease-out flex items-center justify-center relative stacked-segment cursor-pointer"
-                            style="width: {{ $percentage }}%"
-                            data-class="{{ $class['class_code'] }}"
-                            data-description="{{ $class['description'] }}"
-                            data-total="{{ $class['total'] }}"
-                            data-percentage="{{ $percentage }}"
-                            onmouseenter="showTooltip(this)"
-                            onmouseleave="hideTooltip(this)"
-                        >
-                            @if($percentage > 5)
-                                <span class="text-white text-xs font-semibold px-1 text-center truncate pointer-events-none">
-                                    {{ $class['class_code'] }}
-                                </span>
-                            @endif
-                            
-                            <!-- Tooltip -->
-                            <div class="tooltip-box absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-nowrap shadow-xl" style="display: none; z-index: 9999;">
-                                <div class="font-semibold">{{ $class['class_code'] }} - {{ $class['description'] }}</div>
-                                <div>{{ number_format($percentage, 2) }}%</div>
-                                <div>{{ number_format($class['total'], 2) }}</div>
-                                <!-- Arrow -->
-                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                        <div class="flex items-center space-x-2 text-xs">
+                            <div class="w-4 h-4 {{ $barColor }} rounded flex-shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-gray-700 dark:text-gray-300 truncate">
+                                    {{ $classItem['class_code'] }}
+                                </div>
+                                <div class="text-gray-500 dark:text-gray-400">
+                                    {{ number_format($percentage, 2) }}%
+                                </div>
+                                <div class="text-gray-600 dark:text-gray-400 text-[10px]">
+                                    {{ number_format($classItem['total'], 2) }}
+                                </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
-            </div>
-
-            <!-- Legend with amounts added -->
-            <div id="graphLegend" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mx-auto justify-items-center">
-                @foreach($classDistribution as $index => $classItem)
-                    @php
-                        $percentage = $totalForPercentage > 0 ? ($classItem['total'] / $totalForPercentage) * 100 : 0;
-                        $colors = getClassColors($classItem['class_code'], $fixedColors, $fallbackColors);
-                        $barColor = $colors['color'];
-                    @endphp
-                    
-                    <div class="flex items-center space-x-2 text-xs">
-                        <div class="w-4 h-4 {{ $barColor }} rounded flex-shrink-0"></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-bold text-gray-700 dark:text-gray-300 truncate">
-                                {{ $classItem['class_code'] }}
-                            </div>
-                            <div class="text-gray-500 dark:text-gray-400">
-                                {{ number_format($percentage, 2) }}%
-                            </div>
-                            <div class="text-gray-600 dark:text-gray-400 text-[10px]">
-                                {{ number_format($classItem['total'], 2) }}
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
             </div>
         </div>
     </div>
@@ -687,6 +701,7 @@
                             class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}'"
                             data-class-id="{{ $class->id }}"
+                            data-year="{{ $selectedYear }}"
                             data-appropriations="{{ $class->appropriations_sum }}"
                             data-supplementals="{{ $class->supplemental_sum }}"
                             data-reversions="{{ $class->reversion_sum }}"
@@ -721,9 +736,10 @@
                                         <a href="{{ route('dashboard.accounts', $class->id) }}" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 group">
                                             <i class="fas fa-stream mr-2"></i> Accounts
                                         </a>
-                                        <!-- <a href="#" class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
-                                            <i class="fas fa-list-check mr-2"></i>Obligations
+                                        <a href="#" onclick="showObligationsModal(event)" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 rounded-b-lg cursor-pointer">
+                                            <i class="fas fa-list-check mr-2"></i> Obligations
                                         </a>
+                                        <!--
                                         <a href="#" class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
                                             <i class="fas fa-file-contract mr-2"></i>Purchase Orders
                                         </a> -->
@@ -854,6 +870,49 @@
                 @if ($perPage != 'all')
                 {{ $officeAllotmentClasses->appends(request()->query())->links() }}
                 @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Right-Click Context Menu -->
+    <div id="contextMenu" class="hidden fixed bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[9999] text-xs">
+        <a href="#" id="contextAccounts" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-t-lg">
+            <i class="fas fa-stream mr-2"></i> Accounts
+        </a>
+        <!-- <a href="#" id="contextObligate" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600">
+            <i class="fas fa-plus-circle mr-2"></i> Obligate
+        </a> -->
+        <a href="#" id="contextObligations" onclick="showObligationsModal(event)" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-b-lg cursor-pointer">
+            <i class="fas fa-list-check mr-2"></i> Obligations
+        </a>
+    </div>
+
+    <!-- Obligations Modal -->
+    <div id="obligationsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-[80%] max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Obligations <span id="obligationsHeaderInfo" class="text-blue-600 dark:text-blue-400"></span></h3>
+                <button onclick="closeObligationsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="px-6 py-4 max-h-[calc(90vh-200px)] overflow-y-auto">
+                <div id="obligationsContent" class="space-y-4">
+                    <!-- Loading spinner -->
+                    <div id="obligationsLoading" class="flex justify-center items-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="border-t border-gray-300 dark:border-gray-700 px-6 py-3 bg-gray-50 dark:bg-gray-700 flex justify-end">
+                <button onclick="closeObligationsModal()" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500">
+                    Close
+                </button>
             </div>
         </div>
     </div>
@@ -1117,6 +1176,236 @@
                         CloseAllDropdowns();
                     }
                 });
+
+                // Right-click context menu handler
+                document.addEventListener('contextmenu', function(event) {
+                    const row = event.target.closest('#dashboardTable tbody tr');
+                    if (row) {
+                        event.preventDefault();
+                        const contextMenu = document.getElementById('contextMenu');
+                        const classId = row.getAttribute('data-class-id');
+                        const year = row.getAttribute('data-year');
+                        
+                        // Store classId and year globally for use in modal functions
+                        window.currentClassId = classId;
+                        window.currentYear = year;
+                        
+                        // Position the context menu
+                        contextMenu.style.left = event.clientX + 'px';
+                        contextMenu.style.top = event.clientY + 'px';
+                        contextMenu.classList.remove('hidden');
+                        
+                        // Set the href for context menu items
+                        document.getElementById('contextAccounts').href = '{{ route("dashboard.accounts", ":id") }}'.replace(':id', classId);
+                        document.getElementById('contextObligate').href = '{{ route("obligations.create") }}?office_allotment_class_id=' + classId;
+                    }
+                });
+
+                // Hide context menu on click
+                document.addEventListener('click', function(event) {
+                    const contextMenu = document.getElementById('contextMenu');
+                    if (!event.target.closest('#contextMenu')) {
+                        contextMenu.classList.add('hidden');
+                    }
+                });
+
+                /**
+                 * Show obligations modal and fetch data
+                 */
+                function showObligationsModal(event) {
+                    if (event) {
+                        event.preventDefault();
+                    }
+                    
+                    const classId = window.currentClassId;
+                    if (!classId) {
+                        console.error('No class selected');
+                        return;
+                    }
+
+                    const modal = document.getElementById('obligationsModal');
+                    const content = document.getElementById('obligationsContent');
+                    const loading = document.getElementById('obligationsLoading');
+                    const headerInfo = document.getElementById('obligationsHeaderInfo');
+
+                    // Log missing elements for debugging
+                    if (!modal || !content || !loading || !headerInfo) {
+                        console.warn('Some modal elements not found:', {
+                            modal: !!modal,
+                            content: !!content,
+                            loading: !!loading,
+                            headerInfo: !!headerInfo
+                        });
+                    }
+
+                    // Try to clear and show modal if elements exist
+                    if (headerInfo) {
+                        headerInfo.textContent = '';
+                    }
+                    if (content) {
+                        content.innerHTML = '';
+                    }
+                    
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                    }
+                    if (loading) {
+                        loading.style.display = 'flex';
+                    }
+
+                    // Fetch obligations
+                    fetch(`{{ route('obligations.api.byOfficeAllotmentClass', ':classId') }}`.replace(':classId', classId))
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (loading) {
+                                loading.style.display = 'none';
+                            }
+                            
+                            console.log('API Response:', data);
+                            
+                            // Update header with office and allotment class info and year
+                            if (data.success && headerInfo) {
+                                const year = window.currentYear || '';
+                                headerInfo.textContent = ` | ${data.office} - ${data.allotmentClass} (CY ${year})`;
+                            }
+                            
+                            if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
+                                // Create table with obligations
+                                let tableHTML = `
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-xs text-gray-700 dark:text-gray-300">
+                                            <thead class="sticky top-0 bg-gray-200 dark:bg-gray-700 z-10 border-t border-b border-gray-400 dark:border-gray-600">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left w-12"></th>
+                                                    <th class="px-3 py-2 text-left">OBR No.</th>
+                                                    <th class="px-3 py-2 text-left">Date</th>
+                                                    <th class="px-3 py-2 text-left">OBR Type</th>
+                                                    <th class="px-3 py-2 text-left">Particulars</th>
+                                                    <th class="px-3 py-2 text-right">Obligation</th>
+                                                    <th class="px-3 py-2 text-right">Purchase Order</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-300 dark:divide-gray-600">
+                                `;
+                                
+                                let totalAmount = 0;
+                                let totalPurchaseOrder = 0;
+                                data.data.forEach((obligation, index) => {
+                                    tableHTML += `
+                                        <tr class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer obligation-row" data-obligation-index="${index}">
+                                            <td class="px-3 py-2 text-center"><i class="fas fa-chevron-right text-gray-500 transition-transform duration-200 expand-icon"></i></td>
+                                            <td class="px-3 py-2">${obligation.obr_no}</td>
+                                            <td class="px-3 py-2">${obligation.obr_date}</td>
+                                            <td class="px-3 py-2">${obligation.obr_type}</td>
+                                            <td class="px-3 py-2">${obligation.payee}</td>
+                                            <td class="px-3 py-2 text-right font-semibold">${obligation.amount}</td>
+                                            <td class="px-3 py-2 text-right">${obligation.purchase_order}</td>
+                                        </tr>
+                                        <tr class="hidden appropriations-row" data-obligation-index="${index}">
+                                            <td colspan="7" class="px-2 py-2">
+                                                    <table class="w-full text-xs text-gray-600 dark:text-gray-400">
+                                                        <thead class="border border-gray-400 dark:border-gray-600">
+                                                            <tr class="bg-gray-100 dark:bg-gray-800">
+                                                                <th class="px-3 py-2 text-left">Programs</th>
+                                                                <th class="px-3 py-2 text-left">Account Code</th>
+                                                                <th class="px-3 py-2 text-left">Description</th>
+                                                                <th class="px-3 py-2 text-right">Amount</th>
+                                                                <th class="px-3 py-2 text-right">Adjustment Amount</th>
+                                                                <th class="px-3 py-2 text-right">Adjusted Amount</th>
+                                                                <th class="px-3 py-2 text-right">Purchase Order</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-400 dark:border-gray-600">
+                    `;
+                                    
+                                    obligation.appropriations.forEach(app => {
+                                        tableHTML += `
+                                                            <tr>
+                                                                <td class="px-3 py-2">${app.programs}</td>
+                                                                <td class="px-3 py-2">${app.code}</td>
+                                                                <td class="px-3 py-2">${app.description}</td>
+                                                                <td class="px-3 py-2 text-right font-semibold">${app.amount}</td>
+                                                                <td class="px-3 py-2 text-right">${app.adjustment_amount}</td>
+                                                                <td class="px-3 py-2 text-right font-semibold">${app.adjusted_amount}</td>
+                                                                <td class="px-3 py-2 text-right">${app.purchase_order_amount}</td>
+                                                            </tr>
+                                        `;
+                                    });
+                                    
+                                    tableHTML += `
+                                                        </tbody>
+                                                    </table>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    
+                                    // Add amount to total (remove commas and convert to float)
+                                    totalAmount += parseFloat(obligation.amount.replace(/,/g, ''));
+                                    totalPurchaseOrder += parseFloat(obligation.purchase_order.replace(/,/g, ''));
+                                });
+                                
+                                tableHTML += `
+                                                </tbody>
+                                                <tfoot class="sticky bottom-0 bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600 z-10">
+                                                    <tr>
+                                                        <td colspan="2" class="px-3 py-2 text-left">Total Records: ${data.data.length} record${data.data.length !== 1 ? 's' : ''}</td>
+                                                        <td colspan="3" class="px-3 py-2 text-right">Total:</td>
+                                                        <td class="px-3 py-2 text-right">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                        <td class="px-3 py-2 text-right">${totalPurchaseOrder ? Number(totalPurchaseOrder).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                `;
+                                
+                                if (content) {
+                                    content.innerHTML = tableHTML;
+                                    
+                                    // Add click event listeners to obligation rows
+                                    document.querySelectorAll('.obligation-row').forEach(row => {
+                                        row.addEventListener('click', function() {
+                                            const obligationIndex = this.dataset.obligationIndex;
+                                            const appRow = document.querySelector(`.appropriations-row[data-obligation-index="${obligationIndex}"]`);
+                                            const expandIcon = this.querySelector('.expand-icon');
+                                            
+                                            if (appRow) {
+                                                appRow.classList.toggle('hidden');
+                                                expandIcon.style.transform = appRow.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+                                            }
+                                        });
+                                    });
+                                }
+                            } else if (data.success && content) {
+                                content.innerHTML = '<div class="text-center py-8 text-gray-500 italic dark:text-gray-400">No Obligations found for this Office Allotment Class.</div>';
+                            } else if (content) {
+                                content.innerHTML = '<div class="text-center py-8 text-red-500">Error: ' + (data.message || 'Unknown error') + '</div>';
+                            }
+                        })
+                        .catch(error => {
+                            if (loading) {
+                                loading.style.display = 'none';
+                            }
+                            if (content) {
+                                content.innerHTML = '<div class="text-center py-8 text-red-500">Error loading obligations: ' + error.message + '</div>';
+                            }
+                            console.error('Error fetching obligations:', error);
+                        });
+                }
+
+                /**
+                 * Close obligations modal
+                 */
+                function closeObligationsModal() {
+                    const modal = document.getElementById('obligationsModal');
+                    if (modal) {
+                        modal.classList.add('hidden');
+                    }
+                }
 
                 document.addEventListener('DOMContentLoaded', function() {
                     const searchInput = document.getElementById('searchInput');
@@ -1941,13 +2230,41 @@
      * Toggle widget visibility
      */
     function toggleWidget(widgetId) {
-        const content = document.getElementById(widgetId.replace('Widget', 'Content'));
-        const toggle = document.getElementById(widgetId.replace('Widget', 'Toggle'));
+        let content, toggle;
+        
+        if (widgetId === 'topPerformersWidget') {
+            content = document.getElementById('topPerformersContent');
+            toggle = document.getElementById('topPerformersToggle');
+        } else if (widgetId === 'allotmentDistributionWidget') {
+            content = document.getElementById('allotmentDistributionContent');
+            toggle = document.getElementById('allotmentDistributionToggle');
+        }
         
         if (content && toggle) {
             const isHidden = content.style.display === 'none';
             content.style.display = isHidden ? 'block' : 'none';
             toggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            
+            // If opening the allotment distribution, trigger animation
+            if (isHidden && widgetId === 'allotmentDistributionWidget') {
+                setTimeout(() => {
+                    animateStackedBar();
+                }, 100);
+            }
+        }
+    }
+
+    /**
+     * Toggle filters visibility
+     */
+    function toggleFilters() {
+        const filterContent = document.getElementById('filterContent');
+        const filterToggle = document.getElementById('filterToggle');
+        
+        if (filterContent && filterToggle) {
+            const isHidden = filterContent.style.display === 'none';
+            filterContent.style.display = isHidden ? 'grid' : 'none';
+            filterToggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
         }
     }
 
@@ -2219,7 +2536,10 @@
         
         // Make functions available globally
         window.toggleWidget = toggleWidget;
+        window.toggleFilters = toggleFilters;
         window.createTopPerformersWidget = createTopPerformersWidget;
+        window.showObligationsModal = showObligationsModal;
+        window.closeObligationsModal = closeObligationsModal;
     });
 
     // Update widgets when filtering

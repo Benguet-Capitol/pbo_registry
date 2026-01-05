@@ -59,7 +59,16 @@
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="obr_date" autocomplete="off" id="obr_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input 
+                                            withicon 
+                                            type='date' 
+                                            name="obr_date" 
+                                            autocomplete="off" 
+                                            id="obr_date" 
+                                            placeholder="{{ __('Date') }}" 
+                                            value="{{ $selectedYear == date('Y') ? now()->format('Y-m-d') : $selectedYear . '-12-31' }}" 
+                                            max="{{ $selectedYear == date('Y') ? now()->format('Y-m-d') : $selectedYear . '-12-31' }}" 
+                                            class="block w-full dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
@@ -72,7 +81,6 @@
                                             <i class="fas fa-arrow-up-right-dots"></i>
                                         </x-slot>
                                         <x-form.select withicon id="obr_type" class="block w-full" type="text" name="obr_type" placeholder="{{ __('Obligation Type') }}">
-                                            <option value="">{{ __('Select Obligation Type') }}</option>
                                             <option value="Regular">{{ __('Regular') }}</option>
                                             <option value="Purchase Request">{{ __('Purchase Request') }}</option>
                                             <option value="Project/Contract">{{ __('Project/Contract') }}</option>
@@ -290,7 +298,8 @@ const allowedObligationTypes = {
     'PS': ['Regular'],
     'MOOE': ['Regular', 'Purchase Request', 'Project/Contract'],
     'CO': ['Purchase Request', 'Project/Contract'],
-    'CCO': ['Purchase Request', 'Project/Contract']
+    'CCO': ['Purchase Request', 'Project/Contract'],
+    'FE': ['Regular']
 };
 
 const existingObrNumbers = [
@@ -384,9 +393,13 @@ function generateObrNumber() {
         return;
     }
     
+    // Get the selected year from the year filter
+    const yearFilter = document.getElementById('year1');
+    const selectedYear = yearFilter ? yearFilter.value : new Date().getFullYear();
+    
     const date = new Date();
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear()).slice(-2);
+    const year = String(selectedYear).slice(-2); // Use selected year instead of current year
 
     const fundToSequence = {
         'General Fund': '100',
@@ -748,6 +761,54 @@ document.addEventListener('click', function(event) {
             dropdown.classList.add('hidden');
         }
     });
+});
+
+// Function to update date field based on selected year
+function updateDateFieldBasedOnYear() {
+    const yearFilter = document.getElementById('year1');
+    const dateField = document.getElementById('obr_date');
+    
+    if (!yearFilter || !dateField) return;
+    
+    const selectedYear = parseInt(yearFilter.value);
+    const currentYear = new Date().getFullYear();
+    
+    if (selectedYear === currentYear) {
+        // Current year: use today's date
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+        dateField.max = today;
+    } else {
+        // Past year: use December 31 of that year
+        const lastDayOfYear = `${selectedYear}-12-31`;
+        dateField.value = lastDayOfYear;
+        dateField.max = lastDayOfYear;
+    }
+    
+    updateTextColor(dateField);
+}
+
+// Call this function when opening the modal
+function openCreateModal() {
+    closeAllDropdowns();
+    document.getElementById('createModal').classList.remove('hidden');
+    
+    // Update date field based on current year filter
+    updateDateFieldBasedOnYear();
+}
+
+// Also update when year filter changes (if modal is already open)
+document.addEventListener('DOMContentLoaded', function() {
+    const yearFilter = document.getElementById('year1');
+    if (yearFilter) {
+        yearFilter.addEventListener('change', function() {
+            // If modal is open, update the date field
+            const modal = document.getElementById('createModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                updateDateFieldBasedOnYear();
+            }
+        });
+    }
 });
 
 // 19. VALIDATE FORM

@@ -34,6 +34,26 @@
         </div>
     </x-slot>
 
+    <!-- Success Alert Toast - Right Side -->
+    @if(session('status'))
+    @php
+    $status = session('status');
+    @endphp
+    <div id="successAlert" class="fixed top-6 right-6 max-w-2xl z-50 animate-slide-in">
+        <div class="bg-green-50 border-2 border-green-300 text-green-800 px-6 py-5 rounded-xl shadow-2xl dark:bg-green-900 dark:border-green-600 dark:text-green-100 flex items-start justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <i class="fas fa-check-circle text-green-600 dark:text-green-400 mt-1 flex-shrink-0 text-2xl"></i>
+                <div class="flex-1">
+                    <p class="font-semibold text-base leading-relaxed">{!! $status['message'] ?? $status !!}</p>
+                </div>
+            </div>
+            <button type="button" class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0" onclick="closeSuccessAlert()">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
     <div class="bg-white p-4 rounded-lg shadow-md mb-2 dark:bg-gray-800">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
             <!-- Search Input -->
@@ -707,23 +727,34 @@
 
     <!-- Right-Click Context Menu for Accounts Table -->
     <div id="accountContextMenu" class="hidden fixed text-xs bg-white dark:bg-gray-800 rounded-lg shadow-lg z-[10000] text-gray-900 dark:text-gray-200 min-w-max border border-gray-200 dark:border-gray-700">
-        <!-- <a href="#" id="contextObligate" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600">
+        <a href="#" id="contextObligate" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600">
             <i class="fas fa-plus-circle mr-2"></i> Obligate
-        </a> -->
+        </a>
         <a href="#" onclick="event.preventDefault(); handleAccountMenuOption('obligations')" class="block px-4 py-2 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer">
             <i class="fas fa-list mr-2"></i>Obligations
         </a>
     </div>
 
     <!-- Obligations Modal for Accounts -->
-    <div id="accountObligationsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
+    <div id="accountObligationsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-[10000]">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-[80%] max-h-[90vh] overflow-y-auto">
             <!-- Modal Header -->
-            <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+            <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-6 py-4 flex justify-between items-center z-10">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Obligations <span id="accountObligationsHeaderInfo" class="text-blue-600 dark:text-blue-400"></span></h3>
                 <button onclick="closeAccountObligationsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                     <i class="fas fa-times text-xl"></i>
                 </button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="sticky top-[72px] bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-6 py-3 z-10">
+                <input 
+                    type="text" 
+                    id="accountObligationsSearchInput" 
+                    placeholder="Search obligations..." 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    oninput="filterObligationsTable(this.value, 'accounts')"
+                >
             </div>
 
             <!-- Modal Body -->
@@ -743,6 +774,22 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- Context Menu for Account Obligations -->
+    <div id="accountObligationsContextMenu" class="hidden fixed w-48 bg-white border border-gray-300 rounded-lg shadow-lg dark:bg-gray-700 dark:border-gray-600" style="z-index: 10001; position: fixed;">
+        <button id="contextAccountObligationEdit" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-edit mr-2"></i>Edit Obligation
+        </button>
+        <button id="contextAccountObligationAdjustment" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-file-edit mr-2"></i>Add Adjustment
+        </button>
+        <button id="contextAccountObligationPO" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-file-invoice mr-2"></i>Add Purchase Order
+        </button>
+        <button id="contextAccountObligationHistory" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-history mr-2"></i>Status/History
+        </button>
     </div>
 
     <style>
@@ -785,6 +832,24 @@
     </style>
 
     <script>
+        // Close success alert
+        function closeSuccessAlert() {
+            const alert = document.getElementById('successAlert');
+            if (alert) {
+                alert.style.display = 'none';
+            }
+        }
+
+        // Auto-close success alert after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alert = document.getElementById('successAlert');
+            if (alert) {
+                setTimeout(function() {
+                    closeSuccessAlert();
+                }, 5000);
+            }
+        });
+
         // Tooltip functions
         function showTooltip(element) {
             const tooltip = element.querySelector('.tooltip-box');
@@ -1889,15 +1954,31 @@ if (typeof originalUpdateCardValues === 'function') {
                         
                         // Calculate amount for only the selected appropriation
                         let appropriationAmount = 0;
+                        let adjustmentAmount = 0;
+                        let adjustedAmount = 0;
                         let purchaseOrderAmount = 0;
 
                         selectedApps.forEach(app => {
-                            appropriationAmount += parseFloat(app.amount.replace(/,/g, ''));
+                            // Parse the amount (already formatted with commas)
+                            const baseAmount = parseFloat(app.amount.replace(/,/g, ''));
+                            appropriationAmount += baseAmount;
+                            
+                            // Parse adjustment amount
+                            const adjAmt = parseFloat(app.adjustment_amount ? app.adjustment_amount.replace(/,/g, '') : '0');
+                            adjustmentAmount += adjAmt;
+                            
+                            // Parse adjusted amount (which should be base + adjustments)
+                            const adjTotal = parseFloat(app.adjusted_amount ? app.adjusted_amount.replace(/,/g, '') : '0');
+                            adjustedAmount += adjTotal;
 
-                            const poAmount = parseFloat(app.purchase_order_amount.replace(/,/g, ''));
+                            // Parse purchase order amount
+                            const poAmount = parseFloat(app.purchase_order_amount ? app.purchase_order_amount.replace(/,/g, '') : '0');
                             purchaseOrderAmount += isNaN(poAmount) ? 0 : poAmount;
                         });
-                        const formattedAppAmount = appropriationAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        
+                        // Use adjusted_amount if available, otherwise calculate base + adjustments
+                        const displayAmount = adjustedAmount > 0 ? adjustedAmount : (appropriationAmount + adjustmentAmount);
+                        const formattedAppAmount = displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         const formattedPOAmount = purchaseOrderAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         
                         tableHTML += `
@@ -1949,8 +2030,8 @@ if (typeof originalUpdateCardValues === 'function') {
                             </tr>
                         `;
                         
-                        // Add to total for the selected appropriation only
-                        totalAmount += appropriationAmount;
+                        // Add to total for the selected appropriation only (using adjusted amounts)
+                        totalAmount += displayAmount;
                         totalPurchaseOrder += purchaseOrderAmount;
                         recordCount++;
                     });
@@ -1984,6 +2065,12 @@ if (typeof originalUpdateCardValues === 'function') {
                                     expandIcon.style.transform = appRow.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
                                 }
                             });
+
+                            // Add right-click context menu listener
+                            row.addEventListener('contextmenu', function(e) {
+                                e.preventDefault();
+                                showAccountObligationContextMenu(e, this, data.data[this.dataset.obligationIndex]);
+                            });
                         });
                     }
                 } else if (data.success && content) {
@@ -2004,7 +2091,526 @@ if (typeof originalUpdateCardValues === 'function') {
     function closeAccountObligationsModal() {
         const modal = document.getElementById('accountObligationsModal');
         modal.classList.add('hidden');
+        // Clear search input
+        const searchInput = document.getElementById('accountObligationsSearchInput');
+        if (searchInput) {
+            searchInput.value = '';
+        }
     }
+
+    // Show context menu for account obligations
+    function showAccountObligationContextMenu(event, row, obligation) {
+        const menu = document.getElementById('accountObligationsContextMenu');
+        if (!menu) return;
+        
+        menu.style.display = 'block';
+        menu.style.left = (event.clientX) + 'px';
+        menu.style.top = (event.clientY) + 'px';
+
+        // Store obligation data globally
+        window.selectedAccountObligation = obligation;
+
+        // Edit button handler
+        const editBtn = menu.querySelector('#contextAccountObligationEdit');
+        if (editBtn) {
+            editBtn.onclick = (e) => {
+                e.preventDefault();
+                hideAccountObligationContextMenu();
+                openAccountObligationEditModal(obligation);
+            };
+        }
+
+        // Adjustment button handler
+        const adjBtn = menu.querySelector('#contextAccountObligationAdjustment');
+        if (adjBtn) {
+            adjBtn.onclick = (e) => {
+                e.preventDefault();
+                hideAccountObligationContextMenu();
+                openAccountObligationAdjustmentModal(obligation);
+            };
+        }
+
+        // Purchase Order button handler - only show for Purchase Request type
+        const poBtn = menu.querySelector('#contextAccountObligationPO');
+        if (poBtn) {
+            // Show/hide based on obligation type
+            if (obligation.obr_type === 'Purchase Request') {
+                poBtn.style.display = 'block';
+                poBtn.onclick = (e) => {
+                    e.preventDefault();
+                    hideAccountObligationContextMenu();
+                    openAccountObligationPurchaseOrderModal(obligation);
+                };
+            } else {
+                poBtn.style.display = 'none';
+            }
+        }
+
+        // Status/History button handler
+        const historyBtn = menu.querySelector('#contextAccountObligationHistory');
+        if (historyBtn) {
+            historyBtn.onclick = (e) => {
+                e.preventDefault();
+                hideAccountObligationContextMenu();
+                openObligationHistoryModal(obligation);
+            };
+        }
+    }
+
+    // Hide context menu
+    function hideAccountObligationContextMenu() {
+        const menu = document.getElementById('accountObligationsContextMenu');
+        if (menu) {
+            menu.style.display = 'none';
+        }
+    }
+
+    // Open edit modal with obligation data
+    function openAccountObligationEditModal(obligation) {
+        if (typeof openEditObligationsModal === 'function') {
+            // Fetch full obligation data from show endpoint
+            fetch(`/obligations/${obligation.id}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Full obligation data from API:', data);
+                
+                // Get office and allotment class details from API response
+                const officeAbbr = data.obligation.office || '';
+                const classDesc = data.obligation.allotment_class || '';
+                
+                // Get office_allotment_class_id from currentAccountAppropriation or the obligation
+                let officeAllotmentClassId = obligation.office_allotment_class_id;
+                if (!officeAllotmentClassId && currentAccountAppropriation && currentAccountAppropriation.officeAllotmentClassId) {
+                    officeAllotmentClassId = currentAccountAppropriation.officeAllotmentClassId;
+                }
+                
+                // Build complete obligation object with all required fields
+                const fullObligation = {
+                    id: obligation.id,
+                    office_allotment_class_id: officeAllotmentClassId,
+                    office_allotment_class: {
+                        id: officeAllotmentClassId,
+                        name: `${officeAbbr} - ${classDesc}`,
+                        office_abbreviation: officeAbbr,
+                        class: classDesc
+                    },
+                    obr_date: data.obligation.obr_date,
+                    obr_type: data.obligation.obr_type,
+                    obr_no: data.obligation.obr_no,
+                    particulars: data.obligation.particulars,
+                    remarks: data.obligation.remarks,
+                    processed_by: data.obligation.processed_by,
+                    obligation_amounts: data.obligation_amounts || []
+                };
+                
+                console.log('Complete obligation for edit modal:', fullObligation);
+                // Set flag to indicate this is from accounts
+                window.isFromAccounts = true;
+                if (officeAllotmentClassId) {
+                    window.accountsClassId = officeAllotmentClassId;
+                }
+                // Open the edit modal with the complete obligation data
+                openEditObligationsModal(fullObligation);
+            })
+            .catch(error => {
+                console.error('Error fetching obligation:', error);
+                alert('Error loading obligation: ' + error.message);
+            });
+        } else {
+            alert('Edit modal not available');
+        }
+    }
+
+    // Open adjustment modal - navigate to adjustment index with obligation_id
+    function openAccountObligationAdjustmentModal(obligation) {
+        hideAccountObligationContextMenu();
+        // Set the obligation_id in the create form
+        const obligationIdInput = document.querySelector('#createObligationAdjustmentForm input[name="obligation_id"]');
+        if (obligationIdInput) {
+            obligationIdInput.value = obligation.id;
+        }
+        // Open the create adjustment modal with obligation ID
+        if (typeof openCreateObligationAdjustmentModal === 'function') {
+            openCreateObligationAdjustmentModal(obligation.id);
+        }
+    }
+
+    // Open purchase order modal
+    function openAccountObligationPurchaseOrderModal(obligation) {
+        hideAccountObligationContextMenu();
+        if (obligation && obligation.id) {
+            // Fetch the complete modal HTML from the server with all data pre-populated
+            fetch(`/obligations/${obligation.id}/purchase-order-modal`)
+                .then(response => response.text())
+                .then(html => {
+                    // Find the existing form and replace it entirely with the new HTML
+                    const existingForm = document.getElementById('CreatePurchaseOrderForm');
+                    if (existingForm) {
+                        // Create a temporary container to parse the HTML
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+                        const newForm = temp.querySelector('form');
+                        
+                        if (newForm) {
+                            // Replace the old form with the new one
+                            existingForm.replaceWith(newForm);
+                            
+                            // Show the modal after replacement
+                            setTimeout(() => {
+                                const modal = document.getElementById('createPOModal');
+                                if (modal) {
+                                    modal.classList.remove('hidden');
+                                    console.log('Purchase Order modal opened with pre-populated data');
+                                }
+                            }, 10);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading purchase order modal:', error);
+                    alert('Failed to load purchase order modal. Please try again.');
+                });
+        }
+    }
+
+    // Close purchase order modal
+    function closeCreatePOModal() {
+        const modal = document.getElementById('createPOModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Open obligation history modal
+     */
+    function openObligationHistoryModal(obligation) {
+        if (!obligation || !obligation.id) {
+            alert('Invalid obligation selected');
+            return;
+        }
+
+        const modal = document.getElementById('obligationHistoryModal');
+        const historyContent = document.getElementById('historyContent');
+        const historyInfo = document.getElementById('historyObligationInfo');
+
+        // Show modal with loading spinner
+        modal.classList.remove('hidden');
+        historyInfo.textContent = ` | ${obligation.obr_no || 'Loading...'}`;
+        historyContent.innerHTML = '<div class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div>';
+
+        // Fetch activity history
+        fetch(`/obligations/${obligation.id}/activity-history`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    displayActivityHistory(data.data, historyContent);
+                } else {
+                    historyContent.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">No activity history found</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching activity history:', error);
+                historyContent.innerHTML = '<div class="text-center py-8 text-red-500">Failed to load activity history. Please try again.</div>';
+            });
+    }
+
+    /**
+     * Close obligation history modal
+     */
+    function closeObligationHistoryModal() {
+        const modal = document.getElementById('obligationHistoryModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Display activity history in timeline format
+     */
+    function displayActivityHistory(activities, container) {
+        if (!activities || activities.length === 0) {
+            container.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">No activity history found</div>';
+            return;
+        }
+
+        let html = '<div class="space-y-4">';
+        
+        activities.forEach((activity, index) => {
+            const date = new Date(activity.created_at);
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            const formattedTime = date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            // Determine activity color and icon based on event type
+            let colorClass = 'bg-blue-500';
+            let icon = 'fas fa-circle';
+            
+            if (activity.event_type === 'created' || activity.description.toLowerCase().includes('created')) {
+                colorClass = 'bg-green-500';
+                icon = 'fas fa-plus-circle';
+            } else if (activity.event_type === 'updated' || activity.description.toLowerCase().includes('updated') || activity.description.toLowerCase().includes('edited')) {
+                colorClass = 'bg-blue-500';
+                icon = 'fas fa-edit';
+            } else if (activity.description.toLowerCase().includes('adjustment')) {
+                colorClass = 'bg-yellow-500';
+                icon = 'fas fa-file-edit';
+            } else if (activity.description.toLowerCase().includes('purchase order')) {
+                colorClass = 'bg-purple-500';
+                icon = 'fas fa-file-invoice';
+            } else if (activity.event_type === 'deleted' || activity.description.toLowerCase().includes('deleted')) {
+                colorClass = 'bg-red-500';
+                icon = 'fas fa-trash';
+            }
+
+            html += `
+                <div class="flex gap-3 ${index !== activities.length - 1 ? 'border-l-2 border-gray-300 dark:border-gray-600 ml-2 pb-4' : ''}">
+                    <div class="relative">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 ${colorClass} rounded-full flex items-center justify-center">
+                            <i class="${icon} text-white text-[8px]"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 ml-6">
+                        <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">${activity.description}</p>
+                                    ${activity.user ? `<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">by ${activity.user.name}</p>` : ''}
+                                </div>
+                                <div class="text-right ml-4">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${formattedDate}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${formattedTime}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Validate PO amount against balance
+    function validateAmountPO(inputElement) {
+        const maxBalance = parseFloat(inputElement.dataset.balance || "0");
+        const inputValue = parseFloat(inputElement.value || "0");
+
+        if (inputValue > maxBalance) {
+            inputElement.value = maxBalance.toFixed(2);
+            inputElement.title = `Max allowed is ₱${maxBalance.toFixed(2)}`;
+        }
+        updatePOAmountTotal();
+    }
+
+    // Update PO amount total
+    function updatePOAmountTotal() {
+        const poInputs = document.querySelectorAll("input[name^='po_amount']");
+        let total = 0;
+        poInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val) && val > 0) {
+                total += val;
+            }
+        });
+        const totalCell = document.getElementById('poAmountTotalCell');
+        if (totalCell) {
+            totalCell.textContent = total.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+    }
+
+    // Validate PO form before submission
+    function validateFormCreatePO() {
+        const po_number = document.getElementById('po_number');
+        const pr_no = document.getElementById('pr_no');
+        const delivery_period = document.getElementById('delivery_period');
+        const supplier = document.getElementById('supplier');
+        const poInputs = document.querySelectorAll("input[name^='po_amount']");
+
+        let atLeastOnePOFilled = false;
+        let isValid = true;
+
+        // Validate PO Number
+        if (!po_number.value.trim()) {
+            document.getElementById('po_numberError').innerText = 'PO Number is required.';
+            isValid = false;
+        } else {
+            document.getElementById('po_numberError').innerText = '';
+        }
+        
+        // Validate PR Number
+        if (!pr_no.value.trim()) {
+            document.getElementById('pr_noError').innerText = 'PR Number is required.';
+            isValid = false;
+        } else {
+            document.getElementById('pr_noError').innerText = '';
+        }
+        
+        // Validate Delivery Period
+        if (!delivery_period.value.trim()) {
+            document.getElementById('delivery_periodError').innerText = 'Delivery Period is required.';
+            isValid = false;
+        } else {
+            document.getElementById('delivery_periodError').innerText = '';
+        }
+        
+        // Validate Supplier
+        if (!supplier.value.trim()) {
+            document.getElementById('supplierError').innerText = 'Supplier is required.';
+            isValid = false;
+        } else {
+            document.getElementById('supplierError').innerText = '';
+        }
+
+        // Ensure at least one po_amount is filled
+        poInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val) && val > 0) {
+                atLeastOnePOFilled = true;
+            }
+        });
+
+        // Validate po_amount fields and require at least one valid entry
+        if (!atLeastOnePOFilled) {
+            document.getElementById('tableMessagePO').classList.remove('hidden');
+            document.getElementById('tableMessagePO').innerText = 'Enter at least one valid Purchase Order amount.';
+            isValid = false;
+        } else {
+            document.getElementById('tableMessagePO').classList.add('hidden');
+            document.getElementById('tableMessagePO').innerText = '';
+        }
+
+        if (isValid) {
+            submitPurchaseOrderForm();
+        }
+    }
+
+    /**
+     * Show success alert in modal
+     */
+    function showPOSuccessMessage(message) {
+        const modal = document.getElementById('createPOModal');
+        if (!modal) return;
+
+        // Remove any existing success message
+        const existingAlert = modal.querySelector('.po-success-alert');
+        if (existingAlert) existingAlert.remove();
+
+        // Create success message element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'po-success-alert bg-green-50 border-2 border-green-300 text-green-800 px-4 py-3 rounded-lg mb-4 dark:bg-green-900 dark:border-green-600 dark:text-green-100 flex items-start gap-3';
+        alertDiv.innerHTML = `
+            <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl flex-shrink-0 mt-0.5"></i>
+            <div class="flex-1">
+                <p class="font-semibold">${message}</p>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        // Insert at the top of modal content
+        const modalContent = modal.querySelector('.relative.bg-white');
+        if (modalContent) {
+            modalContent.insertBefore(alertDiv, modalContent.firstChild);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.style.transition = 'opacity 0.5s';
+                    alertDiv.style.opacity = '0';
+                    setTimeout(() => alertDiv.remove(), 500);
+                }
+            }, 5000);
+        }
+    }
+
+    /**
+     * Submit purchase order form via AJAX
+     */
+    function submitPurchaseOrderForm() {
+        const form = document.getElementById('CreatePurchaseOrderForm');
+        const formData = new FormData(form);
+        const submitUrl = form.action;
+
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+        }
+
+        fetch(submitUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message in modal
+                showPOSuccessMessage(data.message || 'Purchase Order created successfully!');
+                
+                // Reset the form
+                form.reset();
+                
+                // Clear any validation messages
+                const tableMessage = document.getElementById('tableMessagePO');
+                if (tableMessage) {
+                    tableMessage.classList.add('hidden');
+                    tableMessage.innerText = '';
+                }
+                
+                // Recalculate totals
+                updatePOAmountTotal();
+            } else {
+                // Show error message
+                alert(data.message || 'Failed to create Purchase Order');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting purchase order:', error);
+            alert('An error occurred while submitting the form. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+    }
+
+    // Close context menu when clicking elsewhere
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById('accountObligationsContextMenu');
+        if (menu && !event.target.closest('#accountObligationsContextMenu')) {
+            hideAccountObligationContextMenu();
+        }
+    });
 
     window.handleAccountMenuOption = handleAccountMenuOption;
     window.showAccountObligationsModal = showAccountObligationsModal;
@@ -2032,4 +2638,390 @@ if (typeof originalFilterTable === 'function') {
 }
     </script>
 
+<!-- Include the Create Obligations Modal -->
+@include('obligations.modal.create')
+<!-- Include the Edit Obligations Modal -->
+@include('obligations.modal.edit')
+
+    <script>
+    // Update the context menu handler to include the Obligate option
+    document.addEventListener('DOMContentLoaded', function() {
+        const accountsTable = document.getElementById('accountsTable');
+        const contextMenu = document.getElementById('accountContextMenu');
+
+        if (accountsTable) {
+            accountsTable.addEventListener('contextmenu', function(event) {
+                event.preventDefault();
+                
+                // Find the closest row
+                const row = event.target.closest('tr');
+                if (row && row.querySelector('td')) {
+                    const appropriationId = row.dataset.appropriationId;
+                    const accountCode = row.getAttribute('data-account-code');
+                    const programs = row.querySelector('td:nth-child(1)')?.textContent?.trim();
+                    const description = row.getAttribute('data-description');
+                    
+                    // Store context including office allotment class ID from the page
+                    currentAccountAppropriation = {
+                        accountCode: accountCode,
+                        description: description,
+                        appropriationId: appropriationId,
+                        programs: programs,
+                        officeAllotmentClassId: '{{ $officeAllotmentClasses->id }}' // Add this
+                    };
+                    
+                    // Position the context menu
+                    contextMenu.style.left = event.clientX + 'px';
+                    contextMenu.style.top = event.clientY + 'px';
+                    contextMenu.classList.remove('hidden');
+                }
+            });
+
+            // Hide context menu on click
+            document.addEventListener('click', function(e) {
+                if (!contextMenu.contains(e.target) && !e.target.closest('tr')) {
+                    contextMenu.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Handle the Obligate context menu option
+        const contextObligate = document.getElementById('contextObligate');
+        if (contextObligate) {
+            contextObligate.addEventListener('click', function(e) {
+                e.preventDefault();
+                const contextMenu = document.getElementById('accountContextMenu');
+                contextMenu.classList.add('hidden');
+                
+                if (currentAccountAppropriation && currentAccountAppropriation.officeAllotmentClassId) {
+                    openCreateModalWithAppropriation(
+                        currentAccountAppropriation.officeAllotmentClassId,
+                        currentAccountAppropriation.appropriationId,
+                        currentAccountAppropriation.accountCode
+                    );
+                }
+            });
+        }
+    });
+
+    /**
+     * Open the create modal with preselected office allotment class and appropriation
+     */
+    function openCreateModalWithAppropriation(officeAllotmentClassId, appropriationId, accountCode) {
+        // Close any open dropdowns
+        if (typeof closeAllDropdowns === 'function') {
+            closeAllDropdowns();
+        }
+        
+        const createModal = document.getElementById('createModal');
+        if (!createModal) {
+            console.error('Create modal element not found');
+            return;
+        }
+        
+        createModal.classList.remove('hidden');
+        
+        // Update date field based on current year
+        if (typeof updateDateFieldBasedOnYear === 'function') {
+            updateDateFieldBasedOnYear();
+        }
+        
+        // Set preselection flags to 1 (coming from accounts page)
+        const preselectedInput = document.getElementById('preselected_class');
+        if (preselectedInput) {
+            preselectedInput.value = '1';
+        }
+        
+        // Set preselected appropriation ID so controller knows this came from accounts page
+        const preselectedAppropriationInput = document.getElementById('preselected_appropriation_id');
+        if (preselectedAppropriationInput && appropriationId) {
+            preselectedAppropriationInput.value = appropriationId;
+        }
+        
+        // Find and select the office allotment class
+        const selectedClass = officeAllotmentClasses.find(oac => oac.id == officeAllotmentClassId);
+        if (selectedClass) {
+            const classInput = document.getElementById('office_allotment_class');
+            const classIdInput = document.getElementById('office_allotment_class_id');
+            
+            if (classInput && classIdInput) {
+                classInput.value = selectedClass.name;
+                classIdInput.value = selectedClass.id;
+                selectedOfficeAllotmentClass = selectedClass;
+                
+                // Update obligation types based on the selected class
+                updateObligationTypes(selectedClass.class);
+                
+                // Generate OBR number
+                generateObrNumber();
+            }
+        }
+        
+        // Pre-populate the account code in the first row if appropriationId is provided
+        if (appropriationId && accountCode) {
+            setTimeout(() => {
+                const firstAccountCodeInput = document.querySelector('[name="account_code[]"]');
+                if (firstAccountCodeInput) {
+                    // Find the appropriation details
+                    const appropriation = appropriations.find(app => 
+                        app.id == appropriationId || app.account_code == accountCode
+                    );
+                    
+                    if (appropriation) {
+                        // Set the account code
+                        firstAccountCodeInput.value = appropriation.account_code;
+                        
+                        // Populate other fields
+                        const row = firstAccountCodeInput.closest('tr');
+                        const programField = row.querySelector('[name="programs[]"]');
+                        const descriptionField = row.querySelector('[name="description[]"]');
+                        const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
+                        
+                        if (programField) programField.value = appropriation.program || '';
+                        if (descriptionField) descriptionField.value = appropriation.description || '';
+                        
+                        // Calculate and set balance
+                        if (balanceField) {
+                            const balance = parseFloat(appropriation.balance || 0);
+                            const formattedBalance = balance.toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                            balanceField.value = formattedBalance;
+                        }
+                        
+                        // Focus on the amount field for immediate data entry
+                        const amountField = row.querySelector('[name="amount_of_obligation[]"]');
+                        if (amountField) {
+                            amountField.focus();
+                        }
+                    }
+                }
+            }, 300);
+        }
+    }
+
+    // Handle modal reopening after successful save from accounts page
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(session('reopen_modal') && session('preselected_class_id'))
+            // Check if we have a preselected appropriation from session
+            const preselectedAppropriationId = '{{ session("preselected_appropriation_id") }}';
+            const preselectedAccountCode = '{{ session("preselected_account_code") }}';
+            
+            setTimeout(function() {
+                if (preselectedAppropriationId && preselectedAccountCode) {
+                    openCreateModalWithAppropriation(
+                        {{ session('preselected_class_id') }},
+                        preselectedAppropriationId,
+                        preselectedAccountCode
+                    );
+                } else {
+                    openCreateModal({{ session('preselected_class_id') }});
+                }
+                
+                // Clear form fields except office allotment class and preselected appropriation
+                setTimeout(function() {
+                    // Clear other table rows except the first one if it has preselected data
+                    const tableBody = document.querySelector('#programs_table tbody');
+                    const rows = tableBody.querySelectorAll('tr');
+                    
+                    if (rows.length > 1) {
+                        // Keep only the first row if we have a preselected appropriation
+                        if (preselectedAppropriationId) {
+                            for (let i = 1; i < rows.length; i++) {
+                                rows[i].remove();
+                            }
+                        } else {
+                            // Clear all rows
+                            rows.forEach((row, index) => {
+                                if (index === 0) {
+                                    row.querySelectorAll('[name="account_code[]"], [name="amount_of_obligation[]"]').forEach(field => field.value = '');
+                                } else {
+                                    row.remove();
+                                }
+                            });
+                        }
+                    } else if (rows.length === 1 && !preselectedAppropriationId) {
+                        // Clear the first row if no preselection
+                        rows[0].querySelectorAll('[name="account_code[]"], [name="amount_of_obligation[]"]').forEach(field => field.value = '');
+                    }
+                    
+                    // Clear other fields
+                    const obrDateField = document.getElementById('obr_date');
+                    if (obrDateField) {
+                        const yearFilter = document.getElementById('year1');
+                        const selectedYear = yearFilter ? yearFilter.value : new Date().getFullYear();
+                        const currentYear = new Date().getFullYear();
+                        
+                        if (selectedYear == currentYear) {
+                            obrDateField.value = new Date().toISOString().split('T')[0];
+                        } else {
+                            obrDateField.value = selectedYear + '-12-31';
+                        }
+                    }
+                    
+                    const particularsField = document.getElementById('particulars');
+                    if (particularsField) particularsField.value = '';
+                    
+                    const remarksField = document.getElementById('remarks');
+                    if (remarksField) remarksField.value = '';
+                    
+                    // Reset OBR type to first valid option for the selected class
+                    const obrTypeSelect = document.getElementById('obr_type');
+                    if (obrTypeSelect && obrTypeSelect.options.length > 1) {
+                        obrTypeSelect.selectedIndex = 1;
+                    }
+                    
+                    // Generate new OBR number
+                    if (typeof generateObrNumber === 'function') {
+                        generateObrNumber();
+                    }
+                    
+                    // Update text colors
+                    if (typeof updateTextColor === 'function') {
+                        document.querySelectorAll('input, select, textarea').forEach(element => {
+                            updateTextColor(element);
+                        });
+                    }
+                    
+                    // Reset total obligation
+                    if (typeof calculateTotalObligation === 'function') {
+                        calculateTotalObligation();
+                    }
+                }, 300);
+            }, 800);
+        @endif
+    });
+
+    /**
+     * Filter obligations table based on search input
+     */
+    function filterObligationsTable(searchValue, source = 'dashboard') {
+        const lowerSearch = String(searchValue).toLowerCase();
+        const contentId = source === 'dashboard' ? 'obligationsContent' : 'accountObligationsContent';
+        const content = document.getElementById(contentId);
+        
+        if (!content) return;
+        
+        const rows = content.querySelectorAll('tbody tr.obligation-row');
+        let visibleCount = 0;
+        let totalAmount = 0;
+        let totalPurchaseOrder = 0;
+        
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            if (rowText.includes(lowerSearch)) {
+                row.style.display = '';
+                visibleCount++;
+                
+                // Calculate totals for visible rows
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 6) {
+                    // Dashboard: Amount in index 4, PO in index 5
+                    // Accounts: Amount in index 5, PO in index 6
+                    let amountIndex = 4;
+                    let poIndex = 5;
+                    
+                    if (source === 'accounts' && cells.length >= 7) {
+                        amountIndex = 5;
+                        poIndex = 6;
+                    }
+                    
+                    // Extract and clean amount values
+                    const amountText = (cells[amountIndex]?.textContent || '0').replace(/,/g, '').trim();
+                    const amountValue = parseFloat(amountText);
+                    if (!isNaN(amountValue)) {
+                        totalAmount += amountValue;
+                    }
+                    
+                    const poText = (cells[poIndex]?.textContent || '0').replace(/,/g, '').trim();
+                    const poValue = parseFloat(poText);
+                    if (!isNaN(poValue)) {
+                        totalPurchaseOrder += poValue;
+                    }
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Update the footer with new totals
+        const tableContainer = content.querySelector('div.overflow-x-auto');
+        if (tableContainer) {
+            const table = tableContainer.querySelector('table');
+            if (table) {
+                const footer = table.querySelector('tfoot');
+                if (footer) {
+                    const footerCells = footer.querySelectorAll('td');
+                    if (footerCells.length >= 4) {
+                        // Update Total Records (first cell)
+                        footerCells[0].textContent = `Total Records: ${visibleCount} ${visibleCount === 1 ? 'record' : 'records'}`;
+                        
+                        // Update Amount total (3rd cell, index 2)
+                        if (!isNaN(totalAmount)) {
+                            footerCells[2].textContent = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
+                        
+                        // Update PO total (4th cell, index 3)
+                        if (!isNaN(totalPurchaseOrder)) {
+                            footerCells[3].textContent = totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Show "no results" message if nothing found
+        let noResultsDiv = content.querySelector('.no-search-results');
+        
+        if (visibleCount === 0 && searchValue && tableContainer) {
+            if (!noResultsDiv) {
+                noResultsDiv = document.createElement('div');
+                noResultsDiv.className = 'no-search-results text-center py-8 text-gray-500 italic dark:text-gray-400';
+                noResultsDiv.textContent = 'No obligations found matching your search.';
+                tableContainer.parentElement.insertBefore(noResultsDiv, tableContainer.nextSibling);
+            }
+            noResultsDiv.style.display = 'block';
+            if (tableContainer) tableContainer.style.display = 'none';
+        } else {
+            if (noResultsDiv) noResultsDiv.style.display = 'none';
+            if (tableContainer) tableContainer.style.display = 'block';
+        }
+    }
+
+    // Make the function globally available
+    window.openCreateModalWithAppropriation = openCreateModalWithAppropriation;
+    </script>
+
+    @include('obligations.modal.edit')
+    
+    <!-- Include Obligation Adjustments Create Modal -->
+    @include('obligation_adjustments.modal.create')
+    
+    <!-- Include Purchase Order Modal -->
+    @include('obligations.modal.purchase_order', ['obligation' => (object)['id' => null]])
+    
+    <!-- Obligation History Modal -->
+    <div id="obligationHistoryModal" class="hidden fixed inset-0 z-[10003] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-4 border w-full max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                <div class="flex justify-between items-center p-4 border-b dark:border-gray-600">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        Obligation Status/History
+                        <span id="historyObligationInfo" class="text-blue-600 dark:text-blue-400"></span>
+                    </h3>
+                    <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6 max-h-[70vh] overflow-y-auto">
+                    <div id="historyContent" class="space-y-3">
+                        <div class="flex justify-center items-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </x-app-layout>

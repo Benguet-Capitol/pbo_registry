@@ -13,6 +13,7 @@ use App\Models\OfficeAllotmentClass;
 use App\Models\PurchaseOrder;
 use App\Models\Realignment;
 use App\Models\Supplemental;
+use App\Models\ActivityLog;
 use Illuminate\Database\Eloquent\Casts\Json;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -245,14 +246,15 @@ class ObligationController extends Controller
         // Eager load related models in a single query
         $obligation->load([
             'obligationAmounts.obligationAdjustments',
-            'obligationAmounts.appropriation',
+            'obligationAmounts.appropriation.realignments',
+            'obligationAmounts.appropriation.supplementals',
             'obligationAmounts.purchaseOrders',
             'obligationAmounts.disbursements',
             'officeAllotmentClass.offices',
             'officeAllotmentClass.allotmentClass',
             'obligationAdjustments.obligationAmount.appropriation',
         ]);
-
+        
         // Prepare obligation amounts with summarized data
         $obligationAmounts = $obligation->obligationAmounts->map(function ($amount) {
             $obrAmount = $amount->obr_amount ?? 0;
@@ -260,6 +262,34 @@ class ObligationController extends Controller
             $poTotal = $amount->purchaseOrders->sum('po_amount');
             $disbursementTotal = $amount->disbursements->sum('disbursement_amount');
             $appropriation = $amount->appropriation;
+            
+            // Calculate balance using the same formula as the index method
+            $totalAppropriation = collect([
+                $appropriation->quarter1 ?? 0,
+                $appropriation->quarter2 ?? 0,
+                $appropriation->quarter3 ?? 0,
+                $appropriation->quarter4 ?? 0,
+            ])->sum();
+            
+            // Get realignments and supplementals
+            $realignmentTotal = ($appropriation->realignments ?? collect())->sum(function ($r) {
+                return $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0);
+            });
+            
+            $supplementalTotal = ($appropriation->supplementals ?? collect())->sum(function ($s) {
+                return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
+            });
+            
+            // Get total obligation amount for this appropriation
+            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
+                return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+            });
+            
+            // Calculate current balance
+            $balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+            
+            // Balance from allotment shows what it was before this obligation
+            $balanceFromAllotment = $balance + $obrAmount;
 
             return [
                 'account_code' => $amount->account_code,
@@ -270,6 +300,7 @@ class ObligationController extends Controller
                 'po_total' => $poTotal,
                 'disbursement_total' => $disbursementTotal,
                 'balance' => $obrAmount - $disbursementTotal,
+                'balance_from_allotment' => $balanceFromAllotment,
             ];
         });
 
@@ -312,11 +343,12 @@ class ObligationController extends Controller
 
         return response()->json([
             'obligation' => [
+                'office_allotment_class_id' => $obligation->office_allotment_class_id,
                 'obr_date' => $obligation->obr_date,
                 'obr_no' => $obligation->obr_no,
                 'obr_type' => $obligation->obr_type,
-                'office' => optional($obligation->officeAllotmentClass->offices)->office_name ?? '',
-                'allotment_class' => optional($obligation->officeAllotmentClass->allotmentClass)->description ?? '',
+                'office' => optional($obligation->officeAllotmentClass->offices)->office_abbreviation ?? '',
+                'allotment_class' => optional($obligation->officeAllotmentClass->allotmentClass)->class ?? '',
                 'particulars' => $obligation->particulars,
                 'remarks' => $obligation->remarks,
                 'processed_by' => $obligation->processed_by,
@@ -363,6 +395,8 @@ class ObligationController extends Controller
                 'account_code.*' => 'required|string|exists:appropriations,account_code',
                 'amount_of_obligation' => 'required|array',
                 'amount_of_obligation.*' => 'required|numeric|min:0.01',
+                'preselected_class' => 'nullable|boolean',
+                'preselected_appropriation_id' => 'nullable|integer|exists:appropriations,id',
             ]);
 
             // Start a database transaction
@@ -384,6 +418,8 @@ class ObligationController extends Controller
 
                 // Save ObligationAmount records
                 $totalObrAmount = 0;
+                $preselectedAccountCode = null;
+
                 foreach ($validated['account_code'] as $index => $accountCode) {
                     // Fetch the appropriation ID based on the account code and office_allotment_class_id
                     $appropriation = Appropriation::where('account_code', $accountCode)
@@ -399,8 +435,14 @@ class ObligationController extends Controller
                             'obr_amount' => $obrAmount,
                         ]);
                         $totalObrAmount += $obrAmount;
+
+                        // Store the first account code for redirection
+                        if ($index === 0 && isset($validated['preselected_appropriation_id']) && 
+                            $appropriation->id == $validated['preselected_appropriation_id']) {
+                            $preselectedAccountCode = $accountCode;
+                        }
                     }
-                }
+                } // <-- This closing brace was missing!
 
                 // Refresh the obligation to include the ObligationAmounts
                 $obligation->refresh();
@@ -417,9 +459,39 @@ class ObligationController extends Controller
                 $officeAbbreviation = $officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
                 $class = $officeAllotmentClass->allotmentClass->class ?? 'N/A';
 
-                return redirect()
-                    ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
-                    ->with('status', "Obligation Request No. <strong>{$validated['obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been created successfully!");
+                $statusMessage = [
+                    'type' => 'create',
+                    'message' => "Obligation Request No. <strong>{$validated['obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been created successfully!"
+                ];
+
+                // Check if this was a preselected class from dashboard or accounts
+                if ($request->has('preselected_class') && $request->input('preselected_class') == '1') {
+                    // Check if coming from accounts page (has preselected appropriation)
+                    $fromAccountsPage = $request->has('preselected_appropriation_id') && !empty($request->input('preselected_appropriation_id'));
+                    
+                    if ($fromAccountsPage) {
+                        // Redirect back to accounts page with modal reopen
+                        return redirect()
+                            ->route('dashboard.accounts', $validated['office_allotment_class_id'])
+                            ->with('status', $statusMessage['message'])
+                            ->with('reopen_modal', true)
+                            ->with('preselected_class_id', $validated['office_allotment_class_id'])
+                            ->with('preselected_appropriation_id', $request->input('preselected_appropriation_id'))
+                            ->with('preselected_account_code', $preselectedAccountCode);
+                    } else {
+                        // Redirect back to dashboard with modal reopen
+                        return redirect()
+                            ->route('dashboard', $request->only(['year1', 'office_filter', 'allotment_class_filter', 'group_filter', 'fund_type_filter', 'fund_filter']))
+                            ->with('status', $statusMessage)
+                            ->with('reopen_modal', true)
+                            ->with('preselected_class_id', $validated['office_allotment_class_id']);
+                    }
+                } else {
+                    // If not preselected, redirect to obligations index
+                    return redirect()
+                        ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
+                        ->with('status', $statusMessage);
+                }
             } catch (\Exception $e) {
                 DB::rollBack();
                 
@@ -448,6 +520,7 @@ class ObligationController extends Controller
                 ->with('error', 'An error occurred while validating the obligation: ' . $e->getMessage());
         }
     }
+
 
     /**
      * Show form for editing an obligation
@@ -527,6 +600,12 @@ class ObligationController extends Controller
     public function update(Request $request, Obligation $obligation): RedirectResponse
     {
         try {
+            // Debug: Log incoming request data
+            Log::info('Update obligation request:', [
+                'from_dashboard' => $request->input('from_dashboard'),
+                'obligation_id' => $obligation->id
+            ]);
+            
             // Validate the request data
             $validated = $request->validate([
                 'edit_office_allotment_class_id' => 'required|integer|exists:office_allotment_classes,id',
@@ -590,6 +669,38 @@ class ObligationController extends Controller
 
             $officeAbbreviation = $officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
             $class = $officeAllotmentClass->allotmentClass->class ?? 'N/A';
+
+            // Check if this edit came from the dashboard modal
+            // This check MUST happen after the successful update
+            if ($request->input('from_dashboard') == 1) {
+                Log::info('Redirecting to dashboard after update', [
+                    'from_dashboard' => $request->input('from_dashboard'),
+                    'obligation_id' => $obligation->id
+                ]);
+                
+                return redirect()->route('dashboard', $request->only([
+                    'search', 'sort_by', 'sort_order', 'per_page', 'year1', 
+                    'group_filter', 'fund_type_filter', 'fund_filter', 
+                    'office_filter', 'allotment_class_filter'
+                ]))->with('status', [
+                    'type' => 'update',
+                    'message' => "Obligation Request No. <strong>{$validated['edit_obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
+                ]);
+            }
+
+            // Check if this edit came from the accounts modal
+            if ($request->input('from_accounts') == 1) {
+                Log::info('Redirecting to accounts after update', [
+                    'from_accounts' => $request->input('from_accounts'),
+                    'obligation_id' => $obligation->id
+                ]);
+                
+                $accountsClassId = $request->input('accounts_class_id');
+                return redirect()->route('dashboard.accounts', $accountsClassId)->with('status', [
+                    'type' => 'update',
+                    'message' => "Obligation Request No. <strong>{$validated['edit_obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
+                ]);
+            }
 
             return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
                 ->with('status', [
@@ -828,9 +939,88 @@ class ObligationController extends Controller
     }
 
     /**
+     * Get activity history for a specific obligation
+     */
+    public function activityHistory($obligationId): JsonResponse
+    {
+        try {
+            // Find the obligation first
+            $obligation = Obligation::findOrFail($obligationId);
+            
+            // Get all purchase order numbers related to this obligation
+            $purchaseOrders = PurchaseOrder::where('obligation_id', $obligationId)->get();
+            $poNumbers = $purchaseOrders->pluck('po_number')->toArray();
+            
+            // Escape special regex characters in OBR number
+            $escapedObrNo = preg_quote($obligation->obr_no, '/');
+            
+            // Fetch activity logs related to this obligation and its purchase orders
+            // We'll search for:
+            // 1. Activities where details contains the obligation_id
+            // 2. Activities where description mentions the exact obligation ID or OBR number
+            // 3. Activities related to purchase orders for this obligation
+            
+            $activities = ActivityLog::with('user')
+                ->where(function($query) use ($obligationId, $obligation, $escapedObrNo, $poNumbers) {
+                    // Check if details JSON contains obligation_id
+                    $query->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId])
+                        // Or description mentions "Obligation #ID" (exact ID match)
+                        ->orWhere('description', 'like', "%Obligation #{$obligationId} %")
+                        ->orWhere('description', 'like', "%Obligation #{$obligationId}:%")
+                        ->orWhere('description', 'like', "%Obligation #{$obligationId}-%")
+                        // Or description mentions the exact OBR number with word boundaries
+                        // Match "OBR# {number}" or "OBR: {number}" or just the number surrounded by spaces/punctuation
+                        ->orWhere('description', 'REGEXP', "OBR[#:]?[[:space:]]*{$escapedObrNo}([[:space:]]|\$|,|\\.|;)")
+                        // Or match the OBR number at the start of the description
+                        ->orWhere('description', 'like', "{$obligation->obr_no} %")
+                        ->orWhere('description', 'like', "{$obligation->obr_no}:%")
+                        ->orWhere('description', 'like', "{$obligation->obr_no}-%")
+                        // Or description mentions obligation-related actions with exact ID in details
+                        ->orWhere(function($q) use ($obligationId) {
+                            $q->where('description', 'like', "%obligation%")
+                              ->whereRaw("JSON_EXTRACT(details, '$.id') = ?", [$obligationId]);
+                        });
+                    
+                    // Add purchase order related activities
+                    if (!empty($poNumbers)) {
+                        foreach ($poNumbers as $poNumber) {
+                            $escapedPONumber = preg_quote($poNumber, '/');
+                            // Match PO number in description
+                            $query->orWhere('description', 'like', "%{$poNumber}%")
+                                  // Or check details JSON for purchase_order_id or po_number
+                                  ->orWhereRaw("JSON_EXTRACT(details, '$.po_number') = ?", [$poNumber])
+                                  ->orWhere(function($q) use ($poNumber) {
+                                      $q->where('description', 'like', '%purchase order%')
+                                        ->where('description', 'like', "%{$poNumber}%");
+                                  });
+                        }
+                    }
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $activities
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching obligation activity history', [
+                'obligation_id' => $obligationId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch activity history',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created purchase order for an obligation (used by modal).
      */
-    public function storePurchaseOrder(Request $request, Obligation $obligation): RedirectResponse
+    public function storePurchaseOrder(Request $request, Obligation $obligation)
     {
         // Validate the request data
         $validated = $request->validate([
@@ -890,16 +1080,47 @@ class ObligationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while saving the purchase order: ' . $e->getMessage()
+                ], 500);
+            }
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'An error occurred while saving the purchase order: ' . $e->getMessage());
         }
 
         if ($savedPOs === 0) {
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid purchase orders were saved.'
+                ], 400);
+            }
+
             return redirect()->back()->with('error', 'No valid purchase orders were saved.');
         }
 
         $accountCodesMessage = count($accountCodes) > 1 ? implode(', ', $accountCodes) : ($accountCodes[0] ?? 'N/A');
+        $successMessage = "Purchase Order No: {$validated['po_number']} with Date: {$validated['po_date']} under Account Code(s): {$accountCodesMessage} has been created successfully!";
+
+        // Return JSON for AJAX requests
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage,
+                'data' => [
+                    'po_number' => $validated['po_number'],
+                    'po_date' => $validated['po_date'],
+                    'account_codes' => $accountCodesMessage,
+                    'saved_count' => $savedPOs
+                ]
+            ]);
+        }
 
         return redirect()->to(url()->previous())
             ->with('status', [
@@ -1211,7 +1432,7 @@ class ObligationController extends Controller
                     'purchase_order' => $poAmount,
                     'appropriations' => $appropriations,
                     'office' => $obligation->officeAllotmentClass->offices->office_abbreviation ?? '-',
-                    'class' => $obligation->officeAllotmentClass->allotmentClass->description ?? '-',
+                    'class' => $obligation->officeAllotmentClass->allotmentClass->class ?? '-',
                 ];
             })->toArray();
 
@@ -1220,7 +1441,7 @@ class ObligationController extends Controller
                 'data' => $obligationsData,
                 'count' => count($obligationsData),
                 'office' => $officeAllotmentClass->offices->office_abbreviation ?? '-',
-                'allotmentClass' => $officeAllotmentClass->allotmentClass->description ?? '-',
+                'allotmentClass' => $officeAllotmentClass->allotmentClass->class ?? '-',
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -1263,7 +1484,7 @@ class ObligationController extends Controller
                 $totalAmount = $obligationAmountsTotal + $adjustmentsTotal;
                 
                 // Get total PO amount if obr_type is "Purchase Request"
-                $poAmount = 'N/A';
+                $poAmount = '-';
                 if ($obligation->obr_type === 'Purchase Request' && $obligation->purchaseOrders->count() > 0) {
                     $totalPoAmount = $obligation->purchaseOrders->sum('po_amount');
                     $poAmount = number_format($totalPoAmount, 2);

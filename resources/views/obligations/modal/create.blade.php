@@ -6,6 +6,17 @@
     <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
+    <input type="hidden" name="group_filter" value="{{ request('group_filter') }}">
+    <input type="hidden" name="fund_type_filter" value="{{ request('fund_type_filter') }}">
+    <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
+    <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
+    <input type="hidden" name="allotment_class_filter" value="{{ request('allotment_class_filter') }}">
+    <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+    <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
+    <input type="hidden" name="from_dashboard" id="from_dashboard" value="0">
+    <input type="hidden" name="preselected_class" id="preselected_class" value="0">
+    <input type="hidden" name="preselected_appropriation_id" id="preselected_appropriation_id" value="">
+
     <div id="createModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->
@@ -273,13 +284,175 @@
 
 <script>
     // 1. Open/Close Modal Functions
-function openCreateModal() {
-    closeAllDropdowns();
-    document.getElementById('createModal').classList.remove('hidden');
+function openCreateModal(officeAllotmentClassId = null, appropriationId = null, accountCode = null) {
+    // Close any open dropdowns
+    if (typeof closeAllDropdowns === 'function') {
+        closeAllDropdowns();
+    }
+    
+    const createModal = document.getElementById('createModal');
+    if (!createModal) {
+        console.error('Create modal element not found');
+        return;
+    }
+
+    // Set from_dashboard flag if window.isFromDashboard is true
+    const fromDashboardField = document.querySelector('input[name="from_dashboard"]');
+    if (fromDashboardField && window.isFromDashboard) {
+        fromDashboardField.value = '1';
+    }
+    
+    createModal.classList.remove('hidden');
+    
+    // Update date field based on current year
+    if (typeof updateDateFieldBasedOnYear === 'function') {
+        updateDateFieldBasedOnYear();
+    }
+    
+    // Clear form fields when reopening modal (except preselected fields)
+    // This applies when we have a preselectedClassId but should reset for new entry
+    if (officeAllotmentClassId && !appropriationId) {
+        // Clear additional obligation amount rows, keep only first
+        const tableBody = document.querySelector('#programs_table tbody');
+        if (tableBody) {
+            const rows = tableBody.querySelectorAll('tr');
+            if (rows.length > 1) {
+                for (let i = 1; i < rows.length; i++) {
+                    rows[i].remove();
+                }
+            }
+        }
+        
+        // Clear other fields
+        const obrDateField = document.getElementById('obr_date');
+        if (obrDateField) {
+            const yearFilter = document.getElementById('year1');
+            const selectedYear = yearFilter ? yearFilter.value : new Date().getFullYear();
+            const currentYear = new Date().getFullYear();
+            
+            if (selectedYear == currentYear) {
+                obrDateField.value = new Date().toISOString().split('T')[0];
+            } else {
+                obrDateField.value = selectedYear + '-12-31';
+            }
+        }
+        
+        const particularsField = document.getElementById('particulars');
+        if (particularsField) particularsField.value = '';
+        
+        const remarksField = document.getElementById('remarks');
+        if (remarksField) remarksField.value = '';
+        
+        const obrTypeSelect = document.getElementById('obr_type');
+        if (obrTypeSelect) obrTypeSelect.value = '';
+        
+        // Clear account code and amount fields in first row
+        const firstRow = document.querySelector('#programs_table tbody tr');
+        if (firstRow) {
+            firstRow.querySelectorAll('[name="account_code[]"], [name="amount_of_obligation[]"]').forEach(field => field.value = '');
+        }
+    }
+    
+    // Set preselection flags
+    const preselectedInput = document.getElementById('preselected_class');
+    const preselectedAppropriationInput = document.getElementById('preselected_appropriation_id');
+    
+    // Set preselected_class to '1' if we have either an officeAllotmentClassId OR an appropriationId
+    if (preselectedInput && (officeAllotmentClassId || appropriationId)) {
+        preselectedInput.value = '1';
+    } else if (preselectedInput) {
+        preselectedInput.value = '0';
+    }
+    
+    if (preselectedAppropriationInput && appropriationId) {
+        preselectedAppropriationInput.value = appropriationId;
+    }
+    
+    // Find and select the office allotment class
+    if (officeAllotmentClassId) {
+        const selectedClass = officeAllotmentClasses.find(oac => oac.id == officeAllotmentClassId);
+        if (selectedClass) {
+            const classInput = document.getElementById('office_allotment_class');
+            const classIdInput = document.getElementById('office_allotment_class_id');
+            
+            if (classInput && classIdInput) {
+                classInput.value = selectedClass.name;
+                classIdInput.value = selectedClass.id;
+                selectedOfficeAllotmentClass = selectedClass;
+                
+                // Update obligation types based on the selected class
+                updateObligationTypes(selectedClass.class);
+                
+                // Generate OBR number
+                generateObrNumber();
+            }
+        }
+    }
+    
+    // Pre-populate the account code in the first row if appropriationId is provided
+    if (appropriationId && accountCode) {
+        setTimeout(() => {
+            const firstAccountCodeInput = document.querySelector('[name="account_code[]"]');
+            if (firstAccountCodeInput) {
+                // Find the appropriation details
+                const appropriation = appropriations.find(app => 
+                    app.id == appropriationId || app.account_code == accountCode
+                );
+                
+                if (appropriation) {
+                    // Set the account code
+                    firstAccountCodeInput.value = appropriation.account_code;
+                    
+                    // Populate other fields
+                    const row = firstAccountCodeInput.closest('tr');
+                    const programField = row.querySelector('[name="programs[]"]');
+                    const descriptionField = row.querySelector('[name="description[]"]');
+                    const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
+                    
+                    if (programField) programField.value = appropriation.program || '';
+                    if (descriptionField) descriptionField.value = appropriation.description || '';
+                    
+                    // Calculate and set balance
+                    if (balanceField) {
+                        const balance = parseFloat(appropriation.balance || 0);
+                        const formattedBalance = balance.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        balanceField.value = formattedBalance;
+                    }
+                    
+                    // Update text colors for all fields
+                    if (typeof updateTextColor === 'function') {
+                        row.querySelectorAll('input, textarea').forEach(field => updateTextColor(field));
+                    }
+                    
+                    // Focus on the amount field for immediate data entry
+                    const amountField = row.querySelector('[name="amount_of_obligation[]"]');
+                    if (amountField) {
+                        setTimeout(() => amountField.focus(), 100);
+                    }
+                }
+            }
+        }, 300);
+    }
 }
 
+// Add this function to handle modal reopening after successful save from dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    @if(session('reopen_modal') && session('preselected_class_id'))
+        // Reopen modal with preselected class after successful save
+        setTimeout(function() {
+            openCreateModal({{ session('preselected_class_id') }});
+        }, 500);
+    @endif
+});
+
 function closeCreateModal() {
-    document.getElementById('createModal').classList.add('hidden');
+    const createModal = document.getElementById('createModal');
+    if (createModal) {
+        createModal.classList.add('hidden');
+    }
 }
 
 // 2. Data Arrays
@@ -788,12 +961,8 @@ function updateDateFieldBasedOnYear() {
     updateTextColor(dateField);
 }
 
-// Call this function when opening the modal
-function openCreateModal() {
-    closeAllDropdowns();
-    document.getElementById('createModal').classList.remove('hidden');
-    
-    // Update date field based on current year filter
+// Update date field when opening modal
+function updateDateFieldOnModalOpen() {
     updateDateFieldBasedOnYear();
 }
 

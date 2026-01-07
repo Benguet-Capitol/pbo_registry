@@ -6,9 +6,9 @@
 <!-- Container for AJAX-loaded Purchase Order Modal -->
 <div id="createPOModalContainer"></div>
 <!-- Purchase Order Modal -->
-<form id="CreatePurchaseOrderForm" method="POST" action="{{ route('obligations.storePurchaseOrder', ['obligation' => $obligation->id]) }}">
+<form id="CreatePurchaseOrderForm" method="POST" action="{{ isset($obligation->id) && $obligation->id ? route('obligations.storePurchaseOrder', ['obligation' => $obligation->id]) : '#' }}">
     @csrf
-    <div id="createPOModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div id="createPOModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-[10002] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
@@ -18,7 +18,7 @@
                             {{ __('Add Purchase Order') }} (
                             <span class="text-blue-800 dark:text-blue-400">
                             {{ $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A' }} - {{ $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A' }} | 
-                            {{ $obligation->obr_no }}
+                            {{ $obligation->obr_no ?? 'N/A' }}
                             </span>)
                         </h3>
                     <button type="button" onclick="closeCreatePOModal()" class="text-black hover:text-gray-600 dark:text-white">
@@ -29,7 +29,7 @@
                 <div class="px-7 py-3 text-xs">
                     
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
-                            <input type="hidden" name="obligation_id" value="{{ $obligation->id }}">
+                            <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
                             <!-- PO Date -->
                             <div class="sm:col-span-3">
                                 <x-form.label for="po_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PO Date')" />
@@ -109,7 +109,7 @@
                             <!-- Current Purchase Orders Table -->
                             <div class="sm:col-span-6">
                                 <h4 class="text-sm text-gray-900 dark:text-gray-200 mb-3">Current Purchase Orders for this Obligation</h4>
-                                @if($obligation->purchaseOrders && $obligation->purchaseOrders->count())
+                                @if(isset($obligation->purchaseOrders) && $obligation->purchaseOrders && $obligation->purchaseOrders->count())
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
                                         <thead class="bg-gray-50 dark:bg-gray-800">

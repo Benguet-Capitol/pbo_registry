@@ -563,6 +563,10 @@
             <i class="fas fa-comment-dollar mr-2"></i>Payment Remarks
         </button>
         @endhasanyrole
+        <button id="contextHistory"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-history mr-2"></i>Status/History
+        </button>
         @can('edit obligations')
         <button id="contextEdit"
                 class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
@@ -587,6 +591,30 @@
     <div id="createPOModalContainer"></div>
     <div id="createObligationAdjustmentModalContainer"></div>.
     <div id="createDisbursementModalContainer"></div>
+
+    <!-- Obligation History Modal -->
+    <div id="obligationHistoryModal" class="hidden fixed inset-0 z-[10003] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-4 border w-full max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                <div class="flex justify-between items-center p-4 border-b dark:border-gray-600">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        Obligation Status/History
+                        <span id="historyObligationInfo" class="text-blue-600 dark:text-blue-400"></span>
+                    </h3>
+                    <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6 max-h-[70vh] overflow-y-auto">
+                    <div id="historyContent" class="space-y-3">
+                        <div class="flex justify-center items-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </x-app-layout>
 
@@ -721,6 +749,15 @@
                     openCancellationModal(obligation.id, obligation);
                 };
             }
+
+            // Status/History button
+            const historyBtn = menu.querySelector('#contextHistory');
+            if (historyBtn) {
+                historyBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    openObligationHistoryModal(obligation);
+                };
+            }
         }
 
         // Add event listeners with delay
@@ -774,7 +811,7 @@
         if (container) {
             container.addEventListener('scroll', hideObligationContextMenu, { passive: true });
         }
-        
+
         // Handle vertical scroll container
         const scrollableContainer = document.querySelector('.max-h-\\[720px\\].overflow-y-auto');
         if (scrollableContainer) {
@@ -783,6 +820,122 @@
     });
 })();
 
+    /**
+     * Open obligation history modal
+     */
+    function openObligationHistoryModal(obligation) {
+        if (!obligation || !obligation.id) {
+            alert('Invalid obligation selected');
+            return;
+        }
+
+        const modal = document.getElementById('obligationHistoryModal');
+        const historyContent = document.getElementById('historyContent');
+        const historyInfo = document.getElementById('historyObligationInfo');
+
+        // Show modal with loading spinner
+        modal.classList.remove('hidden');
+        historyInfo.textContent = ` | ${obligation.obr_no || 'Loading...'}`;
+        historyContent.innerHTML = '<div class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div>';
+
+        // Fetch activity history
+        fetch(`/obligations/${obligation.id}/activity-history`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    displayActivityHistory(data.data, historyContent);
+                } else {
+                    historyContent.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">No activity history found</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching activity history:', error);
+                historyContent.innerHTML = '<div class="text-center py-8 text-red-500">Failed to load activity history. Please try again.</div>';
+            });
+    }
+
+    /**
+     * Close obligation history modal
+     */
+    function closeObligationHistoryModal() {
+        const modal = document.getElementById('obligationHistoryModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Display activity history in timeline format
+     */
+    function displayActivityHistory(activities, container) {
+        if (!activities || activities.length === 0) {
+            container.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">No activity history found</div>';
+            return;
+        }
+
+        let html = '<div class="space-y-4">';
+        
+        activities.forEach((activity, index) => {
+            const date = new Date(activity.created_at);
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            const formattedTime = date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            // Determine activity color and icon based on event type
+            let colorClass = 'bg-blue-500';
+            let icon = 'fas fa-circle';
+            
+            if (activity.event_type === 'created' || activity.description.toLowerCase().includes('created')) {
+                colorClass = 'bg-green-500';
+                icon = 'fas fa-plus-circle';
+            } else if (activity.event_type === 'updated' || activity.description.toLowerCase().includes('updated') || activity.description.toLowerCase().includes('edited')) {
+                colorClass = 'bg-blue-500';
+                icon = 'fas fa-edit';
+            } else if (activity.description.toLowerCase().includes('adjustment')) {
+                colorClass = 'bg-yellow-500';
+                icon = 'fas fa-file-edit';
+            } else if (activity.description.toLowerCase().includes('purchase order')) {
+                colorClass = 'bg-purple-500';
+                icon = 'fas fa-file-invoice';
+            } else if (activity.event_type === 'deleted' || activity.description.toLowerCase().includes('deleted')) {
+                colorClass = 'bg-red-500';
+                icon = 'fas fa-trash';
+            }
+
+            html += `
+                <div class="flex gap-3 ${index !== activities.length - 1 ? 'border-l-2 border-gray-300 dark:border-gray-600 ml-2 pb-4' : ''}">
+                    <div class="relative">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 ${colorClass} rounded-full flex items-center justify-center">
+                            <i class="${icon} text-white text-[8px]"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 ml-6">
+                        <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">${activity.description}</p>
+                                    ${activity.user ? `<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">by ${activity.user.name}</p>` : ''}
+                                </div>
+                                <div class="text-right ml-4">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${formattedDate}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${formattedTime}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+    }
 
     // Compute totals for visible rows
     function computeTableTotals() {

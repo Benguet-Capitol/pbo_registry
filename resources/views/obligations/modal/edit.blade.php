@@ -7,7 +7,18 @@
     <input type="hidden" name="supplemental_type_filter" value="{{ request('supplemental_type_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
-    <div id="editObligationsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+    <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
+    <input type="hidden" name="group_filter" value="{{ request('group_filter') }}">
+    <input type="hidden" name="fund_type_filter" value="{{ request('fund_type_filter') }}">
+    <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
+    <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
+    <input type="hidden" name="allotment_class_filter" value="{{ request('allotment_class_filter') }}">
+    <input type="hidden" name="from_dashboard" value="0">
+    <input type="hidden" name="from_accounts" value="0">
+    <input type="hidden" name="dashboard_class_id" value="">
+    <input type="hidden" name="accounts_class_id" value="">
+    <div id="editObligationsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-[10001] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
@@ -277,7 +288,7 @@
 </form>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteConfirmEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+<div id="deleteConfirmEditModal" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md p-6">
         <h2 class="text-lg font-semibold text-red-600 mb-4">Confirm Deletion</h2>
         <p class="text-sm text-gray-700 dark:text-gray-300 mb-6">
@@ -297,16 +308,86 @@
 <script>
     //Open Edit Modal
     function openEditObligationsModal(obligation) {
-        closeAllDropdowns();
+        if (typeof closeAllDropdowns === 'function') {
+            closeAllDropdowns();
+        }
 
         document.getElementById('editObligationsForm').action = `/obligations/${obligation.id}`;
         console.log('Loaded obligation:', obligation);
-        console.log('Sample obligation with amounts:', @json($obligations->first()));
+        
+        // Reset from_dashboard and from_accounts first
+        const fromDashboardField = document.querySelector('#editObligationsForm input[name="from_dashboard"]');
+        const fromAccountsField = document.querySelector('#editObligationsForm input[name="from_accounts"]');
+        
+        if (fromDashboardField) {
+            fromDashboardField.value = '0'; // Reset to default
+        }
+        if (fromAccountsField) {
+            fromAccountsField.value = '0'; // Reset to default
+        }
+        
+        // Check if opened from dashboard
+        const isFromDashboard = window.isFromDashboard || (window.currentClassId !== undefined);
+        const isFromAccounts = window.isFromAccounts || false;
+        
+        console.log('Is from dashboard:', isFromDashboard, 'window.isFromDashboard:', window.isFromDashboard, 'window.currentClassId:', window.currentClassId);
+        console.log('Is from accounts:', isFromAccounts, 'window.isFromAccounts:', window.isFromAccounts);
+        
+        if (isFromDashboard) {
+            console.log('Setting from_dashboard to 1');
+            if (fromDashboardField) {
+                fromDashboardField.value = '1';
+                console.log('from_dashboard field value set to:', fromDashboardField.value);
+            }
+            if (window.currentClassId) {
+                const dashboardClassIdField = document.querySelector('#editObligationsForm input[name="dashboard_class_id"]');
+                if (dashboardClassIdField) {
+                    dashboardClassIdField.value = window.currentClassId;
+                }
+            }
+        } else if (isFromAccounts) {
+            console.log('Setting from_accounts to 1');
+            if (fromAccountsField) {
+                fromAccountsField.value = '1';
+                console.log('from_accounts field value set to:', fromAccountsField.value);
+            }
+            if (window.accountsClassId) {
+                const accountsClassIdField = document.querySelector('#editObligationsForm input[name="accounts_class_id"]');
+                if (accountsClassIdField) {
+                    accountsClassIdField.value = window.accountsClassId;
+                }
+            }
+        }
+
+        // Get office_allotment_class_id from obligation, or fallback to currentClassId or URL parameter
+        let officeAllotmentClassId = obligation.office_allotment_class_id;
+        console.log('openEditObligationsModal - Initial officeAllotmentClassId:', officeAllotmentClassId);
+        console.log('openEditObligationsModal - window.currentClassId:', window.currentClassId);
+        
+        if (!officeAllotmentClassId && window.currentClassId) {
+            officeAllotmentClassId = window.currentClassId;
+            console.log('Using window.currentClassId:', officeAllotmentClassId);
+        }
+        if (!officeAllotmentClassId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            officeAllotmentClassId = urlParams.get('office_allotment_class_id') || '';
+            if (officeAllotmentClassId) {
+                console.log('Using URL parameter office_allotment_class_id:', officeAllotmentClassId);
+            }
+        }
+
+        console.log('Final officeAllotmentClassId to use:', officeAllotmentClassId);
+
+        // Update the main form's hidden office_allotment_class_id field
+        const mainOfficeAllotmentClassIdField = document.querySelector('#editObligationsForm input[name="office_allotment_class_id"]');
+        if (mainOfficeAllotmentClassIdField) {
+            mainOfficeAllotmentClassIdField.value = officeAllotmentClassId;
+        }
 
         // Fields to populate
         const fields = {
             edit_office_allotment_class: obligation.office_allotment_class?.name || obligation.office_allotment_class || '',
-            edit_office_allotment_class_id: obligation.office_allotment_class_id || '',
+            edit_office_allotment_class_id: officeAllotmentClassId,
             edit_obr_date: obligation.obr_date || '',
             edit_obr_type: obligation.obr_type || '',
             edit_obr_no: obligation.obr_no || '',
@@ -434,6 +515,14 @@
     // Close Edit Modal
     function closeEditObligationsModal() {
         document.getElementById('editObligationsModal').classList.add('hidden');
+        // Reset the from_dashboard flag
+        window.isFromDashboard = false;
+        
+        // Also reset the form field
+        const fromDashboardField = document.querySelector('#editObligationsForm input[name="from_dashboard"]');
+        if (fromDashboardField) {
+            fromDashboardField.value = '0';
+        }
     }
 
     const editOfficeAllotmentClasses = [
@@ -608,7 +697,9 @@
     function calculateEditBalance(inputElement, item) {
         const row = inputElement.closest('tr');
         const balanceField = row.querySelector('input[name="edit_balance_from_allotment[]"]');
-        const balance = parseFloat(item.balance || 0);
+        // Remove commas from formatted balance string before parsing
+        const balanceValue = String(item.balance || '0').replace(/,/g, '');
+        const balance = parseFloat(balanceValue);
         const formatBalance = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         if (balanceField) balanceField.value = formatBalance;
     }
@@ -780,6 +871,13 @@
        
     function validateEditObligationsForm() {
         const form = document.getElementById('editObligationsForm');
+        
+       // Log the current state BEFORE any modifications
+        const fromDashboardField = document.querySelector('#editObligationsForm input[name="from_dashboard"]');
+        console.log('validateEditObligationsForm - from_dashboard value:', fromDashboardField ? fromDashboardField.value : 'NOT FOUND');
+        console.log('validateEditObligationsForm - window.isFromDashboard:', window.isFromDashboard);
+        
+        
         let isValid = true;
         document.querySelectorAll('#editObligationsModal .text-red-500').forEach(error => error.textContent = '');
         const officeAllotmentClass = document.getElementById('edit_office_allotment_class');
@@ -862,6 +960,8 @@
 
         // If the form is valid, submit it
         if (isValid) {
+            // Final check before submission
+            console.log('Submitting form - from_dashboard final value:', fromDashboardField ? fromDashboardField.value : 'NOT FOUND');
             form.submit();
         }
     }

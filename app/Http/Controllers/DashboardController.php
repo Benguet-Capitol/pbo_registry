@@ -244,7 +244,36 @@ class DashboardController extends Controller
 
         // Total For Later Release (all classes)
         $totalForLaterRelease = 0;
-        $appropriations = Appropriation::whereIn('id', $appropriationIds)->get();
+        $appropriations = Appropriation::with([
+            'obligationAmounts.obligationAdjustments',
+            'realignments',
+            'supplementals'
+        ])->whereIn('id', $appropriationIds)->get();
+
+        // Calculate balance for each appropriation
+        $appropriations->each(function ($appropriation) use ($currentQuarter) {
+            $totalAppropriation = collect([
+                $appropriation->quarter1,
+                $appropriation->quarter2,
+                $appropriation->quarter3,
+                $appropriation->quarter4
+            ])->take($currentQuarter)->sum();
+
+            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
+                return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+            });
+
+            $realignmentTotal = $appropriation->realignments->sum(function ($r) {
+                return $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0);
+            });
+
+            $supplementalTotal = $appropriation->supplementals->sum(function ($s) {
+                return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
+            });
+
+            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+        });
+
         foreach ($appropriations as $app) {
             if ($currentQuarter < 2) $totalForLaterRelease += $app->quarter2 ?? 0;
             if ($currentQuarter < 3) $totalForLaterRelease += $app->quarter3 ?? 0;
@@ -324,6 +353,8 @@ class DashboardController extends Controller
             ['label' => 'Dashboard', 'route' => route('dashboard')]
         ];
 
+        $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass', 'fundSourceRelation', 'fund'])->where('year', $currentYear)->get();
+
         return view('dashboard', compact(
             'officeAllotmentClasses',
             'totalAppropriations',
@@ -356,7 +387,9 @@ class DashboardController extends Controller
             'selectedGroup',
             'selectedFundType',
             'selectedFund',
-            'isGuest'
+            'isGuest',
+            'office_allotment_classes',
+            'appropriations'
         ));
     }
 
@@ -576,13 +609,55 @@ class DashboardController extends Controller
 
         // Get all appropriation IDs for the filtered office allotment class
         $appropriationIds = $officeAllotmentClasses->appropriations->pluck('id');
-        
 
+        $selectedYear = $officeAllotmentClasses->year;
+
+        $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass', 'fundSourceRelation', 'fund'])->where('year', $selectedYear)->get();
+
+        $appropriations = Appropriation::with([
+            'obligationAmounts.obligationAdjustments',
+            'realignments',
+            'supplementals'
+        ])->whereIn('id', $appropriationIds)->get();
+
+        // Calculate balance for each appropriation
+        $appropriations->each(function ($appropriation) use ($currentQuarter) {
+            $totalAppropriation = collect([
+                $appropriation->quarter1,
+                $appropriation->quarter2,
+                $appropriation->quarter3,
+                $appropriation->quarter4
+            ])->take($currentQuarter)->sum();
+
+            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
+                return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+            });
+
+            $realignmentTotal = $appropriation->realignments->sum(function ($r) {
+                return $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0);
+            });
+
+            $supplementalTotal = $appropriation->supplementals->sum(function ($s) {
+                return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
+            });
+
+            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+        });
+
+        foreach ($appropriations as $app) {
+            if ($currentQuarter < 2) $forLater += $app->quarter2 ?? 0;
+            if ($currentQuarter < 3) $forLater += $app->quarter3 ?? 0;
+            if ($currentQuarter < 4) $forLater += $app->quarter4 ?? 0;
+        }
+        
         return view('dashboard.accounts', compact(
             'officeAllotmentClasses',
             'obrSum',
             'breadcrumb',
-            'isGuest'
+            'isGuest',
+            'selectedYear',
+            'office_allotment_classes',
+            'appropriations'
         ));
     }
 }

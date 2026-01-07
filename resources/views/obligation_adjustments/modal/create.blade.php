@@ -1,7 +1,7 @@
 <!-- Adjust Obligations Modal -->
 <form id="createObligationAdjustmentForm" method="POST" action="{{ route('obligation_adjustments.store') }}">
     @csrf
-    <div id="createObligationAdjustmentModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div id="createObligationAdjustmentModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-[10002] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
@@ -19,7 +19,7 @@
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
-                            <input type="hidden" name="obligation_id" value="{{ $obligation->id }}">
+                            <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
                             <!-- Date -->
                             <div class="sm:col-span-3">
                                 <x-form.label for="adjustment_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
@@ -50,9 +50,8 @@
                                 <x-form.label for="programs_table" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Accounts')" />
                                 <!-- Message Placeholder -->
                                 <div id="tableMessage" class="text-red-500 text-sm hidden mb-2"></div>
-                                <div class="mt-2 overflow-x-auto">
+                                <div class="mt-2 overflow-auto" style="max-height: 500px;">
                                     <!-- Display Obligation Amounts and Appropriations in Programs Table -->
-                                    @if(isset($obligationAmounts) && $obligationAmounts->isNotEmpty())
                                     <table id="programs_table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
                                         <thead class="bg-gray-50 dark:bg-gray-800">
                                             <tr>
@@ -83,106 +82,108 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                            @foreach($obligationAmounts as $obligationAmount)
-                                            @php
-                                                $appropriation = $obligationAmount->appropriation;
-                                                
-                                                // Compute Adjusted OBR
-                                                $adjustedObrAmount = $obligationAmount->obr_amount;
-                                                if ($obligationAmount->obligationAdjustments && $obligationAmount->obligationAdjustments->isNotEmpty()) {
-                                                    $adjustedObrAmount += $obligationAmount->obligationAdjustments->sum('adjustment_amount');
-                                                }
-
-                                                // Determine current quarter
-                                                $currentMonth = now()->month; 
-                                                if ($currentMonth >= 1 && $currentMonth <= 3) {
-                                                    $currentQuarter = 1;
-                                                } elseif ($currentMonth >= 4 && $currentMonth <= 6) {
-                                                    $currentQuarter = 2;
-                                                } elseif ($currentMonth >= 7 && $currentMonth <= 9) {
-                                                    $currentQuarter = 3;
-                                                } else {
-                                                    $currentQuarter = 4;
-                                                }
-
-                                                // Compute Total Appropriation (allotment base, only up to current quarter)
-                                                $totalAppropriation = 0;
-                                                if ($appropriation) {
-                                                    if ($currentQuarter >= 1) $totalAppropriation += $appropriation->quarter1 ?? 0;
-                                                    if ($currentQuarter >= 2) $totalAppropriation += $appropriation->quarter2 ?? 0;
-                                                    if ($currentQuarter >= 3) $totalAppropriation += $appropriation->quarter3 ?? 0;
-                                                    if ($currentQuarter >= 4) $totalAppropriation += $appropriation->quarter4 ?? 0;
-                                                }
-
-                                                // Realignments
-                                                $realignmentTotal = 0;
-                                                foreach ($appropriation->realignments ?? [] as $realignment) {
-                                                    if ($realignment->type === 'Source') {
-                                                        $realignmentTotal -= $realignment->amount;
-                                                    } elseif ($realignment->type === 'Recipient') {
-                                                        $realignmentTotal += $realignment->amount;
+                                            @if(isset($obligationAmounts) && $obligationAmounts->isNotEmpty())
+                                                @foreach($obligationAmounts as $obligationAmount)
+                                                @php
+                                                    $appropriation = $obligationAmount->appropriation;
+                                                    
+                                                    // Compute Adjusted OBR
+                                                    $adjustedObrAmount = $obligationAmount->obr_amount;
+                                                    if ($obligationAmount->obligationAdjustments && $obligationAmount->obligationAdjustments->isNotEmpty()) {
+                                                        $adjustedObrAmount += $obligationAmount->obligationAdjustments->sum('adjustment_amount');
                                                     }
-                                                }
 
-                                                // Supplementals
-                                                $supplementalTotal = 0;
-                                                foreach ($appropriation->supplementals ?? [] as $supplemental) {
-                                                    if ($supplemental->type === 'Reversion') {
-                                                        $supplementalTotal -= $supplemental->amount;
-                                                    } elseif ($supplemental->type === 'Supplemental') {
-                                                        $supplementalTotal += $supplemental->amount;
+                                                    // Determine current quarter
+                                                    $currentMonth = now()->month; 
+                                                    if ($currentMonth >= 1 && $currentMonth <= 3) {
+                                                        $currentQuarter = 1;
+                                                    } elseif ($currentMonth >= 4 && $currentMonth <= 6) {
+                                                        $currentQuarter = 2;
+                                                    } elseif ($currentMonth >= 7 && $currentMonth <= 9) {
+                                                        $currentQuarter = 3;
+                                                    } else {
+                                                        $currentQuarter = 4;
                                                     }
-                                                }
 
-                                                // Final Allotment
-                                                $allotment = $totalAppropriation + $realignmentTotal + $supplementalTotal;
+                                                    // Compute Total Appropriation (allotment base, only up to current quarter)
+                                                    $totalAppropriation = 0;
+                                                    if ($appropriation) {
+                                                        if ($currentQuarter >= 1) $totalAppropriation += $appropriation->quarter1 ?? 0;
+                                                        if ($currentQuarter >= 2) $totalAppropriation += $appropriation->quarter2 ?? 0;
+                                                        if ($currentQuarter >= 3) $totalAppropriation += $appropriation->quarter3 ?? 0;
+                                                        if ($currentQuarter >= 4) $totalAppropriation += $appropriation->quarter4 ?? 0;
+                                                    }
 
-                                                // Balance
-                                                $balanceFromAllotment = $allotment - $adjustedObrAmount;
-                                            @endphp
-                                            <tr 
-                                                data-obligation-type="{{ $obligationAmount->obligation->type ?? '' }}" 
-                                                data-po-amount="{{ $obligationAmount->obligation->purchaseOrders->sum('po_amount') ?? 0 }}">
-                                                
-                                                <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
-                                                    {{ $appropriation->programs ?? '-' }}
-                                                </td>
-                                                <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
-                                                    {{ $appropriation->account_code ?? '-' }}
-                                                </td>
-                                                <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
-                                                    {{ $appropriation->description ?? '-' }}
-                                                </td>
-                                                {{-- Show PO amount if obligation type is Purchase Request --}}
-                                                @if($obligationAmount->obligation->obr_type === 'Purchase Request')
-                                                    <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 po-amount-cell">
-                                                        {{ number_format($obligationAmount->purchaseOrders->sum('po_amount'), 2) }}
+                                                    // Realignments
+                                                    $realignmentTotal = 0;
+                                                    foreach ($appropriation->realignments ?? [] as $realignment) {
+                                                        if ($realignment->type === 'Source') {
+                                                            $realignmentTotal -= $realignment->amount;
+                                                        } elseif ($realignment->type === 'Recipient') {
+                                                            $realignmentTotal += $realignment->amount;
+                                                        }
+                                                    }
+
+                                                    // Supplementals
+                                                    $supplementalTotal = 0;
+                                                    foreach ($appropriation->supplementals ?? [] as $supplemental) {
+                                                        if ($supplemental->type === 'Reversion') {
+                                                            $supplementalTotal -= $supplemental->amount;
+                                                        } elseif ($supplemental->type === 'Supplemental') {
+                                                            $supplementalTotal += $supplemental->amount;
+                                                        }
+                                                    }
+
+                                                    // Final Allotment
+                                                    $allotment = $totalAppropriation + $realignmentTotal + $supplementalTotal;
+
+                                                    // Balance
+                                                    $balanceFromAllotment = $allotment - $adjustedObrAmount;
+                                                @endphp
+                                                <tr 
+                                                    data-obligation-type="{{ $obligationAmount->obligation->type ?? '' }}" 
+                                                    data-po-amount="{{ $obligationAmount->obligation->purchaseOrders->sum('po_amount') ?? 0 }}">
+                                                    
+                                                    <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
+                                                        {{ $appropriation->programs ?? '-' }}
                                                     </td>
-                                                @else
-                                                    {{-- Otherwise show Allotment --}}
-                                                    <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 allotment-cell">
-                                                        {{ number_format($allotment, 2) }}
+                                                    <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
+                                                        {{ $appropriation->account_code ?? '-' }}
                                                     </td>
-                                                @endif
-                                                <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
-                                                    {{ number_format($adjustedObrAmount, 2) }}
-                                                </td>
-                                                <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 hidden">
-                                                    {{ number_format($balanceFromAllotment, 2) }}
-                                                </td>
-                                                <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">
-                                                    <span class="adjustment-amount">0.00</span>
-                                                </td>
-                                                <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">
-                                                    <x-form.input type="number" 
-                                                        name="adjusted_amount[{{ $obligationAmount->id }}]" 
-                                                        autocomplete="off" 
-                                                        oninput="validateAmount(this)"  
-                                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"/>
-                                                    <span class="adjustmentAmountError text-red-500 text-xs hidden"></span>
-                                                </td>
-                                            </tr>
-                                            @endforeach
+                                                    <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
+                                                        {{ $appropriation->description ?? '-' }}
+                                                    </td>
+                                                    {{-- Show PO amount if obligation type is Purchase Request --}}
+                                                    @if($obligationAmount->obligation->obr_type === 'Purchase Request')
+                                                        <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 po-amount-cell">
+                                                            {{ number_format($obligationAmount->purchaseOrders->sum('po_amount'), 2) }}
+                                                        </td>
+                                                    @else
+                                                        {{-- Otherwise show Allotment --}}
+                                                        <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 allotment-cell">
+                                                            {{ number_format($allotment, 2) }}
+                                                        </td>
+                                                    @endif
+                                                    <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
+                                                        {{ number_format($adjustedObrAmount, 2) }}
+                                                    </td>
+                                                    <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200 hidden">
+                                                        {{ number_format($balanceFromAllotment, 2) }}
+                                                    </td>
+                                                    <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">
+                                                        <span class="adjustment-amount">0.00</span>
+                                                    </td>
+                                                    <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">
+                                                        <x-form.input type="number" 
+                                                            name="adjusted_amount[{{ $obligationAmount->id }}]" 
+                                                            autocomplete="off" 
+                                                            oninput="validateAmount(this)"  
+                                                            class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"/>
+                                                        <span class="adjustmentAmountError text-red-500 text-xs hidden"></span>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            @endif
                                         </tbody>
                                         <tfoot>
                                             <tr class="bg-gray-50 dark:bg-gray-900">
@@ -191,9 +192,6 @@
                                             </tr>
                                         </tfoot>
                                     </table>
-                                    @else
-                                    <p class="text-center text-gray-500 dark:text-gray-400">No obligation amounts found for this obligation.</p>
-                                    @endif
                                 </div>
                             </div>
 
@@ -221,9 +219,51 @@
 </form>
 
 <script>
-    function openCreateObligationAdjustmentModal() {
-        closeAllDropdowns();
-        document.getElementById('createObligationAdjustmentModal').classList.remove('hidden');
+    function openCreateObligationAdjustmentModal(obligationId) {
+        if (typeof closeAllDropdowns === 'function') {
+            closeAllDropdowns();
+        }
+        
+        // If obligationId is provided, fetch the modal HTML with pre-populated data
+        if (obligationId) {
+            // Called from dashboard/accounts - fetch the complete modal HTML
+            fetch(`/obligations/${obligationId}/obligation-adjustment-modal`)
+                .then(response => response.text())
+                .then(html => {
+                    // Find the existing form and replace it entirely with the new HTML
+                    const existingForm = document.getElementById('createObligationAdjustmentForm');
+                    if (existingForm) {
+                        // Create a temporary container to parse the HTML
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+                        const newForm = temp.querySelector('form');
+                        
+                        if (newForm) {
+                            // Replace the old form with the new one
+                            existingForm.replaceWith(newForm);
+                            
+                            // Show the modal after replacement
+                            setTimeout(() => {
+                                const modal = document.getElementById('createObligationAdjustmentModal');
+                                if (modal) {
+                                    modal.classList.remove('hidden');
+                                    console.log('Modal opened with pre-populated data');
+                                }
+                            }, 10);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading obligation adjustment modal:', error);
+                    alert('Failed to load adjustment modal. Please try again.');
+                });
+        } else {
+            // Called from obligation_adjustments index - modal already has data from Blade
+            const modal = document.getElementById('createObligationAdjustmentModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
     }
 
     function closeCreateObligationAdjustmentModal() {

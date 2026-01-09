@@ -1540,5 +1540,56 @@ class ObligationController extends Controller
         }
     }
 
+    /**
+     * Get obligation details with amounts, adjustments, PO, and disbursements for the details panel
+     */
+    public function getObligationDetails($obligationId): JsonResponse
+    {
+        try {
+            $obligation = Obligation::with([
+                'obligationAmounts.appropriation',
+                'obligationAmounts.obligationAdjustments',
+                'obligationAmounts.purchaseOrders',
+                'obligationAmounts.disbursements',
+                'obligationAdjustments',
+                'purchaseOrders',
+                'disbursements'
+            ])->findOrFail($obligationId);
+
+            // Map obligation amounts with related data
+            $amounts = $obligation->obligationAmounts->map(function ($obrAmount) {
+                $originalObligation = $obrAmount->obr_amount ?? 0;
+                $adjustment = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                $adjustedObligation = $originalObligation + $adjustment;
+                $poAmount = $obrAmount->purchaseOrders->sum('po_amount') ?? 0;
+                $disbursementAmount = $obrAmount->disbursements->sum('disbursement_amount') ?? 0;
+
+                return [
+                    'id' => $obrAmount->id,
+                    'account_code' => $obrAmount->appropriation->account_code ?? '-',
+                    'description' => $obrAmount->appropriation->description ?? '-',
+                    'program' => $obrAmount->appropriation->programs ?? '-',
+                    'amount' => $originalObligation,
+                    'adjustment' => $adjustment,
+                    'adjusted_obligation' => $adjustedObligation,
+                    'po_amount' => $poAmount,
+                    'disbursement_amount' => $disbursementAmount,
+                ];
+            })->toArray();
+
+            return response()->json([
+                'id' => $obligation->id,
+                'obr_no' => $obligation->obr_no,
+                'particulars' => $obligation->particulars,
+                'obligation_amounts' => $amounts,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch obligation details',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }
 

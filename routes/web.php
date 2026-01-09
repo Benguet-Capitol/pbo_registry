@@ -131,6 +131,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/obligations/{obligation}/activity-history', [ObligationController::class, 'activityHistory'])->name('obligations.activityHistory');
     Route::get('/api/obligations/by-office-allotment-class/{classId}', [ObligationController::class, 'getByOfficeAllotmentClass'])->name('obligations.api.byOfficeAllotmentClass');
     Route::get('/api/obligations/by-appropriation/{appropriationId}', [ObligationController::class, 'getByAppropriation'])->name('obligations.api.byAppropriation');
+    Route::get('/api/obligations/{obligationId}/details', [ObligationController::class, 'getObligationDetails'])->name('obligations.api.details');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);

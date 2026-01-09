@@ -153,7 +153,7 @@
             </div>
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
-                <div class="max-h-[720px] overflow-y-auto">
+                <div class="max-h-[560px] overflow-y-auto">
                     <table id="obligationsTable" class="mb-20 min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
                         <thead id="obligationTableHead"
                             class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
@@ -516,6 +516,40 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Obligation Details Panel -->
+                    <div id="obligationDetailsPanel" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-md px-4 pb-4 pt-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                                <span id="detailObrNo" class="text-blue-600 dark:text-blue-400"></span>
+                                <span id="detailParticulars" class="text-gray-700 dark:text-gray-300 text-xs font-normal"></span>
+                            </h3>
+                            <button onclick="closeObligationDetails()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+
+                        <!-- Details Table -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Program</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Account Code</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Description</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Original Obligation</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjustment</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjusted Obligation</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Purchase Order</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Disbursement</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailsTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
             </div>
             <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
                 @if ($perPage != 'all')
@@ -1584,4 +1618,92 @@ function updateAdjustedAmountTotal() {
             document.getElementById('CreateDisbursementForm').submit();
         }
     }
+
+    // Display Obligation Details Panel
+    function displayObligationDetails(obligationId) {
+        // Fetch obligation details with amounts
+        fetch(`/api/obligations/${obligationId}/details`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch obligation details');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const panel = document.getElementById('obligationDetailsPanel');
+                const tbody = document.getElementById('detailsTableBody');
+                
+                // Clear previous rows
+                tbody.innerHTML = '';
+                
+                // Populate header info
+                document.getElementById('detailObrNo').textContent = data.obr_no;
+                document.getElementById('detailParticulars').textContent = '| ' + data.particulars;
+                
+                // Populate details rows
+                if (data.obligation_amounts && data.obligation_amounts.length > 0) {
+                    data.obligation_amounts.forEach(amount => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+                        
+                        const originalObligation = parseFloat(amount.amount || 0);
+                        const adjustment = parseFloat(amount.adjustment || 0);
+                        const adjustedObligation = originalObligation + adjustment;
+                        const poAmount = parseFloat(amount.po_amount || 0);
+                        const disbursementAmount = parseFloat(amount.disbursement_amount || 0);
+                        
+                        // Helper function to format currency or show '-' if zero
+                        const formatCurrency = (value) => {
+                            return value === 0 ? '-' : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
+                        
+                        row.innerHTML = `
+                            <td class="px-3 py-2 text-xs text-gray-900 dark:text-gray-200">${amount.program || '-'}</td>
+                            <td class="px-3 py-2 text-xs text-gray-900 dark:text-gray-200">${amount.account_code || '-'}</td>
+                            <td class="px-3 py-2 text-xs text-gray-900 dark:text-gray-200">${amount.description || '-'}</td>
+                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(originalObligation)}</td>
+                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(adjustment)}</td>
+                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">${formatCurrency(adjustedObligation)}</td>
+                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(poAmount)}</td>
+                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(disbursementAmount)}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">No details available</td></tr>';
+                }
+                
+                // Show the panel
+                panel.classList.remove('hidden');
+                
+                // Scroll to the panel
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load obligation details');
+            });
+    }
+
+    // Close Obligation Details Panel
+    function closeObligationDetails() {
+        document.getElementById('obligationDetailsPanel').classList.add('hidden');
+    }
+
+    // Add click listeners to obligation rows (left click)
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('tbody tr[data-obligation-id]');
+        rows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't trigger on button clicks or double-click
+                if (e.target.closest('button') || e.detail === 2) {
+                    return;
+                }
+                const obligationId = this.dataset.obligationId;
+                if (obligationId) {
+                    displayObligationDetails(obligationId);
+                }
+            });
+        });
+    });
 </script>

@@ -342,22 +342,22 @@ trait LogsActivity
             $allotmentClass = optional($model->obligation->officeAllotmentClass)->allotmentClass->class ?? 'Unknown Class';
             $accountCode = optional($model->obligationAmount->appropriation)->account_code ?? 'Unknown Code';
             $description = optional($model->obligationAmount->appropriation)->description ?? 'Unknown Description';
-            $baseDetails = "PO# {$model->po_number} for {$office} - {$allotmentClass} under Account Code: {$accountCode} - {$description}";
+            $baseDetails = "PO# {$model->po_number} for OBR# {$model->obligation->obr_no} under {$office} - {$allotmentClass}, Account Code: {$accountCode} - {$description}";
 
             switch ($action) {
                 case 'create':
-                    return "Created new Purchase Order ({$baseDetails})";
+                    return "Created new Purchase Order for {$baseDetails}";
                 case 'update':
-                    $baseDescription = "Updated Purchase Order ({$baseDetails}).";
+                    $baseDescription = "Updated Purchase Order for {$baseDetails}.";
                     if (!empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
                     return $baseDescription;
                 case 'delete':
-                    return "Deleted Purchase Order ({$baseDetails})";
+                    return "Deleted Purchase Order for {$baseDetails}";
                 default:
-                    return "Purchase Order ({$baseDetails}) action: {$action}";
+                    return "Purchase Order action: {$action}";
             }
         } catch (\Exception $e) {
              \Illuminate\Support\Facades\Log::error('Error in getPurchaseOrderDescription: ' . $e->getMessage());
@@ -410,7 +410,8 @@ trait LogsActivity
                 'obligation.officeAllotmentClass.offices', 
                 'obligation.officeAllotmentClass.allotmentClass',
                 'obligationAmount.appropriation',
-                'obligation.obligationAmounts'
+                'obligation.obligationAmounts',
+                'obligation.obligationAdjustments'
             ]);
             
             // Ensure we always return a non-empty description for logging
@@ -420,10 +421,19 @@ trait LogsActivity
             $accountCode = optional($model->obligationAmount->appropriation)->account_code ?? 'Unknown Code';
             $description = optional($model->obligationAmount->appropriation)->description ?? 'Unknown Description';
             
-            // Calculate total OBR amount for comparison
+            // Calculate total OBR amount
             $totalObrAmount = optional($model->obligation)->obligationAmounts->sum('obr_amount') ?? 0;
-            $isCancellation = abs($model->adjustment_amount) === abs($totalObrAmount);
+            
+            // Calculate total adjustment amount
+            $totalAdjustmentAmount = optional($model->obligation)->obligationAdjustments->sum('adjustment_amount') ?? 0;
+            
+            // Calculate adjusted amount (totalObrAmount - totalAdjustmentAmount)
+            $adjustedAmount = $totalObrAmount + $totalAdjustmentAmount;
+            
+            // Determine adjustment type based on adjusted amount
+            $isCancellation = abs($adjustedAmount) == 0; // Adjusted amount is zero
             $adjustmentType = $isCancellation ? 'Cancellation' : ($model->adjustment_amount >= 0 ? 'Addition' : 'Deduction');
+            
             $baseDetails = "OBR# {$model->obligation->obr_no} under {$office} - {$allotmentClass}, Account Code: {$accountCode} - {$description}";
 
             switch ($action) {
@@ -442,7 +452,7 @@ trait LogsActivity
                     return "Obligation Adjustment for OBR# {$model->obligation->obr_no} action: {$action}";
             }
         } catch (\Exception $e) {
-             \Illuminate\Support\Facades\Log::error('Error in getObligationAdjustmentDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getObligationAdjustmentDescription: ' . $e->getMessage());
             return "OBR Adjustment action: {$action}";
         }
     }

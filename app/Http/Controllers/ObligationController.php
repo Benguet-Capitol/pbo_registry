@@ -882,6 +882,9 @@ class ObligationController extends Controller
 
             DB::commit();
 
+            // Log the cancellation action
+            Obligation::logObligationCancellation($obligation, $validated['remarks']);
+
             // Prepare success message data (already loaded from eager loading)
             $obrNumber = $obligation->obr_no;
             $account_code = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
@@ -985,13 +988,20 @@ class ObligationController extends Controller
                     if (!empty($poNumbers)) {
                         foreach ($poNumbers as $poNumber) {
                             $escapedPONumber = preg_quote($poNumber, '/');
-                            // Match PO number in description
-                            $query->orWhere('description', 'like', "%{$poNumber}%")
-                                  // Or check details JSON for purchase_order_id or po_number
-                                  ->orWhereRaw("JSON_EXTRACT(details, '$.po_number') = ?", [$poNumber])
-                                  ->orWhere(function($q) use ($poNumber) {
-                                      $q->where('description', 'like', '%purchase order%')
-                                        ->where('description', 'like', "%{$poNumber}%");
+                            // Match PO number in description AND obligation_id in JSON details
+                            $query->orWhere(function($q) use ($poNumber, $obligationId) {
+                                $q->where('description', 'like', "%{$poNumber}%")
+                                  ->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId]);
+                            })
+                                  // Or check details JSON for both po_number and obligation_id
+                                  ->orWhere(function($q) use ($poNumber, $obligationId) {
+                                      $q->whereRaw("JSON_EXTRACT(details, '$.po_number') = ?", [$poNumber])
+                                        ->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId]);
+                                  })
+                                  // Or check for PO# format with obligation_id
+                                  ->orWhere(function($q) use ($poNumber, $obligationId) {
+                                      $q->where('description', 'like', "%PO#{$poNumber}%")
+                                        ->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId]);
                                   });
                         }
                     }

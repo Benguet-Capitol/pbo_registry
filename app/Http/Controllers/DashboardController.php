@@ -280,6 +280,9 @@ class DashboardController extends Controller
             if ($currentQuarter < 4) $totalForLaterRelease += $app->quarter4 ?? 0;
         }
 
+        // Subtract For Later Release from Total Allotments
+        $totalAllotments -= $totalForLaterRelease;
+
         // Calculate Allotment Balance (filtered)
         $allotmentBalance = $totalAllotments - $totalObligations;
 

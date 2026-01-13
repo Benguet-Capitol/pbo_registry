@@ -727,9 +727,11 @@
 
     <!-- Right-Click Context Menu for Accounts Table -->
     <div id="accountContextMenu" class="hidden fixed text-xs bg-white dark:bg-gray-800 rounded-lg shadow-lg z-[10000] text-gray-900 dark:text-gray-200 min-w-max border border-gray-200 dark:border-gray-700">
+        @role('Administrator|Developer|Obligation')
         <a href="#" id="contextObligate" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600">
             <i class="fas fa-plus-circle mr-2"></i> Obligate
         </a>
+        @endrole
         <a href="#" onclick="event.preventDefault(); handleAccountMenuOption('obligations')" class="block px-4 py-2 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer">
             <i class="fas fa-list mr-2"></i>Obligations
         </a>
@@ -777,6 +779,7 @@
     </div>
 
     <!-- Context Menu for Account Obligations -->
+     @role('Administrator|Developer|Obligation')
     <div id="accountObligationsContextMenu" class="hidden fixed w-48 bg-white border border-gray-300 rounded-lg shadow-lg dark:bg-gray-700 dark:border-gray-600" style="z-index: 10001; position: fixed;">
         <button id="contextAccountObligationEdit" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
             <i class="fas fa-edit mr-2"></i>Edit Obligation
@@ -791,6 +794,7 @@
             <i class="fas fa-history mr-2"></i>Status/History
         </button>
     </div>
+    @endrole
 
     <style>
     /* Circular progress animation */

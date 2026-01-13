@@ -632,7 +632,6 @@ class ObligationController extends Controller
                     'obr_type' => $validated['edit_obr_type'],
                     'particulars' => $validated['edit_particulars'],
                     'remarks' => $validated['edit_remarks'],
-                    'processed_by' => Auth::user()->name ?? 'Unknown User',
                 ]);
                 
                 $obligation->save();

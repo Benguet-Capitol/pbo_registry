@@ -899,9 +899,11 @@
         <a href="#" id="contextAccounts" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-t-lg">
             <i class="fas fa-stream mr-2"></i> Accounts
         </a>
+        @role('Administrator|Developer|Obligation')
         <a href="#" id="contextObligate" onclick="openCreateModalWithClass(event)" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer">
             <i class="fas fa-plus-circle mr-2"></i> Obligate
         </a>
+        @endrole
         <a href="#" id="contextObligations" onclick="showObligationsModal(event)" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-b-lg cursor-pointer">
             <i class="fas fa-list-check mr-2"></i> Obligations
         </a>
@@ -949,6 +951,7 @@
     </div>
 
     <!-- Context Menu for Obligation Rows in Dashboard Modal -->
+    @role('Administrator|Developer|Obligation')
     <div id="dashboardObligationContextMenu" 
         class="absolute hidden w-48 bg-white border border-gray-300 rounded-lg shadow-lg dark:bg-gray-700 dark:border-gray-600"
         style="display: none; z-index: 10001; position: fixed;">
@@ -975,6 +978,7 @@
             <i class="fas fa-history mr-2"></i>Status/History
         </button>
     </div>
+    @endrole
 
     <style>
     /* Circular progress animation */

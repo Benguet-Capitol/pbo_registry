@@ -15,11 +15,14 @@ use App\Models\Employee;
 use App\Models\Obligation;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class AccountsSummaryController extends Controller
 {
+    use LogsActivity;
+
     public function index(Request $request)
-{
+    {
     $selectedYear = request('year1', date('Y'));
     $asOfDate = request('as_of_filter', now()->toDateString());
     $selectedFund = request('fund_filter', 'all');
@@ -267,6 +270,13 @@ class AccountsSummaryController extends Controller
 
         
         $fileName = 'SAAOB_Summary' .  '_' . $year . '.xlsx';
+
+        // Log the excel report generation
+        self::logExcelReportGeneration('Accounts Summary Report', $fileName, [
+            'Year' => $year,
+            'Fund' => $selectedFund ?? 'all',
+            'As Of Date' => $asOf,
+        ]);
 
         return Excel::download(new AccountsSummaryExport(
             $year,

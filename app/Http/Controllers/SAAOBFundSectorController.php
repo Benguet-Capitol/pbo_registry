@@ -15,9 +15,11 @@ use App\Models\ObligationAdjustment;
 use App\Models\Fund;
 use App\Models\Sector;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class SAAOBFundSectorController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -486,6 +488,13 @@ class SAAOBFundSectorController extends Controller
             }
 
             $fileName = 'SAAOB_' . $fundName . '_' . $year . '.xlsx';
+
+            // Log the excel report generation
+            self::logExcelReportGeneration('SAAOB Fund Sector Report', $fileName, [
+                'Year' => $year,
+                'Fund' => $fund ?? 'All',
+                'As Of Date' => $asOf,
+            ]);
 
             return Excel::download(new SAAOBFundSectorExport(
                 $year,

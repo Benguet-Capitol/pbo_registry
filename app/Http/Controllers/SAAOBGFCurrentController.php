@@ -16,9 +16,11 @@ use App\Models\ObligationAdjustment;
 use App\Models\Fund;
 use App\Models\Sector;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class SAAOBGFCurrentController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -238,6 +240,12 @@ class SAAOBGFCurrentController extends Controller
 
 
             $fileName = 'SAAOB_GF_Current_' . $year . '.xlsx';
+
+            // Log the excel report generation
+            self::logExcelReportGeneration('SAAOB GF Current Report', $fileName, [
+                'Year' => $year,
+                'As Of Date' => $asOf,
+            ]);
 
             return Excel::download(new SAAOBGFCurrentExport(
                 $year,

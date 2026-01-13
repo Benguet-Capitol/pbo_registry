@@ -15,9 +15,11 @@ use App\Models\Fund;
 use App\Models\FundSource;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class SAAOBFundSourceController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
         {
             $selectedYear = request('year1', date('Y'));
@@ -234,6 +236,13 @@ class SAAOBFundSourceController extends Controller
             }
 
             $fileName = 'SAAOB_' . $fundSourceName . '_' . $year . '.xlsx';
+
+            // Log the excel report generation
+            self::logExcelReportGeneration('SAAOB Fund Source Report', $fileName, [
+                'Year' => $year,
+                'Fund Source' => $fundSource ?? 'All',
+                'As Of Date' => $asOf,
+            ]);
 
             return Excel::download(new SAAOBFundSourceExport(
                 $year,

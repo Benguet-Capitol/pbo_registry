@@ -914,4 +914,31 @@ trait LogsActivity
                 return "{$modelName} action: {$action}";
         }
     }
+
+    /**
+     * Log the generation of Excel reports
+     */
+    public static function logExcelReportGeneration(string $reportName, string $fileName, array $filters = []): void
+    {
+        try {
+            $filterDetails = '';
+            if (!empty($filters)) {
+                $filterParts = [];
+                foreach ($filters as $key => $value) {
+                    if ($value !== null && $value !== '') {
+                        $filterParts[] = "{$key}: {$value}";
+                    }
+                }
+                if (!empty($filterParts)) {
+                    $filterDetails = " with filters [" . implode(', ', $filterParts) . "]";
+                }
+            }
+
+            $description = "Generated Excel Report: {$reportName} ({$fileName}){$filterDetails}";
+            
+            ActivityLogger::log($description, 'export', null);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error logging excel report generation: ' . $e->getMessage());
+        }
+    }
 }

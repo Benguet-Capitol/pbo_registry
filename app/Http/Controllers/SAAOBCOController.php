@@ -13,11 +13,14 @@ use App\Models\AccountCode;
 use App\Models\Employee;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class SAAOBCOController extends Controller
 {
+    use LogsActivity;
+
     public function index(Request $request)
-        {
+    {
             $selectedYear = request('year1', date('Y'));
             $selectedOffice = request('office_filter');
             $selectedAccountCode = request('account_code');
@@ -334,6 +337,14 @@ class SAAOBCOController extends Controller
             }
 
             $fileName = 'SAAOB_' . $officeName . $accountCodeName . '_' . $year . '.xlsx';
+
+            // Log the excel report generation
+            self::logExcelReportGeneration('SAAOB CO Report', $fileName, [
+                'Year' => $year,
+                'Office' => !empty($officeId) ? Office::find($officeId)?->office_abbreviation : 'All',
+                'Account Code' => $accountCode ?? 'All',
+                'As Of Date' => $asOf,
+            ]);
 
             return Excel::download(new SAAOBCOExport(
                 $year,

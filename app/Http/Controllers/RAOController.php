@@ -13,9 +13,11 @@ use App\Models\Employee;
 use App\Models\Obligation;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class RAOController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -351,6 +353,14 @@ class RAOController extends Controller
         $className = preg_replace('/[^A-Za-z0-9_]/', '_', $officeAllotmentClass->allotmentClass->class);
         
         $fileName = 'RAO_' . $officeAbbr . '-' . $className . '_' . $year . '.xlsx';
+
+        // Log the excel report generation
+        self::logExcelReportGeneration('RAO Report', $fileName, [
+            'Year' => $year,
+            'Office' => $officeAllotmentClass->offices->office_abbreviation,
+            'Allotment Class' => $officeAllotmentClass->allotmentClass->class,
+            'As Of Date' => $asOf,
+        ]);
 
         return Excel::download(new RAOExport(
             $year,

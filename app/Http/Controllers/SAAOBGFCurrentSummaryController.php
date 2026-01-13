@@ -16,9 +16,11 @@ use App\Models\ObligationAdjustment;
 use App\Models\Fund;
 use App\Models\Sector;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class SAAOBGFCurrentSummaryController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -509,6 +511,12 @@ class SAAOBGFCurrentSummaryController extends Controller
 
 
             $fileName = 'SAAOB_GF_Current_Summary_' . $year . '.xlsx';
+
+            // Log the excel report generation
+            self::logExcelReportGeneration('SAAOB GF Current Summary Report', $fileName, [
+                'Year' => $year,
+                'As Of Date' => $asOf,
+            ]);
 
             return Excel::download(new SAAOBGFCurrentSummaryExport(
                 $year,

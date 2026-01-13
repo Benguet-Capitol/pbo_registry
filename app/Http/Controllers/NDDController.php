@@ -16,9 +16,11 @@ use App\Models\PurchaseOrder;
 use App\Models\Disbursement;
 use App\Models\ObligationAmount;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class NDDController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -291,6 +293,13 @@ class NDDController extends Controller
         }
         
         $fileName = 'NDD_' . $officeAbbr . '_' . $year . '.xlsx';
+
+        // Log the excel report generation
+        self::logExcelReportGeneration('NDD Report', $fileName, [
+            'Year' => $year,
+            'Office' => $officeName->office_abbreviation ?? 'All',
+            'As Of Date' => $asOf,
+        ]);
 
         return Excel::download(new NDDExport(
             $year,

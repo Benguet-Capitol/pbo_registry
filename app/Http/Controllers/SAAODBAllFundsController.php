@@ -15,9 +15,11 @@ use App\Models\ObligationAdjustment;
 use App\Models\Fund;
 use App\Models\Sector;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\LogsActivity;
 
 class SAAODBAllFundsController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -406,6 +408,12 @@ public function exportExcel(Request $request)
         $certifiedSignatoryDesignation = $request->input('certified_signatory_designation');
 
         $fileName = 'SAAODB_' . 'All_Funds_' . $year . '.xlsx';
+
+        // Log the excel report generation
+        self::logExcelReportGeneration('SAAODB All Funds Report', $fileName, [
+            'Year' => $year,
+            'As Of Date' => $asOf,
+        ]);
 
          return Excel::download(new SAAODBAllFundsExport(
             $year,

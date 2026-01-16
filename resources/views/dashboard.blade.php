@@ -789,13 +789,11 @@
                             <!-- Appropriation Utilization -->
                             <td class="px-1 py-2">
                                 <div class="relative group">
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-                                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition-all duration-300"
                                             style="width: {{ min($class->appropriation_accomplishment, 100) }}%">
-                                            @if($class->appropriation_accomplishment > 15)
-                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->appropriation_accomplishment, 1) }}%</span>
-                                            @endif
                                         </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->appropriation_accomplishment, 1) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
                                     <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
@@ -811,13 +809,11 @@
                             <!-- Allotments Utilization Cell -->
                             <td class="px-1 py-2">
                                 <div class="relative group">
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-                                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300"
                                             style="width: {{ min($class->allotment_accomplishment, 100) }}%">
-                                            @if($class->allotment_accomplishment > 15)
-                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->allotment_accomplishment, 1) }}%</span>
-                                            @endif
                                         </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->allotment_accomplishment, 1) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
                                     <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
@@ -835,13 +831,11 @@
                             <!-- Disbursements / Obligations Cell (if role allowed) -->
                             <td class="px-1 py-2">
                                 <div class="relative group">
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-                                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-4 rounded-full transition-all duration-300"
                                             style="width: {{ min($class->disbursements_to_obligations, 100) }}%">
-                                            @if($class->disbursements_to_obligations > 15)
-                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->disbursements_to_obligations, 1) }}%</span>
-                                            @endif
                                         </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->disbursements_to_obligations, 1) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
                                     <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
@@ -856,13 +850,11 @@
                             <!-- Disbursements / Appropriations Cell (if role allowed) -->
                             <td class="px-1 py-2">
                                 <div class="relative group">
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-                                        <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-4 rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-4 rounded-full transition-all duration-300"
                                             style="width: {{ min($class->disbursements_to_appropriations, 100) }}%">
-                                            @if($class->disbursements_to_appropriations > 15)
-                                                <span class="text-white text-[9px] font-semibold">{{ number_format($class->disbursements_to_appropriations, 1) }}%</span>
-                                            @endif
                                         </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->disbursements_to_appropriations, 1) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
                                     <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">

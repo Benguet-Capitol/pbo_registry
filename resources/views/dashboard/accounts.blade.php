@@ -1336,98 +1336,114 @@ function applyHeatmap() {
     if (!table) return;
     
     const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+    if (rows.length === 0) return;
     
-    // Define which columns should have heatmap (by index or class)
-    const heatmapColumns = [
-        { index: 4, name: 'approved_appropriations', color: 'blue' },      // Approved Appropriations
-        { index: 8, name: 'authorized_appropriations', color: 'blue' },    // Authorized Appropriations
-        { index: 9, name: 'allotments', color: 'green' },                  // Allotments
-        { index: 11, name: 'obligations', color: 'yellow' },               // Obligations
-        { index: 13, name: 'appropriation_accomplishment', color: 'blue', type: 'percentage' }, // Appropriation Accomplishment
-        { index: 15, name: 'allotment_accomplishment', color: 'green', type: 'percentage' }    // Allotment Accomplishment
+    // Get header row to identify specific columns
+    const headerRow = table.querySelector('thead tr');
+    if (!headerRow) return;
+    
+    const headers = Array.from(headerRow.cells).map(cell => cell.textContent.toLowerCase().trim());
+    
+    // Define exact column mappings for heatmap
+    const columnMappings = [
+        { names: ['approved appropriations'], type: 'value', color: 'blue' },
+        { names: ['authorized appropriations'], type: 'value', color: 'blue' },
+        { names: ['allotments'], type: 'value', color: 'green' },
+        { names: ['obligations'], type: 'value', color: 'yellow' },
+        { names: ['appropriation utilization'], type: 'percentage', color: 'blue' },
+        { names: ['allotments utilization'], type: 'percentage', color: 'green' },
+        { names: ['disbursements'], type: 'value', color: 'emerald' },
+        { names: ['disbursements / oblgations', 'disbursements / obligations'], type: 'percentage', color: 'purple' },
+        { names: ['disbursements / approp.', 'disbursements / appropriations'], type: 'percentage', color: 'amber' }
     ];
-
-    // Check if disbursements columns exist (for certain roles)
-    const firstRow = rows[0];
-    if (firstRow && firstRow.cells.length > 15) {
-        heatmapColumns.push(
-            { index: 16, name: 'disbursements', color: 'lime' },               // Disbursements
-            { index: 18, name: 'disbursements_to_obligations', color: 'purple', type: 'percentage' },// Disbursements / Obligations
-            { index: 19, name: 'disbursements_to_appropriations', color: 'amber', type: 'percentage' } // Disbursements / Appropriations
-        );
-    }
     
-    heatmapColumns.forEach(col => {
-        const values = [];
+    // Find matching columns and apply heatmap
+    columnMappings.forEach(mapping => {
+        const colIndex = headers.findIndex(header => 
+            mapping.names.some(name => header.includes(name))
+        );
         
-        // Collect all values for this column
+        if (colIndex === -1) return;
+        
+        const values = [];
         rows.forEach(row => {
-            const cell = row.cells[col.index];
+            const cell = row.cells[colIndex];
             if (cell) {
-                const value = parseFormattedNumber(cell.textContent);
+                let value = 0;
+                
+                if (mapping.type === 'percentage') {
+                    // Try to find progress bar or extract percentage value
+                    const progressBar = cell.querySelector('[style*="width"]');
+                    if (progressBar) {
+                        const widthStr = progressBar.style.width;
+                        value = parseFloat(widthStr) || 0;
+                    } else {
+                        const text = cell.textContent.trim();
+                        const match = text.match(/(\d+(?:\.\d+)?)/);
+                        if (match) {
+                            value = parseFloat(match[1]);
+                        }
+                    }
+                } else {
+                    // Parse formatted number for value columns
+                    value = parseFormattedNumber(cell.textContent);
+                }
+                
                 values.push({ cell, value });
             }
         });
         
-        if (values.length === 0) return;
+        if (values.length > 0) {
+            applyColumnHeatmap(values, mapping.color, mapping.type);
+        }
+    });
+}
+
+function applyColumnHeatmap(values, colorName, type) {
+    if (values.length === 0) return;
+    
+    // Calculate min and max
+    const max = Math.max(...values.map(v => v.value));
+    const min = Math.min(...values.map(v => v.value));
+    const range = max - min;
+    
+    const colorPalettes = {
+        'blue': { light: 'rgba(59, 130, 246, OPACITY)', dark: 'rgba(96, 165, 250, OPACITY)' },
+        'green': { light: 'rgba(34, 197, 94, OPACITY)', dark: 'rgba(74, 222, 128, OPACITY)' },
+        'red': { light: 'rgba(239, 68, 68, OPACITY)', dark: 'rgba(248, 113, 113, OPACITY)' },
+        'yellow': { light: 'rgba(234, 179, 8, OPACITY)', dark: 'rgba(250, 204, 21, OPACITY)' },
+        'purple': { light: 'rgba(168, 85, 247, OPACITY)', dark: 'rgba(196, 181, 253, OPACITY)' },
+        'teal': { light: 'rgba(20, 184, 166, OPACITY)', dark: 'rgba(45, 212, 191, OPACITY)' },
+        'emerald': { light: 'rgba(16, 185, 129, OPACITY)', dark: 'rgba(52, 211, 153, OPACITY)' },
+    };
+    
+    const palette = colorPalettes[colorName] || colorPalettes['blue'];
+    
+    values.forEach(({ cell, value }, idx) => {
+        if (range === 0) return;
         
-        // Calculate min and max
-        const max = Math.max(...values.map(v => v.value));
-        const min = Math.min(...values.map(v => v.value));
-        const range = max - min;
+        const normalized = (value - min) / range;
+        const intensity = Math.round(normalized * 100);
         
-        // Apply colors based on value
-            values.forEach(({ cell, value }) => {
-                if (range === 0) return;
-                
-                const normalized = (value - min) / range;
-                const intensity = Math.round(normalized * 100);
-                
-                // For percentage cells, apply background to the container
-                const targetElement = col.type === 'percentage' ? cell : cell;
-                
-                // Apply background color with varying opacity
-                targetElement.style.transition = 'background-color 0.3s ease';
-                
-                // Define color palettes for different types
-                const colorPalettes = {
-                    'blue': { light: 'rgba(59, 130, 246, OPACITY)', dark: 'rgba(96, 165, 250, OPACITY)' },
-                    'green': { light: 'rgba(34, 197, 94, OPACITY)', dark: 'rgba(74, 222, 128, OPACITY)' },
-                    'red': { light: 'rgba(239, 68, 68, OPACITY)', dark: 'rgba(248, 113, 113, OPACITY)' },
-                    'yellow': { light: 'rgba(234, 179, 8, OPACITY)', dark: 'rgba(250, 204, 21, OPACITY)' },
-                    'purple': { light: 'rgba(221, 214, 254, OPACITY)', dark: 'rgba(168, 85, 247, OPACITY)' },
-                    'teal': { light: 'rgba(20, 184, 166, OPACITY)', dark: 'rgba(45, 212, 191, OPACITY)' },
-                    'emerald': { light: 'rgba(16, 185, 129, OPACITY)', dark: 'rgba(52, 211, 153, OPACITY)' },
-                    'lime': { light: 'rgba(132, 204, 22, OPACITY)', dark: 'rgba(163, 230, 53, OPACITY)' },
-                    'amber': { light: 'rgba(245, 158, 11, OPACITY)', dark: 'rgba(251, 191, 36, OPACITY)' },
-                    'pink': { light: 'rgba(236, 72, 153, OPACITY)', dark: 'rgba(249, 168, 212, OPACITY)' },
-                    'cyan': { light: 'rgba(6, 182, 212, OPACITY)', dark: 'rgba(34, 211, 238, OPACITY)' },
-                    'orange': { light: 'rgba(249, 115, 22, OPACITY)', dark: 'rgba(251, 191, 36, OPACITY)' },
-                    'indigo': { light: 'rgba(99, 102, 241, OPACITY)', dark: 'rgba(129, 140, 248, OPACITY)' },
-                };
-                
-                const palette = colorPalettes[col.color] || colorPalettes['blue'];
-                const baseOpacity = col.type === 'percentage' ? 0.15 : 0.1;
-                const maxOpacity = col.type === 'percentage' ? 0.4 : 0.3;
-                const opacity = baseOpacity + (intensity / 100) * maxOpacity;
-                
-                // Apply light mode color
-                const lightColor = palette.light.replace('OPACITY', opacity);
-                targetElement.style.backgroundColor = lightColor;
-                
-                // Add dark mode support with data attribute
-                targetElement.setAttribute('data-dark-bg', palette.dark.replace('OPACITY', opacity * 0.6));
-                
-                // Apply dark mode color if currently in dark mode
-                if (document.documentElement.classList.contains('dark')) {
-                    targetElement.style.backgroundColor = palette.dark.replace('OPACITY', opacity * 0.6);
-                }
-                
-                // Add fade animation class with staggered timing
-                targetElement.classList.add('heatmap-cell-fade');
-                const delayMs = (values.indexOf({ cell, value }) % 10) * 30;
-                targetElement.style.animationDelay = delayMs + 'ms';
-            });
+        const baseOpacity = type === 'percentage' ? 0.15 : 0.1;
+        const maxOpacity = type === 'percentage' ? 0.4 : 0.3;
+        const opacity = baseOpacity + (intensity / 100) * maxOpacity;
+        
+        // Apply light mode color
+        const lightColor = palette.light.replace('OPACITY', opacity);
+        cell.style.backgroundColor = lightColor;
+        cell.style.transition = 'background-color 0.3s ease';
+        
+        // Store dark mode color
+        cell.setAttribute('data-dark-bg', palette.dark.replace('OPACITY', opacity * 0.6));
+        
+        // Apply dark mode if active
+        if (document.documentElement.classList.contains('dark')) {
+            cell.style.backgroundColor = palette.dark.replace('OPACITY', opacity * 0.6);
+        }
+        
+        cell.classList.add('heatmap-cell-fade');
+        cell.style.animationDelay = (idx % 10) * 30 + 'ms';
     });
 }
 
@@ -1447,7 +1463,7 @@ function removeHeatmap() {
 /**
  * Toggle heatmap on/off
  */
-let heatmapEnabled = true;
+let heatmapEnabled = false;
 function toggleHeatmap() {
     heatmapEnabled = !heatmapEnabled;
     
@@ -1761,7 +1777,7 @@ function addHeatmapToggle() {
         toggleButton.id = 'heatmapToggle';
         toggleButton.onclick = toggleHeatmap;
         toggleButton.className = 'px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors duration-200 dark:bg-indigo-500 dark:hover:bg-indigo-600';
-        toggleButton.innerHTML = '🎨 Disable Heatmap';
+        toggleButton.innerHTML = '🎨 Enable Heatmap';
         
         tableHeader.appendChild(toggleButton);
     }

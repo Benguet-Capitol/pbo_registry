@@ -756,7 +756,7 @@
                                         <a href="{{ route('dashboard.accounts', $class->id) }}" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 group">
                                             <i class="fas fa-stream mr-2"></i> Accounts
                                         </a>
-                                        <a href="#" onclick="showObligationsModal(event)" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 rounded-b-lg cursor-pointer">
+                                        <a href="#" onclick="openObligationsModalFromDropdown(event, {{ $class->id }})" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 rounded-b-lg cursor-pointer">
                                             <i class="fas fa-list-check mr-2"></i> Obligations
                                         </a>
                                         <!--
@@ -1270,6 +1270,21 @@
                         contextMenu.classList.add('hidden');
                     }
                 });
+
+                /**
+                 * Show obligations modal from dropdown with class ID
+                 */
+                function openObligationsModalFromDropdown(event, classId) {
+                    if (event) {
+                        event.preventDefault();
+                    }
+                    
+                    // Set the class ID globally
+                    window.currentClassId = classId;
+                    
+                    // Call the main modal function
+                    showObligationsModal(event);
+                }
 
                 /**
                  * Show obligations modal and fetch data
@@ -3269,6 +3284,7 @@
         window.toggleWidget = toggleWidget;
         window.toggleFilters = toggleFilters;
         window.createTopPerformersWidget = createTopPerformersWidget;
+        window.openObligationsModalFromDropdown = openObligationsModalFromDropdown;
         window.showObligationsModal = showObligationsModal;
         window.closeObligationsModal = closeObligationsModal;
         window.openCreateModalWithClass = openCreateModalWithClass;

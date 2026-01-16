@@ -1,6 +1,13 @@
 <x-app-layout>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <style>
+        [x-cloak] { display: none; }
+        .dashboard-content {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+
     <x-slot name="header">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <h2 class="text-xl font-semibold leading-tight">
@@ -46,8 +53,9 @@
         </div>
     </x-slot>
 
-    <!-- Success Alert Toast - Right Side -->
-    @if(session('status'))
+    <div class="dashboard-content">
+        <!-- Success Alert Toast - Right Side -->
+        @if(session('status'))
     @php
     $status = session('status');
     @endphp
@@ -3319,6 +3327,19 @@
     </script>
 
     <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
         @keyframes slideIn {
             from {
                 transform: translateX(400px);
@@ -3382,5 +3403,6 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </x-app-layout>

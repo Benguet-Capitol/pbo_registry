@@ -76,6 +76,19 @@
         .login-input:focus {
             animation: none;
         }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        .animate-fade-out {
+            animation: fadeOut 0.6s ease-in forwards;
+        }
     </style>
 
     <div class="flex items-center justify-center min-h-screen px-4 py-12">
@@ -102,7 +115,7 @@
                             </p>
                         </div>
 
-                        <form method="POST" action="{{ route('login') }}">
+                        <form method="POST" action="{{ route('login') }}" onsubmit="handleFormSubmit(event)">
                             @csrf
 
                             <div class="space-y-6">
@@ -229,6 +242,13 @@
                 passwordInput.type = 'password';
                 showIcon.style.display = 'inline';
                 hideIcon.style.display = 'none';
+            }
+        }
+
+        function handleFormSubmit(event) {
+            const mainContainer = document.querySelector('.flex.items-center.justify-center');
+            if (mainContainer) {
+                mainContainer.classList.add('animate-fade-out');
             }
         }
     </script>

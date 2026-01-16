@@ -1,7 +1,7 @@
 <x-perfect-scrollbar
     as="nav"
     aria-label="main"
-    class="flex flex-col flex-1 gap-3 px-3">
+    class="flex flex-col flex-1 gap-2 px-2">
 
     <!-- Administrator | Developer roles -->
     @role('Administrator|Developer')
@@ -16,7 +16,7 @@
     <div
         x-transition
         x-show="isSidebarOpen || isSidebarHovered"
-        class="text-sm text-gray-900 dark:text-gray-100">
+        class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
         Registry
     </div>
     <x-sidebar.link
@@ -135,7 +135,7 @@
     <div
         x-transition
         x-show="isSidebarOpen || isSidebarHovered"
-        class="text-sm text-gray-900 dark:text-gray-100">
+        class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
         Reports / Summaries
     </div>
 
@@ -259,7 +259,7 @@
     <div
         x-transition
         x-show="isSidebarOpen || isSidebarHovered"
-        class="text-sm text-gray-900 dark:text-gray-100">
+        class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
         User Management
     </div>
     <x-sidebar.link
@@ -301,7 +301,7 @@
     <div
         x-transition
         x-show="isSidebarOpen || isSidebarHovered"
-        class="text-sm text-gray-900 dark:text-gray-100">
+        class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
         Registry
     </div>
     <x-sidebar.link
@@ -348,7 +348,7 @@
     <div
         x-transition
         x-show="isSidebarOpen || isSidebarHovered"
-        class="text-sm text-gray-900 dark:text-gray-100">
+        class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
         Reports / Summaries
     </div>
 
@@ -441,7 +441,7 @@
         <div
             x-transition
             x-show="isSidebarOpen || isSidebarHovered"
-            class="text-sm text-gray-900 dark:text-gray-100">
+            class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
             Registry
         </div>
 
@@ -451,6 +451,14 @@
             :isActive="request()->routeIs('obligations.index')">
             <x-slot name="icon">
                 <i class="fas fa-list-check text-xl flex-shrink-0 dark:text-gray-100"></i>
+            </x-slot>
+        </x-sidebar.link>
+        <x-sidebar.link
+            title="Purchase Order"
+            href="{{ route('purchase_orders.all') }}"
+            :isActive="request()->routeIs('purchase_orders.all')">
+            <x-slot name="icon">
+                <i class="fas fa-file-invoice text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
             </x-slot>
         </x-sidebar.link>
         <x-sidebar.link
@@ -465,7 +473,7 @@
         <div
             x-transition
             x-show="isSidebarOpen || isSidebarHovered"
-            class="text-sm text-gray-900 dark:text-gray-100">
+            class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
             Reports / Summaries
         </div>
 

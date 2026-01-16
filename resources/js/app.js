@@ -51,7 +51,7 @@ document.addEventListener('alpine:init', () => {
                 this.isDarkMode = !this.isDarkMode
                 setTheme(this.isDarkMode)
             },
-            isSidebarOpen: window.innerWidth > 1024,
+            isSidebarOpen: false,
             isSidebarHovered: false,
             handleSidebarHover(value) {
                 if (window.innerWidth < 1024) {
@@ -62,8 +62,6 @@ document.addEventListener('alpine:init', () => {
             handleWindowResize() {
                 if (window.innerWidth <= 1024) {
                     this.isSidebarOpen = false
-                } else {
-                    this.isSidebarOpen = true
                 }
             },
             scrollingDown: false,

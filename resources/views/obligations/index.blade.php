@@ -371,6 +371,7 @@
                                     $isOBRZero = $obligationAmount == 0;
                                 @endphp
 
+                                @if ($obligation->obr_type !== 'Purchase Request')
                                 <div class="relative inline-block group">
                                         <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
                                             type="button"
@@ -396,6 +397,9 @@
                                             Add Disbursement
                                         </span>
                                 </div>
+                                @else
+                                    <span class="text-gray-700 dark:text-gray-400 px-2 py-1">{{ number_format($disbursementAmount, 2) }}</span>
+                                @endif
                             </td>
 
                             <td class="px-1 py-2 text-right balance">
@@ -501,7 +505,7 @@
                         </tbody>
                     </table>
                     <!-- Sticky footer table for totals -->
-                    <div id="obligationTableFooter" class="sticky bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-2 border-b-2 border-gray-700 dark:border-gray-600 z-20">
+                    <div id="obligationTableFooter" class="sticky bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-2 border-b-2 border-gray-700 dark:border-gray-600 z-10">
                         <table class="min-w-full text-sm text-center text-gray-600 dark:text-gray-300">
                             <tbody>
                                 <tr class="bg-gray-200 dark:bg-gray-700 font-bold">
@@ -732,10 +736,11 @@
             // Disbursement button
             const disbursementBtn = menu.querySelector('#contextDisbursement');
             if (disbursementBtn && obligation.id) {
-                disbursementBtn.onclick = () => {
-                    hideObligationContextMenu();
-                    window.location.href = `/disbursements?obligation_id=${obligation.id}`;
-                };
+                    disbursementBtn.style.display = 'block';
+                    disbursementBtn.onclick = () => {
+                        hideObligationContextMenu();
+                        window.location.href = `/disbursements?obligation_id=${obligation.id}`;
+                    };
             }
 
             // Edit button
@@ -1492,7 +1497,7 @@ function updateAdjustedAmountTotal() {
     /* Modal Create Disbursement */
     function openCreateDisbursementModal(obligationId) {
         closeAllDropdowns();
-        fetch(`/obligations/${obligationId}/disbursement-modal`)
+        fetch(`/obligations/${obligationId}/disbursement-modal?from=obligation`)
             .then(response => response.text())
             .then(html => {
                 document.getElementById('createDisbursementModalContainer').innerHTML = html;
@@ -1567,22 +1572,28 @@ function updateAdjustedAmountTotal() {
         let isValid = true;
 
         // Clear previous error messages
-        document.getElementById('dv_noError').innerText = '';
-        document.getElementById('statusError').innerText = '';
-        document.getElementById('tableMessage').classList.add('hidden');
-        document.getElementById('tableMessage').innerText = '';
+        const dvNoError = document.getElementById('dv_noError');
+        const statusError = document.getElementById('statusError');
+        const tableMessageDV = document.getElementById('tableMessageDV');
 
-        // Validate PO Number
-        const poNumber = document.getElementById('dv_no').value.trim();
-        if (poNumber === '') {
-            document.getElementById('dv_noError').innerText = 'DV / Check Number is required.';
+        if (dvNoError) dvNoError.innerText = '';
+        if (statusError) statusError.innerText = '';
+        if (tableMessageDV) {
+            tableMessageDV.classList.add('hidden');
+            tableMessageDV.innerText = '';
+        }
+
+        // Validate DV Number
+        const poNumber = document.getElementById('dv_no');
+        if (poNumber && poNumber.value.trim() === '') {
+            if (dvNoError) dvNoError.innerText = 'DV / Check Number is required.';
             isValid = false;
         }
 
         // Validate Status
-        const status = document.getElementById('status').value;
-        if (status === '') {
-            document.getElementById('statusError').innerText = 'Status is required.';
+        const status = document.getElementById('status');
+        if (status && status.value === '') {
+            if (statusError) statusError.innerText = 'Status is required.';
             isValid = false;
         }
 
@@ -1597,25 +1608,39 @@ function updateAdjustedAmountTotal() {
             if (value > 0) {
                 atLeastOneAmountEntered = true;
                 if (value > maxBalance) {
-                    input.nextElementSibling.innerText = `Amount exceeds the available balance of ₱${maxBalance.toFixed(2)}.`;
+                    const errorSpan = input.nextElementSibling;
+                    if (errorSpan) {
+                        errorSpan.innerText = `Amount exceeds the available balance of ₱${maxBalance.toFixed(2)}.`;
+                    }
                     isValid = false;
                 } else {
-                    input.nextElementSibling.innerText = '';
+                    const errorSpan = input.nextElementSibling;
+                    if (errorSpan) {
+                        errorSpan.innerText = '';
+                    }
                 }
             } else {
-                input.nextElementSibling.innerText = '';
+                const errorSpan = input.nextElementSibling;
+                if (errorSpan) {
+                    errorSpan.innerText = '';
+                }
             }
         });
 
         if (!atLeastOneAmountEntered) {
-            document.getElementById('tableMessageDV').innerText = 'Please enter at least one DV / Check Amount.';
-            document.getElementById('tableMessageDV').classList.remove('hidden');
+            if (tableMessageDV) {
+                tableMessageDV.innerText = 'Please enter at least one DV / Check Amount.';
+                tableMessageDV.classList.remove('hidden');
+            }
             isValid = false;
         }
 
         // If all validations pass, submit the form
         if (isValid) {
-            document.getElementById('CreateDisbursementForm').submit();
+            const form = document.getElementById('CreateDisbursementForm');
+            if (form) {
+                form.submit();
+            }
         }
     }
 

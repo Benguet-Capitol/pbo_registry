@@ -25,18 +25,63 @@
         </div>
     </x-slot>
 
+    <!-- Success Toast Notification -->
+    <div id="success-toast" class="fixed top-6 right-6 z-50 transform transition-all duration-300 ease-in-out opacity-0 translate-x-96 pointer-events-none">
+        <div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-300 rounded-lg shadow-lg p-4 dark:bg-gradient-to-r dark:from-green-900 dark:to-green-800 dark:border-green-700">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-green-800 dark:text-green-100">Success</h3>
+                    <p class="mt-1 text-sm text-green-700 dark:text-green-200" id="toast-message">Excel report generated successfully</p>
+                </div>
+                <button onclick="closeSuccessToast()" class="ml-3 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Toast Notification -->
+    <div id="loading-toast" class="fixed top-6 right-6 z-50 transform transition-all duration-300 ease-in-out opacity-0 translate-x-96 pointer-events-none">
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-300 rounded-lg shadow-lg p-4 dark:bg-gradient-to-r dark:from-blue-900 dark:to-blue-800 dark:border-blue-700">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <div class="animate-spin h-5 w-5 text-blue-600 dark:text-blue-400">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.581 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-100">Generating Excel Report</h3>
+                    <p class="mt-1 text-sm text-blue-700 dark:text-blue-200">Please wait while your file is being generated...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Unified Filter Section -->
-    <form method="GET" action="" class="bg-white p-4 rounded-lg shadow-md mb-3 dark:bg-gray-800" id="filterForm">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
-        <!-- Shared validation message -->
-        <span id="signatory_error" class="text-red-500 text-xs mb-2 hidden"></span>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
-            <!-- Year Filter -->
-            <div class="flex items-center space-x-2">
+    <form method="GET" action="" class="bg-white overflow-hidden shadow-md sm:rounded-lg mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out" id="filterForm">
+        <div class="p-4 bg-white rounded-md border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
+                Filters
+            </h4>
+            <!-- Shared validation message -->
+            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 animate-pulse transition-opacity duration-300 ease-in-out"></span>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
+                <!-- Year Filter -->
+                <div class="flex items-center space-x-2">
                 <x-form.select
                     name="year1"
                     id="year1"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                     onchange="this.form.submit()">
                     @foreach($availableYears as $year)
                     <option value="{{ $year }}" {{ request('year1', date('Y')) == $year ? 'selected' : '' }}>{{ $year }}</option>
@@ -48,7 +93,7 @@
                 <x-form.select
                     name="fund_filter"
                     id="fund_filter"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                     onchange="this.form.submit()">
                     <option value="">All Funds</option>
 
@@ -74,7 +119,7 @@
                     autocomplete="off"
                     id="as_of_filter"
                     value="{{ request('as_of_filter', now()->format('Y-m-d')) }}"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                     onchange="this.form.submit()">
                 </x-form.input>
             </div>
@@ -83,7 +128,7 @@
                 <x-form.select
                     name="signatory_name"
                     id="signatory_name"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                     onchange="this.form.submit()">
                     <option value="">Select Signatory</option>
                     @foreach($employees as $employee)
@@ -99,7 +144,7 @@
                 <x-form.select
                     name="signatory_designation"
                     id="signatory_designation"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                     onchange="this.form.submit()">
                     <option value="">Select Designation</option>
                     <option value="Provincial Budget Officer" {{ request('signatory_designation') == 'Provincial Budget Officer' ? 'selected' : '' }}>Provincial Budget Officer</option>
@@ -108,35 +153,35 @@
                 </x-form.select>
 
             </div>
-            <div class="flex items-center space-x-2">
+            </div>
+
+            <!-- Buttons Row -->
+            <div class="flex items-center space-x-2 mt-4">
                 <button
                     onclick="printSAAOBFundSectorTable()"
-                    class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900"
+                    class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
                     type="button">
+                    <i class="fas fa-print text-lg mr-2 -ml-1 w-4 h-4"></i>
                     Print Report
                 </button>
-    </form>
-    <form method="GET" action="{{ route('saaobFundSector.exportExcel') }}" style="display:inline;">
-        <input type="hidden" name="year1" value="{{ request('year1') }}">
-        <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
-        <input type="hidden" name="as_of_filter" value="{{ request('as_of_filter') }}">
-        <input type="hidden" name="signatory_name" value="{{ request('signatory_name') }}">
-        <input type="hidden" name="signatory_designation" value="{{ request('signatory_designation') }}">
 
-        <button type="submit" class="text-green-700 border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-3 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-            Generate Excel
-        </button>
-    </form>
-    </div>
-    </div>
+                <button 
+                    type="button"
+                    onclick="exportSAAOBFundSectorExcel()"
+                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
+                    id="excel-export-btn">
+                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4"></i>
+                    Generate Excel
+                </button>
+            </div>
+        </div>
 
-    <div class="bg-white overflow-hidden shadow-md sm:rounded-lg mt-6 mb-6 dark:bg-gray-800">
-        <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
+        <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <table id="saaobFundSectorTable" class="w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
-                    <thead class="sticky top-0 z-10 bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900">
+                    <thead class="sticky top-0 z-10 bg-gradient-to-r from-gray-700 to-gray-800 text-white dark:bg-gradient-to-r dark:from-gray-200 dark:to-gray-300 dark:text-gray-900 transition-colors duration-300 ease-in-out">
                         <tr>
                             <th class="px-1 py-1 w-[70px] text-center">Code</th>
                             <th class="px-1 py-1 w-[170px] text-center">Function / Program / Project</th>
@@ -157,21 +202,21 @@
 
                     <tbody class="border border-gray-300 dark:border-gray-600 text-[10px]">
                         @foreach($groupedFunds as $fund)
-                        <tr id="fundRow" class="bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 uppercase font-bold border-t border-b border-gray-700 dark:border-gray-100 text-center text-sm">
+                        <tr id="fundRow" class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 text-gray-700 dark:text-gray-200 uppercase font-bold border-t border-b border-gray-700 dark:border-gray-100 text-center text-sm transition-colors duration-300 ease-in-out">
                             <td colspan="15" class="px-2 py-3">{{ $fund->fund_type }}</td>
                         </tr>
                         @foreach ($fund->matchedSectorsByCategory as $category => $sectors)
-                        <tr id="fundSourceRow" class="bg-gray-600 text-white dark:bg-gray-200 dark:text-gray-800 font-bold text-xs border-t border-b border-gray-700 dark:border-gray-100">
+                        <tr id="fundSourceRow" class="bg-gradient-to-r from-gray-600 to-gray-700 text-white dark:from-gray-200 dark:to-gray-300 dark:text-gray-800 font-bold text-xs border-t border-b border-gray-700 dark:border-gray-100 transition-colors duration-300 ease-in-out hover:from-gray-700 hover:to-gray-800 dark:hover:from-gray-300 dark:hover:to-gray-400">
                             <td colspan="15" class="px-4 py-2"> {{ $category }} Appropriations </td>
                         </tr>
                         @foreach($sectors as $sector)
                         @if ($sector->sector_code !== '' && $sector->present_allotment_classes->isNotEmpty())
-                        <tr id="sectorRow" class="bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-white text-xs font-semibold italic border-t border-b border-gray-400 dark:border-gray-100">
+                        <tr id="sectorRow" class="bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 dark:from-gray-600 dark:to-gray-700 dark:text-white text-xs font-semibold italic border-t border-b border-gray-400 dark:border-gray-100 transition-all duration-300 ease-in-out hover:from-gray-300 hover:to-gray-400 dark:hover:from-gray-700 dark:hover:to-gray-800">
                             <td class="px-1 py-2 text-center"> {{ $sector->sector_code }}</td>
                             <td colspan="14" class="px-1 py-2 text-left">{{ $sector->sector }}</td>
                         </tr>
                         @foreach ($sector->present_allotment_classes as $aClass)
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out">
                             <td class="px-1 py-2"></td>
                             <td class="px-1 py-2 text-left">{{ $aClass->description }}</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">
@@ -283,7 +328,7 @@
                             </td>
                         </tr>
                         @endforeach
-                        <tr class="bg-gray-500 text-white dark:bg-gray-600 dark:text-white font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
+                        <tr class="bg-gradient-to-r from-blue-600 to-blue-700 text-white dark:from-gray-600 dark:to-gray-700 dark:text-white font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 transition-colors duration-300 ease-in-out">
                             <td colspan="2" class="px-1 py-2 text-right">Total:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">
                                 {{ $sector->totals->approved_appropriation == 0 ? '-' : ($sector->totals->approved_appropriation < 0 ? '(' . number_format(abs($sector->totals->approved_appropriation), 2) . ')' : number_format($sector->totals->approved_appropriation, 2)) }}
@@ -341,7 +386,7 @@
                         );
                         @endphp
                         @if ($hasValidSector)
-                        <tr class="bg-gray-100 text-gray-700 dark:bg-gray-200 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
+                        <tr class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 dark:from-gray-200 dark:to-gray-300 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 transition-colors duration-300 ease-in-out">
                             <td colspan="2" class="px-1 py-2 text-right">Total {{ $category }} Appropriations:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">
                                 {{ $fund->categoryTotals[$category]->approved_appropriation == 0 ? '-' : ($fund->categoryTotals[$category]->approved_appropriation < 0 ? '(' . number_format(abs($fund->categoryTotals[$category]->approved_appropriation), 2) . ')' : number_format($fund->categoryTotals[$category]->approved_appropriation, 2)) }}
@@ -398,12 +443,12 @@
                         $sectors->filter(fn($sector) => $sector->present_allotment_classes->isNotEmpty())->isNotEmpty()
                         && $fund->categoryClassStats[$category]?->isNotEmpty()
                         )
-                        <tr id="fundSourceRow" class="bg-gray-700 text-white text-xs font-bold border-t border-b border-gray-600">
+                        <tr id="fundSourceRow" class="bg-gradient-to-r from-gray-700 to-gray-800 text-white text-xs font-bold border-t border-b border-gray-600 transition-colors duration-300 ease-in-out hover:from-gray-800 hover:to-gray-900">
                             <td colspan="15" class="px-2 py-2 text-left">{{ $category }} Appropriations by Allotment Class</td>
                         </tr>
 
                         @foreach ($fund->categoryClassStats[$category] as $classCode => $row)
-                        <tr class="bg-white text-gray-800 border-b dark:bg-gray-900 dark:text-gray-200">
+                        <tr class="bg-white text-gray-800 border-b dark:bg-gray-900 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150 ease-in-out">
                             <td colspan="2" class="px-1 py-2 text-left">{{ $row->description }}</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">
                                 {{ $row->approved_appropriation == 0 || is_null($row->approved_appropriation) ? '-' : ($row->approved_appropriation < 0 ? '(' . number_format(abs($row->approved_appropriation), 2) . ')' : number_format($row->approved_appropriation, 2)) }}
@@ -455,7 +500,7 @@
                         </tr>
                         @endforeach
                         {{-- Totals per Category after Allotment Class Totals --}}
-                        <tr class="bg-gray-100 text-gray-700 dark:bg-gray-200 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100">
+                        <tr class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 dark:from-gray-200 dark:to-gray-300 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 transition-colors duration-300 ease-in-out">
                             <td colspan="2" class="px-1 py-2 text-right">Total {{ $category }} Appropriations:</td>
                             <td class="px-1 py-2 text-right" data-key="appropriation">
                                 @php $val = $fund->categoryTotals[$category]->approved_appropriation ?? null; @endphp
@@ -619,14 +664,84 @@
             runPrintSAAOBFundSectorTable(); // call actual print function
         };
 
-        // Intercept Excel Export Submit
-        document.querySelector(`form[action="{{ route('saaobFundSector.exportExcel') }}"]`)
-            .addEventListener('submit', function(e) {
-                if (!validateSignatories()) {
-                    e.preventDefault();
-                }
+        // Intercept Excel Export with AJAX
+        async function exportSAAOBFundSectorExcel() {
+            if (!validateSignatories()) {
+                return;
+            }
+
+            const btn = document.getElementById('excel-export-btn');
+            btn.disabled = true;
+
+            // Show loading toast
+            showLoadingToast();
+
+            const params = new URLSearchParams({
+                year1: document.querySelector('[name="year1"]').value,
+                fund_filter: document.querySelector('[name="fund_filter"]').value,
+                as_of_filter: document.querySelector('[name="as_of_filter"]').value,
+                signatory_name: document.querySelector('[name="signatory_name"]').value,
+                signatory_designation: document.querySelector('[name="signatory_designation"]').value,
             });
 
+            try {
+                const response = await fetch('{{ route('saaobFundSector.exportExcel') }}?' + params);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'SAAOB_Fund_Sector_Report.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    
+                    // Hide loading toast and show success toast
+                    closeLoadingToast();
+                    showSuccessToast('Excel report generated successfully');
+                }
+            } catch (error) {
+                console.error('Export failed:', error);
+                closeLoadingToast();
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Toast notification functions
+        function showSuccessToast(message = 'Excel report generated successfully') {
+            const toast = document.getElementById('success-toast');
+            const messageEl = document.getElementById('toast-message');
+            
+            if (messageEl) {
+                messageEl.textContent = message;
+            }
+            
+            toast.classList.remove('hide', 'pointer-events-none');
+            toast.classList.add('show');
+            
+            // Auto dismiss after 4 seconds
+            setTimeout(closeSuccessToast, 4000);
+        }
+
+        function closeSuccessToast() {
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('show');
+            toast.classList.add('hide', 'pointer-events-none');
+        }
+
+        function showLoadingToast() {
+            const toast = document.getElementById('loading-toast');
+            toast.classList.remove('hide', 'pointer-events-none');
+            toast.classList.add('show');
+        }
+
+        function closeLoadingToast() {
+            const toast = document.getElementById('loading-toast');
+            toast.classList.remove('show');
+            toast.classList.add('hide', 'pointer-events-none');
+        }
 
         function runPrintSAAOBFundSectorTable() {
             const table = document.getElementById('saaobFundSectorTable').cloneNode(true);
@@ -762,4 +877,209 @@
 
         }
     </script>
+
+    <style>
+        /* Smooth transitions for filter inputs */
+        .filter-select {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .filter-select:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Table row hover animations */
+        tbody tr {
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Header sticky effect with smooth animation */
+        thead {
+            animation: slideDown 0.3s ease-in-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Gradient text for section headers */
+        tr[id="fundRow"] {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        tr[id="fundSourceRow"] {
+            animation: fadeIn 0.4s ease-in-out 0.1s both;
+        }
+
+        tr[id="sectorRow"] {
+            animation: fadeIn 0.4s ease-in-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Button press animation */
+        button {
+            transition: all 0.2s ease-in-out;
+        }
+
+        button:active {
+            transition: all 0.1s ease-in-out;
+        }
+
+        /* Smooth color transition for hover states */
+        tr[id="fundSourceRow"]:hover {
+            transition: background 0.3s ease-in-out;
+        }
+
+        /* Table cell transition */
+        td, th {
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        /* Error message pulse animation */
+        #signatory_error {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Form transition on focus */
+        #filterForm {
+            animation: slideUp 0.3s ease-in-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Table container entrance animation */
+        .bg-white.overflow-hidden.shadow-md {
+            animation: slideUp 0.4s ease-in-out 0.1s both;
+        }
+
+        /* Enhanced scrollbar styling for table */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background 0.2s ease-in-out;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Dark mode scrollbar */
+        .dark .overflow-y-auto::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        .dark .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #4b5563;
+        }
+
+        .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        /* Smooth staggered table rendering */
+        tbody tr {
+            opacity: 1;
+            animation: tableRowFade 0.3s ease-in-out;
+        }
+
+        @keyframes tableRowFade {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Focus indicator enhancement */
+        .filter-select:focus-visible {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+
+        /* Toast notification animations */
+        @keyframes slideInToast {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutToast {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+
+        #success-toast.show {
+            animation: slideInToast 0.3s ease-out forwards;
+            pointer-events: auto;
+        }
+
+        #success-toast.hide {
+            animation: slideOutToast 0.3s ease-in forwards;
+            pointer-events: none;
+        }
+
+        #loading-toast.show {
+            animation: slideInToast 0.3s ease-out forwards;
+            pointer-events: auto;
+        }
+
+        #loading-toast.hide {
+            animation: slideOutToast 0.3s ease-in forwards;
+            pointer-events: none;
+        }
+    </style>
 </x-app-layout>

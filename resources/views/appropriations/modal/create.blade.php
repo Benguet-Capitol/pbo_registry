@@ -1,21 +1,22 @@
 <!-- Create Appropriations Modal -->
 <form id="createAppropriationsForm" method="POST" action="{{ route('appropriations.store') }}">
     @csrf
-    <div id="createAppropriationsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-        <div class="relative top-20 mx-auto p-4 border w-full max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+    <div id="createAppropriationsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-all duration-300 ease-in-out animate-fadeIn flex items-center justify-center p-4" style="display: none;">
+        <div class="relative w-full max-w-4xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 transform transition-all duration-300 ease-out animate-scaleInUp max-h-[90vh] flex flex-col">
             <!-- Modal content -->
-            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+            <div class="relative bg-white rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                    <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
+                <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+                    <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                        <i class="fas fa-plus-circle text-blue-600 dark:text-blue-400 mr-3 text-xl"></i>
                         {{ __('Create Account') }}
                     </h3>
-                    <button type="button" onclick="closeCreateAppropriationsModal()" class="text-black hover:text-gray-600 dark:text-white">
-                        <i class="fas fa-times text-xl mr-2"></i>
+                    <button type="button" onclick="closeCreateAppropriationsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">
+                        <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
                 <!-- Modal body -->
-                <div class="mt-2 px-7 py-3">
+                <div class="overflow-y-auto flex-1 px-7 py-3">
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
@@ -235,14 +236,14 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-4 p-4 flex items-center border-t border-gray-200 rounded-b dark:border-gray-600">
+                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateCreateAppropriationsForm()" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                        <i class="fas fa-save text-xl mr-2"></i>
+                    <button type="button" onclick="validateCreateAppropriationsForm()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
-                    <button type="button" onclick="closeCreateAppropriationsModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                        <i class="fas fa-times text-xl mr-2"></i>
+                    <button type="button" onclick="closeCreateAppropriationsModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-times text-lg mr-2"></i>
                         {{ __('Cancel') }}
                     </button>
                 </div>
@@ -255,11 +256,17 @@
     //Open Create Modal
     function openCreateAppropriationsModal() {
         closeAllDropdowns();
-        document.getElementById('createAppropriationsModal').classList.remove('hidden');
+        const modal = document.getElementById('createAppropriationsModal');
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
     }
     //Close Create Modal
     function closeCreateAppropriationsModal() {
-        document.getElementById('createAppropriationsModal').classList.add('hidden');
+        const modal = document.getElementById('createAppropriationsModal');
+        modal.classList.add('hidden');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     }
     // Unhide Project No. and CCO year if the allotment class is CCO and unhide CCO Year only if the office is PDF
     document.addEventListener("DOMContentLoaded", function() {

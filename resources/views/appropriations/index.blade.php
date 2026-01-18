@@ -10,9 +10,9 @@
             }
         @endphp
 
-        <div class="border-l-4 p-4 mb-4 flex justify-between items-start {{ $alertType }}" role="alert">
+        <div class="border-l-4 p-4 mb-4 flex justify-between items-start {{ $alertType }} rounded-r-lg shadow-md animate-slideInDown transition-all duration-500 ease-out" role="alert">
             <p class="flex-1">{!! session('status') !!}</p>
-            <button type="button" class="ml-4 text-2xl font-semibold leading-none" onclick="this.closest('div[role=alert]').remove();">
+            <button type="button" class="ml-4 text-2xl font-semibold leading-none hover:opacity-70 transition-opacity duration-200" onclick="this.closest('div[role=alert]').classList.add('animate-slideOutUp'); setTimeout(() => this.closest('div[role=alert]').remove(), 300);">
                 &times;
             </button>
         </div>
@@ -20,9 +20,9 @@
 
     {{-- Error/Warning messages --}}
     @if (session('error'))
-        <div class="border-l-4 p-4 mb-4 flex justify-between items-start bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-600 dark:text-red-200" role="alert">
+        <div class="border-l-4 p-4 mb-4 flex justify-between items-start bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-600 dark:text-red-200 rounded-r-lg shadow-md animate-slideInDown transition-all duration-500 ease-out" role="alert">
             <p class="flex-1">{!! session('error') !!}</p>
-            <button type="button" class="ml-4 text-2xl font-semibold leading-none" onclick="this.closest('div[role=alert]').remove();">
+            <button type="button" class="ml-4 text-2xl font-semibold leading-none hover:opacity-70 transition-opacity duration-200" onclick="this.closest('div[role=alert]').classList.add('animate-slideOutUp'); setTimeout(() => this.closest('div[role=alert]').remove(), 300);">
                 &times;
             </button>
         </div>
@@ -123,29 +123,30 @@
 
     </x-slot>
 
-    <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
+    <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex gap-2">
+            <div class="flex justify-between items-center mb-4 gap-4">
+                <div class="flex gap-3">
                     @can('create appropriations')
-                    <button onclick="openCreateAppropriationsModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                        <i class="fas fa-plus text-lg mr-1 -ml-1 w-5 h-5"></i>
+                    <button onclick="openCreateAppropriationsModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Create Account') }}
                     </button>
                     @endcan
 
                     @can('create appropriations')
-                    <button onclick="openCopyLastYearModal()" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900">
-                        <i class="fas fa-copy text-lg mr-1 -ml-1 w-5 h-5"></i>
+                    <button onclick="openCopyLastYearModal()" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-copy text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Accounts from Last Year') }}
                     </button>
                     @endcan
                 </div>
-                <div class="flex items-center text-xs">
-                    <form method="GET" action="{{ route('appropriations.index') }}" class="flex items-center">
+                <div class="flex items-center text-xs gap-3 flex-1 max-w-2xl">
+                    <i class="fas fa-search text-gray-400"></i>
+                    <form method="GET" action="{{ route('appropriations.index') }}" class="flex items-center gap-2 w-full">
                         <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for accounts" class="form-control border border-gray-300 rounded-lg px-4 py-2 mr-2 text-xs w-72 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200" />
-                        <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search accounts..." class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400" />
+                        <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400">
                             <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
                             <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
                             <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
@@ -160,112 +161,138 @@
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <table id="appropriationsTable" class="table-auto text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
-                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
+                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10 transition-colors duration-200">
                     <tr>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'programs', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Programs
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'programs', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>Programs</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'programs')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'account_code', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Account Code
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'account_code', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>Account Code</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'account_code')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'description', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Description
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'description', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>Description</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'description')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'fpp_code', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                FPP Code
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'fpp_code', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>FPP Code</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'fpp_code')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_no', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Project No.
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_no', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>Project No.</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'project_no')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_location', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Project Location
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'project_location', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>Project Location</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'project_location')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
                         @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'cco_year', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                CCO Year
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'cco_year', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>CCO Year</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'cco_year')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
                         @endif
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'appropriation', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Appropriation
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'appropriation', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>Appropriation</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'appropriation')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter1', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                1st Quarter Allotment
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter1', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>1st Quarter Allotment</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'quarter1')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter2', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                2nd Quarter Allotment
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter2', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>2nd Quarter Allotment</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'quarter2')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter3', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                3rd Quarter Allotment
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter3', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>3rd Quarter Allotment</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'quarter3')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter4', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                4th Quarter Allotment
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'quarter4', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>4th Quarter Allotment</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'quarter4')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
-                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700">
-                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'remarks', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="dark:text-gray-200">
-                                Remarks
+                        <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                            <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'remarks', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
+                                <span>Remarks</span>
+                                <span class="transition-transform duration-200">
                                 @if($sortBy == 'remarks')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
+                                </span>
                             </a>
                         </th>
                     </tr>
@@ -273,7 +300,7 @@
                 <tbody>
                     @forelse ($appropriations as $appropriation)
                     <tr 
-                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer relative"
+                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer relative transition-colors duration-200 ease-in-out"
                         oncontextmenu="showAppropriationContextMenu(event, this)"
                         @if(isset($appropriation))
                             data-appropriation='@json($appropriation)'
@@ -283,21 +310,21 @@
                             data-appropriation-desc="{{ $appropriation->description }}"
                         @endif
                     >
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->programs }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->account_code }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->description }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->fpp_code }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_no }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->project_location }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->programs }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->account_code }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->description }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->fpp_code }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->project_no }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->project_location }}</td>
                         @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->cco_year }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->cco_year }}</td>
                         @endif
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->appropriation, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter1, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter2, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter3, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right">{{ number_format($appropriation->quarter4, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300">{{ $appropriation->remarks }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->appropriation, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter1, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter2, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter3, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter4, 2) }}</td>
+                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->remarks }}</td>
                     </tr>
                     @empty
                     <tr>
@@ -342,10 +369,8 @@
     @include('appropriations.modal.edit')
     @include('appropriations.modal.copy_last_year')
 
-</x-app-layout>
-
-<script>
-    function filterTable() {
+    <script>
+        function filterTable() {
         // Declare variables
         var input, filter, table, tr, td, i, j, txtValue;
         input = document.getElementById("searchInput");
@@ -439,4 +464,5 @@ function hideAppropriationContextMenu(event) {
             closeAllDropdowns();
         }
     });
-</script>
+    </script>
+</x-app-layout>

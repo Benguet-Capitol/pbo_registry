@@ -1,18 +1,19 @@
 <!-- Modal for Copying Appropriations from Last Year -->
-<div id="copyLastYearModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-[120rem] w-full max-h-[90vh] overflow-y-auto">
+<div id="copyLastYearModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 transition-all duration-300 ease-in-out animate-fadeIn" style="display: none;">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-[120rem] w-full max-h-[90vh] flex flex-col transform transition-all duration-300 ease-out animate-scaleInUp">
         <!-- Header -->
-        <div class="sticky top-0 flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+            <h2 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                <i class="fas fa-copy text-purple-600 dark:text-purple-400 mr-3 text-xl"></i>
                 Accounts from Last Year
             </h2>
-            <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                <i class="fas fa-times text-2xl"></i>
+            <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">
+                <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
         <!-- Body -->
-        <div class="p-6">
+        <div class="overflow-y-auto flex-1 p-6">
             <div id="loadingIndicator" class="text-center py-8 hidden">
                 <i class="fas fa-spinner fa-spin text-3xl text-blue-600 dark:text-blue-400"></i>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">Loading accounts from last year...</p>
@@ -23,7 +24,7 @@
                 <p class="text-gray-600 dark:text-gray-400">No accounts found for last year</p>
             </div>
 
-            <div id="validationErrors" class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4 hidden">
+            <div id="validationErrors" class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4 hidden animate-slideInDown">
                 <div class="flex items-start justify-between">
                     <div class="flex items-start gap-3 flex-1">
                         <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"></i>
@@ -41,22 +42,22 @@
 
             <div id="tableContainer" class="overflow-x-auto hidden">
                 <table class="min-w-full border-collapse text-xs">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
+                    <thead class="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-gray-700 dark:to-gray-700 sticky top-0">
                         <tr>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">Programs</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">Account Code</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">Description</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">FPP Code</th>
-                            <th id="projectLocationHeader" class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">Project Location</th>
-                            <th id="projectNoHeader" class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 hidden">Project No.</th>
-                            <th id="ccoYearHeader" class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 hidden">CCO Year</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">Appropriation</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">1st Quarter Allotment</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">2nd Quarter Allotment</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">3rd Quarter Allotment</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">4th Quarter Allotment</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">Remarks</th>
-                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300">Action</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">Programs</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">Account Code</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">Description</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">FPP Code</th>
+                            <th id="projectLocationHeader" class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">Project Location</th>
+                            <th id="projectNoHeader" class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200 hidden">Project No.</th>
+                            <th id="ccoYearHeader" class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200 hidden">CCO Year</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">Appropriation</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">1st Quarter Allotment</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">2nd Quarter Allotment</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">3rd Quarter Allotment</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">4th Quarter Allotment</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">Remarks</th>
+                            <th class="border-y border-gray-300 dark:border-gray-600 px-3 py-3 text-center dark:text-gray-300 font-semibold text-gray-700 dark:text-gray-200 hover:bg-purple-200 dark:hover:bg-gray-600 transition-colors duration-200">Action</th>
                         </tr>
                     </thead>
                     <tbody id="appropriationsTableBody" class="bg-white dark:bg-gray-800">
@@ -99,16 +100,16 @@
         </div>
 
         <!-- Footer -->
-        <div class="sticky bottom-0 flex justify-between items-center p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-            <button type="button" onclick="addNewRow()" class="text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600">
-                <i class="fas fa-plus mr-1"></i>Add Row
+        <div class="flex justify-between items-center p-6 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0 gap-3">
+            <button type="button" onclick="addNewRow()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>Add Row
             </button>
             <div class="flex gap-3">
-                <button type="button" onclick="submitCopyLastYearForm()" class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600">
-                    <i class="fas fa-save mr-1"></i>Save All
+                <button type="button" onclick="submitCopyLastYearForm()" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>Save All
                 </button>
-                <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-600 inline-flex items-center border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-2 dark:border-gray-500 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-white hover:text-white">
-                    Cancel
+                <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>Cancel
                 </button>
             </div>
         </div>
@@ -163,7 +164,9 @@ function openCopyLastYearModal() {
         })
         .catch(error => console.error('Error fetching allotment class:', error));
 
-    document.getElementById('copyLastYearModal').classList.remove('hidden');
+    const modal = document.getElementById('copyLastYearModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     document.getElementById('loadingIndicator').classList.remove('hidden');
     document.getElementById('tableContainer').classList.add('hidden');
     document.getElementById('noDataMessage').classList.add('hidden');
@@ -172,7 +175,11 @@ function openCopyLastYearModal() {
 }
 
 function closeCopyLastYearModal() {
-    document.getElementById('copyLastYearModal').classList.add('hidden');
+    const modal = document.getElementById('copyLastYearModal');
+    modal.classList.add('hidden');
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
     lastYearAppropriatationsData = [];
     rowCounter = 0;
 }

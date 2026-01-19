@@ -38,7 +38,7 @@
     </div>
 
     <!-- Loading Toast Notification -->
-    <div id="loading-toast" class="toast fixed top-6 right-6 z-50 transform transition-all duration-300 ease-in-out opacity-0 translate-x-96 pointer-events-none hide">
+    <div id="loading-toast" class="fixed top-6 right-6 z-50 transform transition-all duration-300 ease-in-out opacity-0 translate-x-96 pointer-events-none hide">
         <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-300 rounded-lg shadow-lg p-4 dark:bg-gradient-to-r dark:from-blue-900 dark:to-blue-800 dark:border-blue-700">
             <div class="flex items-start">
                 <div class="flex-shrink-0">
@@ -1134,7 +1134,7 @@
 
     <!-- CSS Animations (minified) -->
     <style>
-        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes tableRowFade{from{opacity:0}to{opacity:1}}@keyframes slideInToast{from{opacity:0;transform:translateX(400px)}to{opacity:1;transform:translateX(0)}}@keyframes slideOutToast{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(400px)}}form{animation:slideUp .3s ease-in-out}table tbody tr{animation:tableRowFade .5s ease-in-out}.toast{animation:slideInToast .3s ease-in-out}.toast.hide{animation:slideOutToast .3s ease-in-out forwards}.toast.show{opacity:1;transform:translateX(0);pointer-events-auto}.toast.hide{opacity:0;transform:translateX(400px);pointer-events-none}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes tableRowFade{from{opacity:0}to{opacity:1}}@keyframes slideInToast{from{opacity:0;transform:translateX(400px)}to{opacity:1;transform:translateX(0)}}@keyframes slideOutToast{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(400px)}}form{animation:slideUp .3s ease-in-out}table tbody tr{animation:tableRowFade .5s ease-in-out}#loading-toast.show{opacity:1;transform:translateX(0);pointer-events:auto;animation:slideInToast .3s ease-in-out}#loading-toast.hide{opacity:0;transform:translateX(400px);pointer-events:none}#success-toast.show{opacity:1;transform:translateX(0);pointer-events:auto;animation:slideInToast .3s ease-in-out}#success-toast.hide{opacity:0;transform:translateX(400px);pointer-events:none}
     </style>
 
     <script>
@@ -1159,19 +1159,24 @@
 
         function showLoadingToast() {
             const toast = document.getElementById('loading-toast');
-            if (toast) {
-                toast.classList.remove('hide');
-                toast.classList.add('show');
-            }
+            toast.classList.remove('hide', 'pointer-events-none');
+            toast.classList.add('show');
         }
 
         function closeLoadingToast() {
             const toast = document.getElementById('loading-toast');
-            if (toast) {
-                toast.classList.remove('show');
-                toast.classList.add('hide');
-            }
+            toast.classList.remove('show');
+            toast.classList.add('hide', 'pointer-events-none');
         }
+
+        // Initialize loading toast to hide on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const loadingToast = document.getElementById('loading-toast');
+            if (loadingToast) {
+                loadingToast.classList.add('hide', 'pointer-events-none');
+                loadingToast.classList.remove('show');
+            }
+        });
 
         async function exportSAAODBGFExcel() {
             console.log('Export button clicked');

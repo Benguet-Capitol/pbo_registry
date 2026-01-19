@@ -132,6 +132,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/obligations/by-office-allotment-class/{classId}', [ObligationController::class, 'getByOfficeAllotmentClass'])->name('obligations.api.byOfficeAllotmentClass');
     Route::get('/api/obligations/by-appropriation/{appropriationId}', [ObligationController::class, 'getByAppropriation'])->name('obligations.api.byAppropriation');
     Route::get('/api/obligations/{obligationId}/details', [ObligationController::class, 'getObligationDetails'])->name('obligations.api.details');
+    Route::get('/api/obligations/{obligationId}/amounts', [ObligationController::class, 'getObligationAmounts'])->name('obligations.api.amounts');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);
@@ -140,6 +141,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('purchase_orders', PurchaseOrderController::class);
     // Unified Purchase Order module view
     Route::get('purchase-orders/all', [PurchaseOrderController::class, 'all'])->name('purchase_orders.all');
+    // API endpoint to get purchase orders by po_number
+    Route::get('/api/purchase-orders/by-number/{poNumber}', [PurchaseOrderController::class, 'getByPoNumber'])->name('purchase_orders.api.byNumber');
 
     // Disbursement Routes
     Route::resource('disbursements', DisbursementController::class);

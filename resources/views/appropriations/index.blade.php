@@ -59,13 +59,19 @@
             </nav>
             @endif
         </div>
-        @if ($officeAllotmentClass && $officeAllotmentClass->offices)
+
+    </x-slot>
+
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
+    @if ($officeAllotmentClass && $officeAllotmentClass->offices)
         @php
         // Determine grid columns: 2 if import is visible, 1 if not
         $showImport = auth()->user() && auth()->user()->can('import appropriations');
         $gridCols = $showImport ? 'md:grid-cols-2' : 'md:grid-cols-1';
         @endphp
-        <div class="p-4 bg-white shadow-md rounded-md mt-6 text-gray-600 text-xs grid grid-cols-1 {{ $gridCols }} gap-4 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700">
+        <div class="p-4 mb-4 bg-white shadow-md rounded-md text-gray-600 text-xs grid grid-cols-1 {{ $gridCols }} gap-4 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700">
             <div>
                 <table class="min-w-full table-auto bg-white rounded-lg dark:bg-gray-800">
                     <tbody>
@@ -120,8 +126,6 @@
             @endcan
         </div>
         @endif
-
-    </x-slot>
 
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
@@ -465,4 +469,22 @@ function hideAppropriationContextMenu(event) {
         }
     });
     </script>
+
+    <style>
+        @keyframes pageSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-transition {
+            animation: pageSlideUp 0.4s ease-in-out;
+        }
+    </style>
+    </div>
 </x-app-layout>

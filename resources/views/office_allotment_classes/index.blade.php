@@ -53,6 +53,9 @@
         </div>
     </x-slot>
 
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
     <!-- Unified Filter Section -->
     <form method="GET" action="{{ route('office_allotment_classes.index') }}" class="bg-white p-6 rounded-lg shadow-md mb-3 dark:bg-gray-800 transition-all duration-300 ease-in-out hover:shadow-lg dark:shadow-gray-900/50" id="filterForm">
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-4 flex items-center">
@@ -557,3 +560,20 @@
         select.addEventListener('change', updateSelectColors);
     });
 </script>
+
+<style>
+    @keyframes pageSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-transition {
+        animation: pageSlideUp 0.4s ease-in-out;
+    }
+</style>

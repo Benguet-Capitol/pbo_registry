@@ -32,6 +32,7 @@
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id }}">
+                            <input type="hidden" name="purchase_order_id" value="{{ isset($purchaseOrder) ? $purchaseOrder->id : null }}">
                             <!-- DV Date -->
                             <div class="sm:col-span-3">
                                 <x-form.label for="disbursement_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Date')" />
@@ -156,7 +157,7 @@
                                                     {{ __('Description') }}
                                                 </th>
                                                 <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
-                                                    {{ __('Balance from Obligations or Purchase Orders') }}
+                                                    {{ ($from === 'purchase_order') ? __('Balance from Purchase Order') : __('Balance from Obligation') }}
                                                 </th>
                                                 <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
                                                     {{ __('DV / Check Amount') }}
@@ -171,16 +172,14 @@
                                                     $totalPO = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)->sum('po_amount');
                                                     $appropriation = $obligationAmount->appropriation;
 
-                                                    // Compute default balance (for non-PO types)
-                                                    $defaultBalance = (($obligationAmount->obr_amount - $disbursements) + $adjustments);
-
-                                                    // Compute PO balance by deducting disbursements
-                                                    $poBalance = $totalPO - $disbursements;
-
-                                                    // Choose which balance to use based on OBR type
-                                                    $balance = $obligationAmount->obligation->obr_type === 'Purchase Request'
-                                                        ? $poBalance
-                                                        : $defaultBalance;
+                                                    // Determine balance based on where modal is called from
+                                                    if ($from === 'purchase_order' && isset($purchaseOrder)) {
+                                                        // Balance from the specific purchase order only
+                                                        $balance = $purchaseOrder->po_amount - $disbursements;
+                                                    } else {
+                                                        // Balance from obligation (default)
+                                                        $balance = (($obligationAmount->obr_amount - $disbursements) + $adjustments);
+                                                    }
                                                 @endphp
                                             <tr>
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
@@ -234,7 +233,3 @@
         </div>
     </div>
 </form>
-
-<script>
-    
-</script>

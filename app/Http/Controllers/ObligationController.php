@@ -1249,7 +1249,32 @@ class ObligationController extends Controller
             'obligationAmounts.appropriation',
             'purchaseOrders'
         ]);
-        $obligationAmounts = $obligation->obligationAmounts;
+        
+        // Get the query parameters
+        $from = $request->query('from', 'obligation');
+        $purchaseOrderId = $request->query('purchase_order_id');
+        
+        // Fetch the specific purchase order if provided
+        $purchaseOrder = null;
+        if ($from === 'purchase_order' && $purchaseOrderId) {
+            $purchaseOrder = \App\Models\PurchaseOrder::find($purchaseOrderId);
+        }
+        
+        // Filter obligation amounts based on context
+        if ($from === 'purchase_order' && $purchaseOrderId && $purchaseOrder) {
+            // Get all purchase orders with the same po_number
+            $poNumbersToInclude = \App\Models\PurchaseOrder::where('po_number', $purchaseOrder->po_number)
+                ->pluck('obligation_amounts_id')
+                ->toArray();
+            
+            // Show obligation amounts related to all purchase orders with the same po_number
+            $obligationAmounts = $obligation->obligationAmounts()
+                ->whereIn('id', $poNumbersToInclude)
+                ->get();
+        } else {
+            // Show all obligation amounts
+            $obligationAmounts = $obligation->obligationAmounts;
+        }
 
         // Calculate totals for the modal table footer
         $totalDisbursementAmount = $obligation->disbursements->sum('disbursement_amount');
@@ -1266,7 +1291,9 @@ class ObligationController extends Controller
             'totalDisbursementAmount',
             'totalObligationAmount',
             'totalAdjustments',
-            'balanceFromObligations'
+            'balanceFromObligations',
+            'from',
+            'purchaseOrder'
         ));
     }
 
@@ -1275,6 +1302,7 @@ class ObligationController extends Controller
         // Validate the request data
         $validated = $request->validate([
             'obligation_id' => 'required|exists:obligations,id',
+            'purchase_order_id' => 'nullable|exists:purchase_orders,id',
             'disbursement_date' => 'required|date',
             'dv_no' => 'required|string|max:255',
             'remarks' => 'nullable|string|max:255',
@@ -1306,6 +1334,7 @@ class ObligationController extends Controller
                 Disbursement::create([
                     'obligation_id' => $validated['obligation_id'],
                     'obligation_amounts_id' => $obligationAmountId,
+                    'purchase_order_id' => $validated['purchase_order_id'] ?? null,
                     'dv_no' => $validated['dv_no'],
                     'disbursement_date' => $validated['disbursement_date'],
                     'remarks' => $validated['remarks'],
@@ -1595,6 +1624,38 @@ class ObligationController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch obligation details',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getObligationAmounts($obligationId): JsonResponse
+    {
+        try {
+            $obligationAmounts = ObligationAmount::where('obligation_id', $obligationId)
+                ->with('appropriation', 'obligationAdjustments')
+                ->get();
+
+            $amounts = $obligationAmounts->map(function ($obrAmount) {
+                $adjustment = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+
+                return [
+                    'id' => $obrAmount->id,
+                    'obr_amount' => $obrAmount->obr_amount,
+                    'adjustment_amount' => $adjustment,
+                    'account_code' => $obrAmount->account_code ?? '-',
+                    'appropriation' => [
+                        'programs' => $obrAmount->appropriation->programs ?? '-',
+                        'account_code' => $obrAmount->appropriation->account_code ?? '-',
+                        'description' => $obrAmount->appropriation->description ?? '-',
+                    ]
+                ];
+            })->toArray();
+
+            return response()->json($amounts);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch obligation amounts',
                 'message' => $e->getMessage(),
             ], 500);
         }

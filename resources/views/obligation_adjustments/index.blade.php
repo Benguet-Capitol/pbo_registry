@@ -61,6 +61,9 @@
         </div>
     </x-slot>
 
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
     <!-- Combined Obligation Details and Appropriations -->
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
         <!-- Obligation Details -->
@@ -196,7 +199,6 @@
     @include('obligation_adjustments.modal.create')
     @include('obligation_adjustments.modal.delete')
     @include('obligation_adjustments.modal.edit')
-</x-app-layout>
 
 <script>
     // Function to toggle dropdown menu
@@ -222,3 +224,22 @@
         }
     });
 </script>
+
+<style>
+    @keyframes pageSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-transition {
+        animation: pageSlideUp 0.4s ease-in-out;
+    }
+</style>
+    </div>
+</x-app-layout>

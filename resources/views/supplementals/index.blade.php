@@ -83,6 +83,9 @@
         </div>
     </x-slot>
 
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
     <!-- Filter Section -->
     <div class="bg-white p-4 rounded-lg shadow-md mb-3 dark:bg-gray-800">
         <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
@@ -357,6 +360,7 @@
     @include('supplementals.modal.edit')
     @include('supplementals.modal.delete')
 
+    </div>
 </x-app-layout>
 
 <script>
@@ -552,3 +556,20 @@
         updateFooterTotals();
     });
 </script>
+
+<style>
+    @keyframes pageSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-transition {
+        animation: pageSlideUp 0.4s ease-in-out;
+    }
+</style>

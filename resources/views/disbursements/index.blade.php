@@ -32,6 +32,9 @@
         </div>
     </x-slot>
 
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
     <!-- Combined Obligation Details and Appropriations -->
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
         <!-- Obligation Details -->
@@ -135,10 +138,12 @@
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
+                @if($obligation->obr_type !== 'Purchase Request')
                 <button onclick="openCreateModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Add Disbursement') }}
                 </button>
+                @endif
             </div>
             <table id="adjustmentsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
                 <thead class="text-center text-xs border-b-2 border-gray-400 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400">
@@ -205,8 +210,6 @@
     @include('disbursements.modal.create')
     @include('disbursements.modal.delete')
     @include('disbursements.modal.edit')
-
-</x-app-layout>
 
 <script>
 
@@ -284,3 +287,22 @@
         }
     });
 </script>
+
+<style>
+    @keyframes pageSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-transition {
+        animation: pageSlideUp 0.4s ease-in-out;
+    }
+</style>
+    </div>
+</x-app-layout>

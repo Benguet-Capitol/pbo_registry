@@ -13,6 +13,7 @@ class Disbursement extends Model
     protected $fillable = [
         'obligation_amounts_id',
         'obligation_id',
+        'purchase_order_id',
         'dv_no',
         'remarks',
         'disbursement_date',

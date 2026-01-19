@@ -51,6 +51,9 @@
         </div>
     </x-slot>
 
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
     <!-- Display Success Message -->
     @if(session('status'))
     @php
@@ -653,8 +656,6 @@
             </div>
         </div>
     </div>
-
-</x-app-layout>
 
 <script>
 
@@ -1732,3 +1733,22 @@ function updateAdjustedAmountTotal() {
         });
     });
 </script>
+
+<style>
+    @keyframes pageSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-transition {
+        animation: pageSlideUp 0.4s ease-in-out;
+    }
+</style>
+    </div>
+</x-app-layout>

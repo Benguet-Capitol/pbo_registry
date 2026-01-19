@@ -27,6 +27,9 @@
         </div>
     </x-slot>
 
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
     <div class="space-y-6">
         <div class="p-4 sm:p-8 bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 transition-all duration-300 ease-in-out hover:shadow-md dark:hover:shadow-lg border border-gray-200 dark:border-gray-700 animate-slideInDown">
             <div class="max-w-xl">
@@ -45,5 +48,23 @@
                 @include('profile.partials.delete-user-form')
             </div>
         </div> -->
+    </div>
+
+<style>
+    @keyframes pageSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-transition {
+        animation: pageSlideUp 0.4s ease-in-out;
+    }
+</style>
     </div>
 </x-app-layout>

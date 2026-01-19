@@ -378,4 +378,13 @@ class PurchaseOrderController extends Controller
             ])->with('error', 'Failed to delete purchase order. Please try again.');
         }
     }
+
+    /**
+     * Get all purchase orders by po_number
+     */
+    public function getByPoNumber($poNumber)
+    {
+        $purchaseOrders = PurchaseOrder::where('po_number', $poNumber)->get();
+        return response()->json($purchaseOrders);
+    }
 }

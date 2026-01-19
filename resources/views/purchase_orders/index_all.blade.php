@@ -46,6 +46,9 @@
         </div>
     </x-slot>
 
+    <!-- Page Content Wrapper with Transition -->
+    <div class="page-transition">
+
     <!-- Display Success Message -->
     @if(session('status'))
     @php
@@ -153,7 +156,8 @@
                                 'pr_no' => 'PR Number',
                                 'supplier' => 'Supplier',
                                 'delivery_period' => 'Delivery Period',
-                                'po_amount' => 'PO Amount',
+                                'po_amount' => 'Purchase Order',
+                                'disbursement' => 'Disbursement',
                                 'remarks' => 'Remarks',
                             ];
                             $sortable = ['po_date', 'po_number', 'pr_no', 'supplier', 'delivery_period', 'po_amount', 'remarks'];
@@ -180,7 +184,12 @@
                 </thead>
                 <tbody>
                     @forelse($purchaseOrders as $purchaseOrder)
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer relative"
+                            oncontextmenu="showPurchaseOrderContextMenu(event, this)"
+                            data-po='@json($purchaseOrder)'
+                            data-po-id="{{ $purchaseOrder->id }}"
+                            data-po-number="{{ $purchaseOrder->po_number }}"
+                            data-obligation-id="{{ $purchaseOrder->obligation_id }}">
                             <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_date ?? '-' }}</td>
                             <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
@@ -195,21 +204,42 @@
                             </td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
                                 @php
-                                    $accountCodes = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.account_code')->unique()->filter()->implode(', ');
+                                    $accountCode = $purchaseOrder->obligation->obligationAmounts
+                                        ->where('id', $purchaseOrder->obligation_amounts_id)
+                                        ->first()?->account_code ?? '-';
                                 @endphp
-                                {{ $accountCodes ?: '-' }}
+                                {{ $accountCode }}
                             </td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
                                 @php
-                                    $descriptions = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.description')->unique()->filter()->implode(', ');
+                                    $description = $purchaseOrder->obligation->obligationAmounts
+                                        ->where('id', $purchaseOrder->obligation_amounts_id)
+                                        ->first()?->appropriation?->description ?? '-';
                                 @endphp
-                                {{ $descriptions ?: '-' }}
+                                {{ $description }}
                             </td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_number }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->pr_no ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
                             <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">{{ number_format($purchaseOrder->po_amount, 2) }}</td>
+                            @php
+                                // Get all obligation amounts related to purchase orders with the same po_number
+                                $relatedPoIds = \App\Models\PurchaseOrder::where('po_number', $purchaseOrder->po_number)
+                                    ->pluck('obligation_amounts_id')
+                                    ->toArray();
+                                
+                                // Get disbursement amount for this specific obligation amount
+                                $disbursementAmount = \App\Models\Disbursement::where('obligation_amounts_id', $purchaseOrder->obligation_amounts_id)
+                                    ->sum('disbursement_amount');
+                            @endphp
+                            <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">
+                                @if($disbursementAmount > 0)
+                                    <span class="font-semibold text-green-600 dark:text-green-400">{{ number_format($disbursementAmount, 2) }}</span>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->po_remarks ?? '-' }}</td>
                             <!-- @canany(['edit purchase orders', 'delete purchase orders'])
                                 <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
@@ -218,7 +248,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="13" class="py-4 text-center text-gray-500">No purchase orders found.</td>
+                            <td colspan="14" class="py-4 text-center text-gray-500">No purchase orders found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -227,9 +257,9 @@
                         <td colspan="8" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
 
                         </td>
-                        <td colspan="3" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                        <td colspan="4" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Purchase Order Amount:
-                            <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">
+                            <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold ml-2">
                                 0.00
                             </span>
                         </td>
@@ -243,6 +273,27 @@
             </div>
         </div>
     </div>
+
+    <!-- Include Modal Files -->
+     @role('Developer|Administrator|Disbursement')
+    <div id="createDisbursementModalContainer"></div>
+    <div id="purchaseOrderContextMenu" 
+        class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
+        style="display: none;">
+        @can('edit purchase orders')
+        <button id="contextEditPO"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        @endcan
+        @can('create disbursement')
+        <button id="contextAddDisbursement"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-file-medical-alt mr-2"></i>Add Disbursement
+        </button>
+        @endcan
+    </div>
+    @endrole
 
     <script>
         function updatePurchaseOrdersFooterTotal() {
@@ -295,8 +346,509 @@
             filterTable();
             updatePurchaseOrdersFooterTotal();
         });
+
+        // Context Menu Handler for Purchase Orders
+        const poMenu = document.getElementById('purchaseOrderContextMenu');
+
+        window.showPurchaseOrderContextMenu = function(event, row) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!poMenu) return;
+
+            // Get the table container
+            const container = row.closest('.overflow-x-auto') || document.body;
+            if (!container) return;
+
+            // Get element positions
+            const rowRect = row.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            // Calculate position
+            const top = rowRect.top + rowRect.height + 5;
+            const left = containerRect.left + container.scrollLeft + 10;
+
+            // Position menu
+            poMenu.style.position = 'absolute';
+            poMenu.style.top = `${top}px`;
+            poMenu.style.left = `${left}px`;
+            poMenu.style.display = 'block';
+            poMenu.classList.remove('hidden');
+
+            // Get purchase order data and set up menu items
+            const purchaseOrder = row.dataset.po ? JSON.parse(row.dataset.po) : null;
+            if (purchaseOrder) {
+                // Add Disbursement button
+                const addDisbursementBtn = poMenu.querySelector('#contextAddDisbursement');
+                if (addDisbursementBtn && purchaseOrder.id) {
+                    addDisbursementBtn.onclick = () => {
+                        hidePurchaseOrderContextMenu();
+                        openCreateDisbursementModal(purchaseOrder.obligation_id, purchaseOrder.id);
+                    };
+                }
+
+                // Edit button
+                const editBtn = poMenu.querySelector('#contextEditPO');
+                if (editBtn && purchaseOrder.id) {
+                    editBtn.onclick = () => {
+                        hidePurchaseOrderContextMenu();
+                        openEditPurchaseOrderModal(purchaseOrder);
+                    };
+                }
+            }
+
+            // Add event listeners with delay
+            setTimeout(() => {
+                document.addEventListener('click', hidePurchaseOrderContextMenu);
+                window.addEventListener('resize', hidePurchaseOrderContextMenu);
+                window.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
+                
+                // Add scroll listener to container
+                container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
+            }, 30);
+        };
+
+        function hidePurchaseOrderContextMenu() {
+            if (!poMenu) return;
+            poMenu.classList.add('hidden');
+            poMenu.style.display = 'none';
+            
+            // Clean up event listeners
+            document.removeEventListener('click', hidePurchaseOrderContextMenu);
+            window.removeEventListener('resize', hidePurchaseOrderContextMenu);
+            window.removeEventListener('scroll', hidePurchaseOrderContextMenu);
+            
+            // Clean up container listeners
+            const container = document.querySelector('.overflow-x-auto');
+            if (container) {
+                container.removeEventListener('scroll', hidePurchaseOrderContextMenu);
+            }
+        }
+
+        // Hide on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hidePurchaseOrderContextMenu();
+        });
+
+        // Initialize scroll event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.overflow-x-auto');
+            if (container) {
+                container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
+            }
+        });
+
+        /* Modal Create Disbursement */
+        function openCreateDisbursementModal(obligationId, purchaseOrderId = null) {
+            closeAllDropdowns();
+            const url = purchaseOrderId 
+                ? `/obligations/${obligationId}/disbursement-modal?from=purchase_order&purchase_order_id=${purchaseOrderId}`
+                : `/obligations/${obligationId}/disbursement-modal?from=purchase_order`;
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('createDisbursementModalContainer').innerHTML = html;
+                    const modal = document.getElementById('createDisbursementModal');
+                    modal.classList.remove('hidden');
+
+                    // Attach event listener AFTER modal is loaded
+                    const statusField = modal.querySelector('#status');
+                    if (statusField) {
+                        statusField.addEventListener('change', function() {
+                            if (statusField.value === 'Full Payment') {
+                                modal.querySelectorAll('input[name^="disbursement_amount"]').forEach(function(input) {
+                                    input.value = input.dataset.balance || "0";
+                                });
+                                updateDVAmountTotal();
+                            }
+                        });
+
+                        // If modal opens with "Full Payment" already selected (edit mode)
+                        if (statusField.value === 'Full Payment') {
+                            modal.querySelectorAll('input[name^="disbursement_amount"]').forEach(function(input) {
+                                input.value = input.dataset.balance || "0";
+                            });
+                            updateDVAmountTotal();
+                        }
+                    }
+
+                    // Run initial calculation inside modal
+                    updateDVAmountTotal();
+                });
+        }
+
+        function closeCreateDisbursementModal() {
+            const modal = document.getElementById('createDisbursementModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function closeAllDropdowns() {
+            // Close any open dropdowns if this function exists
+            const dropdowns = document.querySelectorAll('.dropdown-menu');
+            dropdowns.forEach(dropdown => dropdown.classList.add('hidden'));
+        }
+
+        /* Edit Purchase Order Modal Functions */
+        function openEditPurchaseOrderModal(purchaseOrder) {
+            closeAllDropdowns();
+
+            document.querySelector("input[name='purchase_order_id']").value = purchaseOrder.id;
+            document.getElementById('EditPurchaseOrderForm').action = `/purchase_orders/${purchaseOrder.id}`;
+
+            document.getElementById('edit_po_date').value = purchaseOrder.po_date ?? '';
+            document.getElementById('edit_po_number').value = purchaseOrder.po_number ?? '';
+            document.getElementById('edit_pr_no').value = purchaseOrder.pr_no ?? '';
+            document.getElementById('edit_delivery_period').value = purchaseOrder.delivery_period ?? '';
+            document.getElementById('edit_supplier').value = purchaseOrder.supplier ?? '';
+            document.getElementById('edit_po_remarks').value = purchaseOrder.po_remarks ?? '';
+
+            // Fetch and display obligation amounts
+            if (purchaseOrder.obligation_id) {
+                fetch(`/api/obligations/${purchaseOrder.obligation_id}/amounts`)
+                    .then(response => response.json())
+                    .then(data => {
+                        populateEditProgramsTable(data, purchaseOrder);
+                    })
+                    .catch(error => console.error('Error fetching obligation amounts:', error));
+            }
+
+            document.getElementById('editPurchaseOrderModal').classList.remove('hidden');
+        }
+
+        function populateEditProgramsTable(obligationAmounts, purchaseOrder) {
+            const tbody = document.getElementById('edit_programs_tbody');
+            tbody.innerHTML = '';
+
+            // Fetch all purchase orders with the same po_number to get all related obligation amounts
+            fetch(`/api/purchase-orders/by-number/${purchaseOrder.po_number}`)
+                .then(response => response.json())
+                .then(purchaseOrdersWithSameNumber => {
+                    // Collect all obligation_amounts_id from purchase orders with the same po_number
+                    const relatedAmountIds = new Set(
+                        purchaseOrdersWithSameNumber.map(po => po.obligation_amounts_id)
+                    );
+
+                    // Filter obligation amounts to show all those related to purchase orders with the same po_number
+                    const relatedAmounts = obligationAmounts.filter(amount => {
+                        return relatedAmountIds.has(amount.id);
+                    });
+
+                    relatedAmounts.forEach(amount => {
+                        const appropriation = amount.appropriation || {};
+                        const balance = (parseFloat(amount.obr_amount) || 0) + (parseFloat(amount.adjustment_amount) || 0);
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${appropriation.programs || 'N/A'}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${amount.account_code || 'N/A'}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${appropriation.description || 'N/A'}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
+                                <input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
+                                       class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
+                                       value="${parseFloat(purchaseOrder.po_amount) || 0}" data-balance="${balance}" oninput="updateEditPOTotal()" />
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    updateEditPOTotal();
+                })
+                .catch(error => {
+                    console.error('Error fetching purchase orders by number:', error);
+                    // Fallback: show only the related amount for this specific PO
+                    const relatedAmounts = obligationAmounts.filter(amount => {
+                        return amount.id === purchaseOrder.obligation_amounts_id;
+                    });
+
+                    relatedAmounts.forEach(amount => {
+                        const appropriation = amount.appropriation || {};
+                        const balance = (parseFloat(amount.obr_amount) || 0) + (parseFloat(amount.adjustment_amount) || 0);
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${appropriation.programs || 'N/A'}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${amount.account_code || 'N/A'}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${appropriation.description || 'N/A'}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
+                                <input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
+                                       class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
+                                       value="${parseFloat(purchaseOrder.po_amount) || 0}" data-balance="${balance}" oninput="updateEditPOTotal()" />
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    updateEditPOTotal();
+                });
+        }
+
+        function updateEditPOTotal() {
+            const inputs = document.querySelectorAll("input[name^='edit_po_amount']");
+            let total = 0;
+            inputs.forEach(input => {
+                const val = parseFloat(input.value) || 0;
+                total += val;
+            });
+            const totalCell = document.getElementById('editPurchaseOrderTotalCell');
+            if (totalCell) {
+                totalCell.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        }
+
+        function closeEditPurchaseOrderModal() {
+            document.getElementById('editPurchaseOrderModal').classList.add('hidden');
+        }
+
+        // Functions needed for disbursement modal
+        function updateDVAmountTotal() {
+            const adjustedInputs = document.querySelectorAll("input[name^='disbursement_amount']");
+            let total = 0;
+            adjustedInputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (!isNaN(val) && val > 0) {
+                    total += val;
+                }
+            });
+            const totalCell = document.getElementById('dvAmountTotalCell');
+            if (totalCell) {
+                totalCell.textContent = total.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        }
+
+        function validateDisbursementAmount(inputElement) {
+            const maxBalance = parseFloat(inputElement.dataset.balance || "0");
+            const inputValue = parseFloat(inputElement.value || "0");
+
+            if (inputValue > maxBalance) {
+                inputElement.value = maxBalance.toFixed(2);
+                inputElement.title = `Max allowed is ₱${maxBalance.toFixed(2)}`;
+            }
+        }
+
+        function validateFormCreateDisbursement() {
+            let isValid = true;
+
+            // Clear previous error messages
+            const dvNoError = document.getElementById('dv_noError');
+            const statusError = document.getElementById('statusError');
+            const tableMessageDV = document.getElementById('tableMessageDV');
+
+            if (dvNoError) dvNoError.innerText = '';
+            if (statusError) statusError.innerText = '';
+            if (tableMessageDV) {
+                tableMessageDV.classList.add('hidden');
+                tableMessageDV.innerText = '';
+            }
+
+            // Validate DV Number
+            const poNumber = document.getElementById('dv_no');
+            if (poNumber && poNumber.value.trim() === '') {
+                if (dvNoError) dvNoError.innerText = 'DV / Check Number is required.';
+                isValid = false;
+            }
+
+            // Validate Status
+            const status = document.getElementById('status');
+            if (status && status.value === '') {
+                if (statusError) statusError.innerText = 'Status is required.';
+                isValid = false;
+            }
+
+            // Validate at least one DV Amount is entered and does not exceed balance
+            const amountInputs = document.querySelectorAll('input[name^="disbursement_amount"]');
+            let atLeastOneAmountEntered = false;
+
+            amountInputs.forEach(input => {
+                const value = parseFloat(input.value || "0");
+                const maxBalance = parseFloat(input.dataset.balance || "0");
+
+                if (value > 0) {
+                    atLeastOneAmountEntered = true;
+                    if (value > maxBalance) {
+                        const errorSpan = input.nextElementSibling;
+                        if (errorSpan) {
+                            errorSpan.innerText = `Amount exceeds the available balance of ₱${maxBalance.toFixed(2)}.`;
+                        }
+                        isValid = false;
+                    } else {
+                        const errorSpan = input.nextElementSibling;
+                        if (errorSpan) {
+                            errorSpan.innerText = '';
+                        }
+                    }
+                } else {
+                    const errorSpan = input.nextElementSibling;
+                    if (errorSpan) {
+                        errorSpan.innerText = '';
+                    }
+                }
+            });
+
+            if (!atLeastOneAmountEntered) {
+                if (tableMessageDV) {
+                    tableMessageDV.innerText = 'Please enter at least one DV / Check Amount.';
+                    tableMessageDV.classList.remove('hidden');
+                }
+                isValid = false;
+            }
+
+            // If all validations pass, submit the form
+            if (isValid) {
+                const form = document.getElementById('CreateDisbursementForm');
+                if (form) {
+                    form.submit();
+                }
+            }
+        }
+
+        document.addEventListener('input', function(event) {
+            if (event.target.name && event.target.name.startsWith('disbursement_amount')) {
+                updateDVAmountTotal();
+            }
+        });
     </script>
 
+<style>
+    @keyframes pageSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-transition {
+        animation: pageSlideUp 0.4s ease-in-out;
+    }
+</style>
+    </div>
+
+    <!-- Edit Purchase Order Modal -->
+    <form id="EditPurchaseOrderForm" method="POST" action="">
+        @csrf
+        @method('PUT')
+        <div id="editPurchaseOrderModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+            <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+                <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+                    <!-- Modal header -->
+                    <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
+                            {{ __('Edit Purchase Order') }}
+                        </h3>
+                        <button type="button" onclick="closeEditPurchaseOrderModal()" class="text-black hover:text-gray-600 dark:text-white">
+                            <i class="fas fa-times text-xl mr-2"></i>
+                        </button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <div class="mt-2 px-7 py-3 text-xs">
+                        <div class="grid gap-3">
+                            <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
+                                <input type="hidden" name="purchase_order_id" id="purchase_order_id">
+
+                                <!-- PO Date -->
+                                <div class="sm:col-span-3">
+                                    <label for="edit_po_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('PO Date') }}</label>
+                                    <div class="mt-2">
+                                        <input type="date" name="po_date" id="edit_po_date" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                    </div>
+                                </div>
+
+                                <!-- PO Number -->
+                                <div class="sm:col-span-3">
+                                    <label for="edit_po_number" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('PO Number') }}</label>
+                                    <div class="mt-2">
+                                        <input type="text" name="po_number" id="edit_po_number" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                    </div>
+                                </div>
+
+                                <!-- PR Number -->
+                                <div class="sm:col-span-3">
+                                    <label for="edit_pr_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('PR Number') }}</label>
+                                    <div class="mt-2">
+                                        <input type="text" name="pr_no" id="edit_pr_no" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                    </div>
+                                </div>
+
+                                <!-- Delivery Period -->
+                                <div class="sm:col-span-3">
+                                    <label for="edit_delivery_period" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Delivery Period') }}</label>
+                                    <div class="mt-2">
+                                        <input type="text" name="delivery_period" id="edit_delivery_period" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                    </div>
+                                </div>
+
+                                <!-- Supplier -->
+                                <div class="sm:col-span-6">
+                                    <label for="edit_supplier" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Supplier') }}</label>
+                                    <div class="mt-2">
+                                        <input type="text" name="supplier" id="edit_supplier" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                    </div>
+                                </div>
+
+                                <!-- Remarks -->
+                                <div class="sm:col-span-6">
+                                    <label for="edit_po_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Remarks') }}</label>
+                                    <div class="mt-2">
+                                        <textarea name="po_remarks" id="edit_po_remarks" rows="3" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Programs Table -->
+                                <div class="sm:col-span-6">
+                                    <label class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Accounts') }}</label>
+                                    <div class="mt-2 overflow-x-auto">
+                                        <table id="edit_programs_table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
+                                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                                <tr>
+                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Program') }}</th>
+                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Account Code') }}</th>
+                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Description') }}</th>
+                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Balance from Purchase Order') }}</th>
+                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Purchase Order Amount') }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="edit_programs_tbody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                                <!-- Will be populated by JavaScript -->
+                                            </tbody>
+                                            <tfoot>
+                                                <tr class="bg-gray-50 dark:bg-gray-900">
+                                                    <td colspan="4" class="px-2 py-2 text-right text-xs font-semibold text-gray-900 dark:text-gray-200">Total Purchase Order Amount:</td>
+                                                    <td class="px-2 py-2 text-right text-xs font-bold text-green-700 dark:text-green-400" id="editPurchaseOrderTotalCell">0.00</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="justify-center items-center p-4 flex border-t border-gray-200 rounded-b dark:border-gray-600">
+                        <button type="submit" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
+                            <i class="fas fa-save text-xl mr-2"></i>
+                            {{ __('Save') }}
+                        </button>
+                        <button type="button" onclick="closeEditPurchaseOrderModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
+                            <i class="fas fa-times text-xl mr-2"></i>
+                            {{ __('Cancel') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 
 
 </x-app-layout>

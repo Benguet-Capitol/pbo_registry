@@ -525,12 +525,17 @@
             fetch(`/api/purchase-orders/by-number/${purchaseOrder.po_number}`)
                 .then(response => response.json())
                 .then(purchaseOrdersWithSameNumber => {
-                    // Collect all obligation_amounts_id from purchase orders with the same po_number
+                    // Create a map of obligation_amounts_id to po_amount
+                    const poAmountMap = {};
+                    purchaseOrdersWithSameNumber.forEach(po => {
+                        poAmountMap[po.obligation_amounts_id] = parseFloat(po.po_amount) || 0;
+                    });
+
+                    // Filter obligation amounts to show all those related to purchase orders with the same po_number
                     const relatedAmountIds = new Set(
                         purchaseOrdersWithSameNumber.map(po => po.obligation_amounts_id)
                     );
 
-                    // Filter obligation amounts to show all those related to purchase orders with the same po_number
                     const relatedAmounts = obligationAmounts.filter(amount => {
                         return relatedAmountIds.has(amount.id);
                     });
@@ -538,6 +543,7 @@
                     relatedAmounts.forEach(amount => {
                         const appropriation = amount.appropriation || {};
                         const balance = (parseFloat(amount.obr_amount) || 0) + (parseFloat(amount.adjustment_amount) || 0);
+                        const poAmount = poAmountMap[amount.id] || 0;
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -548,7 +554,7 @@
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
                                 <input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
-                                       value="${parseFloat(purchaseOrder.po_amount) || 0}" data-balance="${balance}" oninput="updateEditPOTotal()" />
+                                       value="${poAmount.toFixed(2)}" data-balance="${balance}" oninput="updateEditPOTotal()" />
                             </td>
                         `;
                         tbody.appendChild(row);
@@ -576,7 +582,7 @@
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
                                 <input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
-                                       value="${parseFloat(purchaseOrder.po_amount) || 0}" data-balance="${balance}" oninput="updateEditPOTotal()" />
+                                       value="${parseFloat(purchaseOrder.po_amount).toFixed(2)}" data-balance="${balance}" oninput="updateEditPOTotal()" />
                             </td>
                         `;
                         tbody.appendChild(row);
@@ -755,67 +761,114 @@
                         <div class="grid gap-3">
                             <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                                 <input type="hidden" name="purchase_order_id" id="purchase_order_id">
+                                <input type="hidden" name="redirect" id="redirect" value="all">
 
                                 <!-- PO Date -->
                                 <div class="sm:col-span-3">
-                                    <label for="edit_po_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('PO Date') }}</label>
+                                    <x-form.label for="edit_po_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PO Date')" />
                                     <div class="mt-2">
-                                        <input type="date" name="po_date" id="edit_po_date" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input-with-icon-wrapper>
+                                            <x-slot name="icon">
+                                                <i class="fas fa-calendar"></i>
+                                            </x-slot>
+                                            <x-form.input withicon type='date' name="edit_po_date" autocomplete="off" id="edit_po_date" placeholder="{{ __('Date') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        </x-form.input-with-icon-wrapper>
                                     </div>
                                 </div>
 
                                 <!-- PO Number -->
                                 <div class="sm:col-span-3">
-                                    <label for="edit_po_number" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('PO Number') }}</label>
+                                    <x-form.label for="edit_po_number" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PO Number')" />
                                     <div class="mt-2">
-                                        <input type="text" name="po_number" id="edit_po_number" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input-with-icon-wrapper>
+                                            <x-slot name="icon">
+                                                <i class="fas fa-hashtag"></i>
+                                            </x-slot>
+                                            <x-form.input withicon name="edit_po_number" autocomplete="off" id="edit_po_number" placeholder="{{ __('PO Number') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        </x-form.input-with-icon-wrapper>
+                                        <span id="edit_po_numberError" class="text-red-500 text-sm"></span>
                                     </div>
                                 </div>
 
                                 <!-- PR Number -->
                                 <div class="sm:col-span-3">
-                                    <label for="edit_pr_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('PR Number') }}</label>
+                                    <x-form.label for="edit_pr_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PR Number')" />
                                     <div class="mt-2">
-                                        <input type="text" name="pr_no" id="edit_pr_no" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input-with-icon-wrapper>
+                                            <x-slot name="icon">
+                                                <i class="fas fa-list-ol"></i>
+                                            </x-slot>
+                                            <x-form.input withicon name="edit_pr_no" autocomplete="off" id="edit_pr_no" placeholder="{{ __('PR Number') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        </x-form.input-with-icon-wrapper>
+                                        <span id="edit_pr_noError" class="text-red-500 text-sm"></span>
                                     </div>
                                 </div>
 
                                 <!-- Delivery Period -->
                                 <div class="sm:col-span-3">
-                                    <label for="edit_delivery_period" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Delivery Period') }}</label>
+                                    <x-form.label for="edit_delivery_period" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Delivery Period')" />
                                     <div class="mt-2">
-                                        <input type="text" name="delivery_period" id="edit_delivery_period" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input-with-icon-wrapper>
+                                            <x-slot name="icon">
+                                                <i class="fas fa-calendar-day"></i>
+                                            </x-slot>
+                                            <x-form.input withicon name="edit_delivery_period" autocomplete="off" id="edit_delivery_period" placeholder="{{ __('Delivery Period') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        </x-form.input-with-icon-wrapper>
+                                        <span id="edit_delivery_periodError" class="text-red-500 text-sm"></span>
                                     </div>
                                 </div>
 
                                 <!-- Supplier -->
                                 <div class="sm:col-span-6">
-                                    <label for="edit_supplier" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Supplier') }}</label>
+                                    <x-form.label for="edit_supplier" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Supplier')" />
                                     <div class="mt-2">
-                                        <input type="text" name="supplier" id="edit_supplier" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input-with-icon-wrapper>
+                                            <x-slot name="icon">
+                                                <i class="fas fa-store"></i>
+                                            </x-slot>
+                                            <x-form.input withicon name="edit_supplier" autocomplete="off" id="edit_supplier" placeholder="{{ __('Supplier') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        </x-form.input-with-icon-wrapper>
+                                        <span id="edit_supplierError" class="text-red-500 text-sm"></span>
                                     </div>
                                 </div>
 
                                 <!-- Remarks -->
                                 <div class="sm:col-span-6">
-                                    <label for="edit_po_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Remarks') }}</label>
+                                    <x-form.label for="edit_po_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                     <div class="mt-2">
-                                        <textarea name="po_remarks" id="edit_po_remarks" rows="3" class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 dark:bg-gray-800 dark:text-gray-200"></textarea>
+                                        <x-form.input-with-icon-wrapper>
+                                            <x-slot name="icon">
+                                                <i class="fas fa-circle-info"></i>
+                                            </x-slot>
+                                            <x-form.textarea withicon name="edit_po_remarks" autocomplete="off" id="edit_po_remarks" placeholder="{{ __('Remarks') }}" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        </x-form.input-with-icon-wrapper>
                                     </div>
                                 </div>
 
                                 <!-- Programs Table -->
                                 <div class="sm:col-span-6">
-                                    <label class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200">{{ __('Accounts') }}</label>
+                                    <x-form.label for="programs_table" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Accounts')" />
+                                    <!-- Message Placeholder -->
+                                    <div id="tableMessage" class="text-red-500 text-sm hidden mb-2"></div>
                                     <div class="mt-2 overflow-x-auto">
                                         <table id="edit_programs_table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
                                             <thead class="bg-gray-50 dark:bg-gray-800">
                                                 <tr>
-                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Program') }}</th>
-                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Account Code') }}</th>
-                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Description') }}</th>
-                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Balance from Purchase Order') }}</th>
-                                                    <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">{{ __('Purchase Order Amount') }}</th>
+                                                    <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
+                                                        {{ __('Program') }}
+                                                    </th>
+                                                    <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
+                                                        {{ __('Account Code') }}
+                                                    </th>
+                                                    <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
+                                                        {{ __('Description') }}
+                                                    </th>
+                                                    <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
+                                                        {{ __('Balance from Obligations') }}
+                                                    </th>
+                                                    <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
+                                                        {{ __('Purchase Order Amount') }}
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody id="edit_programs_tbody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -823,8 +876,12 @@
                                             </tbody>
                                             <tfoot>
                                                 <tr class="bg-gray-50 dark:bg-gray-900">
-                                                    <td colspan="4" class="px-2 py-2 text-right text-xs font-semibold text-gray-900 dark:text-gray-200">Total Purchase Order Amount:</td>
-                                                    <td class="px-2 py-2 text-right text-xs font-bold text-green-700 dark:text-green-400" id="editPurchaseOrderTotalCell">0.00</td>
+                                                    <td colspan="4" class="px-2 py-2 text-right text-xs font-semibold text-gray-900 dark:text-gray-200">
+                                                        Total Purchase Order Amount:
+                                                    </td>
+                                                    <td class="px-2 py-2 text-right text-xs font-bold text-green-700 dark:text-green-400" id="editPurchaseOrderTotalCell">
+                                                        0.00
+                                                    </td>
                                                 </tr>
                                             </tfoot>
                                         </table>

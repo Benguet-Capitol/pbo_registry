@@ -174,8 +174,8 @@
 
                                                     // Determine balance based on where modal is called from
                                                     if ($from === 'purchase_order' && isset($purchaseOrder)) {
-                                                        // Balance from the specific purchase order only
-                                                        $balance = $purchaseOrder->po_amount - $disbursements;
+                                                        // Balance from the purchase orders for THIS specific obligation amount
+                                                        $balance = $totalPO - $disbursements;
                                                     } else {
                                                         // Balance from obligation (default)
                                                         $balance = (($obligationAmount->obr_amount - $disbursements) + $adjustments);

@@ -283,25 +283,44 @@ class PurchaseOrderController extends Controller
                 'edit_po_remarks' => 'nullable|string|max:1000',
                 'edit_po_amount' => 'required|array',
                 'edit_po_amount.*' => 'nullable|numeric|min:0',
+                'redirect' => 'nullable|string',
             ]);
 
             $purchaseOrder = PurchaseOrder::findOrFail($validated['purchase_order_id']);
             $obligationId = $purchaseOrder->obligation_amounts_id;
+            $originalPoNumber = $purchaseOrder->po_number;
 
             // Get PO amount specifically for this obligation
             $poAmount = $validated['edit_po_amount'][$obligationId] ?? 0;
 
-            $purchaseOrder->update([
+            // Prepare common data that applies to all related POs
+            $commonData = [
                 'po_date' => $validated['edit_po_date'],
                 'po_number' => $validated['edit_po_number'],
                 'pr_no' => $validated['edit_pr_no'],
                 'delivery_period' => $validated['edit_delivery_period'],
                 'supplier' => $validated['edit_supplier'],
                 'po_remarks' => $validated['edit_po_remarks'],
-                'po_amount' => $poAmount,
-            ]);
+            ];
+
+            // Update the current purchase order with all fields including po_amount
+            $purchaseOrder->update(array_merge($commonData, ['po_amount' => $poAmount]));
+
+            // Update all related purchase orders with the same ORIGINAL po_number (except the current one)
+            // This ensures that if po_number is changed, all related POs get the new po_number too
+            PurchaseOrder::where('po_number', $originalPoNumber)
+                ->where('id', '!=', $purchaseOrder->id)
+                ->update($commonData);
 
             $accountCodesMessage = optional($purchaseOrder->obligationAmount->appropriation)->account_code ?? 'N/A';
+
+            // Check if redirect to all purchase orders is requested
+            if ($validated['redirect'] === 'all') {
+                return redirect()->route('purchase_orders.all')->with('status', [
+                    'type' => 'update',
+                    'message' => "Purchase Order No: <strong>{$purchaseOrder->po_number}</strong> has been <strong>updated</strong> under <strong>Account Code:</strong> {$accountCodesMessage}."
+                ]);
+            }
 
             return redirect()->route('purchase_orders.index', [
                 'obligation_id' => $purchaseOrder->obligation_id,

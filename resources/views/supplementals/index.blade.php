@@ -88,7 +88,10 @@
 
     <!-- Filter Section -->
     <div class="bg-white p-4 rounded-lg shadow-md mb-3 dark:bg-gray-800">
-        <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-3">Filters</h4>
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-4 flex items-center">
+            <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
+            Filters
+        </h4>
         
         <form id="filterForm" method="GET" action="{{ route('supplementals.index') }}">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

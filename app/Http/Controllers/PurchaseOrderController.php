@@ -315,7 +315,7 @@ class PurchaseOrderController extends Controller
             $accountCodesMessage = optional($purchaseOrder->obligationAmount->appropriation)->account_code ?? 'N/A';
 
             // Check if redirect to all purchase orders is requested
-            if ($validated['redirect'] === 'all') {
+            if (($validated['redirect'] ?? null) === 'all') {
                 return redirect()->route('purchase_orders.all')->with('status', [
                     'type' => 'update',
                     'message' => "Purchase Order No: <strong>{$purchaseOrder->po_number}</strong> has been <strong>updated</strong> under <strong>Account Code:</strong> {$accountCodesMessage}."

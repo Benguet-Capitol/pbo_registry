@@ -5,30 +5,49 @@
 @endif
 <!-- Container for AJAX-loaded Purchase Order Modal -->
 <div id="createPOModalContainer"></div>
+
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>
+
 <!-- Purchase Order Modal -->
 <form id="CreatePurchaseOrderForm" method="POST" action="{{ isset($obligation->id) && $obligation->id ? route('obligations.storePurchaseOrder', ['obligation' => $obligation->id]) : '#' }}">
     @csrf
-    <div id="createPOModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-[10002] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-        <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <!-- Modal content -->
-            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-                <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
-                            {{ __('Add Purchase Order') }} (
-                            <span class="text-blue-800 dark:text-blue-400">
-                            {{ $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A' }} - {{ $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A' }} | 
-                            {{ $obligation->obr_no ?? 'N/A' }}
-                            </span>)
+    <div id="createPOModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+            <!-- Modal header -->
+            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-plus-circle text-blue-600 dark:text-blue-300 text-xl"></i>
+                    <div>
+                        <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
+                            {{ __('Add Purchase Order') }}
                         </h3>
-                    <button type="button" onclick="closeCreatePOModal()" class="text-black hover:text-gray-600 dark:text-white">
-                        <i class="fas fa-times text-xl mr-2"></i>
-                    </button>
+                        <span class="text-xs text-blue-700 dark:text-blue-300">
+                            {{ $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A' }} - {{ $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A' }} | {{ $obligation->obr_no ?? 'N/A' }}
+                        </span>
+                    </div>
                 </div>
-                <!-- Modal body -->
-                <div class="px-7 py-3 text-xs">
-                    
-                        <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
+                <button type="button" onclick="closeCreatePOModal()" class="text-blue-600 dark:text-blue-300 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-full p-2 transition-colors duration-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Modal body (scrollable) -->
+            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-7 py-3 text-xs">
+                <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
                             <!-- PO Date -->
                             <div class="sm:col-span-3">
@@ -231,21 +250,18 @@
                             </div>
 
                         </div>
-                    </div>
-
-                </div>
-                <!-- Modal footer -->
-                <div class="justify-center items-center mt-4 p-4 flex items-center border-t border-gray-200 rounded-b dark:border-gray-600">
-                    <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateFormCreatePO()" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                        <i class="fas fa-save text-xl mr-2"></i>
-                        {{ __('Save') }}
-                    </button>
-                    <button type="button" onclick="closeCreatePOModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                        <i class="fas fa-times text-xl mr-2"></i>
-                        {{ __('Cancel') }}
-                    </button>
-                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                <x-input-error :messages="$errors->get('message')" class="mr-auto" />
+                <button type="button" onclick="validateFormCreatePO()" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    {{ __('Save') }}
+                </button>
+                <button type="button" onclick="closeCreatePOModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>
+                    {{ __('Cancel') }}
+                </button>
             </div>
         </div>
     </div>

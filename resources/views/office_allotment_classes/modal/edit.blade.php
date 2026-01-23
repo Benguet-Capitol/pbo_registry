@@ -2,10 +2,10 @@
 <form id="editOfficeAllotmentClassForm" method="POST" action="">
     @csrf
     @method('PUT')
-    <div id="editOfficeAllotmentClassModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-all duration-300 ease-in-out animate-fadeIn flex items-center justify-center p-4" style="display: none;">
-        <div class="relative w-full max-w-4xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 transform transition-all duration-300 ease-out animate-scaleInUp max-h-[90vh] flex flex-col">
+    <div id="editOfficeAllotmentClassModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="w-full max-w-4xl rounded-xl shadow-2xl transform transition-all duration-300 ease-out bg-white dark:bg-gray-800 overflow-hidden hidden animate-scaleInUp max-h-[90vh] flex flex-col" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal content -->
-            <div class="relative bg-white rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
                 <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
                     <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
@@ -181,8 +181,8 @@
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
                     <button type="button" onclick="validateEditOfficeAllotmentClassForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
-                        <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
-                        {{ __('Save') }}
+                        <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>
+                        {{ __('Update') }}
                     </button>
                     <button type="button" onclick="closeEditOfficeAllotmentClassModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
@@ -194,25 +194,40 @@
     </div>
 </form>
 
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>
+
 <script>
-     function openEditOfficeAllotmentClassModal(officeAllotmentClass) {
+    function openEditOfficeAllotmentClassModal(officeAllotmentClass) {
         closeAllDropdowns();
         const modal = document.getElementById('editOfficeAllotmentClassModal');
         modal.style.display = 'flex';
-        modal.classList.remove('hidden');
+        setTimeout(() => {
+            const box = modal.querySelector('div.hidden');
+            if (box) box.classList.remove('hidden');
+        }, 10);
 
         document.getElementById('editOfficeAllotmentClassForm').action = '{{ route("office_allotment_classes.update", ":id") }}'.replace(':id', officeAllotmentClass.id);
 
         document.getElementById('edit_year').value = officeAllotmentClass.year;
-        updateTextColor(document.getElementById('edit_year'));
         document.getElementById('edit_fund_source').value = officeAllotmentClass.fund_source;
-        updateTextColor(document.getElementById('edit_fund_source'));
         document.getElementById('edit_office').value = officeAllotmentClass.office;
-        updateTextColor(document.getElementById('edit_office'));
         document.getElementById('edit_office_abbreviation').value = officeAllotmentClass.office_abbreviation;
-        updateTextColor(document.getElementById('edit_office_abbreviation'));
         document.getElementById('edit_sub_office').value = officeAllotmentClass.sub_office;
-        updateTextColor(document.getElementById('edit_sub_office'));
         document.getElementById('edit_fund').value = officeAllotmentClass.fund;
         updateTextColor(document.getElementById('edit_fund'));
         document.getElementById('edit_fpp_code').value = officeAllotmentClass.fpp_code;
@@ -225,10 +240,15 @@
 
     function closeEditOfficeAllotmentClassModal() {
         const modal = document.getElementById('editOfficeAllotmentClassModal');
-        modal.classList.add('hidden');
-        setTimeout(() => {
+        const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div > div');
+        if (box) {
+            box.classList.add('hidden');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        } else {
             modal.style.display = 'none';
-        }, 300);
+        }
     }
 
     function fetchFundEdit(officeId) {

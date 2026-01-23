@@ -730,29 +730,37 @@
     </div>
 
     <!-- Obligations Modal for Accounts -->
-    <div id="accountObligationsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-[10000]">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-[80%] max-h-[90vh] overflow-y-auto">
+    <div id="accountObligationsModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
             <!-- Modal Header -->
-            <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-6 py-4 flex justify-between items-center z-10">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Obligations <span id="accountObligationsHeaderInfo" class="text-blue-600 dark:text-blue-400"></span></h3>
-                <button onclick="closeAccountObligationsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-list-check text-blue-600 dark:text-blue-300 text-xl"></i>
+                    <div>
+                        <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
+                            Obligations
+                        </h3>
+                        <span id="accountObligationsHeaderInfo" class="text-xs text-blue-700 dark:text-blue-300"></span>
+                    </div>
+                </div>
+                <button onclick="closeAccountObligationsModal()" class="text-blue-600 dark:text-blue-300 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-full p-2 transition-colors duration-200">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
             <!-- Search Input -->
-            <div class="sticky top-[72px] bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-6 py-3 z-10">
+            <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                 <input 
                     type="text" 
                     id="accountObligationsSearchInput" 
                     placeholder="Search obligations..." 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                     oninput="filterObligationsTable(this.value, 'accounts')"
                 >
             </div>
 
             <!-- Modal Body -->
-            <div class="px-6 py-4 max-h-[calc(90vh-200px)] overflow-y-auto">
+            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-6 py-4">
                 <div id="accountObligationsContent" class="space-y-4">
                     <!-- Loading spinner -->
                     <div id="accountObligationsLoading" class="flex justify-center items-center py-8">
@@ -762,8 +770,9 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="border-t border-gray-300 dark:border-gray-700 px-6 py-3 bg-gray-50 dark:bg-gray-700 flex justify-end">
-                <button onclick="closeAccountObligationsModal()" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500">
+            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
+                <button onclick="closeAccountObligationsModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>
                     Close
                 </button>
             </div>
@@ -782,6 +791,11 @@
         <button id="contextAccountObligationPO" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
             <i class="fas fa-file-invoice mr-2"></i>Add Purchase Order
         </button>
+        @can('cancel obligations')
+        <button id="contextAccountObligationCancellation" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-window-close mr-2"></i>Cancellation
+        </button>
+        @endcan
         <button id="contextAccountObligationHistory" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
             <i class="fas fa-history mr-2"></i>Status/History
         </button>
@@ -1925,7 +1939,9 @@ if (typeof originalUpdateCardValues === 'function') {
         const content = document.getElementById('accountObligationsContent');
         const loading = document.getElementById('accountObligationsLoading');
 
-        modal.classList.remove('hidden');
+        modal.offsetHeight;
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
         
         // Clear previous content
         headerInfo.textContent = ' | ' + (currentAccountAppropriation.accountCode || 'N/A') + ' - ' + (currentAccountAppropriation.description || 'N/A');
@@ -1942,15 +1958,15 @@ if (typeof originalUpdateCardValues === 'function') {
                     let tableHTML = `
                         <div class="overflow-x-auto">
                             <table class="w-full text-xs text-gray-700 dark:text-gray-300">
-                                <thead class="sticky top-0 bg-gray-200 dark:bg-gray-700 z-10 border-b border-t border-gray-400 dark:border-gray-600">
+                                <thead class="sticky top-0 bg-gray-200 dark:bg-gray-700 z-10 border-b border-t border-gray-400 dark:border-gray-600 text-center">
                                     <tr>
-                                        <th class="px-3 py-2 text-left w-12"></th>
-                                        <th class="px-3 py-2 text-left">OBR No.</th>
-                                        <th class="px-3 py-2 text-left">Date</th>
-                                        <th class="px-3 py-2 text-left">OBR Type</th>
-                                        <th class="px-3 py-2 text-left">Particulars</th>
-                                        <th class="px-3 py-2 text-right">Obligation</th>
-                                        <th class="px-3 py-2 text-right">Purchase Order</th>
+                                        <th class="px-3 py-2 w-12"></th>
+                                        <th class="px-3 py-2">OBR No.</th>
+                                        <th class="px-3 py-2">Date</th>
+                                        <th class="px-3 py-2">OBR Type</th>
+                                        <th class="px-3 py-2">Particulars</th>
+                                        <th class="px-3 py-2">Obligation</th>
+                                        <th class="px-3 py-2">Purchase Order</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-300 dark:divide-gray-600">
@@ -1993,6 +2009,21 @@ if (typeof originalUpdateCardValues === 'function') {
                         const formattedAppAmount = displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         const formattedPOAmount = purchaseOrderAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         
+                        // Check if obligation is cancelled (amount is 0)
+                        const isCancelled = displayAmount === 0;
+                        
+                        // Check if obligation has adjustments in selected appropriations
+                        const hasAdjustments = selectedApps.some(app => {
+                            const adjAmount = parseFloat(app.adjustment_amount ? app.adjustment_amount.replace(/,/g, '') : '0');
+                            return adjAmount !== 0;
+                        });
+                        
+                        const amountDisplay = isCancelled ? 
+                            '<span class="text-red-600 dark:text-red-400 font-semibold">Cancelled</span>' : 
+                            (hasAdjustments ?
+                                `<span class="text-green-600 dark:text-green-400 font-semibold">${formattedAppAmount}</span>` :
+                                formattedAppAmount);
+                        
                         tableHTML += `
                             <tr class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer obligation-row" data-obligation-index="${index}">
                                 <td class="px-3 py-2 text-center"><i class="fas fa-chevron-right text-gray-500 transition-transform duration-200 expand-icon"></i></td>
@@ -2000,21 +2031,21 @@ if (typeof originalUpdateCardValues === 'function') {
                                 <td class="px-3 py-2">${obligation.obr_date}</td>
                                 <td class="px-3 py-2">${obligation.obr_type}</td>
                                 <td class="px-3 py-2">${obligation.payee}</td>
-                                <td class="px-3 py-2 text-right font-semibold">${formattedAppAmount}</td>
+                                <td class="px-3 py-2 text-right font-semibold">${amountDisplay}</td>
                                 <td class="px-3 py-2 text-right">${formattedPOAmount}</td>
                             </tr>
                             <tr class="hidden appropriations-row" data-obligation-index="${index}">
                                 <td colspan="7" class="px-2 py-2">
                                         <table class="w-full text-xs text-gray-600 dark:text-gray-400">
-                                            <thead class="border border-gray-400 dark:border-gray-600">
+                                            <thead class="border border-gray-400 dark:border-gray-600 text-center">
                                                 <tr class="bg-gray-100 dark:bg-gray-800">
-                                                    <th class="px-3 py-2 text-left">Programs</th>
-                                                    <th class="px-3 py-2 text-left">Account Code</th>
-                                                    <th class="px-3 py-2 text-left">Description</th>
-                                                    <th class="px-3 py-2 text-right">Amount</th>
-                                                    <th class="px-3 py-2 text-right">Adjustment Amount</th>
-                                                    <th class="px-3 py-2 text-right">Adjusted Amount</th>
-                                                    <th class="px-3 py-2 text-right">Purchase Order</th>
+                                                    <th class="px-3 py-2">Programs</th>
+                                                    <th class="px-3 py-2">Account Code</th>
+                                                    <th class="px-3 py-2">Description</th>
+                                                    <th class="px-3 py-2">Amount</th>
+                                                    <th class="px-3 py-2">Adjustment Amount</th>
+                                                    <th class="px-3 py-2">Adjusted Amount</th>
+                                                    <th class="px-3 py-2">Purchase Order</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-400 dark:border-gray-600">
@@ -2102,7 +2133,8 @@ if (typeof originalUpdateCardValues === 'function') {
 
     function closeAccountObligationsModal() {
         const modal = document.getElementById('accountObligationsModal');
-        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
         // Clear search input
         const searchInput = document.getElementById('accountObligationsSearchInput');
         if (searchInput) {
@@ -2165,6 +2197,16 @@ if (typeof originalUpdateCardValues === 'function') {
                 e.preventDefault();
                 hideAccountObligationContextMenu();
                 openObligationHistoryModal(obligation);
+            };
+        }
+
+        // Cancellation button handler
+        const cancelBtn = menu.querySelector('#contextAccountObligationCancellation');
+        if (cancelBtn) {
+            cancelBtn.onclick = (e) => {
+                e.preventDefault();
+                hideAccountObligationContextMenu();
+                openAccountsCancellationModal(obligation.id, obligation);
             };
         }
     }
@@ -2280,7 +2322,9 @@ if (typeof originalUpdateCardValues === 'function') {
                             setTimeout(() => {
                                 const modal = document.getElementById('createPOModal');
                                 if (modal) {
-                                    modal.classList.remove('hidden');
+                                    modal.offsetHeight;
+                                    modal.style.display = 'flex';
+                                    modal.setAttribute('aria-hidden', 'false');
                                     console.log('Purchase Order modal opened with pre-populated data');
                                 }
                             }, 10);
@@ -2298,7 +2342,8 @@ if (typeof originalUpdateCardValues === 'function') {
     function closeCreatePOModal() {
         const modal = document.getElementById('createPOModal');
         if (modal) {
-            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         }
     }
 
@@ -2316,7 +2361,9 @@ if (typeof originalUpdateCardValues === 'function') {
         const historyInfo = document.getElementById('historyObligationInfo');
 
         // Show modal with loading spinner
-        modal.classList.remove('hidden');
+        modal.offsetHeight;
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
         historyInfo.textContent = ` | ${obligation.obr_no || 'Loading...'}`;
         historyContent.innerHTML = '<div class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div>';
 
@@ -2342,8 +2389,157 @@ if (typeof originalUpdateCardValues === 'function') {
     function closeObligationHistoryModal() {
         const modal = document.getElementById('obligationHistoryModal');
         if (modal) {
-            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         }
+    }
+
+    /**
+     * Open cancellation modal from accounts obligations modal
+     */
+    function openAccountsCancellationModal(obligationId, obligationData) {
+        try {
+            // Close dropdowns if the function exists
+            if (typeof CloseAllDropdowns === 'function') {
+                CloseAllDropdowns();
+            }
+            
+            const modal = document.getElementById('accountsCancellationModal');
+            
+            if (!modal) {
+                console.error('accountsCancellationModal not found');
+                alert('Cancellation modal not found');
+                return;
+            }
+            
+            // Ensure obligation data exists
+            if (!obligationData) {
+                console.error('No obligation data provided');
+                alert('No obligation data available');
+                return;
+            }
+            
+            modal.offsetHeight; // Trigger reflow
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+
+            modal.dataset.obligationId = obligationId;
+
+            // Set the hidden input
+            const hiddenInput = document.getElementById('accountsHiddenObligationId');
+            if (hiddenInput) {
+                hiddenInput.value = obligationId;
+            }
+
+            // Get office and allotment class from page data
+            let officeAbbr = currentPageOfficeAllotmentData?.officeAbbr || 'N/A';
+            let allotmentClass = currentPageOfficeAllotmentData?.allotmentClass || 'N/A';
+            
+            // Fill modal data - use correct field names from API response
+            const obrDateField = document.querySelector('#accountsCancellationModal td[data-field="obr_date"]');
+            if (obrDateField) obrDateField.textContent = obligationData.obr_date || 'N/A';
+            
+            const officeField = document.querySelector('#accountsCancellationModal td[data-field="office_abbreviation"]');
+            if (officeField) officeField.textContent = officeAbbr;
+            
+            const classField = document.querySelector('#accountsCancellationModal td[data-field="allotment_class"]');
+            if (classField) classField.textContent = allotmentClass;
+            
+            const obrNoField = document.querySelector('#accountsCancellationModal td[data-field="obr_no"]');
+            if (obrNoField) obrNoField.textContent = obligationData.obr_no || 'N/A';
+            
+            const obrTypeField = document.querySelector('#accountsCancellationModal td[data-field="obr_type"]');
+            if (obrTypeField) obrTypeField.textContent = obligationData.obr_type || 'N/A';
+            
+            const particularsField = document.querySelector('#accountsCancellationModal td[data-field="particulars"]');
+            if (particularsField) particularsField.textContent = obligationData.payee || 'N/A';
+            
+            const amountField = document.querySelector('#accountsCancellationModal td[data-field="obr_amount"]');
+            if (amountField) {
+                amountField.textContent = Number(obligationData.amount.replace(/,/g, '')).toLocaleString(undefined, {
+                    minimumFractionDigits: 2
+                });
+            }
+
+            const proceedBtn = modal.querySelector('button[onclick="proceedAccountsCancellation()"]');
+            const remarksBox = document.getElementById('accountsCancellationRemarks');
+            const messageContainerId = 'accountsCancelNotice';
+
+            // Clear previous remarks
+            if (remarksBox) {
+                remarksBox.value = '';
+            }
+
+            // Remove any previous message
+            const oldMessage = document.getElementById(messageContainerId);
+            if (oldMessage) oldMessage.remove();
+
+            // Check if obligation is already cancelled
+            if (Number(obligationData.amount.replace(/,/g, '')) === 0) {
+                // Disable button and textarea
+                if (proceedBtn) proceedBtn.disabled = true;
+                if (remarksBox) remarksBox.disabled = true;
+
+                // Add a note below the table
+                const message = document.createElement('p');
+                message.id = messageContainerId;
+                message.className = 'text-red-600 text-sm mt-4 font-semibold';
+                message.textContent = 'This obligation is already cancelled.';
+
+                // Append after table
+                const bodyDiv = modal.querySelector('div.overflow-y-auto');
+                if (bodyDiv) bodyDiv.appendChild(message);
+            } else {
+                // Enable if it was previously disabled
+                if (proceedBtn) proceedBtn.disabled = false;
+                if (remarksBox) remarksBox.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error opening cancellation modal:', error);
+            alert('Error opening cancellation modal: ' + error.message);
+        }
+    }
+
+    /**
+     * Close accounts cancellation modal
+     */
+    function closeAccountsCancellationModal() {
+        const modal = document.getElementById('accountsCancellationModal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    /**
+     * Proceed with accounts cancellation
+     */
+    function proceedAccountsCancellation() {
+        const modal = document.getElementById('accountsCancellationModal');
+        const obligationId = modal.dataset.obligationId;
+        const remarks = document.getElementById('accountsCancellationRemarks').value.trim();
+
+        if (!remarks) {
+            let errorSpan = document.getElementById('accountsRemarksError');
+            if (!errorSpan) {
+                errorSpan = document.createElement('span');
+                errorSpan.id = 'accountsRemarksError';
+                errorSpan.className = 'text-sm text-red-600 mt-1 block';
+                document.getElementById('accountsCancellationRemarks').parentNode.appendChild(errorSpan);
+            }
+            errorSpan.textContent = 'Remarks is required.';
+            return;
+        }
+
+        // Prepare the form
+        const form = document.getElementById('accountsCancelObligationForm');
+        form.action = `/obligations/${obligationId}/cancel`;
+        form.innerHTML = `
+            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+            <input type="hidden" name="remarks" value="${remarks}">
+        `;
+
+        form.submit(); // Submit the form (will follow Laravel's redirect)
     }
 
     /**
@@ -2627,6 +2823,9 @@ if (typeof originalUpdateCardValues === 'function') {
     window.handleAccountMenuOption = handleAccountMenuOption;
     window.showAccountObligationsModal = showAccountObligationsModal;
     window.closeAccountObligationsModal = closeAccountObligationsModal;
+    window.openAccountsCancellationModal = openAccountsCancellationModal;
+    window.closeAccountsCancellationModal = closeAccountsCancellationModal;
+    window.proceedAccountsCancellation = proceedAccountsCancellation;
 
 // Override filterTable to include animations
 const originalFilterTable = window.filterTable;
@@ -2656,6 +2855,13 @@ if (typeof originalFilterTable === 'function') {
 @include('obligations.modal.edit')
 
     <script>
+    // Store office allotment class data for use in modals
+    const currentPageOfficeAllotmentData = {
+        officeAbbr: '{{ $officeAllotmentClasses->offices->office_abbreviation ?? "N/A" }}',
+        officeName: '{{ $officeAllotmentClasses->offices->office_name ?? "N/A" }}',
+        allotmentClass: '{{ $officeAllotmentClasses->class ?? "N/A" }}'
+    };
+
     // Update the context menu handler to include the Obligate option
     document.addEventListener('DOMContentLoaded', function() {
         const accountsTable = document.getElementById('accountsTable');
@@ -2731,7 +2937,10 @@ if (typeof originalFilterTable === 'function') {
             return;
         }
         
-        createModal.classList.remove('hidden');
+        // Trigger reflow to ensure CSS transitions work
+        createModal.offsetHeight;
+        createModal.style.display = 'flex';
+        createModal.setAttribute('aria-hidden', 'false');
         
         // Update date field based on current year
         if (typeof updateDateFieldBasedOnYear === 'function') {
@@ -3014,26 +3223,114 @@ if (typeof originalFilterTable === 'function') {
     @include('obligations.modal.purchase_order', ['obligation' => (object)['id' => null]])
     
     <!-- Obligation History Modal -->
-    <div id="obligationHistoryModal" class="hidden fixed inset-0 z-[10003] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div class="relative top-20 mx-auto p-4 border w-full max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-                <div class="flex justify-between items-center p-4 border-b dark:border-gray-600">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                        Obligation Status/History
-                        <span id="historyObligationInfo" class="text-blue-600 dark:text-blue-400"></span>
-                    </h3>
-                    <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                <div class="p-6 max-h-[70vh] overflow-y-auto">
-                    <div id="historyContent" class="space-y-3">
-                        <div class="flex justify-center items-center py-8">
-                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                        </div>
+    <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+            <!-- Modal header -->
+            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
+                    <div>
+                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-gray-100">
+                            Obligation Status/History
+                        </h3>
+                        <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
                     </div>
                 </div>
+                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 hover:text-white hover:bg-gray-600 dark:hover:bg-gray-700 rounded-full p-2 transition-colors duration-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Modal body (scrollable) -->
+            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-6 space-y-3">
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>
+                    Close
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- Cancellation Modal for Accounts -->
+    <form id="accountsCancelObligationForm" method="POST">
+        <div id="accountsCancellationModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10004] flex items-center justify-center bg-black bg-opacity-50">
+            <div class="flex flex-col max-h-[90vh] w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+                <!-- Modal header -->
+                <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900 dark:to-violet-900 border-b-2 border-purple-200 dark:border-purple-700 rounded-t-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-ban text-purple-600 dark:text-purple-300 text-xl"></i>
+                        <h3 class="text-lg leading-6 font-semibold text-purple-900 dark:text-purple-100">
+                            Cancel Obligation
+                        </h3>
+                    </div>
+                    <button type="button" onclick="closeAccountsCancellationModal()" class="text-purple-600 dark:text-purple-300 hover:text-white hover:bg-purple-600 dark:hover:bg-purple-700 rounded-full p-2 transition-colors duration-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <!-- Modal body (scrollable) -->
+                <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] p-6">
+                    <input type="hidden" id="accountsHiddenObligationId" name="obligation_id" value="">
+                    <p class="text-sm font-bold text-gray-700 dark:text-gray-300">
+                        Do you want to proceed with the cancellation of this Obligation? If cancelled, the obligation amount will be set to zero.
+                    </p>
+
+                    <div class="mt-4">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <tbody>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Date:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_date"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Office Abbreviation:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="office_abbreviation"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Allotment Class:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="allotment_class"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR No:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_no"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Type:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_type"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Particulars:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="particulars"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Obligation Amount:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_amount"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <label for="accountsCancellationRemarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Remarks:</label>
+                        <textarea id="accountsCancellationRemarks" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" rows="3" placeholder="Enter remarks..."></textarea>
+                    </div>
+                </div>
+                <!-- Modal footer -->
+                <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                    <button type="button" onclick="proceedAccountsCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                        <i class="fas fa-window-close mr-2"></i>
+                        Proceed
+                    </button>
+                    <button type="button" onclick="closeAccountsCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
 </x-app-layout>

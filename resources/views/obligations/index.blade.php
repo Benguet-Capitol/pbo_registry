@@ -51,6 +51,14 @@
         </div>
     </x-slot>
 
+    <!-- Include modals early so functions are available -->
+    @include('obligations.modal.obligation_details')
+    @include('obligations.modal.cancellation')
+    @include('obligations.modal.delete')
+    @include('obligations.modal.create')
+    @include('obligations.modal.edit')
+    @include('obligations.modal.payment_remarks')
+
     <!-- Page Content Wrapper with Transition -->
     <div class="page-transition">
 
@@ -626,36 +634,57 @@
     </div>
     
 
-    @include('obligations.modal.obligation_details')
-    @include('obligations.modal.cancellation')
-    @include('obligations.modal.delete')
-    @include('obligations.modal.create')
-    @include('obligations.modal.edit')
-    @include('obligations.modal.payment_remarks')
     <div id="createPOModalContainer"></div>
     <div id="createObligationAdjustmentModalContainer"></div>.
     <div id="createDisbursementModalContainer"></div>
 
     <!-- Obligation History Modal -->
-    <div id="obligationHistoryModal" class="hidden fixed inset-0 z-[10003] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-        <div class="relative top-20 mx-auto p-4 border w-full max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-                <div class="flex justify-between items-center p-4 border-b dark:border-gray-600">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                        Obligation Status/History
-                        <span id="historyObligationInfo" class="text-blue-600 dark:text-blue-400"></span>
-                    </h3>
-                    <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                <div class="p-6 max-h-[70vh] overflow-y-auto">
-                    <div id="historyContent" class="space-y-3">
-                        <div class="flex justify-center items-center py-8">
-                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                        </div>
+    <style>
+        @keyframes scaleInUp {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-scaleInUp {
+            animation: scaleInUp 0.3s ease-out;
+        }
+    </style>
+
+    <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+            <!-- Modal header -->
+            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
+                    <div>
+                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-gray-100">
+                            Obligation Status/History
+                        </h3>
+                        <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
                     </div>
                 </div>
+                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 hover:text-white hover:bg-gray-600 dark:hover:bg-gray-700 rounded-full p-2 transition-colors duration-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Modal body (scrollable) -->
+            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-6 space-y-3">
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>
+                    Close
+                </button>
             </div>
         </div>
     </div>
@@ -876,10 +905,11 @@
         const historyContent = document.getElementById('historyContent');
         const historyInfo = document.getElementById('historyObligationInfo');
 
-        // Show modal with loading spinner
-        modal.classList.remove('hidden');
+        // Show modal with loading spinner and display flex
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
         historyInfo.textContent = ` | ${obligation.obr_no || 'Loading...'}`;
-        historyContent.innerHTML = '<div class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div>';
+        historyContent.innerHTML = '<div class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div></div>';
 
         // Fetch activity history
         fetch(`/obligations/${obligation.id}/activity-history`)
@@ -903,7 +933,8 @@
     function closeObligationHistoryModal() {
         const modal = document.getElementById('obligationHistoryModal');
         if (modal) {
-            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         }
     }
 
@@ -1137,9 +1168,9 @@ function openCreateObligationAdjustmentModal(obligationId) {
             document.getElementById('createObligationAdjustmentModalContainer').innerHTML = html;
             const modal = document.getElementById('createObligationAdjustmentModal');
             
-            // Remove aria-hidden when modal is shown
-            modal.removeAttribute('aria-hidden');
-            modal.classList.remove('hidden');
+            // Show modal with display flex
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
             
             // Prevent form submission on Enter key
             const form = document.getElementById('createObligationAdjustmentForm');
@@ -1165,7 +1196,7 @@ function openCreateObligationAdjustmentModal(obligationId) {
 function closeCreateObligationAdjustmentModal() {
     const modal = document.getElementById('createObligationAdjustmentModal');
     if (modal) {
-        modal.classList.add('hidden');
+        modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
     }
 }
@@ -1394,14 +1425,19 @@ function updateAdjustedAmountTotal() {
             .then(response => response.text())
             .then(html => {
                 document.getElementById('createPOModalContainer').innerHTML = html;
-                // Only show the modal after content is loaded
-                document.getElementById('createPOModal').classList.remove('hidden');
+                // Show the modal after content is loaded
+                const modal = document.getElementById('createPOModal');
+                modal.style.display = 'flex';
+                modal.setAttribute('aria-hidden', 'false');
             });
     }
 
     function closeCreatePOModal() {
-
-        document.getElementById('createPOModal').classList.add('hidden');
+        const modal = document.getElementById('createPOModal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+        }
     }
 
     function validateAmountPO(inputElement) {
@@ -1506,7 +1542,8 @@ function updateAdjustedAmountTotal() {
             .then(html => {
                 document.getElementById('createDisbursementModalContainer').innerHTML = html;
                 const modal = document.getElementById('createDisbursementModal');
-                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+                modal.setAttribute('aria-hidden', 'false');
 
                 // Attach event listener AFTER modal is loaded
                 const statusField = modal.querySelector('#status');
@@ -1535,7 +1572,11 @@ function updateAdjustedAmountTotal() {
     }
 
     function closeCreateDisbursementModal() {
-        document.getElementById('createDisbursementModal').classList.add('hidden');
+        const modal = document.getElementById('createDisbursementModal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+        }
     }
 
     function validateDisbursementAmount(inputElement) {

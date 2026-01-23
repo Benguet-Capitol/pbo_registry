@@ -1,32 +1,49 @@
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>
+
 <!-- Obligation Details Modal -->
-<div id="obligationModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-    <div class="relative top-20 mx-auto p-4 border w-full max-w-6xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-        <!-- Modal content -->
-        <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-            <!-- Modal header -->
-            <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
+<div id="obligationModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+    <div class="flex flex-col max-h-[90vh] w-full max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+        <!-- Modal header -->
+        <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900 dark:to-teal-900 border-b-2 border-green-200 dark:border-green-700 rounded-t-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-eye text-green-600 dark:text-green-300 text-xl"></i>
+                <h3 class="text-lg leading-6 font-semibold text-green-900 dark:text-green-100">
                     {{ __('Obligation Details') }}
                 </h3>
-                <button type="button" onclick="closeModal()" class="text-black hover:text-gray-600 dark:text-white">
-                    <i class="fas fa-times text-xl mr-2"></i>
-                </button>
             </div>
-            <!-- Modal body -->
-            <div id="modalContent" class="p-6">
-                <!-- Content will be dynamically loaded here -->
-            </div>
-            <!-- Modal footer -->
-            <div class="flex justify-end p-4 border-t border-gray-200 dark:border-gray-600">
-                <button type="button" onclick="printModal()" class="mr-2 text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                    <i class="fas fa-print mr-1 -ml-1"></i>
-                    Print
-                </button>
-                <button type="button" onclick="closeModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                    <i class="fas fa-times mr-1 -ml-1"></i>
-                    Close
-                </button>
-            </div>
+            <button type="button" onclick="closeModal()" class="text-green-600 dark:text-green-300 hover:text-white hover:bg-green-600 dark:hover:bg-green-700 rounded-full p-2 transition-colors duration-200">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <!-- Modal body (scrollable) -->
+        <div id="modalContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] p-6">
+            <!-- Content will be dynamically loaded here -->
+        </div>
+        <!-- Modal footer -->
+        <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+            <button type="button" onclick="printModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-print mr-2"></i>
+                Print
+            </button>
+            <button type="button" onclick="closeModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-times mr-2"></i>
+                Close
+            </button>
         </div>
     </div>
 </div>
@@ -39,7 +56,8 @@
     function openModal(obligationId) {
         closeAllDropdowns(); // Hide other UI dropdowns if open
         const modal = document.getElementById('obligationModal');
-        modal.classList.remove('hidden'); // Show modal
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
 
         // Request obligation data from the server
         fetch(`/obligations/${obligationId}`)
@@ -509,6 +527,8 @@
      * Closes the modal by hiding it
      */
     function closeModal() {
-        document.getElementById('obligationModal').classList.add('hidden');
+        const modal = document.getElementById('obligationModal');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
     }
 </script>

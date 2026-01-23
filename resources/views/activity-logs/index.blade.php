@@ -85,23 +85,23 @@
     </div>
 
                     <!-- Table -->
-    <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
-        <div class="overflow-x-auto overflow-y-auto max-h-[700px] border border-gray-300 dark:border-gray-600 rounded-md">
-            <table class="w-full text-left text-gray-800 dark:text-gray-200 text-[11px]">
-                <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900 border border-gray-300 dark:border-gray-600">
+    <div class="p-4 bg-white rounded-lg border-b border-gray-200 relative overflow-x-auto shadow-md dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
+        <div class="overflow-x-auto overflow-y-auto max-h-[700px] border border-gray-200 dark:border-gray-600 rounded-lg">
+            <table class="w-full text-left text-gray-800 dark:text-gray-200 text-xs">
+                <thead class="sticky top-0 z-10 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b-2 border-gray-300 dark:border-gray-600">
                     <tr>
-                            <th class="px-1 py-1 min-w-[120px] text-center border border-gray-300 dark:border-gray-600">User</th>
-                            <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600">Event Type</th>
-                            <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600">Date & Time</th>
-                            <th class="px-1 py-1 min-w-[200px] text-center border border-gray-300 dark:border-gray-600">Description</th>
-                            <th class="px-1 py-1 min-w-[120px] text-center border border-gray-300 dark:border-gray-600">IP Address</th>
+                            <th class="px-4 py-3 min-w-[120px] text-center font-semibold text-gray-700 dark:text-gray-200">User</th>
+                            <th class="px-4 py-3 min-w-[100px] text-center font-semibold text-gray-700 dark:text-gray-200">Event Type</th>
+                            <th class="px-4 py-3 min-w-[150px] text-center font-semibold text-gray-700 dark:text-gray-200">Date & Time</th>
+                            <th class="px-4 py-3 min-w-[200px] text-center font-semibold text-gray-700 dark:text-gray-200">Description</th>
+                            <th class="px-4 py-3 min-w-[120px] text-center font-semibold text-gray-700 dark:text-gray-200">IP Address</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($logs as $log)
-                            <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                <td class="px-1 py-2 text-center border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-semibold">{{ $log->user->name ?? 'N/A' }}</td>
-                                <td class="px-1 py-2 text-center border border-gray-300 dark:border-gray-600">
+                            <tr class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <td class="px-4 py-3 text-center text-gray-900 dark:text-white font-semibold">{{ $log->user->name ?? 'N/A' }}</td>
+                                <td class="px-4 py-3 text-center">
                                     <span class="px-2 py-1 rounded-full text-xs font-semibold {{ 
                                         match($log->event_type) {
                                             'create' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
@@ -114,13 +114,13 @@
                                         {{ ucfirst($log->event_type) }}
                                     </span>
                                 </td>
-                                <td class="px-1 py-2 text-center border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300">{{ $log->created_at->setTimezone('Asia/Manila')->format('F j, Y h:i A') }}</td>
-                                <td class="px-1 py-2 text-center border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300">{{ $log->description }}</td>
-                                <td class="px-1 py-2 text-center border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300">{{ $log->ip_address }}</td>
+                                <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ $log->created_at->setTimezone('Asia/Manila')->format('F j, Y h:i A') }}</td>
+                                <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ $log->description }}</td>
+                                <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ $log->ip_address }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-1 py-2 text-center border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
+                                <td colspan="5" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
                                     No activity logs found.
                                 </td>
                             </tr>

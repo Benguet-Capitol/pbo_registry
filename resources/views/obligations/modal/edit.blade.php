@@ -18,21 +18,20 @@
     <input type="hidden" name="from_accounts" value="0">
     <input type="hidden" name="dashboard_class_id" value="">
     <input type="hidden" name="accounts_class_id" value="">
-    <div id="editObligationsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-[10001] bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-        <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <!-- Modal content -->
-            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-                <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                    <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
-                        {{ __('Edit Obligation') }}
-                    </h3>
-                    <button type="button" onclick="closeEditObligationsModal()" class="text-black hover:text-gray-600 dark:text-white">
-                        <i class="fas fa-times text-xl mr-2"></i>
-                    </button>
-                </div>
-                <!-- Modal body -->
-                <div class="mt-2 px-7 py-3 text-xs">
+    <div id="editObligationsModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+        <div class="relative w-full max-w-5xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp flex flex-col" style="animation: scaleInUp 0.3s ease-out; max-height: 90vh;">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-edit text-amber-600 dark:text-amber-400"></i>
+                    {{ __('Edit Obligation') }}
+                </h3>
+                <button type="button" onclick="closeEditObligationsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="px-6 py-4 overflow-y-auto flex-1" style="max-height: calc(90vh - 280px);">
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
@@ -270,22 +269,36 @@
 
                         </div>
                     </div>
+            </div>
 
-                </div>
-                <!-- Modal footer -->
-                <div class="justify-center items-center p-4 flex border-t border-gray-200 rounded-b dark:border-gray-600">
-                    <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateEditObligationsForm()" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                        <i class="fas fa-save mr-2 ml-1"></i> {{ __('Save') }}
-                    </button>
-                    <button type="button" onclick="closeEditObligationsModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                        <i class="fas fa-times mr-2 ml-1"></i> {{ __('Cancel') }}
-                    </button>
-                </div>
+            <!-- Modal footer -->
+            <div class="justify-center items-center mt-0 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <x-input-error :messages="$errors->get('message')" class="mt-2" />
+                <button type="submit" onclick="validateEditObligationsForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>
+                    {{ __('Update') }}
+                </button>
+                <button type="button" onclick="closeEditObligationsModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
+                    {{ __('Cancel') }}
+                </button>
             </div>
         </div>
     </div>
 </form>
+
+<style>
+@keyframes scaleInUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+</style>
 
 <!-- Delete Confirmation Modal -->
 <div id="deleteConfirmEditModal" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50 hidden">
@@ -414,7 +427,8 @@
         }
 
         // Handle obligation amounts: render all as table rows
-        const tableBody = document.querySelector('#edit_programs_table tbody');
+        try {
+            const tableBody = document.querySelector('#edit_programs_table tbody');
         tableBody.innerHTML = '';
         if (Array.isArray(obligation.obligation_amounts) && obligation.obligation_amounts.length > 0) {
             console.log('Debug - Full obligation:', obligation);
@@ -499,22 +513,41 @@
             `;
             tableBody.appendChild(tr);
         }
+        } catch (error) {
+            console.error('Error populating edit table:', error);
+        }
 
         // Colorize all editable input fields
-        document.querySelectorAll('#editObligationsModal input, #editObligationsModal textarea, #editObligationsModal select').forEach(el => {
-            const hasValue = el.value && el.value.trim() !== '';
-            el.classList.toggle('text-gray-900', hasValue);
-            el.classList.toggle('text-gray-400', !hasValue);
-        });
+        try {
+            document.querySelectorAll('#editObligationsModal input, #editObligationsModal textarea, #editObligationsModal select').forEach(el => {
+                const hasValue = el.value && el.value.trim() !== '';
+                el.classList.toggle('text-gray-900', hasValue);
+                el.classList.toggle('text-gray-400', !hasValue);
+            });
 
-        calculateTotalObligationEdit();
+            calculateTotalObligationEdit();
+        } catch (error) {
+            console.error('Error in edit modal population:', error);
+        }
 
-        document.getElementById('editObligationsModal').classList.remove('hidden');
+        try {
+            const modal = document.getElementById('editObligationsModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.setAttribute('aria-hidden', 'false');
+            }
+        } catch (error) {
+            console.error('Error displaying edit modal:', error);
+        }
     }
 
     // Close Edit Modal
     function closeEditObligationsModal() {
-        document.getElementById('editObligationsModal').classList.add('hidden');
+        const modal = document.getElementById('editObligationsModal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+        }
         // Reset the from_dashboard flag
         window.isFromDashboard = false;
         

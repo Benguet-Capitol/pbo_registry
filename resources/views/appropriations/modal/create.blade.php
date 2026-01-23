@@ -1,8 +1,8 @@
 <!-- Create Appropriations Modal -->
 <form id="createAppropriationsForm" method="POST" action="{{ route('appropriations.store') }}">
     @csrf
-    <div id="createAppropriationsModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-all duration-300 ease-in-out animate-fadeIn flex items-center justify-center p-4" style="display: none;">
-        <div class="relative w-full max-w-4xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 transform transition-all duration-300 ease-out animate-scaleInUp max-h-[90vh] flex flex-col">
+    <div id="createAppropriationsModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="w-full max-w-4xl rounded-xl shadow-2xl transform transition-all duration-300 ease-out bg-white dark:bg-gray-800 overflow-hidden hidden animate-scaleInUp max-h-[90vh] flex flex-col" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal content -->
             <div class="relative bg-white rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
@@ -252,21 +252,46 @@
     </div>
 </form>
 
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>
+
 <script>
     //Open Create Modal
     function openCreateAppropriationsModal() {
         closeAllDropdowns();
         const modal = document.getElementById('createAppropriationsModal');
         modal.style.display = 'flex';
-        modal.classList.remove('hidden');
+        setTimeout(() => {
+            const box = modal.querySelector('div.hidden');
+            if (box) box.classList.remove('hidden');
+        }, 10);
     }
     //Close Create Modal
     function closeCreateAppropriationsModal() {
         const modal = document.getElementById('createAppropriationsModal');
-        modal.classList.add('hidden');
-        setTimeout(() => {
+        const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div > div');
+        if (box) {
+            box.classList.add('hidden');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        } else {
             modal.style.display = 'none';
-        }, 300);
+        }
     }
     // Unhide Project No. and CCO year if the allotment class is CCO and unhide CCO Year only if the office is PDF
     document.addEventListener("DOMContentLoaded", function() {

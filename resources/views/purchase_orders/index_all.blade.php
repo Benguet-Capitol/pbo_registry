@@ -452,7 +452,10 @@
                 .then(html => {
                     document.getElementById('createDisbursementModalContainer').innerHTML = html;
                     const modal = document.getElementById('createDisbursementModal');
-                    modal.classList.remove('hidden');
+                    // Trigger reflow to ensure CSS transitions work
+                    modal.offsetHeight;
+                    modal.style.display = 'flex';
+                    modal.setAttribute('aria-hidden', 'false');
 
                     // Attach event listener AFTER modal is loaded
                     const statusField = modal.querySelector('#status');
@@ -483,7 +486,8 @@
         function closeCreateDisbursementModal() {
             const modal = document.getElementById('createDisbursementModal');
             if (modal) {
-                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
             }
         }
 
@@ -517,7 +521,9 @@
                     .catch(error => console.error('Error fetching obligation amounts:', error));
             }
 
-            document.getElementById('editPurchaseOrderModal').classList.remove('hidden');
+            const modal = document.getElementById('editPurchaseOrderModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
         }
 
         function populateEditProgramsTable(obligationAmounts, purchaseOrder) {
@@ -555,7 +561,7 @@
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${appropriation.description || 'N/A'}</td>
                             <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
-                                <input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
+                                <x-form.input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
                                        value="${poAmount.toFixed(2)}" data-balance="${balance}" oninput="updateEditPOTotal()" />
                             </td>
@@ -583,7 +589,7 @@
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">${appropriation.description || 'N/A'}</td>
                             <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-200">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
-                                <input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
+                                <x-form.input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
                                        value="${parseFloat(purchaseOrder.po_amount).toFixed(2)}" data-balance="${balance}" oninput="updateEditPOTotal()" />
                             </td>
@@ -609,7 +615,9 @@
         }
 
         function closeEditPurchaseOrderModal() {
-            document.getElementById('editPurchaseOrderModal').classList.add('hidden');
+            const modal = document.getElementById('editPurchaseOrderModal');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         }
 
         // Functions needed for disbursement modal
@@ -746,23 +754,23 @@
     <form id="EditPurchaseOrderForm" method="POST" action="">
         @csrf
         @method('PUT')
-        <div id="editPurchaseOrderModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-            <div class="relative top-20 mx-auto p-4 border w-full max-w-5xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-                <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-                    <!-- Modal header -->
-                    <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
-                            {{ __('Edit Purchase Order') }}
-                        </h3>
-                        <button type="button" onclick="closeEditPurchaseOrderModal()" class="text-black hover:text-gray-600 dark:text-white">
-                            <i class="fas fa-times text-xl mr-2"></i>
-                        </button>
-                    </div>
+        <div id="editPurchaseOrderModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+            <div class="relative w-full max-w-5xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-edit text-amber-600 dark:text-amber-400"></i>
+                        {{ __('Edit Purchase Order') }}
+                    </h3>
+                    <button type="button" onclick="closeEditPurchaseOrderModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
 
-                    <!-- Modal body -->
-                    <div class="mt-2 px-7 py-3 text-xs">
-                        <div class="grid gap-3">
-                            <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
+                <!-- Modal body -->
+                <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 200px);">
+                    <div class="grid gap-3">
+                        <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                                 <input type="hidden" name="purchase_order_id" id="purchase_order_id">
                                 <input type="hidden" name="redirect" id="redirect" value="all">
 
@@ -890,25 +898,37 @@
                                         </table>
                                     </div>
                                 </div>
-                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Modal footer -->
-                    <div class="justify-center items-center p-4 flex border-t border-gray-200 rounded-b dark:border-gray-600">
-                        <button type="submit" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                            <i class="fas fa-save text-xl mr-2"></i>
-                            {{ __('Save') }}
-                        </button>
-                        <button type="button" onclick="closeEditPurchaseOrderModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                            <i class="fas fa-times text-xl mr-2"></i>
-                            {{ __('Cancel') }}
-                        </button>
-                    </div>
+                <!-- Modal footer -->
+                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                    <button type="submit" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>
+                        {{ __('Update') }}
+                    </button>
+                    <button type="button" onclick="closeEditPurchaseOrderModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
+                        {{ __('Cancel') }}
+                    </button>
                 </div>
             </div>
         </div>
     </form>
+
+    <style>
+        @keyframes scaleInUp {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+    </style>
 
 
 </x-app-layout>

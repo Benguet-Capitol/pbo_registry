@@ -1,10 +1,10 @@
 <!-- Create Office Allotment Class Modal -->
 <form id="createOfficeAllotmentClassForm" method="POST" action="{{ route('office_allotment_classes.store') }}">
     @csrf
-    <div id="createOfficeAllotmentClassModal" tabindex="1" aria-hidden="true" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-all duration-300 ease-in-out animate-fadeIn flex items-center justify-center p-4" style="display: none;">
-        <div class="relative w-full max-w-4xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 transform transition-all duration-300 ease-out animate-scaleInUp max-h-[90vh] flex flex-col">
+    <div id="createOfficeAllotmentClassModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="w-full max-w-4xl rounded-xl shadow-2xl transform transition-all duration-300 ease-out bg-white dark:bg-gray-800 overflow-hidden hidden animate-scaleInUp max-h-[90vh] flex flex-col" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal content -->
-            <div class="relative bg-white rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
                 <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
                     <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
@@ -199,6 +199,23 @@
     </div>
 </form>
 
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>
+
 <script>
     function fetchFund(officeId) {
         if (!officeId) {
@@ -280,15 +297,23 @@
         document.getElementById('year').value = currentYear;
         const modal = document.getElementById('createOfficeAllotmentClassModal');
         modal.style.display = 'flex';
-        modal.classList.remove('hidden');
+        setTimeout(() => {
+            const box = modal.querySelector('div.hidden');
+            if (box) box.classList.remove('hidden');
+        }, 10);
     }
 
     function closeCreateOfficeAllotmentClassModal() {
         const modal = document.getElementById('createOfficeAllotmentClassModal');
-        modal.classList.add('hidden');
-        setTimeout(() => {
+        const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div > div');
+        if (box) {
+            box.classList.add('hidden');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        } else {
             modal.style.display = 'none';
-        }, 300);
+        }
     }
 
     // Form Validation

@@ -5,77 +5,95 @@
     <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
-    <div id="cancellationModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-        <div class="relative top-20 mx-auto p-4 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <!-- Modal content -->
-            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-                <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                    <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
+    
+    <style>
+        @keyframes scaleInUp {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-scaleInUp {
+            animation: scaleInUp 0.3s ease-out;
+        }
+    </style>
+
+    <div id="cancellationModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+            <!-- Modal header -->
+            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900 dark:to-violet-900 border-b-2 border-purple-200 dark:border-purple-700 rounded-t-lg">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-ban text-purple-600 dark:text-purple-300 text-xl"></i>
+                    <h3 class="text-lg leading-6 font-semibold text-purple-900 dark:text-purple-100">
                         Cancel Obligation
                     </h3>
-                    <button type="button" onclick="closeCancellationModal()" class="text-black hover:text-gray-600 dark:text-gray-200 dark:hover:text-gray-400">
-                        <i class="fas fa-times text-xl mr-2"></i>
-                    </button>
                 </div>
-                <!-- Modal body -->
-                <div class="p-6">
-                    <input type="hidden" id="hiddenObligationId" name="obligation_id" value="">
-                    <p class="text-sm font-bold text-gray-700 dark:text-gray-300">
-                        Do you want to proceed with the cancellation of this Obligation? If cancelled, the obligation amount will be set to zero.
-                    </p>
+                <button type="button" onclick="closeCancellationModal()" class="text-purple-600 dark:text-purple-300 hover:text-white hover:bg-purple-600 dark:hover:bg-purple-700 rounded-full p-2 transition-colors duration-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Modal body (scrollable) -->
+            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] p-6">
+                <input type="hidden" id="hiddenObligationId" name="obligation_id" value="">
+                <p class="text-sm font-bold text-gray-700 dark:text-gray-300">
+                    Do you want to proceed with the cancellation of this Obligation? If cancelled, the obligation amount will be set to zero.
+                </p>
 
-                    <div class="mt-2">
-                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <tbody>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Date:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_date"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Office Abbreviation:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="office_abbreviation"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Allotment Class:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="allotment_class"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR No:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_no"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Type:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_type"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Particulars:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="particulars"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Obligation Amount:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_amount"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="mt-4">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <tbody>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Date:</td>
+                                <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_date"></td>
+                            </tr>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Office Abbreviation:</td>
+                                <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="office_abbreviation"></td>
+                            </tr>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Allotment Class:</td>
+                                <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="allotment_class"></td>
+                            </tr>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR No:</td>
+                                <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_no"></td>
+                            </tr>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Type:</td>
+                                <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_type"></td>
+                            </tr>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Particulars:</td>
+                                <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="particulars"></td>
+                            </tr>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Obligation Amount:</td>
+                                <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_amount"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div class="mt-4">
-                        <label for="cancellationRemarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Remarks:</label>
-                        <x-form.textarea id="cancellationRemarks" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" rows="3" placeholder="Enter remarks..."></x-form.textarea>
-                    </div>
+                <div class="mt-4">
+                    <label for="cancellationRemarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Remarks:</label>
+                    <x-form.textarea id="cancellationRemarks" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" rows="3" placeholder="Enter remarks..."></x-form.textarea>
                 </div>
-                <!-- Modal footer -->
-                <div class="flex justify-end p-4 border-t border-gray-200 dark:border-gray-600">
-                    <button type="button" onclick="proceedCancellation()" class="text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                        <i class="fas fa-window-close mr-1"></i>
-                        Proceed with Cancellation
-                    </button>
-                    <button type="button" onclick="closeCancellationModal()" class="ml-1 text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                        <i class="fas fa-times mr-1 -ml-1"></i>
-                        Cancel
-                    </button>
-                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                <button type="button" onclick="proceedCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-window-close mr-2"></i>
+                    Proceed
+                </button>
+                <button type="button" onclick="closeCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancel
+                </button>
             </div>
         </div>
     </div>
@@ -85,7 +103,8 @@
     function openCancellationModal(obligationId, obligationData) {
         closeAllDropdowns();
         const modal = document.getElementById('cancellationModal');
-        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
 
         modal.dataset.obligationId = obligationId;
 
@@ -124,7 +143,7 @@
             message.textContent = 'This obligation is already cancelled.';
 
             // Append after table
-            modal.querySelector('.p-6').appendChild(message);
+            modal.querySelector('div.p-6') ? modal.querySelector('div.p-6').appendChild(message) : null;
         } else {
             // Enable if it was previously disabled
             proceedBtn.disabled = false;
@@ -134,7 +153,8 @@
 
     function closeCancellationModal() {
         const modal = document.getElementById('cancellationModal');
-        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
     }
 
     function proceedCancellation() {

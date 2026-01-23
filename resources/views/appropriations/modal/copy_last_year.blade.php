@@ -1,6 +1,6 @@
 <!-- Modal for Copying Appropriations from Last Year -->
-<div id="copyLastYearModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 transition-all duration-300 ease-in-out animate-fadeIn" style="display: none;">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-[120rem] w-full max-h-[90vh] flex flex-col transform transition-all duration-300 ease-out animate-scaleInUp">
+<div id="copyLastYearModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-[120rem] w-full max-h-[90vh] flex flex-col transform transition-all duration-300 ease-out hidden animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Header -->
         <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
             <h2 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
@@ -165,8 +165,11 @@ function openCopyLastYearModal() {
         .catch(error => console.error('Error fetching allotment class:', error));
 
     const modal = document.getElementById('copyLastYearModal');
-    modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    setTimeout(() => {
+        const box = modal.querySelector('div.hidden');
+        if (box) box.classList.remove('hidden');
+    }, 10);
     document.getElementById('loadingIndicator').classList.remove('hidden');
     document.getElementById('tableContainer').classList.add('hidden');
     document.getElementById('noDataMessage').classList.add('hidden');
@@ -176,10 +179,15 @@ function openCopyLastYearModal() {
 
 function closeCopyLastYearModal() {
     const modal = document.getElementById('copyLastYearModal');
-    modal.classList.add('hidden');
-    setTimeout(() => {
+    const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div');
+    if (box) {
+        box.classList.add('hidden');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    } else {
         modal.style.display = 'none';
-    }, 300);
+    }
     lastYearAppropriatationsData = [];
     rowCounter = 0;
 }
@@ -798,3 +806,19 @@ function submitCopyLastYearForm() {
     document.body.removeChild(form);
 }
 </script>
+
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>

@@ -1,24 +1,24 @@
 <!-- Create Employee Modal -->
 <form id="createEmployeeForm" method="POST" action="{{ route('employees.store') }}">
-    <div id="createEmployeeModal" tabindex="1" aria-hidden="true" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-        <div class="relative top-20 mx-auto p-4 border w-full max-w-3xl shadow-lg rounded-md bg-white max-h-full dark:bg-gray-800">
+    @csrf
+    <div id="createEmployeeModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="w-full max-w-4xl rounded-xl shadow-2xl transform transition-all duration-300 ease-out bg-white dark:bg-gray-800 overflow-hidden hidden animate-scaleInUp max-h-[90vh] flex flex-col" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal content -->
-            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                    <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
+                <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+                    <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                        <i class="fas fa-user-plus text-blue-600 dark:text-blue-400 mr-3 text-xl"></i>
                         {{ __('Add Employee') }}
                     </h3>
-                    <button type="button" onclick="closeCreateEmployeeModal()" class="text-black hover:text-gray-600 dark:text-gray-200 dark:hover:text-gray-400">
-                        <i class="fas fa-times text-xl mr-2"></i>
+                    <button type="button" onclick="closeCreateEmployeeModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">
+                        <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
                 <!-- Modal body -->
-                <div class="mt-2 px-7 py-3">
-                    @csrf
+                <div class="overflow-y-auto flex-1 px-7 py-3">
                     <div class="grid gap-3">
-                        <!-- Employee ID -->
-                        <div class="space-y-2">
+                        <div class="space-y-3">
                             <x-form.label
                                 for="employee_id"
                                 :value="__('Employee ID')" />
@@ -110,18 +110,18 @@
                                 <span id="officeError" class="text-red-500 text-sm"></span>
                             </div>
 
+                        </div>
                     </div>
-
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-4 p-4 flex items-center border-t border-gray-200 rounded-b dark:border-gray-600">
+                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateCreateEmployeeForm()" class="mr-1 text-green-600 inline-flex items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                        <i class="fas fa-save text-xl mr-2"></i>
+                    <button type="button" onclick="validateCreateEmployeeForm()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
-                    <button type="button" onclick="closeCreateEmployeeModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                        <i class="fas fa-times text-xl mr-2"></i>
+                    <button type="button" onclick="closeCreateEmployeeModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Cancel') }}
                     </button>
                 </div>
@@ -134,47 +134,26 @@
 <script>
     function openCreateEmployeeModal() {
         closeAllDropdowns();
-        document.getElementById('createEmployeeModal').classList.remove('hidden');
+        const modal = document.getElementById('createEmployeeModal');
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            const box = modal.querySelector('div.hidden');
+            if (box) box.classList.remove('hidden');
+        }, 10);
     }
 
     function closeCreateEmployeeModal() {
-        document.getElementById('createEmployeeModal').classList.add('hidden');
-    }
-
-    //Checks if an input has a value and adjusts the text color accordingly
-    document.addEventListener("DOMContentLoaded", function() {
-        const elements = document.querySelectorAll("input, select");
-
-        elements.forEach(element => {
-            updateTextColor(element); // Check initial values
-
-            element.addEventListener("input", function() {
-                updateTextColor(this);
-            });
-
-            element.addEventListener("change", function() {
-                updateTextColor(this);
-            });
-
-            element.addEventListener("focus", function() {
-                updateTextColor(this);
-            });
-        });
-
-        // Handle autofill values after a short delay
-        setTimeout(() => {
-            elements.forEach(updateTextColor);
-        }, 100);
-
-        function updateTextColor(element) {
-            if (element.value.trim() !== "") {
-                element.classList.remove("text-gray-500");
-                element.classList.add("text-gray-900", "dark:text-gray-100");
-            } else {
-                element.classList.remove("text-gray-900", "dark:text-gray-100");
-            }
+        const modal = document.getElementById('createEmployeeModal');
+        const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div');
+        if (box) {
+            box.classList.add('hidden');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        } else {
+            modal.style.display = 'none';
         }
-    });
+    }
 
     function validateCreateEmployeeForm() {
         let isValid = true;
@@ -217,3 +196,20 @@
         }
     }
 </script>
+
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>

@@ -1,18 +1,41 @@
 {{-- Payment Remarks Modal --}}
 <div id="createPaymentRemarksContainer"></div>
-<div id="paymentRemarksModal" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="relative w-full max-w-md p-6 bg-white rounded-lg shadow-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center pb-3 mb-4 border-b border-gray-200 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+
+<style>
+    @keyframes scaleInUp {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .animate-scaleInUp {
+        animation: scaleInUp 0.3s ease-out;
+    }
+</style>
+
+<div id="paymentRemarksModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+    <div class="flex flex-col max-h-[90vh] w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+        <!-- Modal header -->
+        <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-comment-dots text-blue-600 dark:text-blue-300 text-xl"></i>
+                <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
                     Payment Remarks
                 </h3>
-                <button type="button" onclick="closePaymentRemarksModal()" class="text-gray-400 hover:text-gray-600 dark:text-gray-200 dark:hover:text-gray-400">
-                    <i class="fas fa-times h-6 w-6"></i>
-                </button>
             </div>
+            <button type="button" onclick="closePaymentRemarksModal()" class="text-blue-600 dark:text-blue-300 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-full p-2 transition-colors duration-200">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
 
-            <form id="paymentRemarksForm" method="POST" action="">
+        <!-- Modal body (scrollable) -->
+        <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)]">
+            <form id="paymentRemarksForm" method="POST" action="" class="p-6">
                 @csrf
                 <input type="hidden" name="year1" value="{{ request('year1') }}">
                 <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
@@ -22,7 +45,7 @@
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        OBR No: <span id="paymentRemarksObrNo" class="font-bold text-blue-700"></span>
+                        OBR No: <span id="paymentRemarksObrNo" class="font-bold text-blue-700 dark:text-blue-300"></span>
                     </label>
                 </div>
 
@@ -38,23 +61,25 @@
                         class="w-full px-3 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                         placeholder="Enter payment remarks"></x-form.textarea>
                 </div>
-
-                <div class="flex justify-end space-x-2 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <button 
-                        type="submit" 
-                        class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                        <i class="fas fa-save mr-1"></i>
-                        Save Remarks
-                    </button>
-                    <button 
-                        type="button" 
-                        onclick="closePaymentRemarksModal()" 
-                        class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                        <i class="fas fa-times mr-1"></i>
-                        Cancel
-                    </button>
-                </div>
             </form>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+            <button 
+                type="submit" 
+                form="paymentRemarksForm"
+                class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-save mr-2"></i>
+                Save
+            </button>
+            <button 
+                type="button" 
+                onclick="closePaymentRemarksModal()" 
+                class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-times mr-2"></i>
+                Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -85,8 +110,9 @@
         // Set existing payment remarks
         remarksTextarea.value = paymentRemarks || '';
         
-        // Show modal
-        modal.classList.remove('hidden');
+        // Show modal with display flex
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
         
         // Focus on textarea
         setTimeout(() => remarksTextarea.focus(), 100);
@@ -95,7 +121,8 @@
     function closePaymentRemarksModal() {
         const modal = document.getElementById('paymentRemarksModal');
         if (modal) {
-            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
             
             // Reset form
             const form = document.getElementById('paymentRemarksForm');
@@ -109,7 +136,7 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const paymentRemarksModal = document.getElementById('paymentRemarksModal');
-            if (paymentRemarksModal && !paymentRemarksModal.classList.contains('hidden')) {
+            if (paymentRemarksModal && paymentRemarksModal.style.display !== 'none') {
                 closePaymentRemarksModal();
             }
         }

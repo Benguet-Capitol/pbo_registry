@@ -174,6 +174,7 @@
                                                         placeholder="{{ __('Account Code') }}"
                                                         class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
                                                         oninput="filterAccountCodes(this)"
+                                                        onchange="resetAmountOnAccountCodeChange(this)"
                                                         autocomplete="off" />
                                                     <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown">
                                                         <!-- Suggestions will appear here -->
@@ -207,8 +208,8 @@
                                                     <x-form.input
                                                         type="text"
                                                         name="amount_of_obligation[]"
-                                                        oninput="validateAmount(this); calculateTotalObligation();"
-                                                        onblur="calculateTotalObligation();"
+                                                        oninput="validateAmountInput(this); calculateTotalObligation();"
+                                                        onblur="formatAmountField(this); calculateTotalObligation();"
                                                         placeholder="{{ __('Amount') }}"
                                                         autocomplete="off"
                                                         class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
@@ -251,7 +252,7 @@
             <!-- Modal footer -->
             <div class="justify-center items-center mt-0 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                 <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                <button type="submit" onclick="validateForm()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="if(!validateForm()) return false; cleanupFormData(); document.getElementById('createObligationsForm').submit();" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Save') }}
                 </button>
@@ -278,7 +279,7 @@
 </style>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+<div id="deleteConfirmModal" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md p-6">
         <h2 class="text-lg font-semibold text-red-600 mb-4">Confirm Deletion</h2>
         <p class="text-sm text-gray-700 dark:text-gray-300 mb-6">
@@ -732,17 +733,70 @@ function calculateBalance(inputElement, item) {
     if (balanceField) balanceField.value = formattedBalance;
 }
 
-// 11. VALIDATE AMOUNT
-function validateAmount(inputElement) {
+// 10b. RESET AMOUNT ON ACCOUNT CODE CHANGE
+function resetAmountOnAccountCodeChange(inputElement) {
+    const row = inputElement.closest('tr');
+    const amountField = row.querySelector('[name="amount_of_obligation[]"]');
+    if (amountField) {
+        amountField.value = '';
+        calculateTotalObligation();
+    }
+}
+
+// 11. VALIDATE AMOUNT INPUT (on input - only validation, no formatting)
+function validateAmountInput(inputElement) {
     const row = inputElement.closest('tr');
     const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
 
     if (balanceField) {
+        // Parse the balance value (remove commas if any)
         const maxBalance = parseFloat((balanceField.value || 0).replace(/,/g, ''));
-        const currentValue = parseFloat((inputElement.value || 0).replace(/,/g, ''));
+        
+        // Parse the current input value (remove commas if any)
+        let currentValue = (inputElement.value || '').replace(/,/g, '');
+        currentValue = parseFloat(currentValue) || 0;
 
+        // If current value exceeds max balance, prevent it and show warning
         if (currentValue > maxBalance) {
-            inputElement.value = maxBalance.toFixed(2);
+            // Add visual feedback - yellow ring to indicate warning
+            inputElement.classList.add('ring-2', 'ring-yellow-500', 'ring-opacity-50');
+            setTimeout(() => {
+                inputElement.classList.remove('ring-2', 'ring-yellow-500', 'ring-opacity-50');
+            }, 1000);
+            
+            // Reset to the raw unformatted max balance (for input, don't format yet)
+            inputElement.value = maxBalance.toString();
+        }
+    }
+}
+
+// 11b. FORMAT AMOUNT FIELD (on blur - format and final validation)
+function formatAmountField(inputElement) {
+    const row = inputElement.closest('tr');
+    const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
+
+    if (balanceField && inputElement.value) {
+        // Parse the balance value (remove commas if any)
+        const maxBalance = parseFloat((balanceField.value || 0).replace(/,/g, ''));
+        
+        // Parse the current input value (remove commas if any)
+        let currentValue = (inputElement.value || '').replace(/,/g, '');
+        currentValue = parseFloat(currentValue) || 0;
+
+        // If current value exceeds max balance, reset to max balance
+        if (currentValue > maxBalance) {
+            inputElement.value = maxBalance.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else if (currentValue > 0) {
+            // Format the value with commas and decimals
+            inputElement.value = currentValue.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else if (currentValue === 0 && inputElement.value.trim() !== '') {
+            inputElement.value = '0.00';
         }
     }
 }
@@ -753,7 +807,8 @@ function calculateTotalObligation() {
     let total = 0;
 
     amountFields.forEach(field => {
-        const value = parseFloat(field.value.replace(/,/g, '') || 0);
+        let value = (field.value || '').replace(/,/g, '');
+        value = parseFloat(value) || 0;
         total += value;
     });
 
@@ -1000,6 +1055,11 @@ function validateForm() {
     const form = document.getElementById('createObligationsForm');
     let isValid = true;
 
+    // Clear previous error messages
+    const tableBody = document.querySelector('#programs_table tbody');
+    if (tableBody) {
+        tableBody.querySelectorAll('.text-red-500').forEach(error => error.remove());
+    }
     document.querySelectorAll('.text-red-500').forEach(error => error.textContent = '');
 
     const officeAllotmentClass = document.getElementById('office_allotment_class');
@@ -1072,7 +1132,6 @@ function validateForm() {
         particulars.classList.add('border-gray-300');
     }
 
-    const tableBody = document.querySelector('#programs_table tbody');
     if (tableBody.rows.length === 0) {
         const tableMessage = document.getElementById('tableMessage');
         tableMessage.textContent = 'At least one row is required in the table.';
@@ -1082,13 +1141,29 @@ function validateForm() {
 
     const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
     amountFields.forEach((field, index) => {
-        const value = parseFloat(field.value || 0);
+        const value = parseFloat((field.value || '').replace(/,/g, '')) || 0;
+        const row = field.closest('tr');
+        const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
+        const balanceValue = parseFloat((balanceField.value || '').replace(/,/g, '')) || 0;
+        
+        // Check if amount is greater than 0
         if (value <= 0) {
             field.classList.add('border-red-500');
             field.classList.remove('border-gray-300');
             const errorMessage = document.createElement('div');
             errorMessage.className = 'text-red-500 text-xs mt-1';
             errorMessage.textContent = `Row ${index + 1}: Amount of Obligation must be greater than 0.`;
+            errorMessage.style.gridColumn = 'span 2';
+            field.parentNode.appendChild(errorMessage);
+            isValid = false;
+        }
+        // Check if amount exceeds balance
+        else if (value > balanceValue) {
+            field.classList.add('border-red-500');
+            field.classList.remove('border-gray-300');
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'text-red-500 text-xs mt-1';
+            errorMessage.textContent = `Row ${index + 1}: Amount of Obligation (${value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}) cannot exceed Balance from Allotment (${balanceValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}).`;
             errorMessage.style.gridColumn = 'span 2';
             field.parentNode.appendChild(errorMessage);
             isValid = false;
@@ -1119,8 +1194,26 @@ function validateForm() {
         isValid = false;
     }
 
-    if (isValid) {
-        form.submit();
-    }
+    return isValid;
+}
+
+// CLEANUP FORM DATA - Remove formatting before submission
+function cleanupFormData() {
+    // Remove commas from all amount_of_obligation fields
+    const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
+    amountFields.forEach(field => {
+        if (field.value) {
+            // Remove commas to convert "5,000.00" to "5000.00"
+            field.value = field.value.replace(/,/g, '');
+        }
+    });
+    
+    // Remove commas from all balance_from_allotment fields as well
+    const balanceFields = document.querySelectorAll('[name="balance_from_allotment[]"]');
+    balanceFields.forEach(field => {
+        if (field.value) {
+            field.value = field.value.replace(/,/g, '');
+        }
+    });
 }
 </script>

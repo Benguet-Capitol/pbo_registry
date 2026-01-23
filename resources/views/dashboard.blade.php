@@ -1050,6 +1050,20 @@
             opacity: 1;
         }
     }
+
+    /* Column highlight animation */
+    @keyframes columnHighlight {
+        0% {
+            background-color: rgba(59, 130, 246, 0.3);
+        }
+        100% {
+            background-color: transparent;
+        }
+    }
+
+    .highlight-column {
+        animation: columnHighlight 1.5s ease-out forwards;
+    }
     </style>
 
     <script>
@@ -1335,7 +1349,7 @@
                         headerInfo.textContent = '';
                     }
                     if (content) {
-                        content.innerHTML = '';
+                        content.innerHTML = '<div id="obligationsLoading" class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div>';
                     }
                     
                     if (modal) {
@@ -1343,8 +1357,11 @@
                         modal.style.display = 'flex';
                         modal.setAttribute('aria-hidden', 'false');
                     }
-                    if (loading) {
-                        loading.style.display = 'flex';
+                    
+                    // Re-query the loading element after it's been recreated
+                    const loadingElement = document.getElementById('obligationsLoading');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'flex';
                     }
 
                     // Fetch obligations
@@ -1356,8 +1373,9 @@
                             return response.json();
                         })
                         .then(data => {
-                            if (loading) {
-                                loading.style.display = 'none';
+                            const loadingSpinner = document.getElementById('obligationsLoading');
+                            if (loadingSpinner) {
+                                loadingSpinner.style.display = 'none';
                             }
                             
                             console.log('API Response:', data);
@@ -1461,7 +1479,10 @@
                                     
                                     // Add amount to total (remove commas and convert to float)
                                     totalAmount += parseFloat(obligation.amount.replace(/,/g, ''));
-                                    totalPurchaseOrder += parseFloat(obligation.purchase_order.replace(/,/g, ''));
+                                    // Only add to PO total if it's not "-" (i.e., valid number)
+                                    if (obligation.purchase_order !== '-') {
+                                        totalPurchaseOrder += parseFloat(obligation.purchase_order.replace(/,/g, ''));
+                                    }
                                 });
                                 
                                 tableHTML += `
@@ -1470,8 +1491,8 @@
                                                     <tr>
                                                         <td colspan="2" class="px-3 py-2 text-left">Total Records: ${data.data.length} record${data.data.length !== 1 ? 's' : ''}</td>
                                                         <td colspan="3" class="px-3 py-2 text-right">Total:</td>
-                                                        <td class="px-3 py-2 text-right">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                        <td class="px-3 py-2 text-right">${totalPurchaseOrder ? Number(totalPurchaseOrder).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
+                                                        <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                        <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
                                                     </tr>
                                                 </tfoot>
                                             </table>
@@ -3301,6 +3322,26 @@
      * Smooth scroll and highlight when clicking card
      */
     function setupCardClickHandlers() {
+        // Mapping of card types to column header text patterns
+        const cardToColumnHeader = {
+            'approved_appropriations': 'Approved Appropriations',
+            'supplemental_appropriations': 'Supplemental Appropriations',
+            'reversions': 'Reversions',
+            'realignments': 'Realignments',
+            'authorized_appropriations': 'Authorized Appropriations',
+            'allotments': 'Allotments',
+            'for_later_release': 'For Later Release',
+            'obligations': 'Obligations',
+            'balance_appropriations': 'Authorized Appropriations Balance',
+            'appropriation_accomplishment': 'Appropriation Utilization',
+            'balance_allotments': 'Allotments Balance',
+            'allotment_accomplishment': 'Allotments Utilization',
+            'disbursements': 'Disbursements',
+            'disbursement_balance': 'Obligations Balance',
+            'disbursements_to_obligations': 'Disbursements / Oblgations',
+            'disbursements_to_appropriations': 'Disbursements / Approp.'
+        };
+
         const cards = document.querySelectorAll('[data-card]');
         
         cards.forEach(card => {
@@ -3315,14 +3356,48 @@
                 if (table) {
                     table.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     
-                    // Highlight all rows briefly
+                    // Get the card type and find the corresponding header
+                    const cardType = this.dataset.card;
+                    const headerText = cardToColumnHeader[cardType];
+                    
+                    // Highlight the corresponding column
                     setTimeout(() => {
-                        const rows = table.querySelectorAll('tbody tr');
-                        rows.forEach(row => {
-                            row.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
-                            setTimeout(() => {
-                                row.style.backgroundColor = '';
-                            }, 1000);
+                        const headerCells = table.querySelectorAll('thead th');
+                        let columnIndex = -1;
+                        
+                        // Find the column index by matching header text (exact match preferred)
+                        headerCells.forEach((header, index) => {
+                            const cellText = header.textContent.trim();
+                            // Try exact match first
+                            if (cellText === headerText) {
+                                columnIndex = index;
+                            }
+                            // If no exact match and it's a partial match, use it as fallback
+                            else if (columnIndex === -1 && cellText.includes(headerText)) {
+                                columnIndex = index;
+                            }
+                        });
+                        
+                        if (columnIndex === -1) {
+                            console.warn(`Column header not found for: ${headerText}`);
+                            return;
+                        }
+                        
+                        // Highlight header
+                        headerCells[columnIndex].classList.add('highlight-column');
+                        setTimeout(() => {
+                            headerCells[columnIndex].classList.remove('highlight-column');
+                        }, 1500);
+                        
+                        // Highlight all cells in the column
+                        const bodyCells = table.querySelectorAll('tbody td');
+                        bodyCells.forEach((cell, index) => {
+                            if (index % (headerCells.length) === columnIndex) {
+                                cell.classList.add('highlight-column');
+                                setTimeout(() => {
+                                    cell.classList.remove('highlight-column');
+                                }, 1500);
+                            }
                         });
                     }, 500);
                 }

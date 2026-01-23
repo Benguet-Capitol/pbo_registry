@@ -441,7 +441,7 @@
                 </div>
                 <div class="ml-3 sm:ml-4">
                     <div class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">
-                        Disbursements Balance
+                        Obligations Balance
                     </div>
                     <div class="card-value text-base sm:text-lg md:text-lg font-bold text-gray-800 dark:text-gray-100 break-words">
                         {{ number_format($officeAllotmentClasses->disbursement_balance, 2) }}
@@ -838,6 +838,20 @@
         to {
             opacity: 1;
         }
+    }
+
+    /* Column highlight animation */
+    @keyframes columnHighlight {
+        0% {
+            background-color: rgba(59, 130, 246, 0.3);
+        }
+        100% {
+            background-color: transparent;
+        }
+    }
+
+    .highlight-column {
+        animation: columnHighlight 1.5s ease-out forwards;
     }
     </style>
 
@@ -2818,6 +2832,96 @@ if (typeof originalUpdateCardValues === 'function') {
         if (menu && !event.target.closest('#accountObligationsContextMenu')) {
             hideAccountObligationContextMenu();
         }
+    });
+
+    /**
+     * Setup card click handlers to highlight corresponding table columns
+     */
+    function setupCardClickHandlers() {
+        // Mapping of card types to column header text patterns
+        const cardToColumnHeader = {
+            'approved_appropriations': 'Approved Appropriations',
+            'supplemental_appropriations': 'Supplemental Appropriations',
+            'reversions': 'Reversions',
+            'realignments': 'Realignments',
+            'authorized_appropriations': 'Authorized Appropriations',
+            'allotments': 'Allotments',
+            'for_later_release': 'For Later Release',
+            'obligations': 'Obligations',
+            'balance_appropriations': 'Authorized Approp. Balance',
+            'appropriation_accomplishment': 'Appropriations Utilization',
+            'balance_allotments': 'Allotments Balance',
+            'allotment_accomplishment': 'Allotments Utilization',
+            'disbursements': 'Disbursements',
+            'disbursement_balance': 'Obligations Balance',
+            'disbursements_to_obligations': 'Disbursements / Oblgations',
+            'disbursements_to_appropriations': 'Disbursements / Approp.'
+        };
+
+        const cards = document.querySelectorAll('[data-card]');
+        
+        cards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Don't trigger if clicking toggle button
+                if (e.target.closest('button')) return;
+                
+                // Scroll to table
+                const table = document.getElementById('accountsTable');
+                if (table) {
+                    table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // Get the card type and find the corresponding header
+                    const cardType = this.dataset.card;
+                    const headerText = cardToColumnHeader[cardType];
+                    
+                    // Highlight the corresponding column
+                    setTimeout(() => {
+                        const headerCells = table.querySelectorAll('thead th');
+                        let columnIndex = -1;
+                        
+                        // Find the column index by matching header text (exact match preferred)
+                        headerCells.forEach((header, index) => {
+                            const cellText = header.textContent.trim();
+                            // Try exact match first
+                            if (cellText === headerText) {
+                                columnIndex = index;
+                            }
+                            // If no exact match and it's a partial match, use it as fallback
+                            else if (columnIndex === -1 && cellText.includes(headerText)) {
+                                columnIndex = index;
+                            }
+                        });
+                        
+                        if (columnIndex === -1) {
+                            console.warn(`Column header not found for: ${headerText}`);
+                            return;
+                        }
+                        
+                        // Highlight header
+                        headerCells[columnIndex].classList.add('highlight-column');
+                        setTimeout(() => {
+                            headerCells[columnIndex].classList.remove('highlight-column');
+                        }, 1500);
+                        
+                        // Highlight all cells in the column
+                        const bodyCells = table.querySelectorAll('tbody td');
+                        bodyCells.forEach((cell, index) => {
+                            if (index % (headerCells.length) === columnIndex) {
+                                cell.classList.add('highlight-column');
+                                setTimeout(() => {
+                                    cell.classList.remove('highlight-column');
+                                }, 1500);
+                            }
+                        });
+                    }, 500);
+                }
+            });
+        });
+    }
+
+    // Initialize card click handlers when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        setupCardClickHandlers();
     });
 
     window.handleAccountMenuOption = handleAccountMenuOption;

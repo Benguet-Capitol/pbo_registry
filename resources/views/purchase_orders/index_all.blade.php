@@ -278,25 +278,29 @@
     </div>
 
     <!-- Include Modal Files -->
-     @role('Developer|Administrator|Disbursement')
     <div id="createDisbursementModalContainer"></div>
     <div id="purchaseOrderContextMenu" 
         class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
         style="display: none;">
+        @role('Developer|Administrator|Obligation')
         @can('edit purchase orders')
         <button id="contextEditPO"
                 class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
             <i class="fas fa-edit mr-2"></i>Edit
         </button>
         @endcan
+        @endrole
+        
+        @role('Developer|Administrator|Disbursement')
         @can('create disbursement')
         <button id="contextAddDisbursement"
                 class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
             <i class="fas fa-file-medical-alt mr-2"></i>Add Disbursement
         </button>
         @endcan
+        @endrole
     </div>
-    @endrole
+    
 
     <script>
         function updatePurchaseOrdersFooterTotal() {

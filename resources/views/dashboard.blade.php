@@ -964,6 +964,10 @@
     <div id="dashboardObligationContextMenu" 
         class="absolute hidden w-48 bg-white border border-gray-300 rounded-lg shadow-lg dark:bg-gray-700 dark:border-gray-600"
         style="display: none; z-index: 10001; position: fixed;">
+        <button id="contextObligationDetails"
+                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-eye mr-2"></i>View Details
+        </button>
         @can('edit obligations')
         <button id="contextObligationEdit"
                 class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
@@ -1398,6 +1402,7 @@
                                                     <th class="px-3 py-2">Date</th>
                                                     <th class="px-3 py-2">OBR Type</th>
                                                     <th class="px-3 py-2">Particulars</th>
+                                                    <th class="px-3 py-2">Remarks</th>
                                                     <th class="px-3 py-2">Obligation</th>
                                                     <th class="px-3 py-2">Purchase Order</th>
                                                 </tr>
@@ -1436,11 +1441,12 @@
                                             <td class="px-3 py-2">${obligation.obr_date}</td>
                                             <td class="px-3 py-2">${obligation.obr_type}</td>
                                             <td class="px-3 py-2">${obligation.payee}</td>
+                                            <td class="px-3 py-2">${obligation.remarks || '-'}</td>
                                             <td class="px-3 py-2 text-right font-semibold">${amountDisplay}</td>
                                             <td class="px-3 py-2 text-right">${obligation.purchase_order}</td>
                                         </tr>
                                         <tr class="hidden appropriations-row" data-obligation-index="${index}">
-                                            <td colspan="7" class="px-2 py-2">
+                                            <td colspan="8" class="px-2 py-2">
                                                     <table class="w-full text-xs text-gray-600 dark:text-gray-400">
                                                         <thead class="border border-gray-400 dark:border-gray-600 text-center">
                                                             <tr class="bg-gray-100 dark:bg-gray-800">
@@ -1489,7 +1495,7 @@
                                                 </tbody>
                                                 <tfoot class="sticky bottom-0 bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600 z-10">
                                                     <tr>
-                                                        <td colspan="2" class="px-3 py-2 text-left">Total Records: ${data.data.length} record${data.data.length !== 1 ? 's' : ''}</td>
+                                                        <td colspan="3" class="px-3 py-2 text-left">Total Records: ${data.data.length} record${data.data.length !== 1 ? 's' : ''}</td>
                                                         <td colspan="3" class="px-3 py-2 text-right">Total:</td>
                                                         <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
@@ -1681,6 +1687,15 @@
 
                     console.log('Obligation data:', obligation);
 
+                    // View Details button
+                    const detailsBtn = menu.querySelector('#contextObligationDetails');
+                    if (detailsBtn) {
+                        detailsBtn.onclick = () => {
+                            hideDashboardObligationContextMenu();
+                            openModal(obligation.id);
+                        };
+                    }
+
                     // Edit button
                     const editBtn = menu.querySelector('#contextObligationEdit');
                     if (editBtn) {
@@ -1808,6 +1823,15 @@
                     }
                     document.removeEventListener('click', hideDashboardObligationContextMenu);
                     window.removeEventListener('resize', hideDashboardObligationContextMenu);
+                }
+
+                function closeAllDropdowns() {
+                    // Close context menu
+                    const contextMenu = document.getElementById('dashboardObligationContextMenu');
+                    if (contextMenu) {
+                        contextMenu.style.display = 'none';
+                        contextMenu.classList.add('hidden');
+                    }
                 }
 
                 /**
@@ -3734,4 +3758,7 @@
         </div>
     </form>
     </div>
+
+    <!-- Obligation Details Modal -->
+    @include('obligations.modal.obligation_details')
 </x-app-layout>

@@ -782,6 +782,9 @@
     <!-- Context Menu for Account Obligations -->
      @role('Administrator|Developer|Obligation')
     <div id="accountObligationsContextMenu" class="hidden fixed w-48 bg-white border border-gray-300 rounded-lg shadow-lg dark:bg-gray-700 dark:border-gray-600" style="z-index: 10001; position: fixed;">
+        <button id="contextAccountObligationDetails" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
+            <i class="fas fa-eye mr-2"></i>View Details
+        </button>
         <button id="contextAccountObligationEdit" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
             <i class="fas fa-edit mr-2"></i>Edit Obligation
         </button>
@@ -1979,6 +1982,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                         <th class="px-3 py-2">Date</th>
                                         <th class="px-3 py-2">OBR Type</th>
                                         <th class="px-3 py-2">Particulars</th>
+                                        <th class="px-3 py-2">Remarks</th>
                                         <th class="px-3 py-2">Obligation</th>
                                         <th class="px-3 py-2">Purchase Order</th>
                                     </tr>
@@ -2045,11 +2049,12 @@ if (typeof originalUpdateCardValues === 'function') {
                                 <td class="px-3 py-2">${obligation.obr_date}</td>
                                 <td class="px-3 py-2">${obligation.obr_type}</td>
                                 <td class="px-3 py-2">${obligation.payee}</td>
+                                <td class="px-3 py-2">${obligation.remarks || '-'}</td>
                                 <td class="px-3 py-2 text-right font-semibold">${amountDisplay}</td>
                                 <td class="px-3 py-2 text-right">${formattedPOAmount}</td>
                             </tr>
                             <tr class="hidden appropriations-row" data-obligation-index="${index}">
-                                <td colspan="7" class="px-2 py-2">
+                                <td colspan="8" class="px-2 py-2">
                                         <table class="w-full text-xs text-gray-600 dark:text-gray-400">
                                             <thead class="border border-gray-400 dark:border-gray-600 text-center">
                                                 <tr class="bg-gray-100 dark:bg-gray-800">
@@ -2097,7 +2102,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                 </tbody>
                                 <tfoot class="sticky bottom-0 bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600 z-10">
                                     <tr>
-                                        <td colspan="2" class="px-3 py-2">Total Records: ${recordCount} ${recordCount === 1 ? 'record' : 'records'}</td>
+                                        <td colspan="3" class="px-3 py-2">Total Records: ${recordCount} ${recordCount === 1 ? 'record' : 'records'}</td>
                                         <td colspan="3" class="px-3 py-2 text-right">Total:</td>
                                         <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                         <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -2168,6 +2173,16 @@ if (typeof originalUpdateCardValues === 'function') {
         // Store obligation data globally
         window.selectedAccountObligation = obligation;
 
+        // View Details button handler
+        const detailsBtn = menu.querySelector('#contextAccountObligationDetails');
+        if (detailsBtn) {
+            detailsBtn.onclick = (e) => {
+                e.preventDefault();
+                hideAccountObligationContextMenu();
+                openModal(obligation.id);
+            };
+        }
+
         // Edit button handler
         const editBtn = menu.querySelector('#contextAccountObligationEdit');
         if (editBtn) {
@@ -2230,6 +2245,15 @@ if (typeof originalUpdateCardValues === 'function') {
         const menu = document.getElementById('accountObligationsContextMenu');
         if (menu) {
             menu.style.display = 'none';
+        }
+    }
+
+    function closeAllDropdowns() {
+        // Close context menu
+        const contextMenu = document.getElementById('accountObligationsContextMenu');
+        if (contextMenu) {
+            contextMenu.style.display = 'none';
+            contextMenu.classList.add('hidden');
         }
     }
 
@@ -3437,4 +3461,7 @@ if (typeof originalFilterTable === 'function') {
             </div>
         </div>
     </form>
+
+    <!-- Obligation Details Modal -->
+    @include('obligations.modal.obligation_details')
 </x-app-layout>

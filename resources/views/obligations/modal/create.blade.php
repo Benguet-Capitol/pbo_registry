@@ -167,7 +167,7 @@
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 ">
                                             <tr>
-                                                <td class="px-1 py-2">
+                                                <td class="px-1 py-2 relative">
                                                     <x-form.input
                                                         name="account_code[]"
                                                         id="account_code"
@@ -176,7 +176,7 @@
                                                         oninput="filterAccountCodes(this)"
                                                         onchange="resetAmountOnAccountCodeChange(this)"
                                                         autocomplete="off" />
-                                                    <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown">
+                                                    <div class="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-[10004]" id="AccountCodeDropdown" style="width: auto; min-width: 200px;">
                                                         <!-- Suggestions will appear here -->
                                                     </div>
                                                 </td>
@@ -708,7 +708,12 @@ function filterAccountCodes(inputElement) {
         dropdown.appendChild(option);
     });
 
+    // Position dropdown below the input field
     dropdown.classList.remove('hidden');
+    const rect = inputElement.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
 }
 
 // 9. POPULATE FIELDS

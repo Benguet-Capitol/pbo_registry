@@ -1394,10 +1394,20 @@
                                 // Create table with obligations
                                 let tableHTML = `
                                     <div class="overflow-x-auto flex flex-col" style="max-height: calc(90vh - 340px);">
-                                        <table class="w-full text-xs text-gray-700 dark:text-gray-300">
+                                        <table class="w-full text-xs text-gray-700 dark:text-gray-300" style="table-layout: fixed;">
+                                            <colgroup>
+                                                <col style="width: 50px;">
+                                                <col style="width: 120px;">
+                                                <col style="width: 100px;">
+                                                <col style="width: 100px;">
+                                                <col style="width: auto;">
+                                                <col style="width: 150px;">
+                                                <col style="width: 130px;">
+                                                <col style="width: 130px;">
+                                            </colgroup>
                                             <thead class="bg-gray-200 dark:bg-gray-700 border-t border-b border-gray-400 dark:border-gray-600 text-center">
                                                 <tr>
-                                                    <th class="px-3 py-2 w-12"></th>
+                                                    <th class="px-3 py-2"></th>
                                                     <th class="px-3 py-2">OBR No.</th>
                                                     <th class="px-3 py-2">Date</th>
                                                     <th class="px-3 py-2">OBR Type</th>
@@ -1409,7 +1419,17 @@
                                             </thead>
                                         </table>
                                         <div class="overflow-y-auto flex-1">
-                                            <table class="w-full text-xs text-gray-700 dark:text-gray-300">
+                                            <table class="w-full text-xs text-gray-700 dark:text-gray-300" style="table-layout: fixed;">
+                                                <colgroup>
+                                                    <col style="width: 50px;">
+                                                    <col style="width: 120px;">
+                                                    <col style="width: 100px;">
+                                                    <col style="width: 100px;">
+                                                    <col style="width: auto;">
+                                                    <col style="width: 150px;">
+                                                    <col style="width: 130px;">
+                                                    <col style="width: 130px;">
+                                                </colgroup>
                                                 <tbody class="divide-y divide-gray-300 dark:divide-gray-600">
                                 `;
                                 
@@ -1498,7 +1518,17 @@
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <table class="w-full text-xs text-gray-700 dark:text-gray-300">
+                                        <table class="w-full text-xs text-gray-700 dark:text-gray-300" style="table-layout: fixed;">
+                                            <colgroup>
+                                                <col style="width: 50px;">
+                                                <col style="width: 120px;">
+                                                <col style="width: 100px;">
+                                                <col style="width: 100px;">
+                                                <col style="width: auto;">
+                                                <col style="width: 150px;">
+                                                <col style="width: 130px;">
+                                                <col style="width: 130px;">
+                                            </colgroup>
                                             <tfoot class="bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600">
                                                 <tr>
                                                     <td colspan="3" class="px-3 py-2 text-left">Total Records: ${data.data.length} record${data.data.length !== 1 ? 's' : ''}</td>

@@ -731,7 +731,7 @@
 
     <!-- Obligations Modal for Accounts -->
     <div id="accountObligationsModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50">
-        <div class="flex flex-col max-h-[90vh] w-full max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-screen-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
             <!-- Modal Header -->
             <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
                 <div class="flex items-center gap-3">
@@ -1984,6 +1984,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                     <col style="width: 150px;">
                                     <col style="width: 130px;">
                                     <col style="width: 130px;">
+                                    <col style="width: 130px;">
                                 </colgroup>
                                 <thead class="bg-gray-200 dark:bg-gray-700 border-b border-t border-gray-400 dark:border-gray-600 text-center">
                                     <tr>
@@ -1995,6 +1996,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                         <th class="px-3 py-2">Remarks</th>
                                         <th class="px-3 py-2">Obligation</th>
                                         <th class="px-3 py-2">Purchase Order</th>
+                                        <th class="px-3 py-2">Disbursement</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -2009,12 +2011,14 @@ if (typeof originalUpdateCardValues === 'function') {
                                         <col style="width: 150px;">
                                         <col style="width: 130px;">
                                         <col style="width: 130px;">
+                                        <col style="width: 130px;">
                                     </colgroup>
                                     <tbody class="divide-y divide-gray-300 dark:divide-gray-600">
                     `;
                     
                     let totalAmount = 0;
                     let totalPurchaseOrder = 0;
+                    let totalDisbursement = 0;
                     let recordCount = 0;
 
                     data.data.forEach((obligation, index) => {
@@ -2048,7 +2052,7 @@ if (typeof originalUpdateCardValues === 'function') {
                         // Use adjusted_amount if available, otherwise calculate base + adjustments
                         const displayAmount = adjustedAmount > 0 ? adjustedAmount : (appropriationAmount + adjustmentAmount);
                         const formattedAppAmount = displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        const formattedPOAmount = purchaseOrderAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const formattedPOAmount = purchaseOrderAmount > 0 ? purchaseOrderAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
                         
                         // Check if obligation is cancelled (amount is 0)
                         const isCancelled = displayAmount === 0;
@@ -2075,9 +2079,10 @@ if (typeof originalUpdateCardValues === 'function') {
                                 <td class="px-3 py-2">${obligation.remarks || '-'}</td>
                                 <td class="px-3 py-2 text-right font-semibold">${amountDisplay}</td>
                                 <td class="px-3 py-2 text-right">${formattedPOAmount}</td>
+                                <td class="px-3 py-2 text-right">${obligation.disbursement}</td>
                             </tr>
                             <tr class="hidden appropriations-row" data-obligation-index="${index}">
-                                <td colspan="8" class="px-2 py-2">
+                                <td colspan="9" class="px-2 py-2">
                                         <table class="w-full text-xs text-gray-600 dark:text-gray-400">
                                             <thead class="border border-gray-400 dark:border-gray-600 text-center">
                                                 <tr class="bg-gray-100 dark:bg-gray-800">
@@ -2088,6 +2093,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                                     <th class="px-3 py-2">Adjustment Amount</th>
                                                     <th class="px-3 py-2">Adjusted Amount</th>
                                                     <th class="px-3 py-2">Purchase Order</th>
+                                                    <th class="px-3 py-2">Disbursement</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-400 dark:border-gray-600">
@@ -2104,6 +2110,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                                     <td class="px-3 py-2 text-right">${app.adjustment_amount}</td>
                                                     <td class="px-3 py-2 text-right font-semibold">${app.adjusted_amount}</td>
                                                     <td class="px-3 py-2 text-right">${app.purchase_order_amount}</td>
+                                                    <td class="px-3 py-2 text-right">${app.disbursement_amount}</td>
                                                 </tr>
                             `;
                         });
@@ -2118,6 +2125,13 @@ if (typeof originalUpdateCardValues === 'function') {
                         // Add to total for the selected appropriation only (using adjusted amounts)
                         totalAmount += displayAmount;
                         totalPurchaseOrder += purchaseOrderAmount;
+                        // Add disbursement amount from selected appropriations
+                        let appropriationDisbursement = 0;
+                        selectedApps.forEach(app => {
+                            const disbAmt = parseFloat(app.disbursement_amount ? app.disbursement_amount.replace(/,/g, '') : '0');
+                            appropriationDisbursement += isNaN(disbAmt) ? 0 : disbAmt;
+                        });
+                        totalDisbursement += appropriationDisbursement;
                         recordCount++;
                     });
                     
@@ -2135,13 +2149,15 @@ if (typeof originalUpdateCardValues === 'function') {
                                     <col style="width: 150px;">
                                     <col style="width: 130px;">
                                     <col style="width: 130px;">
+                                    <col style="width: 130px;">
                                 </colgroup>
                                 <tfoot class="bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600">
                                     <tr>
                                         <td colspan="3" class="px-3 py-2">Total Records: ${recordCount}</td>
                                         <td colspan="3" class="px-3 py-2 text-right">Total:</td>
                                         <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                        <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
+                                        <td class="px-3 py-2 text-right text-orange-700 dark:text-orange-300">${totalDisbursement > 0 ? totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
                                     </tr>
                                 </tfoot>
                             </table>

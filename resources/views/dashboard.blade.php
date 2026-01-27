@@ -911,7 +911,7 @@
 
     <!-- Obligations Modal -->
     <div id="obligationsModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50">
-        <div class="flex flex-col max-h-[90vh] w-full max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-screen-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
             <!-- Modal Header -->
             <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
                 <div class="flex items-center gap-3">
@@ -1404,6 +1404,7 @@
                                                 <col style="width: 150px;">
                                                 <col style="width: 130px;">
                                                 <col style="width: 130px;">
+                                                <col style="width: 130px;">
                                             </colgroup>
                                             <thead class="bg-gray-200 dark:bg-gray-700 border-t border-b border-gray-400 dark:border-gray-600 text-center">
                                                 <tr>
@@ -1415,6 +1416,7 @@
                                                     <th class="px-3 py-2">Remarks</th>
                                                     <th class="px-3 py-2">Obligation</th>
                                                     <th class="px-3 py-2">Purchase Order</th>
+                                                    <th class="px-3 py-2">Disbursement</th>
                                                 </tr>
                                             </thead>
                                         </table>
@@ -1429,12 +1431,14 @@
                                                     <col style="width: 150px;">
                                                     <col style="width: 130px;">
                                                     <col style="width: 130px;">
+                                                    <col style="width: 130px;">
                                                 </colgroup>
                                                 <tbody class="divide-y divide-gray-300 dark:divide-gray-600">
                                 `;
                                 
                                 let totalAmount = 0;
                                 let totalPurchaseOrder = 0;
+                                let totalDisbursement = 0;
                                 data.data.forEach((obligation, index) => {
                                     // Check if obligation is cancelled (amount is 0)
                                     const amountValue = parseFloat(obligation.amount.replace(/,/g, ''));
@@ -1467,9 +1471,10 @@
                                             <td class="px-3 py-2">${obligation.remarks || '-'}</td>
                                             <td class="px-3 py-2 text-right font-semibold">${amountDisplay}</td>
                                             <td class="px-3 py-2 text-right">${obligation.purchase_order}</td>
+                                            <td class="px-3 py-2 text-right">${obligation.disbursement}</td>
                                         </tr>
                                         <tr class="hidden appropriations-row" data-obligation-index="${index}">
-                                            <td colspan="8" class="px-2 py-2">
+                                            <td colspan="9" class="px-2 py-2">
                                                     <table class="w-full text-xs text-gray-600 dark:text-gray-400">
                                                         <thead class="border border-gray-400 dark:border-gray-600 text-center">
                                                             <tr class="bg-gray-100 dark:bg-gray-800">
@@ -1480,6 +1485,7 @@
                                                                 <th class="px-3 py-2">Adjustment Amount</th>
                                                                 <th class="px-3 py-2">Adjusted Amount</th>
                                                                 <th class="px-3 py-2">Purchase Order</th>
+                                                                <th class="px-3 py-2">Disbursement</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-400 dark:border-gray-600">
@@ -1495,6 +1501,7 @@
                                                                 <td class="px-3 py-2 text-right">${app.adjustment_amount}</td>
                                                                 <td class="px-3 py-2 text-right font-semibold">${app.adjusted_amount}</td>
                                                                 <td class="px-3 py-2 text-right">${app.purchase_order_amount}</td>
+                                                                <td class="px-3 py-2 text-right">${app.disbursement_amount}</td>
                                                             </tr>
                                         `;
                                     });
@@ -1512,6 +1519,10 @@
                                     if (obligation.purchase_order !== '-') {
                                         totalPurchaseOrder += parseFloat(obligation.purchase_order.replace(/,/g, ''));
                                     }
+                                    // Only add to Disbursement total if it's not "-" (i.e., valid number)
+                                    if (obligation.disbursement !== '-') {
+                                        totalDisbursement += parseFloat(obligation.disbursement.replace(/,/g, ''));
+                                    }
                                 });
                                 
                                 tableHTML += `
@@ -1528,6 +1539,7 @@
                                                 <col style="width: 150px;">
                                                 <col style="width: 130px;">
                                                 <col style="width: 130px;">
+                                                <col style="width: 130px;">
                                             </colgroup>
                                             <tfoot class="bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600">
                                                 <tr>
@@ -1535,6 +1547,7 @@
                                                     <td colspan="3" class="px-3 py-2 text-right">Total:</td>
                                                     <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                     <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
+                                                    <td class="px-3 py-2 text-right text-orange-700 dark:text-orange-300">${totalDisbursement > 0 ? totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
                                                 </tr>
                                             </tfoot>
                                         </table>
@@ -1608,6 +1621,7 @@
                     let visibleCount = 0;
                     let totalAmount = 0;
                     let totalPurchaseOrder = 0;
+                    let totalDisbursement = 0;
                     
                     rows.forEach(row => {
                         const rowText = row.textContent.toLowerCase();
@@ -1617,19 +1631,15 @@
                             
                             // Calculate totals for visible rows
                             const cells = row.querySelectorAll('td');
-                            if (cells.length >= 6) {
-                                // Dashboard: Amount in index 4, PO in index 5
-                                // Accounts: Amount in index 5, PO in index 6
-                                let amountIndex = 4;
-                                let poIndex = 5;
-                                
-                                if (source === 'accounts' && cells.length >= 7) {
-                                    amountIndex = 5;
-                                    poIndex = 6;
-                                }
+                            if (cells.length >= 8) {
+                                // Dashboard: Amount in index 6, PO in index 7, Disbursement in index 8
+                                // Accounts: Amount in index 6, PO in index 7, Disbursement in index 8
+                                let amountIndex = 6;
+                                let poIndex = 7;
+                                let disbursementIndex = 8;
                                 
                                 // Extract and clean amount values
-                                const amountText = (cells[amountIndex]?.textContent || '0').replace(/,/g, '').trim();
+                                const amountText = (cells[amountIndex]?.textContent || '0').replace(/,/g, '').replace(/Cancelled/g, '0').trim();
                                 const amountValue = parseFloat(amountText);
                                 if (!isNaN(amountValue)) {
                                     totalAmount += amountValue;
@@ -1639,6 +1649,12 @@
                                 const poValue = parseFloat(poText);
                                 if (!isNaN(poValue)) {
                                     totalPurchaseOrder += poValue;
+                                }
+                                
+                                const disbursementText = (cells[disbursementIndex]?.textContent || '0').replace(/,/g, '').trim();
+                                const disbursementValue = parseFloat(disbursementText);
+                                if (!isNaN(disbursementValue)) {
+                                    totalDisbursement += disbursementValue;
                                 }
                             }
                         } else {
@@ -1654,7 +1670,7 @@
                             const footer = table.querySelector('tfoot');
                             if (footer) {
                                 const footerCells = footer.querySelectorAll('td');
-                                if (footerCells.length >= 4) {
+                                if (footerCells.length >= 5) {
                                     // Update Total Records (first cell)
                                     footerCells[0].textContent = `Total Records: ${visibleCount} ${visibleCount === 1 ? 'record' : 'records'}`;
                                     
@@ -1666,6 +1682,11 @@
                                     // Update PO total (4th cell, index 3)
                                     if (!isNaN(totalPurchaseOrder)) {
                                         footerCells[3].textContent = totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                                    }
+                                    
+                                    // Update Disbursement total (5th cell, index 4)
+                                    if (footerCells.length >= 6 && !isNaN(totalDisbursement)) {
+                                        footerCells[4].textContent = totalDisbursement > 0 ? totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
                                     }
                                 }
                             }

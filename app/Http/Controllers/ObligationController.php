@@ -1437,6 +1437,9 @@ class ObligationController extends Controller
                 // Total amount is obligation amounts + adjustments
                 $totalAmount = $obligationAmountsTotal + $adjustmentsTotal;
                 
+                // Get total Disbursement amount
+                $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
+                
                 // Get total PO amount if obr_type is "Purchase Request"
                 $poAmount = '-';
                 if ($obligation->obr_type === 'Purchase Request' && $obligation->purchaseOrders->count() > 0) {
@@ -1454,6 +1457,9 @@ class ObligationController extends Controller
                     // Get PO amount for this obligation_amount
                     $poAmount = $obrAmount->purchaseOrders->sum('po_amount') ?? 0;
                     
+                    // Get disbursement amount for this obligation_amount
+                    $disbursementAmountPerOA = \App\Models\Disbursement::where('obligation_amounts_id', $obrAmount->id)->sum('disbursement_amount') ?? 0;
+                    
                     return [
                         'id' => $obrAmount->appropriation->id ?? null,
                         'programs' => $obrAmount->appropriation->programs ?? '-',
@@ -1463,6 +1469,7 @@ class ObligationController extends Controller
                         'adjustment_amount' => number_format($adjustmentAmount, 2) ?? '0.00',
                         'adjusted_amount' => number_format($adjustedAmount, 2) ?? '0.00',
                         'purchase_order_amount' => $poAmount > 0 ? number_format($poAmount, 2) : '-',
+                        'disbursement_amount' => $disbursementAmountPerOA > 0 ? number_format($disbursementAmountPerOA, 2) : '-',
                     ];
                 })->toArray();
                 
@@ -1474,6 +1481,7 @@ class ObligationController extends Controller
                     'payee' => $obligation->particulars ?? '-',
                     'amount' => number_format($totalAmount, 2) ?? '0.00',
                     'purchase_order' => $poAmount,
+                    'disbursement' => $disbursementAmount > 0 ? number_format($disbursementAmount, 2) : '-',
                     'appropriations' => $appropriations,
                     'office' => $obligation->officeAllotmentClass->offices->office_abbreviation ?? '-',
                     'class' => $obligation->officeAllotmentClass->allotmentClass->class ?? '-',
@@ -1534,6 +1542,10 @@ class ObligationController extends Controller
                     $poAmount = number_format($totalPoAmount, 2);
                 }
                 
+                // Get total disbursement amount
+                $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
+                $disbursement = $disbursementAmount > 0 ? number_format($disbursementAmount, 2) : '-';
+                
                 // Get appropriations from obligation_amounts with related adjustments and purchase orders
                 $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) {
                     // Get adjustment amount for this obligation_amount
@@ -1544,6 +1556,9 @@ class ObligationController extends Controller
                     // Get PO amount for this obligation_amount
                     $poAmount = $obrAmount->purchaseOrders->sum('po_amount') ?? 0;
                     
+                    // Get disbursement amount for this obligation_amount
+                    $disbursementAmount = $obrAmount->disbursements->sum('disbursement_amount') ?? 0;
+                    
                     return [
                         'id' => $obrAmount->appropriation->id ?? null,
                         'programs' => $obrAmount->appropriation->programs ?? '-',
@@ -1553,6 +1568,7 @@ class ObligationController extends Controller
                         'adjustment_amount' => number_format($adjustmentAmount, 2) ?? '0.00',
                         'adjusted_amount' => number_format($adjustedAmount, 2) ?? '0.00',
                         'purchase_order_amount' => $poAmount > 0 ? number_format($poAmount, 2) : '-',
+                        'disbursement_amount' => $disbursementAmount > 0 ? number_format($disbursementAmount, 2) : '-',
                     ];
                 })->toArray();
                 
@@ -1564,6 +1580,7 @@ class ObligationController extends Controller
                     'payee' => $obligation->particulars ?? '-',
                     'amount' => number_format($totalAmount, 2) ?? '0.00',
                     'purchase_order' => $poAmount,
+                    'disbursement' => $disbursement,
                     'appropriations' => $appropriations,
                 ];
             })->toArray();

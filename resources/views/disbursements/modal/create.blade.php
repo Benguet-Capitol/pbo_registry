@@ -217,6 +217,13 @@
                     });
                     // Immediately update the total after setting values
                     updateDVAmountTotal();
+                } else if (statusField.value === 'Partial Payment') {
+                    // Reset all DV/Check Amount fields
+                    document.querySelectorAll('input[name^="disbursement_amount"]').forEach(function(input) {
+                        input.value = '';
+                    });
+                    // Immediately update the total after resetting values
+                    updateDVAmountTotal();
                 }
             });
         }

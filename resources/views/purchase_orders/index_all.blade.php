@@ -470,6 +470,11 @@
                                     input.value = input.dataset.balance || "0";
                                 });
                                 updateDVAmountTotal();
+                            } else if (statusField.value === 'Partial Payment') {
+                                modal.querySelectorAll('input[name^="disbursement_amount"]').forEach(function(input) {
+                                    input.value = '';
+                                });
+                                updateDVAmountTotal();
                             }
                         });
 

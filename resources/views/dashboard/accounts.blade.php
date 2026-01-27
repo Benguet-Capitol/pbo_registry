@@ -2138,7 +2138,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                 </colgroup>
                                 <tfoot class="bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600">
                                     <tr>
-                                        <td colspan="3" class="px-3 py-2">Total Records: ${recordCount} ${recordCount === 1 ? 'record' : 'records'}</td>
+                                        <td colspan="3" class="px-3 py-2">Total Records: ${recordCount}</td>
                                         <td colspan="3" class="px-3 py-2 text-right">Total:</td>
                                         <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                         <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

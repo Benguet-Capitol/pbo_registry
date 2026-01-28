@@ -23,7 +23,7 @@
         <tr>
             <th colspan="15" style="text-align:center; font-size: 11px; margin-top:5px; font-weight: bold; text-transform: uppercase;">
                 @if($isSEFConsolidated ?? false)
-                    All Special Education Fund Offices (Consolidated)
+                    Special Education Fund
                 @else
                     {{ isset($selectedOffice) && $selectedOffice ? ($offices->firstWhere('id', $selectedOffice)?->office_name ?? 'All Offices') : 'All Offices' }}
                 @endif

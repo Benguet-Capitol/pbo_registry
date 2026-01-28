@@ -25,8 +25,8 @@
                         @endif
                         @if($selectedAccountDisplay)
                         ({{ $selectedAccountDisplay }})
-                        @endif - 
-                        Current (CY {{ $selectedYear }})
+                        @endif
+                        (CY {{ $selectedYear }})
                     </span>
                 </h3>
             </div>
@@ -803,8 +803,8 @@
                             @endforeach
                         </tr>
                         @endforeach
-                        {{-- Overall Total Row (only if all offices are selected) --}}
-                        @if(empty($selectedOffice) && $overallTotal)
+                        {{-- Overall Total Row (only if all offices are selected or SEF consolidated) --}}
+                        @if((empty($selectedOffice) || ($isSEFConsolidated ?? false)) && $overallTotal)
                         <tr class="bg-blue-900 dark:bg-blue-800 text-white dark:text-gray-100 font-bold border-t-4 border-b-2 text-[11px]">
                             <td colspan="2" class="px-2 py-3 text-right">OVERALL TOTAL: </td>
                             @foreach ($overallTotal as $key => $val)

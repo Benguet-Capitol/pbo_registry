@@ -223,8 +223,15 @@
         </tr>
         @endforeach
 
+        {{-- Per-Office Grand Total Row --}}
         <tr class="grand-total-row" data-rowtype="grand-total">
-            <td colspan="3" style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">Grand Total Current Operating Expenditures: </td>
+            <td colspan="3" style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">
+                @if($isSEFConsolidated ?? false)
+                    Grand Total {{ $office->office_name }}: 
+                @else
+                    Grand Total Current Operating Expenditures: 
+                @endif
+            </td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
@@ -243,9 +250,15 @@
         </tr>
         @endforeach
 
-        @if(empty($selectedOffice) && $overallTotal)
+        @if((empty($selectedOffice) || ($isSEFConsolidated ?? false)) && $overallTotal)
         <tr class="bg-blue-900 dark:bg-blue-800 text-white dark:text-gray-100 font-bold border-t-4 border-b-2 text-[11px]">
-            <td colspan="3" style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">OVERALL TOTAL: </td>
+            <td colspan="3" style="text-align: right; font-weight: bold; vertical-align: middle; border: 1px solid #999; white-space: normal; word-wrap: break-word;">
+                @if($isSEFConsolidated ?? false)
+                    Grand Total Current Operating Expenditures (SEF):
+                @else
+                    Overall Total:
+                @endif
+            </td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>
             <td style="padding: 4px; text-align: right; vertical-align: middle; font-weight: bold; border: 1px solid #999;"></td>

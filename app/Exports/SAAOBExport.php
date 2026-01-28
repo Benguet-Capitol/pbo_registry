@@ -66,11 +66,11 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
                 }
             }
 
-            // Find OVERALL TOTAL row
+            // Find OVERALL TOTAL row (recognize both 'OVERALL TOTAL' and 'GRAND TOTAL' for SEF consolidation)
             $overallTotalRow = null;
             for ($row = 13; $row <= $highestRow; $row++) {
                 $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
-                if (str_contains($cellValue, 'OVERALL TOTAL')) {
+                if (str_contains($cellValue, 'OVERALL TOTAL') || str_contains($cellValue, 'GRAND TOTAL CURRENT OPERATING EXPENDITURES (SEF)')) {
                     $overallTotalRow = $row;
                     break;
                 }
@@ -80,11 +80,16 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
             $lastDataRow = $certifiedRow ? $certifiedRow - 2 : $highestRow;
 
             // Find all GRAND TOTAL rows for Overall Total calculation (exclude overall total row itself)
+            // Match 'GRAND TOTAL CURRENT OPERATING' for non-SEF and 'TOTAL [Office Name]:' for SEF consolidated
             $grandTotalRows = [];
             $searchEndRow = $overallTotalRow ? $overallTotalRow - 1 : $lastDataRow;
             for ($row = 13; $row <= $searchEndRow; $row++) {
                 $cellValue = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
-                if (str_contains($cellValue, 'GRAND TOTAL CURRENT OPERATING')) {
+                // Match: GRAND TOTAL CURRENT OPERATING (non-SEF)
+                // OR: TOTAL followed by office/class name (SEF or regular office totals)
+                // BUT: NOT SUBTOTAL rows
+                if (str_contains($cellValue, 'GRAND TOTAL CURRENT OPERATING') || 
+                    (str_starts_with($cellValue, 'TOTAL ') && !str_starts_with($cellValue, 'SUBTOTAL'))) {
                     $grandTotalRows[] = $row;
                 }
             }
@@ -479,9 +484,9 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
             }
         }
 
-        // Calculate overall total if all offices are selected
+        // Calculate overall total if all offices are selected or SEF is consolidated
         $overallTotal = null;
-        if (empty($selectedOffice) && count($offices) > 0) {
+        if ((empty($selectedOffice) || $this->isSEFConsolidated) && count($offices) > 0) {
             $allOacs = collect($offices)->flatMap(function($office) {
                 return $office->officeAllotmentClasses;
             });

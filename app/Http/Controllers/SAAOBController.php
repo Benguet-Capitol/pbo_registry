@@ -246,9 +246,18 @@ class SAAOBController extends Controller
                 $office->grandTotal = $gt;
             }
 
-            // Calculate overall total if all offices are selected
+            // Determine if we're viewing consolidated SEF offices
+            $isSEFConsolidated = false;
+            if (!empty($selectedOffice)) {
+                $selectedOfficeRecord = Office::find($selectedOffice);
+                if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
+                    $isSEFConsolidated = true;
+                }
+            }
+
+            // Calculate overall total if all offices are selected or SEF is consolidated
             $overallTotal = null;
-            if (empty($selectedOffice) && count($offices) > 0) {
+            if ((empty($selectedOffice) || $isSEFConsolidated) && count($offices) > 0) {
                 $allOacs = $offices->flatMap(function($office) {
                     return $office->officeAllotmentClasses;
                 });
@@ -259,15 +268,6 @@ class SAAOBController extends Controller
                 $overallTotal['allotment_accomplishment'] = ($overallTotal['allotment'] > 0)
                     ? ($overallTotal['obligation'] / $overallTotal['allotment']) * 100
                     : 0;
-            }
-
-            // Determine if we're viewing consolidated SEF offices
-            $isSEFConsolidated = false;
-            if (!empty($selectedOffice)) {
-                $selectedOfficeRecord = Office::find($selectedOffice);
-                if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
-                    $isSEFConsolidated = true;
-                }
             }
 
             return view('saaob.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'officesQuery', 'allOffices', 'accounts', 'overallTotal', 'isSEFConsolidated'))

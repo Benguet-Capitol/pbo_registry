@@ -587,9 +587,9 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
             }
         }
 
-        // Calculate overall totals if all offices are selected
+        // Calculate overall totals if all offices are selected or SEF is consolidated
         $overallTotal = null;
-        if (empty($selectedOffice) && count($offices) > 0) {
+        if ((empty($selectedOffice) || $this->isSEFConsolidated) && count($offices) > 0) {
             $allOacs = collect($offices)->flatMap(function($office) {
                 return $office->officeAllotmentClasses;
             });
@@ -605,6 +605,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
             'accountCodeDisplay' => $accountCodeDisplay,
             'overallTotal' => $overallTotal,
             'asOfDate' => $asOfDate,
+            'isSEFConsolidated' => $this->isSEFConsolidated,
             'preparedSignatoryName' => $this->preparedSignatoryName,
             'preparedSignatoryDesignation' => $this->preparedSignatoryDesignation,
             'certifiedSignatoryName' => $this->certifiedSignatoryName,

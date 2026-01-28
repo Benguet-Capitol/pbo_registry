@@ -311,9 +311,9 @@ class SAAODBOfficeController extends Controller
             
         }
 
-        // Calculate overall total if all offices are selected
+        // Calculate overall total if all offices are selected or SEF is consolidated
             $overallTotal = null;
-            if (empty($selectedOffice) && count($offices) > 0) {
+            if ((empty($selectedOffice) || $isSEFConsolidated) && count($offices) > 0) {
                 $allOacs = $offices->flatMap(function($office) {
                     return $office->officeAllotmentClasses;
                 });
@@ -446,7 +446,7 @@ class SAAODBOfficeController extends Controller
         // Get the account code display (code only, without description)
         $accountCodeName = '';
         if (!empty($accountCode)) {
-            $accountCodeName = '-' . preg_replace('/[^A-Za-z0-9_]/', '_', $accountCode);
+            $accountCodeName = '_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $accountCode);
         }
 
         $fileName = 'SAAODB_' . $officeName . $accountCodeName . '_' . $year . '.xlsx';

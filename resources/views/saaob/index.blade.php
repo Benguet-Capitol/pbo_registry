@@ -505,7 +505,13 @@
                         @endforeach
 
                         <tr class="bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-200 dark:to-gray-300 text-gray-200 dark:text-gray-700 font-bold border-t-2 border-b-2 text-[10px] transition-colors duration-300 ease-in-out border-gray-700 dark:border-gray-100">
-                            <td colspan="3" class="px-2 py-2 text-right">Grand Total Current Operating Expentiture: </td>
+                            <td colspan="3" class="px-2 py-2 text-right">
+                                @if($isSEFConsolidated ?? false)
+                                    Grand Total {{ $office->office_name }}: 
+                                @else
+                                    Grand Total Current Operating Expenditure: 
+                                @endif
+                            </td>
                             @foreach ($officeTotals as $key => $val)
                             <td class="px-2 py-2 
                                 @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
@@ -532,10 +538,16 @@
                             @endforeach
                         </tr>
                         @endforeach
-                        {{-- Overall Total Row (only if all offices are selected) --}}
-                        @if(empty($selectedOffice) && $overallTotal)
+                        {{-- Overall Total Row (only if all offices are selected or SEF consolidated) --}}
+                        @if((empty($selectedOffice) || ($isSEFConsolidated ?? false)) && $overallTotal)
                         <tr class="bg-blue-900 dark:bg-blue-800 text-white dark:text-gray-100 font-bold border-t-4 border-b-2 text-[11px]">
-                            <td colspan="3" class="px-2 py-3 text-right">OVERALL TOTAL: </td>
+                            <td colspan="3" class="px-2 py-3 text-right">
+                                @if($isSEFConsolidated ?? false)
+                                    Grand Total Current Operating Expenditure (SEF): 
+                                @else
+                                    Overall Total: 
+                                @endif
+                            </td>
                             @foreach ($overallTotal as $key => $val)
                             @if(!in_array($key, ['count']))
                             <td class="px-2 py-3 

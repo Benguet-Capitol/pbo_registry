@@ -25,11 +25,15 @@ class SAAOBController extends Controller
             $selectedAccountCode = request('account_code');
             $asOfDate = request('as_of_filter', now()->toDateString());
 
-            $allOffices = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
-                $query->where('year', $selectedYear)
-                    ->whereHas('allotmentClass', function ($subQuery) {
-                        $subQuery->where('category', 'Current');
-                    });
+            // Get all offices with data for the selected year, plus all SEF offices
+            $allOffices = Office::where(function($query) use ($selectedYear) {
+                $query->whereHas('officeAllotmentClasses', function ($subQuery) use ($selectedYear) {
+                    $subQuery->where('year', $selectedYear)
+                        ->whereHas('allotmentClass', function ($innerQuery) {
+                            $innerQuery->where('category', 'Current');
+                        });
+                })
+                ->orWhere('fund', 'Special Education Fund');
             })->orderBy('id', 'asc')->get();
 
             // Get all employees for signatory filter
@@ -60,9 +64,16 @@ class SAAOBController extends Controller
                     });
             });
 
-            // If a specific office is selected, filter it
+            // Check if selected office is a SEF office, if so get all SEF offices
             if (!empty($selectedOffice)) {
-                $officesQuery->where('id', $selectedOffice);
+                $selectedOfficeRecord = Office::find($selectedOffice);
+                if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
+                    // Get all SEF offices
+                    $officesQuery->where('fund', 'Special Education Fund');
+                } else {
+                    // Otherwise, filter to just the selected office
+                    $officesQuery->where('id', $selectedOffice);
+                }
             }
             
             // Get all offices with their OfficeAllotmentClasses and related data
@@ -250,7 +261,16 @@ class SAAOBController extends Controller
                     : 0;
             }
 
-            return view('saaob.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'officesQuery', 'allOffices', 'accounts', 'overallTotal'))
+            // Determine if we're viewing consolidated SEF offices
+            $isSEFConsolidated = false;
+            if (!empty($selectedOffice)) {
+                $selectedOfficeRecord = Office::find($selectedOffice);
+                if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
+                    $isSEFConsolidated = true;
+                }
+            }
+
+            return view('saaob.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'officesQuery', 'allOffices', 'accounts', 'overallTotal', 'isSEFConsolidated'))
                 ->with('status', session('status'));
         }
 
@@ -335,12 +355,26 @@ class SAAOBController extends Controller
         $signatoryName = $request->input('signatory_name');
         $signatoryDesignation = $request->input('signatory_designation');
 
+        // Check if selected office is a SEF office
+        $isSEFConsolidated = false;
+        if (!empty($officeId)) {
+            $office = Office::find($officeId);
+            if ($office && $office->fund === 'Special Education Fund') {
+                $isSEFConsolidated = true;
+            }
+        }
+
         // Get the office name by ID, or use "All_Offices" if none is selected
         $officeName = 'All_Offices';
         if (!empty($officeId)) {
             $office = Office::find($officeId);
             if ($office) {
-                $officeName = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation); // sanitize filename
+                if ($isSEFConsolidated) {
+                    // Use a consolidated name for SEF offices
+                    $officeName = 'SEF';
+                } else {
+                    $officeName = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation); // sanitize filename
+                }
             }
         }
 
@@ -355,7 +389,7 @@ class SAAOBController extends Controller
         // Log the excel report generation
         self::logExcelReportGeneration('SAAOB Report', $fileName, [
             'Year' => $year,
-            'Office' => !empty($officeId) ? Office::find($officeId)?->office_abbreviation : 'All',
+            'Office' => !empty($officeId) ? (Office::find($officeId)?->office_abbreviation . ($isSEFConsolidated ? ' (SEF Consolidated)' : '')) : 'All',
             'Account Code' => $accountCode ?? 'All',
             'As Of Date' => $asOf,
         ]);
@@ -366,7 +400,8 @@ class SAAOBController extends Controller
             $accountCode,
             $asOf,
             $signatoryName,
-            $signatoryDesignation
+            $signatoryDesignation,
+            $isSEFConsolidated
         ), $fileName);
     }
 }

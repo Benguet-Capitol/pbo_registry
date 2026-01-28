@@ -19,7 +19,11 @@
         </tr>
         <tr>
             <th colspan="19" style="text-align:center; font-size: 11px; font-weight: bold; margin-top:5px;">
-                {{ isset($selectedOffice) && $selectedOffice ? ($offices->firstWhere('id', $selectedOffice)?->office_name ?? 'All Offices') : 'All Offices' }}
+                @if($isSEFConsolidated ?? false)
+                    Special Education Fund
+                @else
+                    {{ isset($selectedOffice) && $selectedOffice ? ($offices->firstWhere('id', $selectedOffice)?->office_name ?? 'All Offices') : 'All Offices' }}
+                @endif
                 @if(!empty($accountCode)) ({{ $accountCodeDisplay }}) @endif
             </th>
         </tr>

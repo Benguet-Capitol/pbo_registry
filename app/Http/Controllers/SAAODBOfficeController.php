@@ -26,8 +26,11 @@ class SAAODBOfficeController extends Controller
         $selectedAccountCode = request('account_code');
         $asOfDate = request('as_of_filter', now()->toDateString());
 
-        $allOffices = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
-            $query->where('year', $selectedYear);
+        $allOffices = Office::where(function($query) use ($selectedYear) {
+            $query->whereHas('officeAllotmentClasses', function ($subQuery) use ($selectedYear) {
+                $subQuery->where('year', $selectedYear);
+            })
+            ->orWhere('fund', 'Special Education Fund');
         })->orderBy('id', 'asc')->get();
 
         // Get all employees for signatory filter
@@ -54,9 +57,18 @@ class SAAODBOfficeController extends Controller
             $query->where('year', $selectedYear);
         });
 
-        // If a specific office is selected, filter it
+        // Check if selected office is a SEF office, if so get all SEF offices
+        $isSEFConsolidated = false;
         if (!empty($selectedOffice)) {
-            $officesQuery->where('id', $selectedOffice);
+            $selectedOfficeRecord = Office::find($selectedOffice);
+            if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
+                // Get all SEF offices
+                $officesQuery->where('fund', 'Special Education Fund');
+                $isSEFConsolidated = true;
+            } else {
+                // Otherwise, filter to just the selected office
+                $officesQuery->where('id', $selectedOffice);
+            }
         }
 
         // Get all offices with their OfficeAllotmentClasses and related data
@@ -311,7 +323,7 @@ class SAAODBOfficeController extends Controller
                     : 0;
             }
 
-        return view('saaodboffice.index', compact('availableYears', 'allOffices', 'offices', 'selectedYear', 'selectedOffice', 'asOfDate', 'employees', 'officesQuery', 'accounts', 'selectedAccountCode', 'overallTotal'))
+        return view('saaodboffice.index', compact('availableYears', 'allOffices', 'offices', 'selectedYear', 'selectedOffice', 'asOfDate', 'employees', 'officesQuery', 'accounts', 'selectedAccountCode', 'overallTotal', 'isSEFConsolidated'))
             ->with('status', session('status'));
     }
 
@@ -408,12 +420,26 @@ class SAAODBOfficeController extends Controller
         $certifiedSignatoryName = $request->input('certified_signatory_name');
         $certifiedSignatoryDesignation = $request->input('certified_signatory_designation');
 
+        // Check if selected office is a SEF office
+        $isSEFConsolidated = false;
+        if (!empty($officeId)) {
+            $office = Office::find($officeId);
+            if ($office && $office->fund === 'Special Education Fund') {
+                $isSEFConsolidated = true;
+            }
+        }
+
         // Get the office name by ID, or use "All_Offices" if none is selected
         $officeName = 'All_Offices';
         if (!empty($officeId)) {
             $office = Office::find($officeId);
             if ($office) {
-                $officeName = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation); // sanitize filename
+                if ($isSEFConsolidated) {
+                    // Use a consolidated name for SEF offices
+                    $officeName = 'SEF';
+                } else {
+                    $officeName = preg_replace('/[^A-Za-z0-9_]/', '_', $office->office_abbreviation); // sanitize filename
+                }
             }
         }
 
@@ -428,7 +454,7 @@ class SAAODBOfficeController extends Controller
         // Log the excel report generation
         self::logExcelReportGeneration('SAAODB Office Report', $fileName, [
             'Year' => $year,
-            'Office' => !empty($officeId) ? Office::find($officeId)?->office_abbreviation : 'All',
+            'Office' => !empty($officeId) ? (Office::find($officeId)?->office_abbreviation . ($isSEFConsolidated ? ' (SEF Consolidated)' : '')) : 'All',
             'Account Code' => $accountCode ?? 'All',
             'As Of Date' => $asOf,
         ]);
@@ -441,7 +467,8 @@ class SAAODBOfficeController extends Controller
             $preparedSignatoryName,
             $preparedSignatoryDesignation,
             $certifiedSignatoryName,
-            $certifiedSignatoryDesignation
+            $certifiedSignatoryDesignation,
+            $isSEFConsolidated
         ), $fileName);
     }
 }

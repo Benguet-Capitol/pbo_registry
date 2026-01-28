@@ -84,9 +84,21 @@ class DashboardController extends Controller
             $fundType = Fund::where('fund_type', $fundFilter)->pluck('fund');
             $officeAllotmentClassesQuery->whereIn('fund', $fundType);
         }
+        
+        // Check if selected office is a SEF office, if so get all SEF offices
+        $isSEFConsolidated = false;
         if ($officeFilter && !$isGuest) {
-            $officeAllotmentClassesQuery->where('office', $officeFilter);
+            $selectedOfficeRecord = Office::find($officeFilter);
+            if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
+                // Get all SEF offices
+                $officeIds = Office::where('fund', 'Special Education Fund')->pluck('id');
+                $officeAllotmentClassesQuery->whereIn('office', $officeIds);
+                $isSEFConsolidated = true;
+            } else {
+                $officeAllotmentClassesQuery->where('office', $officeFilter);
+            }
         }
+        
         if ($allotmentClassFilter) {
             $officeAllotmentClassesQuery->where('class', $allotmentClassFilter);
         }
@@ -328,7 +340,11 @@ class DashboardController extends Controller
         $selectedOfficeName = null;
         if ($officeFilter) {
             $selectedOffice = Office::find($officeFilter);
-            $selectedOfficeName = $selectedOffice ? $selectedOffice->office_name : null;
+            if ($isSEFConsolidated) {
+                $selectedOfficeName = 'Special Education Fund';
+            } else {
+                $selectedOfficeName = $selectedOffice ? $selectedOffice->office_name : null;
+            }
         }
 
         $selectedAllotmentClassDesc = null;
@@ -392,7 +408,8 @@ class DashboardController extends Controller
             'selectedFund',
             'isGuest',
             'office_allotment_classes',
-            'appropriations'
+            'appropriations',
+            'isSEFConsolidated'
         ));
     }
 

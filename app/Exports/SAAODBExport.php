@@ -27,8 +27,9 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
     protected $preparedSignatoryDesignation;
     protected $certifiedSignatoryName;
     protected $certifiedSignatoryDesignation;
+    protected $isSEFConsolidated;
 
-    public function __construct($selectedYear, $selectedOffice, $accountCode, $asOfDate, $preparedSignatoryName, $preparedSignatoryDesignation, $certifiedSignatoryName, $certifiedSignatoryDesignation)
+    public function __construct($selectedYear, $selectedOffice, $accountCode, $asOfDate, $preparedSignatoryName, $preparedSignatoryDesignation, $certifiedSignatoryName, $certifiedSignatoryDesignation, $isSEFConsolidated = false)
     {
         $this->selectedYear = $selectedYear;
         $this->selectedOffice = $selectedOffice;
@@ -38,6 +39,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
         $this->preparedSignatoryDesignation = $preparedSignatoryDesignation;
         $this->certifiedSignatoryName = $certifiedSignatoryName;
         $this->certifiedSignatoryDesignation = $certifiedSignatoryDesignation;
+        $this->isSEFConsolidated = $isSEFConsolidated;
     }
 
     public function registerEvents(): array
@@ -391,14 +393,22 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
         $selectedOffice = $this->selectedOffice;
         $accountCode = $this->accountCode;
         $asOfDate = $this->asOfDate;
+        $isSEFConsolidated = $this->isSEFConsolidated;
 
-        // Only include offices with OfficeAllotmentClasses for the selected year and “Current” category
+        // Only include offices with OfficeAllotmentClasses for the selected year and "Current" category
         $officesQuery = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
             $query->where('year', $selectedYear);
         });
 
+        // Check if selected office is a SEF office, if so get all SEF offices
         if (!empty($selectedOffice)) {
-            $officesQuery->where('id', $selectedOffice);
+            if ($isSEFConsolidated) {
+                // Get all SEF offices
+                $officesQuery->where('fund', 'Special Education Fund');
+            } else {
+                // Otherwise, filter to just the selected office
+                $officesQuery->where('id', $selectedOffice);
+            }
         }
         $offices = $officesQuery->with([
             'officeAllotmentClasses' => function ($query) use ($selectedYear) {
@@ -417,7 +427,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
             'officeAllotmentClasses.appropriations.realignments',
             'officeAllotmentClasses.appropriations.supplementals',
             'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
-        ])->get();
+        ])->orderBy('id', 'asc')->get();
 
         // Filter out offices that have no appropriations after account_code filtering
         if (!empty($accountCode)) {
@@ -599,6 +609,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
             'preparedSignatoryDesignation' => $this->preparedSignatoryDesignation,
             'certifiedSignatoryName' => $this->certifiedSignatoryName,
             'certifiedSignatoryDesignation' => $this->certifiedSignatoryDesignation,
+            'isSEFConsolidated' => $this->isSEFConsolidated,
         ]);
     }
 

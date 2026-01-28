@@ -18,7 +18,11 @@
                     {{ __('Statement of Appropriations, Allotments, Obligations, Disbursements and Balances') }}
                     |
                     <span class="text-blue-800 dark:text-blue-400">
-                        {{ $selectedOffice ? $selectedOffice->office_abbreviation : 'All Offices' }} 
+                        @if($isSEFConsolidated)
+                            Special Education Fund
+                        @else
+                            {{ $selectedOffice ? $selectedOffice->office_abbreviation : 'All Offices' }}
+                        @endif
                         @if($selectedAccountDisplay)
                         ({{ $selectedAccountDisplay }})
                         @endif - 

@@ -718,14 +718,14 @@
     </div>
 
     <!-- Right-Click Context Menu for Accounts Table -->
-    <div id="accountContextMenu" class="hidden fixed text-xs bg-white dark:bg-gray-800 rounded-lg shadow-lg z-[10000] text-gray-900 dark:text-gray-200 min-w-max border border-gray-200 dark:border-gray-700">
+    <div id="accountContextMenu" class="hidden fixed text-xs bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg shadow-2xl z-[10000] text-blue-900 dark:text-blue-100 min-w-max border-2 border-blue-400 dark:border-blue-600">
         @role('Administrator|Developer|Obligation')
-        <a href="#" id="contextObligate" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600">
-            <i class="fas fa-plus-circle mr-2"></i> Obligate
+        <a href="#" id="contextObligate" class="flex items-center px-4 py-2 text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150">
+            <i class="fas fa-plus-circle mr-2 text-blue-600 dark:text-blue-400"></i> Obligate
         </a>
         @endrole
-        <a href="#" onclick="event.preventDefault(); handleAccountMenuOption('obligations')" class="block px-4 py-2 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer">
-            <i class="fas fa-list mr-2"></i>Obligations
+        <a href="#" onclick="event.preventDefault(); handleAccountMenuOption('obligations')" class="block px-4 py-2 text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-b-lg transition-colors duration-150 cursor-pointer">
+            <i class="fas fa-list mr-2 text-blue-600 dark:text-blue-400"></i>Obligations
         </a>
     </div>
 
@@ -781,26 +781,26 @@
 
     <!-- Context Menu for Account Obligations -->
      @role('Administrator|Developer|Obligation')
-    <div id="accountObligationsContextMenu" class="hidden fixed w-48 bg-white border border-gray-300 rounded-lg shadow-lg dark:bg-gray-700 dark:border-gray-600" style="z-index: 10001; position: fixed;">
-        <button id="contextAccountObligationDetails" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-eye mr-2"></i>View Details
+    <div id="accountObligationsContextMenu" class="hidden fixed w-48 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl" style="z-index: 10001; position: fixed;">
+        <button id="contextAccountObligationDetails" class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150">
+            <i class="fas fa-eye mr-2 text-blue-600 dark:text-blue-400"></i>View Details
         </button>
-        <button id="contextAccountObligationEdit" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-edit mr-2"></i>Edit Obligation
+        <button id="contextAccountObligationEdit" class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-edit mr-2 text-blue-600 dark:text-blue-400"></i>Edit Obligation
         </button>
-        <button id="contextAccountObligationAdjustment" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-file-edit mr-2"></i>Add Adjustment
+        <button id="contextAccountObligationAdjustment" class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-file-edit mr-2 text-blue-600 dark:text-blue-400"></i>Add Adjustment
         </button>
-        <button id="contextAccountObligationPO" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-file-invoice mr-2"></i>Add Purchase Order
+        <button id="contextAccountObligationPO" class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-file-invoice mr-2 text-blue-600 dark:text-blue-400"></i>Add Purchase Order
         </button>
         @can('cancel obligations')
-        <button id="contextAccountObligationCancellation" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-window-close mr-2"></i>Cancellation
+        <button id="contextAccountObligationCancellation" class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-window-close mr-2 text-blue-600 dark:text-blue-400"></i>Cancellation
         </button>
         @endcan
-        <button id="contextAccountObligationHistory" class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-history mr-2"></i>Status/History
+        <button id="contextAccountObligationHistory" class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-b-lg transition-colors duration-150">
+            <i class="fas fa-history mr-2 text-blue-600 dark:text-blue-400"></i>Status/History
         </button>
     </div>
     @endrole
@@ -855,6 +855,25 @@
 
     .highlight-column {
         animation: columnHighlight 1.5s ease-out forwards;
+    }
+
+    /* Row highlight when context menu is open */
+    #accountsTable tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.15);
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .dark #accountsTable tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.25);
+    }
+
+    #accountObligationsModal tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.15);
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .dark #accountObligationsModal tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.25);
     }
     </style>
 
@@ -1920,6 +1939,15 @@ if (typeof originalUpdateCardValues === 'function') {
                         programs: programs
                     };
                     
+                    // Remove highlight from previously selected row
+                    document.querySelectorAll('#accountsTable tbody tr.context-menu-active').forEach(r => {
+                        r.classList.remove('context-menu-active');
+                    });
+                    
+                    // Highlight the current row
+                    row.classList.add('context-menu-active');
+                    window.currentAccountContextMenuRow = row;
+                    
                     // Position the context menu
                         contextMenu.style.left = event.clientX + 'px';
                         contextMenu.style.top = event.clientY + 'px';
@@ -1931,6 +1959,11 @@ if (typeof originalUpdateCardValues === 'function') {
             document.addEventListener('click', function(e) {
                 if (!contextMenu.contains(e.target) && !e.target.closest('tr')) {
                     contextMenu.classList.add('hidden');
+                    // Remove highlight when menu is closed
+                    if (window.currentAccountContextMenuRow) {
+                        window.currentAccountContextMenuRow.classList.remove('context-menu-active');
+                        window.currentAccountContextMenuRow = null;
+                    }
                 }
             });
         }
@@ -2218,6 +2251,15 @@ if (typeof originalUpdateCardValues === 'function') {
         const menu = document.getElementById('accountObligationsContextMenu');
         if (!menu) return;
         
+        // Remove highlight from previously selected row
+        document.querySelectorAll('#accountObligationsModal tbody tr.context-menu-active').forEach(r => {
+            r.classList.remove('context-menu-active');
+        });
+        
+        // Highlight the current row
+        row.classList.add('context-menu-active');
+        window.currentAccountObligationContextMenuRow = row;
+        
         menu.style.display = 'block';
         menu.style.left = (event.clientX) + 'px';
         menu.style.top = (event.clientY) + 'px';
@@ -2297,6 +2339,11 @@ if (typeof originalUpdateCardValues === 'function') {
         const menu = document.getElementById('accountObligationsContextMenu');
         if (menu) {
             menu.style.display = 'none';
+        }
+        // Remove highlight when menu is closed
+        if (window.currentAccountObligationContextMenuRow) {
+            window.currentAccountObligationContextMenuRow.classList.remove('context-menu-active');
+            window.currentAccountObligationContextMenuRow = null;
         }
     }
 

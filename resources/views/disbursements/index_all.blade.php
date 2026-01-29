@@ -122,15 +122,15 @@
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
-            <table id="disbursementsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
+            <table id="disbursementsTable" class="text-center font-semibold w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
                         @php
                             $columns = [
-                                'disbursement_date' => 'Check / DV Date',
                                 'office_class' => 'Office & Class',
                                 'obr_no' => 'OBR No.',
                                 'dv_no' => 'DV / Check Number',
+                                'disbursement_date' => 'DV / Check Date',
                                 'program' => 'Program',
                                 'account_code' => 'Account Code',
                                 'description' => 'Description',
@@ -163,32 +163,32 @@
                 <tbody>
                     @forelse($disbursements as $disbursement)
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-600 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->disbursement_date ?? '-' }}</td>
                             <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
                                 {{ optional($disbursement->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
                                 {{ optional($disbursement->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
                             </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $disbursement->dv_no }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->dv_no }}</td>
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->disbursement_date ?? '-' }}</td>
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300 max-w-xs">
                                 @php
                                     $programs = $disbursement->obligation->obligationAmounts->pluck('appropriation.programs')->unique()->filter()->implode(', ');
                                 @endphp
                                 {{ $programs ?: '-' }}
                             </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
                                 @php
                                     $accountCodes = $disbursement->obligation->obligationAmounts->pluck('appropriation.account_code')->unique()->filter()->implode(', ');
                                 @endphp
                                 {{ $accountCodes ?: '-' }}
                             </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
                                 @php
                                     $descriptions = $disbursement->obligation->obligationAmounts->pluck('appropriation.description')->unique()->filter()->implode(', ');
                                 @endphp
                                 {{ $descriptions ?: '-' }}
                             </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
                             @if($disbursement->status === 'Full Payment')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
                                         {{ ucfirst($disbursement->status) }}
@@ -202,7 +202,7 @@
                                 @endif
                             </td>
                             <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">{{ number_format($disbursement->disbursement_amount, 2) }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $disbursement->remarks ?? '-' }}</td>
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->remarks ?? '-' }}</td>
                             <!-- <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
                             </td> -->
                         </tr>

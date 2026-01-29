@@ -430,17 +430,34 @@ class RealignmentController extends Controller
                 $relatedRealignments = Realignment::where('realignment_no', $realignmentNo)->get();
                 $deletedCount = $relatedRealignments->count();
                 
-                // Check if any related realignment has obligations
+                // Check if any related realignment has obligations created after the realignment
                 foreach ($relatedRealignments as $related) {
                     $appropriationCheck = Appropriation::find($related->appropriations_id);
                     if ($appropriationCheck) {
-                        $obligationsCount = ObligationAmount::where('appropriation_id', $appropriationCheck->id)->count();
-                        if ($obligationsCount > 0) {
+                        // Get obligations and check their dates
+                        $obligationAmounts = ObligationAmount::where('appropriation_id', $appropriationCheck->id)
+                            ->with('obligation')
+                            ->get();
+                        
+                        // Check if any obligation was created after (or on same date as) the realignment
+                        $realignmentDate = \Carbon\Carbon::parse($related->realignment_date);
+                        $blockedObligations = 0;
+                        
+                        foreach ($obligationAmounts as $oa) {
+                            if ($oa->obligation) {
+                                $obligationDate = \Carbon\Carbon::parse($oa->obligation->obr_date);
+                                if (!$obligationDate->lt($realignmentDate)) {
+                                    $blockedObligations++;
+                                }
+                            }
+                        }
+                        
+                        if ($blockedObligations > 0) {
                             DB::rollBack();
                             return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
                                 ->with('error', 
                                     "Cannot delete Realignment No: <strong>{$realignmentNo}</strong>. " .
-                                    "One or more accounts in this realignment transaction have <strong>{$obligationsCount}</strong> obligation(s) associated with them. " .
+                                    "One or more accounts in this realignment transaction have <strong>{$blockedObligations}</strong> obligation(s) created after the realignment date. " .
                                     "Please delete the related obligations first before removing this realignment."
                                 );
                         }
@@ -462,15 +479,31 @@ class RealignmentController extends Controller
                     ->where('id', '!=', $realignment->id)
                     ->count();
 
-                // Check if appropriation has obligations
+                // Check if appropriation has obligations created after the realignment
                 if ($appropriation) {
-                    $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)->count();
-                    if ($obligationsCount > 0) {
+                    $obligationAmounts = ObligationAmount::where('appropriation_id', $appropriation->id)
+                        ->with('obligation')
+                        ->get();
+                    
+                    // Check if any obligation was created after (or on same date as) the realignment
+                    $realignmentDate = \Carbon\Carbon::parse($realignment->realignment_date);
+                    $blockedObligations = 0;
+                    
+                    foreach ($obligationAmounts as $oa) {
+                        if ($oa->obligation) {
+                            $obligationDate = \Carbon\Carbon::parse($oa->obligation->obr_date);
+                            if (!$obligationDate->lt($realignmentDate)) {
+                                $blockedObligations++;
+                            }
+                        }
+                    }
+                    
+                    if ($blockedObligations > 0) {
                         DB::rollBack();
                         return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
                             ->with('error', 
                                 "Cannot delete Realignment No: <strong>{$realignmentNo}</strong> with Type: <strong>{$type}</strong>, Account Code: <strong>{$accountCode}</strong>. " .
-                                "This realignment has <strong>{$obligationsCount}</strong> obligation(s) associated with it. " .
+                                "This realignment has <strong>{$blockedObligations}</strong> obligation(s) created after the realignment date. " .
                                 "Please delete the related obligations first before removing this realignment."
                             );
                     }
@@ -503,5 +536,67 @@ class RealignmentController extends Controller
             return redirect()->back()
                 ->with('error', 'An error occurred while deleting the realignment: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Check if realignment can be deleted based on obligation date
+     */
+    public function checkRealignmentDeletionDate(Request $request)
+    {
+        $validated = $request->validate([
+            'realignment_id' => 'required|integer',
+        ]);
+
+        $realignment = Realignment::find($validated['realignment_id']);
+        if (!$realignment) {
+            return response()->json([
+                'canDelete' => false,
+                'message' => 'Realignment not found'
+            ], 404);
+        }
+
+        // Get the appropriation and related obligations
+        $appropriation = Appropriation::find($realignment->appropriations_id);
+        if (!$appropriation) {
+            return response()->json([
+                'canDelete' => false,
+                'message' => 'Appropriation not found'
+            ], 404);
+        }
+
+        // Get the earliest obligation date for this appropriation
+        $earliestObligation = ObligationAmount::where('appropriation_id', $appropriation->id)
+            ->with('obligation')
+            ->get()
+            ->map(function ($oam) {
+                return $oam->obligation;
+            })
+            ->filter()
+            ->sortBy('obr_date')
+            ->first();
+
+        // If no obligations exist, allow deletion
+        if (!$earliestObligation) {
+            return response()->json([
+                'canDelete' => true,
+                'message' => 'No obligations associated with this realignment'
+            ]);
+        }
+
+        // Convert realignment_date to comparable format
+        $realignmentDate = \Carbon\Carbon::parse($realignment->realignment_date);
+        $obligationDate = \Carbon\Carbon::parse($earliestObligation->obr_date);
+
+        // Realignment can be deleted if obligation was created BEFORE realignment
+        $canDelete = $obligationDate->lt($realignmentDate);
+
+        return response()->json([
+            'canDelete' => $canDelete,
+            'message' => $canDelete 
+                ? 'Realignment can be deleted' 
+                : 'Cannot delete: Obligation was created after or on the same date as this realignment',
+            'realignment_date' => $realignmentDate->format('Y-m-d'),
+            'earliest_obligation_date' => $obligationDate->format('Y-m-d')
+        ]);
     }
 }

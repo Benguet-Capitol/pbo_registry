@@ -358,22 +358,22 @@
 
     <!-- Context Menu -->
     <div id="realignmentContextMenu" 
-        class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
+        class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
         @can('edit realignments')
         <button id="contextEdit"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-edit mr-2"></i>Edit
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-edit mr-2 text-blue-600"></i>Edit
         </button>
         @endcan
          @can('delete realignments')
         <button id="contextDelete"
-                class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-200 dark:text-red-400 dark:hover:bg-gray-600">
-            <i class="fas fa-trash mr-2"></i>Delete This Entry
+                class="w-full text-left px-4 py-2 text-xs text-red-700 hover:bg-red-200 dark:text-red-300 dark:hover:bg-red-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
+            <i class="fas fa-trash mr-2 text-red-600"></i>Delete This Entry
         </button>
         <button id="contextBulkDelete"
-                class="w-full text-left px-4 py-2 text-xs text-orange-600 hover:bg-gray-200 dark:text-orange-400 dark:hover:bg-gray-600 rounded-b-lg">
-            <i class="fas fa-trash-alt mr-2"></i>Delete All Related
+                class="w-full text-left px-4 py-2 text-xs text-orange-700 hover:bg-orange-200 dark:text-orange-300 dark:hover:bg-orange-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
+            <i class="fas fa-trash-alt mr-2 text-orange-600"></i>Delete All Related
         </button>
         @endcan
     </div>
@@ -399,23 +399,60 @@
 
         if (!menu) return;
 
-        // Get the table container
-        const container = row.closest('.overflow-x-auto') || document.body;
-        if (!container) return;
+        // Remove highlight from previously selected row
+        document.querySelectorAll('table tbody tr.context-menu-active').forEach(r => {
+            r.classList.remove('context-menu-active');
+        });
+        
+        // Highlight the current row
+        row.classList.add('context-menu-active');
+        window.currentContextMenuRow = row;
 
         // Get element positions
-        const rowRect = row.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
+        const menuHeight = 200; // Approximate menu height
+        const viewportHeight = window.innerHeight;
+        const mouseY = event.clientY;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-        // Calculate position relative to container
-        const firstCell = row.querySelector('td:first-child');
-        const firstCellRect = firstCell.getBoundingClientRect();
-        const rowBottom = rowRect.bottom + 5;
+        // Determine if menu should appear above or below the cursor
+        let top, verticalAlignment;
+        const spaceBelow = viewportHeight - mouseY;
+        const spaceAbove = mouseY;
 
-        // Position menu at first column, just below the row
+        if (spaceBelow > menuHeight + 20) {
+            // Show below cursor, tight to cursor position
+            top = mouseY + scrollTop;
+            verticalAlignment = 'below';
+        } else if (spaceAbove > menuHeight + 20) {
+            // Show above cursor, positioned lower so it's beside cursor
+            top = mouseY + scrollTop - menuHeight + 40;
+            verticalAlignment = 'above';
+        } else {
+            // Default to below
+            top = mouseY + scrollTop;
+            verticalAlignment = 'below';
+        }
+
+        // Calculate left position (tight to cursor, with right edge collision detection)
+        let left = event.clientX + scrollLeft + 2;
+        const menuWidth = 192; // w-48 = 12rem = 192px
+        const viewportWidth = window.innerWidth;
+        
+        // Check if menu goes off screen to the right
+        if (left + menuWidth > viewportWidth + scrollLeft) {
+            left = event.clientX + scrollLeft - menuWidth - 2;
+        }
+        
+        // Ensure menu doesn't go off screen to the left
+        if (left < scrollLeft) {
+            left = scrollLeft + 2;
+        }
+
+        // Position menu
         menu.style.position = 'fixed';
-        menu.style.top = `${rowBottom}px`;
-        menu.style.left = `${firstCellRect.left}px`;
+        menu.style.top = `${top}px`;
+        menu.style.left = `${left}px`;
         menu.style.display = 'block';
         menu.classList.remove('hidden');
 
@@ -472,6 +509,12 @@
         if (!menu) return;
         menu.classList.add('hidden');
         menu.style.display = 'none';
+
+        // Remove highlight when menu is closed
+        if (window.currentContextMenuRow) {
+            window.currentContextMenuRow.classList.remove('context-menu-active');
+            window.currentContextMenuRow = null;
+        }
 
         // Remove event listeners
         document.removeEventListener('click', hideRealignmentContextMenu);
@@ -604,6 +647,16 @@
 
     .page-transition {
         animation: pageSlideUp 0.4s ease-in-out;
+    }
+
+    /* Row highlight when context menu is open */
+    table tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.15);
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .dark table tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.25);
     }
 </style>
     </div>

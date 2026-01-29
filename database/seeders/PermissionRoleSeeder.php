@@ -48,6 +48,7 @@ class PermissionRoleSeeder extends Seeder
         $obligation = Role::firstOrCreate(['name' => 'Obligation']);
         $payment = Role::firstOrCreate(['name' => 'Disbursement']);
         $user = Role::firstOrCreate(['name' => 'User']);
+        $guest = Role::firstOrCreate(['name' => 'Guest']);
 
         // Assign all permissions to Administrator and Developer
         $admin->syncPermissions(Permission::all());
@@ -59,14 +60,16 @@ class PermissionRoleSeeder extends Seeder
             ->get();
         $obligation->syncPermissions($obligationPermissions);
 
-        // Payment role: all permissions for disbursement except delete
+        // Payment role: all permissions for disbursement
         $paymentPermissions = Permission::where('name', 'like', '%disbursement%')
-            ->where('name', 'not like', 'delete %')
             ->get();
         $payment->syncPermissions($paymentPermissions);
 
         // User role: only dashboard
         $user->syncPermissions(['view dashboard']);
+
+        // Guest role: only dashboard (minimal access)
+        $guest->syncPermissions(['view dashboard']);
 
         // Re-sync all users based on their usertype field
         User::all()->each(function ($user) {

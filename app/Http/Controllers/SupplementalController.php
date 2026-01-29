@@ -323,21 +323,35 @@ class SupplementalController extends Controller
                 $relatedSupplementals = Supplemental::where('supplemental_no', $supplementalNo)->get();
                 $deletedCount = $relatedSupplementals->count();
                 
-                // Check if any related supplemental has obligations (only for Supplemental type)
+                // Check if any related supplemental has obligations created after the supplemental
                 foreach ($relatedSupplementals as $related) {
                     if ($related->type === 'Supplemental') {
                         $appropriationCheck = Appropriation::find($related->appropriations_id);
                         if ($appropriationCheck) {
-                            $obligationsCount = ObligationAmount::where('appropriation_id', $appropriationCheck->id)
-                                ->distinct('obligation_id')
-                                ->count('obligation_id');
+                            // Get obligations and check their dates
+                            $obligationAmounts = ObligationAmount::where('appropriation_id', $appropriationCheck->id)
+                                ->with('obligation')
+                                ->get();
                             
-                            if ($obligationsCount > 0) {
+                            // Check if any obligation was created after (or on same date as) the supplemental
+                            $supplementalDate = \Carbon\Carbon::parse($related->supplemental_date);
+                            $blockedObligations = 0;
+                            
+                            foreach ($obligationAmounts as $oa) {
+                                if ($oa->obligation) {
+                                    $obligationDate = \Carbon\Carbon::parse($oa->obligation->obr_date);
+                                    if (!$obligationDate->lt($supplementalDate)) {
+                                        $blockedObligations++;
+                                    }
+                                }
+                            }
+                            
+                            if ($blockedObligations > 0) {
                                 DB::rollBack();
                                 return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
                                     ->with('error', 
                                         "Cannot delete Supplemental/Reversion No: <strong>{$supplementalNo}</strong>. " .
-                                        "One or more supplemental accounts in this transaction have <strong>{$obligationsCount}</strong> obligation(s) associated with them. " .
+                                        "One or more supplemental accounts in this transaction have <strong>{$blockedObligations}</strong> obligation(s) created after the supplemental date. " .
                                         "Please delete the related obligations first before removing this supplemental/reversion."
                                     );
                             }
@@ -355,18 +369,31 @@ class SupplementalController extends Controller
                         "All <strong>{$deletedCount}</strong> supplemental/reversion(s) with No: <strong>{$supplementalNo}</strong> have been deleted successfully!"
                     );
             } else {
-                // Single delete - check for obligations first (only for Supplemental type)
+                // Single delete - check for obligations created after the supplemental
                 if ($type === 'Supplemental' && $appropriation) {
-                    $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)
-                        ->distinct('obligation_id')
-                        ->count('obligation_id');
+                    $obligationAmounts = ObligationAmount::where('appropriation_id', $appropriation->id)
+                        ->with('obligation')
+                        ->get();
                     
-                    if ($obligationsCount > 0) {
+                    // Check if any obligation was created after (or on same date as) the supplemental
+                    $supplementalDate = \Carbon\Carbon::parse($supplemental->supplemental_date);
+                    $blockedObligations = 0;
+                    
+                    foreach ($obligationAmounts as $oa) {
+                        if ($oa->obligation) {
+                            $obligationDate = \Carbon\Carbon::parse($oa->obligation->obr_date);
+                            if (!$obligationDate->lt($supplementalDate)) {
+                                $blockedObligations++;
+                            }
+                        }
+                    }
+                    
+                    if ($blockedObligations > 0) {
                         DB::rollBack();
                         return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
                             ->with('error', 
                                 "Cannot delete <strong>{$type}</strong> No. <strong>{$supplementalNo}</strong> for Account Code: <strong>{$accountCode}</strong>. " .
-                                "This supplemental has <strong>{$obligationsCount}</strong> obligation(s) created using these supplemental funds. " .
+                                "This supplemental has <strong>{$blockedObligations}</strong> obligation(s) created after the supplemental date. " .
                                 "Please delete the related obligations first before removing this supplemental entry."
                             );
                     }
@@ -407,5 +434,67 @@ class SupplementalController extends Controller
             return redirect()->route('supplementals.index', array_filter($request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search'])))
                 ->with('error', 'An error occurred while deleting the supplemental/reversion: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Check if supplemental can be deleted based on obligation date
+     */
+    public function checkSupplementalDeletionDate(Request $request)
+    {
+        $validated = $request->validate([
+            'supplemental_id' => 'required|integer',
+        ]);
+
+        $supplemental = Supplemental::find($validated['supplemental_id']);
+        if (!$supplemental) {
+            return response()->json([
+                'canDelete' => false,
+                'message' => 'Supplemental not found'
+            ], 404);
+        }
+
+        // Get the appropriation and related obligations
+        $appropriation = Appropriation::find($supplemental->appropriations_id);
+        if (!$appropriation) {
+            return response()->json([
+                'canDelete' => false,
+                'message' => 'Appropriation not found'
+            ], 404);
+        }
+
+        // Get the earliest obligation date for this appropriation
+        $earliestObligation = ObligationAmount::where('appropriation_id', $appropriation->id)
+            ->with('obligation')
+            ->get()
+            ->map(function ($oam) {
+                return $oam->obligation;
+            })
+            ->filter()
+            ->sortBy('obr_date')
+            ->first();
+
+        // If no obligations exist, allow deletion
+        if (!$earliestObligation) {
+            return response()->json([
+                'canDelete' => true,
+                'message' => 'No obligations associated with this supplemental'
+            ]);
+        }
+
+        // Convert supplemental_date to comparable format
+        $supplementalDate = \Carbon\Carbon::parse($supplemental->supplemental_date);
+        $obligationDate = \Carbon\Carbon::parse($earliestObligation->obr_date);
+
+        // Supplemental can be deleted if obligation was created BEFORE supplemental
+        $canDelete = $obligationDate->lt($supplementalDate);
+
+        return response()->json([
+            'canDelete' => $canDelete,
+            'message' => $canDelete 
+                ? 'Supplemental can be deleted' 
+                : 'Cannot delete: Obligation was created after or on the same date as this supplemental',
+            'supplemental_date' => $supplementalDate->format('Y-m-d'),
+            'earliest_obligation_date' => $obligationDate->format('Y-m-d')
+        ]);
     }
 }

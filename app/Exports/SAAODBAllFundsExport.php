@@ -353,7 +353,7 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
         return [
             'A1:Z10000' => [
                 'font' => [
-                    'name' => 'Arial Narrow', // Or 'Calibri', 'Verdana', etc.
+                    'name' => 'Arial', // Or 'Calibri', 'Verdana', etc.
                     'size' => 10,
                 ],
             ],

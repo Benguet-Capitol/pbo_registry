@@ -141,27 +141,100 @@
             });
         }
 
-        // Set form action with proper route
-        const deleteForm = document.getElementById('deleteRealignmentForm');
-        if (deleteForm) {
-            deleteForm.action = `/realignments/${realignmentId}`; // Direct path
-            console.log('Form action set to:', deleteForm.action);
-        }
+        // Validate deletion date before showing modal
+        fetch(`/api/realignments/check-deletion-date`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                realignment_id: realignmentId
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Set form action with proper route
+            const deleteForm = document.getElementById('deleteRealignmentForm');
+            if (deleteForm) {
+                deleteForm.action = `/realignments/${realignmentId}`; // Direct path
+                console.log('Form action set to:', deleteForm.action);
+            }
 
-        document.getElementById('deleteRealignmentModalContent').innerHTML = `
-            Are you sure you want to delete this Realignment No: <strong>${realignmentNo}</strong> with Type: <strong>${realignmentType}</strong>, Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedRealignmentAmount}</strong>?
-            <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
-                <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                    <strong>Note:</strong> This will only delete this specific account entry. Other accounts under the same Realignment No. will remain.
-                </p>
-            </div>
-            <p class="mt-3 text-red-600 dark:text-red-400 font-semibold">This action cannot be undone.</p>
-        `;
+            let contentHtml = `
+                Are you sure you want to delete this Realignment No: <strong>${realignmentNo}</strong> with Type: <strong>${realignmentType}</strong>, Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedRealignmentAmount}</strong>?
+                <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <strong>Note:</strong> This will only delete this specific account entry. Other accounts under the same Realignment No. will remain.
+                    </p>
+                </div>
+                <p class="mt-3 text-red-600 dark:text-red-400 font-semibold">This action cannot be undone.</p>
+            `;
 
-        const modal = document.getElementById('deleteRealignmentModal');
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
+            // Add date validation error if deletion is not allowed
+            if (!data.canDelete) {
+                contentHtml += `
+                    <div class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                        <p class="text-sm text-red-800 dark:text-red-200">
+                            <i class="fas fa-ban mr-1"></i>
+                            <strong>Cannot Delete:</strong> ${data.message}
+                        </p>
+                        <p class="text-xs text-red-700 dark:text-red-300 mt-2">
+                            Realignment Date: ${data.realignment_date}<br>
+                            Earliest Obligation Date: ${data.earliest_obligation_date}
+                        </p>
+                    </div>
+                `;
+                document.getElementById('deleteRealignmentModalContent').innerHTML = contentHtml;
+                const modal = document.getElementById('deleteRealignmentModal');
+                const deleteButton = modal.querySelector('button[onclick*="submitDeleteRealignmentForm"]');
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                document.getElementById('deleteRealignmentModalContent').innerHTML = contentHtml;
+                const modal = document.getElementById('deleteRealignmentModal');
+                const deleteButton = modal.querySelector('button[onclick*="submitDeleteRealignmentForm"]');
+                if (deleteButton) {
+                    deleteButton.disabled = false;
+                    deleteButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            const modal = document.getElementById('deleteRealignmentModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+        })
+        .catch(error => {
+            console.error('Error checking realignment deletion date:', error);
+            // Show error message
+            const deleteForm = document.getElementById('deleteRealignmentForm');
+            if (deleteForm) {
+                deleteForm.action = `/realignments/${realignmentId}`;
+            }
+
+            document.getElementById('deleteRealignmentModalContent').innerHTML = `
+                Are you sure you want to delete this Realignment No: <strong>${realignmentNo}</strong> with Type: <strong>${realignmentType}</strong>, Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedRealignmentAmount}</strong>?
+                <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <strong>Note:</strong> This will only delete this specific account entry. Other accounts under the same Realignment No. will remain.
+                    </p>
+                </div>
+                <p class="mt-3 text-red-600 dark:text-red-400 font-semibold">This action cannot be undone.</p>
+            `;
+
+            const modal = document.getElementById('deleteRealignmentModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+        });
     }
 
     function closeDeleteRealignmentModal() {

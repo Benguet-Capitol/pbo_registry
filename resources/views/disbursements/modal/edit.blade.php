@@ -69,7 +69,7 @@
                                 </div>
                             </div>
                             <!-- Remarks -->
-                            <div class="sm:col-span-6">
+                            <div class="sm:col-span-3">
                                 <x-form.label for="edit_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>

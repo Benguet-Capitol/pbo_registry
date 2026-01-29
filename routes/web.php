@@ -156,9 +156,13 @@ Route::middleware('auth')->group(function () {
 
     // Realignments Routes
     Route::resource('realignments', RealignmentController::class);
+    // Check realignment deletion date
+    Route::post('/api/realignments/check-deletion-date', [RealignmentController::class, 'checkRealignmentDeletionDate'])->name('realignments.checkDeletionDate');
 
     // Supplemental Routes
     Route::resource('supplementals', SupplementalController::class);
+    // Check supplemental deletion date
+    Route::post('/api/supplementals/check-deletion-date', [SupplementalController::class, 'checkSupplementalDeletionDate'])->name('supplementals.checkDeletionDate');
 
     // SAAOB by Office-Current Report Routes
     Route::get('/saaob', [SAAOBController::class, 'index'])->name('saaob.index');

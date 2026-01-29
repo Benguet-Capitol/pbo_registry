@@ -132,41 +132,120 @@
             });
         }
 
-        // Set form action and populate hidden fields
-        const deleteForm = document.getElementById('deleteSupplementalForm');
-        if (deleteForm) {
-            deleteForm.action = `/supplementals/${supplementalId}`;
-            
-            // Set CSRF token
-            document.getElementById('csrf_token_single').value = csrfToken;
-            
-            // Set query parameters
-            document.getElementById('year1_single').value = queryParams.year1;
-            document.getElementById('office_single').value = queryParams.office_allotment_class_id;
-            document.getElementById('type_filter_single').value = queryParams.supplemental_type_filter;
-            document.getElementById('per_page_single').value = queryParams.per_page;
-            document.getElementById('search_single').value = queryParams.search;
-            
-            console.log('Single delete form configured:', {
-                action: deleteForm.action,
-                method: deleteForm.method
-            });
-        }
+        // Validate deletion date before showing modal
+        fetch(`/api/supplementals/check-deletion-date`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                supplemental_id: supplementalId
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Set form action and populate hidden fields
+            const deleteForm = document.getElementById('deleteSupplementalForm');
+            if (deleteForm) {
+                deleteForm.action = `/supplementals/${supplementalId}`;
+                
+                // Set CSRF token
+                document.getElementById('csrf_token_single').value = csrfToken;
+                
+                // Set query parameters
+                document.getElementById('year1_single').value = queryParams.year1;
+                document.getElementById('office_single').value = queryParams.office_allotment_class_id;
+                document.getElementById('type_filter_single').value = queryParams.supplemental_type_filter;
+                document.getElementById('per_page_single').value = queryParams.per_page;
+                document.getElementById('search_single').value = queryParams.search;
+                
+                console.log('Single delete form configured:', {
+                    action: deleteForm.action,
+                    method: deleteForm.method
+                });
+            }
 
-        document.getElementById('deleteSupplementalModalContent').innerHTML = `
-            Are you sure you want to delete this <strong>${supplementalType}</strong> No: <strong>${supplementalNo}</strong> with Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedSupplementalAmount}</strong>?
-            <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
-                <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                    <strong>Note:</strong> This will only delete this specific account entry. Other accounts under the same ${supplementalType} No. will remain.
-                </p>
-            </div>
-            <p class="mt-3 text-red-600 dark:text-red-400 font-semibold">This action cannot be undone.</p>
-        `;
+            let contentHtml = `
+                Are you sure you want to delete this <strong>${supplementalType}</strong> No: <strong>${supplementalNo}</strong> with Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedSupplementalAmount}</strong>?
+                <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <strong>Note:</strong> This will only delete this specific account entry. Other accounts under the same ${supplementalType} No. will remain.
+                    </p>
+                </div>
+                <p class="mt-3 text-red-600 dark:text-red-400 font-semibold">This action cannot be undone.</p>
+            `;
 
-        const modal = document.getElementById('deleteSupplementalModal');
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
+            // Add date validation error if deletion is not allowed
+            if (!data.canDelete) {
+                contentHtml += `
+                    <div class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                        <p class="text-sm text-red-800 dark:text-red-200">
+                            <i class="fas fa-ban mr-1"></i>
+                            <strong>Cannot Delete:</strong> ${data.message}
+                        </p>
+                        <p class="text-xs text-red-700 dark:text-red-300 mt-2">
+                            Supplemental Date: ${data.supplemental_date}<br>
+                            Earliest Obligation Date: ${data.earliest_obligation_date}
+                        </p>
+                    </div>
+                `;
+                document.getElementById('deleteSupplementalModalContent').innerHTML = contentHtml;
+                const modal = document.getElementById('deleteSupplementalModal');
+                const deleteButton = modal.querySelector('button[onclick*="submitDeleteSupplementalForm"]');
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                document.getElementById('deleteSupplementalModalContent').innerHTML = contentHtml;
+                const modal = document.getElementById('deleteSupplementalModal');
+                const deleteButton = modal.querySelector('button[onclick*="submitDeleteSupplementalForm"]');
+                if (deleteButton) {
+                    deleteButton.disabled = false;
+                    deleteButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            const modal = document.getElementById('deleteSupplementalModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+        })
+        .catch(error => {
+            console.error('Error checking supplemental deletion date:', error);
+            // Show error message
+            const deleteForm = document.getElementById('deleteSupplementalForm');
+            if (deleteForm) {
+                deleteForm.action = `/supplementals/${supplementalId}`;
+                document.getElementById('csrf_token_single').value = csrfToken;
+                document.getElementById('year1_single').value = queryParams.year1;
+                document.getElementById('office_single').value = queryParams.office_allotment_class_id;
+                document.getElementById('type_filter_single').value = queryParams.supplemental_type_filter;
+                document.getElementById('per_page_single').value = queryParams.per_page;
+                document.getElementById('search_single').value = queryParams.search;
+            }
+
+            document.getElementById('deleteSupplementalModalContent').innerHTML = `
+                Are you sure you want to delete this <strong>${supplementalType}</strong> No: <strong>${supplementalNo}</strong> with Account Code: <strong>${accountCode}</strong> - <strong>${description}</strong> and Amount: <strong>${formattedSupplementalAmount}</strong>?
+                <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <strong>Note:</strong> This will only delete this specific account entry. Other accounts under the same ${supplementalType} No. will remain.
+                    </p>
+                </div>
+                <p class="mt-3 text-red-600 dark:text-red-400 font-semibold">This action cannot be undone.</p>
+            `;
+
+            const modal = document.getElementById('deleteSupplementalModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+        });
     }
 
     function closeDeleteSupplementalModal() {

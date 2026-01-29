@@ -349,17 +349,17 @@
 
             <!-- Context Menu -->
         <div id="appropriationContextMenu" 
-            class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600">
+            class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600">
             @can('edit appropriations')
             <button id="contextEdit"
-                    class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600">
-                <i class="fas fa-edit mr-2"></i>Edit
+                    class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 transition-colors duration-150">
+                <i class="fas fa-edit mr-2 text-blue-600"></i>Edit
             </button>
             @endcan
             @can('delete appropriations')
             <button id="contextDelete"
-                    class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
-                <i class="fas fa-trash mr-2"></i>Delete
+                    class="w-full text-left px-4 py-2 text-xs text-red-700 hover:bg-red-200 dark:text-red-300 dark:hover:bg-red-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
+                <i class="fas fa-trash mr-2 text-red-600"></i>Delete
             </button>
             @endcan
         </div>
@@ -403,25 +403,65 @@
     // Add event listener for input event to filter table as you type
     document.getElementById('searchInput').addEventListener('input', filterTable);
 
-    function showAppropriationContextMenu(event, id) {
+    function showAppropriationContextMenu(event, row) {
     event.preventDefault();
 
+    if (row) {
+        // Remove highlight from previously selected row
+        document.querySelectorAll('table tbody tr.context-menu-active').forEach(r => {
+            r.classList.remove('context-menu-active');
+        });
+        
+        // Highlight the current row
+        row.classList.add('context-menu-active');
+        window.currentContextMenuRow = row;
+    }
+
     const menu = document.getElementById('appropriationContextMenu');
-    const row = event.currentTarget;
-    const container = row.closest('.overflow-x-auto') || document.body;
-    const rowRect = row.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
+    
+    // Get element positions
+    const menuHeight = 150; // Approximate menu height
+    const viewportHeight = window.innerHeight;
+    const mouseY = event.clientY;
+    const mouseX = event.clientX;
 
-    // Calculate position relative to container
-    const top = rowRect.top - containerRect.top + container.scrollTop + rowRect.height;
-    const left = rowRect.left - containerRect.left + container.scrollLeft + 10;
+    // Determine if menu should appear above or below the cursor
+    let top;
+    const spaceBelow = viewportHeight - mouseY;
+    const spaceAbove = mouseY;
 
-    menu.style.position = 'absolute';
+    if (spaceBelow > menuHeight + 20) {
+        // Show below cursor
+        top = mouseY;
+    } else if (spaceAbove > menuHeight + 20) {
+        // Show above cursor
+        top = mouseY - menuHeight;
+    } else {
+        // Default to below
+        top = mouseY;
+    }
+
+    // Calculate left position (tight to cursor, with right edge collision detection)
+    let left = mouseX + 2;
+    const menuWidth = 192; // w-48 = 12rem = 192px
+    const viewportWidth = window.innerWidth;
+    
+    // Check if menu goes off screen to the right
+    if (left + menuWidth > viewportWidth) {
+        left = mouseX - menuWidth - 2;
+    }
+    
+    // Ensure menu doesn't go off screen to the left
+    if (left < 0) {
+        left = 2;
+    }
+
+    menu.style.position = 'fixed';
     menu.style.top = `${top}px`;
     menu.style.left = `${left}px`;
     menu.classList.remove('hidden');
 
-    // Attach action handlers if data is present
+    // Get appropriation data from the table row
     const appropriation = row.dataset.appropriation ? JSON.parse(row.dataset.appropriation) : null;
 
     if (appropriation) {
@@ -443,6 +483,11 @@ function hideAppropriationContextMenu(event) {
     const menu = document.getElementById('appropriationContextMenu');
     if (!menu.contains(event.target)) {
         menu.classList.add('hidden');
+        // Remove highlight when menu is closed
+        if (window.currentContextMenuRow) {
+            window.currentContextMenuRow.classList.remove('context-menu-active');
+            window.currentContextMenuRow = null;
+        }
         document.removeEventListener('click', hideAppropriationContextMenu);
     }
 }
@@ -462,6 +507,11 @@ function hideAppropriationContextMenu(event) {
 
     function closeAllDropdowns() {
         document.querySelectorAll(".dropdown-menu").forEach(menu => menu.classList.add("hidden"));
+        // Remove highlight when closing dropdowns
+        if (window.currentContextMenuRow) {
+            window.currentContextMenuRow.classList.remove('context-menu-active');
+            window.currentContextMenuRow = null;
+        }
     }
 
     // Close dropdown if click happens outside
@@ -486,6 +536,16 @@ function hideAppropriationContextMenu(event) {
 
         .page-transition {
             animation: pageSlideUp 0.4s ease-in-out;
+        }
+
+        /* Row highlight when context menu is open */
+        table tbody tr.context-menu-active {
+            background-color: rgba(59, 130, 246, 0.15);
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .dark table tbody tr.context-menu-active {
+            background-color: rgba(59, 130, 246, 0.25);
         }
     </style>
     </div>

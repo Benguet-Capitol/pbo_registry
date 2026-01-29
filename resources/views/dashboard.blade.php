@@ -760,12 +760,12 @@
                                     </button>
 
                                     <!-- Dropdown Menu -->
-                                    <div class="absolute top-full left-0 mt-1 w-48 z-50 hidden dropdown-menu bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-md origin-top-right">
-                                        <a href="{{ route('dashboard.accounts', $class->id) }}" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 group">
-                                            <i class="fas fa-stream mr-2"></i> Accounts
+                                    <div class="absolute top-full left-0 mt-1 w-48 z-50 hidden dropdown-menu bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl origin-top-right">
+                                        <a href="{{ route('dashboard.accounts', $class->id) }}" class="flex items-center px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150 group">
+                                            <i class="fas fa-stream mr-2 text-blue-600 dark:text-blue-400"></i> Accounts
                                         </a>
-                                        <a href="#" onclick="openObligationsModalFromDropdown(event, {{ $class->id }})" class="flex items-center px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600 rounded-b-lg cursor-pointer">
-                                            <i class="fas fa-list-check mr-2"></i> Obligations
+                                        <a href="#" onclick="openObligationsModalFromDropdown(event, {{ $class->id }})" class="flex items-center px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-b-lg transition-colors duration-150 cursor-pointer">
+                                            <i class="fas fa-list-check mr-2 text-blue-600 dark:text-blue-400"></i> Obligations
                                         </a>
                                         <!--
                                         <a href="#" class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
@@ -895,17 +895,17 @@
     </div>
 
     <!-- Right-Click Context Menu -->
-    <div id="contextMenu" class="hidden fixed bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[9999] text-xs">
-        <a href="#" id="contextAccounts" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-t-lg">
-            <i class="fas fa-stream mr-2"></i> Accounts
+    <div id="contextMenu" class="hidden fixed bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl z-[9999] text-xs">
+        <a href="#" id="contextAccounts" class="flex items-center px-4 py-2 text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150 cursor-pointer">
+            <i class="fas fa-stream mr-2 text-blue-600 dark:text-blue-400"></i> Accounts
         </a>
         @role('Administrator|Developer|Obligation')
-        <a href="#" id="contextObligate" onclick="openCreateModalWithClass(event)" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer">
-            <i class="fas fa-plus-circle mr-2"></i> Obligate
+        <a href="#" id="contextObligate" onclick="openCreateModalWithClass(event)" class="flex items-center px-4 py-2 text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150 cursor-pointer">
+            <i class="fas fa-plus-circle mr-2 text-blue-600 dark:text-blue-400"></i> Obligate
         </a>
         @endrole
-        <a href="#" id="contextObligations" onclick="showObligationsModal(event)" class="flex items-center px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-b-lg cursor-pointer">
-            <i class="fas fa-list-check mr-2"></i> Obligations
+        <a href="#" id="contextObligations" onclick="showObligationsModal(event)" class="flex items-center px-4 py-2 text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-b-lg transition-colors duration-150 cursor-pointer">
+            <i class="fas fa-list-check mr-2 text-blue-600 dark:text-blue-400"></i> Obligations
         </a>
     </div>
 
@@ -962,39 +962,39 @@
     <!-- Context Menu for Obligation Rows in Dashboard Modal -->
     @role('Administrator|Developer|Obligation')
     <div id="dashboardObligationContextMenu" 
-        class="absolute hidden w-48 bg-white border border-gray-300 rounded-lg shadow-lg dark:bg-gray-700 dark:border-gray-600"
+        class="absolute hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl"
         style="display: none; z-index: 10001; position: fixed;">
         <button id="contextObligationDetails"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-eye mr-2"></i>View Details
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150">
+            <i class="fas fa-eye mr-2 text-blue-600 dark:text-blue-400"></i>View Details
         </button>
         @can('edit obligations')
         <button id="contextObligationEdit"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-edit mr-2"></i>Edit Obligation
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-edit mr-2 text-blue-600 dark:text-blue-400"></i>Edit Obligation
         </button>
         @endcan
         @can('view obligation adjustments')
         <button id="contextObligationAdjustment"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-file-edit mr-2"></i>Add Adjustment
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-file-edit mr-2 text-blue-600 dark:text-blue-400"></i>Add Adjustment
         </button>
         @endcan
         @can('view purchase orders')
         <button id="contextObligationPO"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-file-invoice mr-2"></i>Add Purchase Order
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-file-invoice mr-2 text-blue-600 dark:text-blue-400"></i>Add Purchase Order
         </button>
         @endcan
         @can('cancel obligations')
         <button id="contextObligationCancellation"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-window-close mr-2"></i>Cancellation
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-window-close mr-2 text-blue-600 dark:text-blue-400"></i>Cancellation
         </button>
         @endcan
         <button id="contextObligationHistory"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-history mr-2"></i>Status/History
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-b-lg transition-colors duration-150">
+            <i class="fas fa-history mr-2 text-blue-600 dark:text-blue-400"></i>Status/History
         </button>
     </div>
     @endrole
@@ -1067,6 +1067,16 @@
 
     .highlight-column {
         animation: columnHighlight 1.5s ease-out forwards;
+    }
+
+    /* Row highlight when context menu is open */
+    #dashboardTable tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.15);
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .dark #dashboardTable tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.25);
     }
     </style>
 
@@ -1286,6 +1296,15 @@
                         window.currentClassId = classId;
                         window.currentYear = year;
                         
+                        // Remove highlight from previously selected row
+                        document.querySelectorAll('#dashboardTable tbody tr.context-menu-active').forEach(r => {
+                            r.classList.remove('context-menu-active');
+                        });
+                        
+                        // Highlight the current row
+                        row.classList.add('context-menu-active');
+                        window.currentContextMenuRow = row;
+                        
                         // Position the context menu
                         contextMenu.style.left = event.clientX + 'px';
                         contextMenu.style.top = event.clientY + 'px';
@@ -1301,6 +1320,11 @@
                     const contextMenu = document.getElementById('contextMenu');
                     if (!event.target.closest('#contextMenu')) {
                         contextMenu.classList.add('hidden');
+                        // Remove highlight when menu is closed
+                        if (window.currentContextMenuRow) {
+                            window.currentContextMenuRow.classList.remove('context-menu-active');
+                            window.currentContextMenuRow = null;
+                        }
                     }
                 });
 

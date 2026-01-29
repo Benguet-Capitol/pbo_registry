@@ -144,18 +144,18 @@
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
-            <table id="purchaseOrdersTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
+            <table id="purchaseOrdersTable" class="text-center font-semibold w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
                         @php
                             $columns = [
-                                'po_date' => 'PO Date',
                                 'office_class' => 'Office & Class',
                                 'obr_no' => 'OBR No.',
                                 'program' => 'Program',
                                 'account_code' => 'Account Code',
                                 'description' => 'Description',
                                 'po_number' => 'PO Number',
+                                'po_date' => 'PO Date',
                                 'pr_no' => 'PR Number',
                                 'supplier' => 'Supplier',
                                 'delivery_period' => 'Delivery Period',
@@ -193,7 +193,6 @@
                             data-po-id="{{ $purchaseOrder->id }}"
                             data-po-number="{{ $purchaseOrder->po_number }}"
                             data-obligation-id="{{ $purchaseOrder->obligation_id }}">
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_date ?? '-' }}</td>
                             <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
@@ -222,6 +221,7 @@
                                 {{ $description }}
                             </td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_number }}</td>
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_date ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->pr_no ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
@@ -280,13 +280,13 @@
     <!-- Include Modal Files -->
     <div id="createDisbursementModalContainer"></div>
     <div id="purchaseOrderContextMenu" 
-        class="absolute hidden w-44 bg-white border border-gray-300 rounded-lg shadow-lg z-50 dark:bg-gray-700 dark:border-gray-600"
+        class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
         @role('Developer|Administrator|Obligation')
         @can('edit purchase orders')
         <button id="contextEditPO"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-edit mr-2"></i>Edit
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 transition-colors duration-150">
+            <i class="fas fa-edit mr-2 text-blue-600"></i>Edit
         </button>
         @endcan
         @endrole
@@ -294,8 +294,8 @@
         @role('Developer|Administrator|Disbursement')
         @can('create disbursement')
         <button id="contextAddDisbursement"
-                class="w-full text-left block px-4 py-2 text-xs text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600">
-            <i class="fas fa-file-medical-alt mr-2"></i>Add Disbursement
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
+            <i class="fas fa-file-medical-alt mr-2 text-blue-600"></i>Add Disbursement
         </button>
         @endcan
         @endrole
@@ -363,23 +363,61 @@
         window.showPurchaseOrderContextMenu = function(event, row) {
             event.preventDefault();
             event.stopPropagation();
+            
+            // Remove highlight from previously selected row
+            document.querySelectorAll('table tbody tr.context-menu-active').forEach(r => {
+                r.classList.remove('context-menu-active');
+            });
+            
+            // Highlight the current row
+            row.classList.add('context-menu-active');
+            window.currentContextMenuRow = row;
 
             if (!poMenu) return;
 
-            // Get the table container
-            const container = row.closest('.overflow-x-auto') || document.body;
-            if (!container) return;
-
             // Get element positions
-            const rowRect = row.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
+            const menuHeight = 150; // Approximate menu height
+            const viewportHeight = window.innerHeight;
+            const mouseY = event.clientY;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-            // Calculate position
-            const top = rowRect.top + rowRect.height + 5;
-            const left = containerRect.left + container.scrollLeft + 10;
+            // Determine if menu should appear above or below the cursor
+            let top, verticalAlignment;
+            const spaceBelow = viewportHeight - mouseY;
+            const spaceAbove = mouseY;
+
+            if (spaceBelow > menuHeight + 20) {
+                // Show below cursor, tight to cursor position
+                top = mouseY + scrollTop;
+                verticalAlignment = 'below';
+            } else if (spaceAbove > menuHeight + 20) {
+                // Show above cursor, positioned lower so it's beside cursor
+                top = mouseY + scrollTop - menuHeight + 40;
+                verticalAlignment = 'above';
+            } else {
+                // Default to below
+                top = mouseY + scrollTop;
+                verticalAlignment = 'below';
+            }
+
+            // Calculate left position (tight to cursor, with right edge collision detection)
+            let left = event.clientX + scrollLeft + 2;
+            const menuWidth = 192; // w-48 = 12rem = 192px
+            const viewportWidth = window.innerWidth;
+            
+            // Check if menu goes off screen to the right
+            if (left + menuWidth > viewportWidth + scrollLeft) {
+                left = event.clientX + scrollLeft - menuWidth - 2;
+            }
+            
+            // Ensure menu doesn't go off screen to the left
+            if (left < scrollLeft) {
+                left = scrollLeft + 2;
+            }
 
             // Position menu
-            poMenu.style.position = 'absolute';
+            poMenu.style.position = 'fixed';
             poMenu.style.top = `${top}px`;
             poMenu.style.left = `${left}px`;
             poMenu.style.display = 'block';
@@ -422,6 +460,12 @@
             if (!poMenu) return;
             poMenu.classList.add('hidden');
             poMenu.style.display = 'none';
+            
+            // Remove highlight when menu is closed
+            if (window.currentContextMenuRow) {
+                window.currentContextMenuRow.classList.remove('context-menu-active');
+                window.currentContextMenuRow = null;
+            }
             
             // Clean up event listeners
             document.removeEventListener('click', hidePurchaseOrderContextMenu);
@@ -821,6 +865,16 @@
 
     .page-transition {
         animation: pageSlideUp 0.4s ease-in-out;
+    }
+
+    /* Row highlight when context menu is open */
+    table tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.15);
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .dark table tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.25);
     }
 </style>
     </div>

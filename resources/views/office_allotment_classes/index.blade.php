@@ -340,20 +340,20 @@
             </div>
 
             <!-- Single Context Menu (outside tbody) -->
-            <div id="contextMenu" class="hidden absolute w-52 rounded-lg border shadow-lg z-50 bg-white dark:bg-gray-700 dark:border-gray-600 animate-scaleIn transition-all duration-200 ease-out origin-top-left">
-                <a id="contextAccounts" href="#" class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors duration-150 first:rounded-t-md">
-                    <i class="fas fa-stream mr-2"></i> Accounts
+            <div id="contextMenu" class="hidden fixed w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600">
+                <a id="contextAccounts" href="#" class="block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 transition-colors duration-150 first:rounded-t-md">
+                    <i class="fas fa-stream mr-2 text-blue-600"></i> Accounts
                 </a>
 
                 @can('edit office allotment classes')
-                <button id="contextEdit" type="button" class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors duration-150">
-                    <i class="fas fa-edit mr-2"></i> Edit
+                <button id="contextEdit" type="button" class="w-full text-left px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
+                    <i class="fas fa-edit mr-2 text-blue-600"></i> Edit
                 </button>
                 @endcan
 
                 @can('delete office allotment classes')
-                <button id="contextDelete" type="button" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600 transition-colors duration-150 last:rounded-b-md">
-                    <i class="fas fa-trash mr-2"></i> Delete
+                <button id="contextDelete" type="button" class="w-full text-left px-4 py-2 text-xs text-red-700 hover:bg-red-200 dark:text-red-300 dark:hover:bg-red-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150 last:rounded-b-md">
+                    <i class="fas fa-trash mr-2 text-red-600"></i> Delete
                 </button>
                 @endcan
             </div>
@@ -378,6 +378,56 @@
         event.preventDefault();
         event.stopPropagation();
 
+        // Remove highlight from previously selected row
+        document.querySelectorAll('table tbody tr.context-menu-active').forEach(r => {
+            r.classList.remove('context-menu-active');
+        });
+        
+        // Highlight the current row
+        row.classList.add('context-menu-active');
+        window.currentContextMenuRow = row;
+
+        // Get element positions
+        const menuHeight = 200; // Approximate menu height
+        const viewportHeight = window.innerHeight;
+        const mouseY = event.clientY;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        // Determine if menu should appear above or below the cursor
+        let top, verticalAlignment;
+        const spaceBelow = viewportHeight - mouseY;
+        const spaceAbove = mouseY;
+
+        if (spaceBelow > menuHeight + 20) {
+            // Show below cursor, tight to cursor position
+            top = mouseY + scrollTop;
+            verticalAlignment = 'below';
+        } else if (spaceAbove > menuHeight + 20) {
+            // Show above cursor, positioned lower so it's beside cursor
+            top = mouseY + scrollTop - menuHeight + 40;
+            verticalAlignment = 'above';
+        } else {
+            // Default to below
+            top = mouseY + scrollTop;
+            verticalAlignment = 'below';
+        }
+
+        // Calculate left position (tight to cursor, with right edge collision detection)
+        let left = event.clientX + scrollLeft + 2;
+        const menuWidth = 192; // w-48 = 12rem = 192px
+        const viewportWidth = window.innerWidth;
+        
+        // Check if menu goes off screen to the right
+        if (left + menuWidth > viewportWidth + scrollLeft) {
+            left = event.clientX + scrollLeft - menuWidth - 2;
+        }
+        
+        // Ensure menu doesn't go off screen to the left
+        if (left < scrollLeft) {
+            left = scrollLeft + 2;
+        }
+
         // read data attributes
         const id = row.dataset.id;
         const office = row.dataset.office || '';
@@ -386,6 +436,12 @@
 
         // build links / callbacks
         accountsLink.href = `{{ url('/appropriations') }}?office_allotment_class_id=${encodeURIComponent(id)}`;
+
+        // Position menu
+        menu.style.position = 'fixed';
+        menu.style.top = `${top}px`;
+        menu.style.left = `${left}px`;
+        menu.classList.remove('hidden');
 
         if (editBtn) {
             // pass the JSON if your modal expects the whole record, otherwise just id
@@ -410,49 +466,7 @@
             };
         }
 
-        // Find the nearest scrollable container (like overflow-x-auto)
-        const container = row.closest('.overflow-x-auto') || document.body;
-
-        // Get bounding rectangles
-        const rowRect = row.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-
-        // Calculate relative position inside container
-        const top = rowRect.top - containerRect.top + container.scrollTop + rowRect.height + 4;
-        const left = rowRect.left - containerRect.left + container.scrollLeft + 20;
-
-        // Measure menu dimensions
-        const menuRect = menu.getBoundingClientRect();
-        const menuH = menuRect.height || 150;
-        const menuW = menuRect.width || 200;
-
-        // Get container visible area
-        const containerVisibleHeight = container.clientHeight;
-        const containerVisibleWidth = container.clientWidth;
-
-        // Adjust if menu would overflow container bottom
-        let adjustedTop = top;
-        if (adjustedTop + menuH > container.scrollTop + containerVisibleHeight - 10) {
-            adjustedTop = top - rowRect.height - menuH - 8; // place above
-        }
-
-        // Adjust horizontally if needed
-        let adjustedLeft = left;
-        if (adjustedLeft + menuW > container.scrollLeft + containerVisibleWidth - 10) {
-            adjustedLeft = container.scrollLeft + containerVisibleWidth - menuW - 10;
-        }
-        if (adjustedLeft < 10) adjustedLeft = 10;
-
-        // Apply
-        menu.style.position = 'absolute';
-        menu.style.top = `${adjustedTop}px`;
-        menu.style.left = `${adjustedLeft}px`;
-        menu.classList.remove('hidden');
-
-        // show
-        menu.classList.remove('hidden');
-
-        // small delay to avoid immediate hide from the click that triggered contextmenu
+        // Add event listeners with delay to avoid immediate hide
         setTimeout(() => {
             document.addEventListener('click', hideContextMenu);
             window.addEventListener('resize', hideContextMenu);
@@ -466,9 +480,14 @@
         document.removeEventListener('click', hideContextMenu);
         window.removeEventListener('resize', hideContextMenu);
         window.removeEventListener('scroll', hideContextMenu);
+        // Remove highlight when menu is closed
+        if (window.currentContextMenuRow) {
+            window.currentContextMenuRow.classList.remove('context-menu-active');
+            window.currentContextMenuRow = null;
+        }
     }
 
-    // optional: hide when Esc is pressed
+    // Hide on Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') hideContextMenu();
     });
@@ -575,5 +594,15 @@
 
     .page-transition {
         animation: pageSlideUp 0.4s ease-in-out;
+    }
+
+    /* Row highlight when context menu is open */
+    table tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.15);
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .dark table tbody tr.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.25);
     }
 </style>

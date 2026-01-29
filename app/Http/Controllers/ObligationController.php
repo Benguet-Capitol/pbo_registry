@@ -1319,6 +1319,8 @@ class ObligationController extends Controller
 
         $savedDVs = 0;
         $accountCodes = [];
+        $totalDisbursementAmount = 0;
+        $dvNumbers = [];
 
         try {
             foreach ($validated['disbursement_amount'] as $obligationAmountId => $dvAmount) {
@@ -1337,11 +1339,25 @@ class ObligationController extends Controller
                     continue; // Skip zero or negative amounts
                 }
 
+                // Generate unique DV number for each account (transaction)
+                $baseDVNo = $validated['dv_no'];
+                $suffix = 1;
+                $uniqueDVNo = $baseDVNo;
+                
+                // Check if this DV number already exists for this obligation
+                while (Disbursement::where('obligation_id', $validated['obligation_id'])
+                    ->where('dv_no', $uniqueDVNo)
+                    ->where('obligation_amounts_id', $obligationAmountId)
+                    ->exists()) {
+                    $uniqueDVNo = $baseDVNo . '-' . $suffix;
+                    $suffix++;
+                }
+
                 Disbursement::create([
                     'obligation_id' => $validated['obligation_id'],
                     'obligation_amounts_id' => $obligationAmountId,
                     'purchase_order_id' => $validated['purchase_order_id'] ?? null,
-                    'dv_no' => $validated['dv_no'],
+                    'dv_no' => $uniqueDVNo,
                     'disbursement_date' => $validated['disbursement_date'],
                     'remarks' => $validated['remarks'],
                     'status' => $validated['status'],
@@ -1349,6 +1365,10 @@ class ObligationController extends Controller
                 ]);
 
                 $savedDVs++;
+                $totalDisbursementAmount += $dvAmount;
+                if (!in_array($uniqueDVNo, $dvNumbers)) {
+                    $dvNumbers[] = $uniqueDVNo;
+                }
 
                 $appropriation = $obligationAmount->appropriation;
                 if ($appropriation && !in_array($appropriation->account_code, $accountCodes)) {
@@ -1371,11 +1391,13 @@ class ObligationController extends Controller
         }
 
         $accountCodesMessage = count($accountCodes) > 1 ? implode(', ', $accountCodes) : ($accountCodes[0] ?? 'N/A');
+        $dvNumbersMessage = implode(', ', $dvNumbers);
+        $formattedAmount = number_format($totalDisbursementAmount, 2);
 
         return redirect()->to(url()->previous())
             ->with('status', [
                 'type' => 'default',
-                'message' => "DV / Check No: <strong>{$validated['dv_no']}</strong> with Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"
+                'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> with Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"
             ]);
         }
 
@@ -1679,6 +1701,24 @@ class ObligationController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch obligation amounts',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the year of the obligation's office allotment class
+     */
+    public function getObligationYear($obligationId)
+    {
+        try {
+            $obligation = Obligation::findOrFail($obligationId);
+            $year = $obligation->officeAllotmentClass->year;
+            
+            return response()->json(['year' => $year]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch obligation year',
                 'message' => $e->getMessage(),
             ], 500);
         }

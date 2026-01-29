@@ -222,7 +222,7 @@
             <!-- Modal footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
                 <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                <button type="button" onclick="validateFormCreateDisbursement()" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="if(!isSubmittingDisbursement) { validateFormCreateDisbursement(); return false; } return false;" id="submitDisbursementBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Save') }}
                 </button>
@@ -249,6 +249,9 @@
 </style>
 
 <script>
+    // Prevent multiple submissions
+    let isSubmittingDisbursement = false;
+
     function closeCreateDisbursementModal() {
         const modal = document.getElementById('createDisbursementModal');
         if (modal) {
@@ -256,3 +259,114 @@
             modal.setAttribute('aria-hidden', 'true');
         }
     }
+
+    // Real-time DV number validation
+    function validateDvNumberInput() {
+        const dvNoField = document.getElementById('dv_no');
+        const dvNoError = document.getElementById('dv_noError');
+        
+        if (!dvNoField || !dvNoError) return;
+        
+        const dvNo = dvNoField.value.trim();
+        
+        // Clear error if field is empty
+        if (dvNo === '') {
+            dvNoError.innerText = '';
+            dvNoField.classList.remove('border-red-500');
+            return;
+        }
+        
+        // Get the obligation year - search within the current form context
+        const form = document.getElementById('CreateDisbursementForm');
+        const obligationIdInput = form ? form.querySelector('input[name="obligation_id"]') : document.querySelector('input[name="obligation_id"]');
+        const obligationId = obligationIdInput?.value;
+        
+        if (!obligationId) {
+            dvNoError.innerText = 'Obligation ID not found';
+            dvNoError.classList.add('text-red-500');
+            console.warn('Obligation ID not found in form');
+            return;
+        }
+        
+        // Show validating state
+        dvNoField.classList.remove('border-red-500');
+        dvNoError.innerText = 'Validating...';
+        dvNoError.classList.add('text-gray-500');
+        dvNoError.classList.remove('text-red-500');
+        
+        // Fetch year and check DV uniqueness
+        fetch(`/api/obligations/${obligationId}/year`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(yearData => {
+                if (!yearData.year) {
+                    throw new Error('No year data returned');
+                }
+                return fetch('{{ route("disbursements.checkDvNumber") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        dv_no: dvNo,
+                        year: yearData.year
+                    })
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.exists) {
+                    dvNoError.innerHTML = data.message;
+                    dvNoError.classList.remove('text-gray-500');
+                    dvNoError.classList.add('text-red-500');
+                    dvNoField.classList.add('border-red-500');
+                    // Scroll error into view and focus on the field
+                    dvNoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    dvNoField.focus();
+                } else {
+                    dvNoError.innerText = '';
+                    dvNoError.classList.remove('text-gray-500');
+                    dvNoError.classList.remove('text-red-500');
+                    dvNoField.classList.remove('border-red-500');
+                }
+            })
+            .catch(error => {
+                console.error('Error validating DV number:', error);
+                dvNoError.innerText = 'Error validating DV number: ' + error.message;
+                dvNoError.classList.remove('text-gray-500');
+                dvNoError.classList.add('text-red-500');
+                // Scroll error into view and focus on the field
+                dvNoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                dvNoField.focus();
+            });
+    }
+
+    // Attach event listener when modal content is loaded
+    // Use a more robust method to attach listeners to dynamically loaded content
+    document.addEventListener('DOMContentLoaded', function() {
+        const dvNoField = document.getElementById('dv_no');
+        if (dvNoField && !dvNoField._validationListenerAttached) {
+            dvNoField.addEventListener('blur', validateDvNumberInput);
+            dvNoField.addEventListener('change', validateDvNumberInput);
+            dvNoField._validationListenerAttached = true;
+        }
+    });
+
+    // Also try to attach immediately in case DOM is already loaded
+    const dvNoField = document.getElementById('dv_no');
+    if (dvNoField && !dvNoField._validationListenerAttached) {
+        dvNoField.addEventListener('blur', validateDvNumberInput);
+        dvNoField.addEventListener('change', validateDvNumberInput);
+        dvNoField._validationListenerAttached = true;
+    }
+</script>

@@ -17,7 +17,7 @@
                     </button>
                 </div>
                 <!-- Modal body -->
-                <div class="overflow-y-auto flex-1 px-7 py-3">
+                <div class="overflow-y-auto flex-1 px-7 py-3" style="max-height: calc(90vh - 280px);">
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">

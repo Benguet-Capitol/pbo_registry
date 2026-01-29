@@ -104,7 +104,7 @@
             </div>
             @can('import appropriations')
             <div class="flex flex-col justify-center items-center bg-white p-2 rounded-lg dark:bg-gray-800">
-                <form action="{{ route('appropriations.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col space-y-3">
+                <form id="importAppropriationsForm" action="{{ route('appropriations.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col space-y-3">
                     @csrf
                     <label for="file-upload" class="block text-xs dark:text-gray-200 font-semibold text-center">
                         {{ __('Import Accounts') }}
@@ -112,7 +112,7 @@
                     <div class="flex items-center space-x-2">
                         <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
                         <input type="file" name="file" id="file-upload" accept=".xlsx,.xls,.csv" required class="form-control border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
-                        <button type="submit" class="text-blue-600 inline-flex items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <button type="submit" onclick="if(!isSubmittingImportAppropriations) { isSubmittingImportAppropriations = true; } else { return false; }" class="text-blue-600 inline-flex items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                             {{ __('Import') }}
                         </button>
                     </div>
@@ -374,6 +374,8 @@
     @include('appropriations.modal.copy_last_year')
 
     <script>
+        let isSubmittingImportAppropriations = false;
+
         function filterTable() {
         // Declare variables
         var input, filter, table, tr, td, i, j, txtValue;

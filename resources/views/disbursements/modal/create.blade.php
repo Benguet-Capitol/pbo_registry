@@ -154,7 +154,7 @@
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateFormCreate()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingCreateDisbursement) validateFormCreate(); else return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
@@ -231,6 +231,9 @@
         updateDVAmountTotal();
     });
 
+    // Prevent multiple submissions
+    let isSubmittingCreateDisbursement = false;
+
     function updateDVAmountTotal() {
         const adjustedInputs = document.querySelectorAll("input[name^='disbursement_amount']");
         let total = 0;
@@ -253,6 +256,9 @@
     });
 
     function validateFormCreate() {
+        // Prevent multiple submissions
+        if (isSubmittingCreateDisbursement) return false;
+        
         let isValid = true;
 
         // Clear previous error messages
@@ -302,10 +308,63 @@
             isValid = false;
         }
 
-        // If all validations pass, submit the form
-        if (isValid) {
+        // If validations pass so far, check if DV number already exists
+        if (isValid && poNumber !== '') {
+            const dvNo = poNumber;
+            const obligationId = document.querySelector('input[name="obligation_id"]')?.value;
+            
+            // Set flag to prevent multiple submissions
+            isSubmittingCreateDisbursement = true;
+            
+            // Fetch the year from the obligation's office allotment class
+            fetch(`/api/obligations/${obligationId}/year`)
+                .then(response => response.json())
+                .then(yearData => {
+                    // Make AJAX call to check DV uniqueness
+                    return fetch('{{ route("disbursements.checkDvNumber") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            dv_no: dvNo,
+                            year: yearData.year
+                        })
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        const errorElement = document.getElementById('dv_noError');
+                        errorElement.innerHTML = data.message;
+                        // Reset flag since we're not submitting
+                        isSubmittingCreateDisbursement = false;
+                        // Scroll error into view and focus on the field
+                        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        document.getElementById('dv_no').focus();
+                        return;
+                    }
+
+                    // All validations passed, submit the form
+                    document.getElementById('CreateDisbursementForm').submit();
+                })
+                .catch(error => {
+                    console.error('Error checking DV number:', error);
+                    // Reset flag and show error
+                    isSubmittingCreateDisbursement = false;
+                    const errorElement = document.getElementById('dv_noError');
+                    errorElement.innerText = 'Error validating DV number. Please try again.';
+                    // Scroll error into view and focus on the field
+                    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('dv_no').focus();
+                });
+        } else if (isValid) {
+            // If all validations pass, submit the form
+            isSubmittingCreateDisbursement = true;
             document.getElementById('CreateDisbursementForm').submit();
         }
+        return false;
     }
 
 </script>

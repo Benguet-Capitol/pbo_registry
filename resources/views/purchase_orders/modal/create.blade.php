@@ -176,7 +176,7 @@
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateFormCreate()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingCreatePurchaseOrder) validateFormCreate(); else return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
@@ -227,6 +227,9 @@
         }
     }
 
+    // Prevent multiple submissions
+    let isSubmittingCreatePurchaseOrder = false;
+
     function updatePOAmountTotal() {
         const poInputs = document.querySelectorAll("input[name^='po_amount']");
         let total = 0;
@@ -246,6 +249,8 @@
     });
 
     function validateFormCreate() {
+        if (isSubmittingCreatePurchaseOrder) return false;
+        
         const po_remarks = document.getElementById('po_remarks');
         const po_number = document.getElementById('po_number');
         const pr_no = document.getElementById('pr_no');
@@ -258,7 +263,8 @@
         let isValid = true;
 
         // Validate PO Number
-        if (!po_number.value.trim()) {
+        const poNum = po_number.value.trim();
+        if (!poNum) {
             document.getElementById('po_numberError').innerText = 'PO Number is required.';
             isValid = false;
         } else {
@@ -303,7 +309,70 @@
             document.getElementById('tableMessage').innerText = '';
         }
 
-        if (isValid) {
+        // If validations pass so far, check if PO number already exists for this obligation
+        if (isValid && poNum !== '') {
+            const obligationId = document.querySelector('input[name="obligation_id"]')?.value;
+            
+            // Set flag to prevent multiple submissions
+            isSubmittingCreatePurchaseOrder = true;
+            
+            // Fetch the year from the obligation's office allotment class
+            fetch(`/api/obligations/${obligationId}/year`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Year fetch failed: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(yearData => {
+                    // Make AJAX call to check PO uniqueness
+                    return fetch('{{ route("purchase_orders.checkPoNumber") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            po_number: poNum,
+                            year: yearData.year
+                        })
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`PO check failed: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.exists) {
+                        const errorElement = document.getElementById('po_numberError');
+                        errorElement.innerHTML = data.message;
+                        // Reset flag since we're not submitting
+                        isSubmittingCreatePurchaseOrder = false;
+                        // Scroll error into view and focus on the field
+                        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        document.getElementById('po_number').focus();
+                        return;
+                    }
+
+                    // All validations passed, submit the form
+                    document.getElementById('CreatePurchaseOrderForm').submit();
+                })
+                .catch(error => {
+                    console.error('Error checking PO number:', error);
+                    console.error('Error details:', error.message);
+                    // Reset flag and show error
+                    isSubmittingCreatePurchaseOrder = false;
+                    const errorElement = document.getElementById('po_numberError');
+                    errorElement.innerText = 'Error validating PO number. Please try again.';
+                    // Scroll error into view and focus on the field
+                    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('po_number').focus();
+                });
+        } else if (isValid) {
+            // If all validations pass, submit the form
+            isSubmittingCreatePurchaseOrder = true;
             document.getElementById('CreatePurchaseOrderForm').submit();
         }
     }

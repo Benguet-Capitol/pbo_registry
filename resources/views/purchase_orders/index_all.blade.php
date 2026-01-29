@@ -303,6 +303,9 @@
     
 
     <script>
+        // Prevent multiple submissions
+        let isSubmittingDisbursement = false;
+
         function updatePurchaseOrdersFooterTotal() {
             let table = document.getElementById("purchaseOrdersTable");
             let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
@@ -659,6 +662,11 @@
         }
 
         function validateFormCreateDisbursement() {
+            // Prevent multiple submissions
+            if (isSubmittingDisbursement) {
+                return false;
+            }
+
             let isValid = true;
 
             // Clear previous error messages
@@ -725,13 +733,71 @@
                 isValid = false;
             }
 
-            // If all validations pass, submit the form
-            if (isValid) {
+            // If validations pass so far, check if DV number already exists
+            if (isValid && poNumber && poNumber.value.trim() !== '') {
+                const dvNo = poNumber.value.trim();
+                const obligationId = document.querySelector('input[name="obligation_id"]')?.value;
+                
+                // Set flag to prevent multiple submissions
+                isSubmittingDisbursement = true;
+                
+                // Fetch the year from the obligation's office allotment class
+                fetch(`/api/obligations/${obligationId}/year`)
+                    .then(response => response.json())
+                    .then(yearData => {
+                        // Make AJAX call to check DV uniqueness
+                        return fetch('{{ route("disbursements.checkDvNumber") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                dv_no: dvNo,
+                                year: yearData.year
+                            })
+                        });
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            if (dvNoError) {
+                                dvNoError.innerHTML = data.message;
+                                // Scroll error into view and focus on the field
+                                dvNoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                poNumber.focus();
+                            }
+                            // Reset flag since we're not submitting
+                            isSubmittingDisbursement = false;
+                            return;
+                        }
+
+                        // All validations passed, submit the form
+                        const form = document.getElementById('CreateDisbursementForm');
+                        if (form) {
+                            form.submit();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking DV number:', error);
+                        // Reset flag and show error
+                        isSubmittingDisbursement = false;
+                        if (dvNoError) {
+                            dvNoError.innerText = 'Error validating DV number. Please try again.';
+                            // Scroll error into view and focus on the field
+                            dvNoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            poNumber.focus();
+                        }
+                    });
+            } else if (isValid) {
+                // If all validations pass, submit the form
+                isSubmittingDisbursement = true;
                 const form = document.getElementById('CreateDisbursementForm');
                 if (form) {
                     form.submit();
                 }
             }
+            return false;
         }
 
         document.addEventListener('input', function(event) {

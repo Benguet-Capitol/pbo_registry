@@ -69,6 +69,8 @@
             <button 
                 type="submit" 
                 form="paymentRemarksForm"
+                onclick="if(isSubmittingPaymentRemarks) return false; isSubmittingPaymentRemarks = true;" 
+                id="submitPaymentRemarksBtn"
                 class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-save mr-2"></i>
                 Save
@@ -90,6 +92,9 @@
         if (typeof closeAllDropdowns === 'function') {
             closeAllDropdowns();
         }
+        
+        // Reset the submission flag
+        isSubmittingPaymentRemarks = false;
         
         const modal = document.getElementById('paymentRemarksModal');
         const form = document.getElementById('paymentRemarksForm');

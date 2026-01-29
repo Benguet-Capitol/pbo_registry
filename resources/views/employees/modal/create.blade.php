@@ -116,7 +116,7 @@
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateCreateEmployeeForm()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingEmployee) validateCreateEmployeeForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
@@ -132,8 +132,11 @@
 </form>
 
 <script>
+    let isSubmittingEmployee = false;
+
     function openCreateEmployeeModal() {
         closeAllDropdowns();
+        isSubmittingEmployee = false;
         const modal = document.getElementById('createEmployeeModal');
         modal.style.display = 'flex';
         setTimeout(() => {
@@ -143,6 +146,7 @@
     }
 
     function closeCreateEmployeeModal() {
+        isSubmittingEmployee = false;
         const modal = document.getElementById('createEmployeeModal');
         const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div');
         if (box) {
@@ -156,6 +160,8 @@
     }
 
     function validateCreateEmployeeForm() {
+        if (isSubmittingEmployee) return false;
+        
         let isValid = true;
 
         const employeeId = document.getElementById('employee_id').value;
@@ -192,8 +198,10 @@
         }
 
         if (isValid) {
+            isSubmittingEmployee = true;
             document.getElementById('createEmployeeForm').submit();
         }
+        return false;
     }
 </script>
 

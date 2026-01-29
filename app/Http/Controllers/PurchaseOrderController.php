@@ -406,4 +406,26 @@ class PurchaseOrderController extends Controller
         $purchaseOrders = PurchaseOrder::where('po_number', $poNumber)->get();
         return response()->json($purchaseOrders);
     }
+
+    /**
+     * Check if PO number is unique per year of officeAllotmentClass
+     */
+    public function checkPoNumber(Request $request)
+    {
+        $validated = $request->validate([
+            'po_number' => 'required|string|max:255',
+            'year' => 'required|integer|min:2000|max:2999',
+        ]);
+
+        $exists = PurchaseOrder::whereHas('obligation.officeAllotmentClass', function ($query) use ($validated) {
+            $query->where('year', $validated['year']);
+        })
+        ->where('po_number', $validated['po_number'])
+        ->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? "PO Number '<strong>{$validated['po_number']}</strong>' is already used in the year <strong>{$validated['year']}</strong>." : ''
+        ]);
+    }
 }

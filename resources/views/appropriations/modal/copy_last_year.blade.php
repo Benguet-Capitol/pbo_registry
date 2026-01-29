@@ -105,7 +105,7 @@
                 <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>Add Row
             </button>
             <div class="flex gap-3">
-                <button type="button" onclick="submitCopyLastYearForm()" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="if(!isSubmittingCopyLastYear) submitCopyLastYearForm(); else return false;" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>Save All
                 </button>
                 <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
@@ -121,6 +121,7 @@ let lastYearAppropriatationsData = [];
 let rowCounter = 0;
 let allocationClassType = null;
 let autocompleteTimeout = null;
+let isSubmittingCopyLastYear = false;
 
 function openCopyLastYearModal() {
     const officeAllotmentClassId = document.querySelector('[name="office_allotment_class_id"]')?.value || new URLSearchParams(window.location.search).get('office_allotment_class_id');
@@ -178,6 +179,7 @@ function openCopyLastYearModal() {
 }
 
 function closeCopyLastYearModal() {
+    isSubmittingCopyLastYear = false;
     const modal = document.getElementById('copyLastYearModal');
     const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div');
     if (box) {
@@ -653,6 +655,8 @@ function insertRowAfter(rowId) {
 }
 
 function submitCopyLastYearForm() {
+    if (isSubmittingCopyLastYear) return false;
+    
     // Clear previous errors from all rows
     document.querySelectorAll('[data-error-row="true"]').forEach(row => row.remove());
     
@@ -773,6 +777,8 @@ function submitCopyLastYearForm() {
         }
         return;
     }
+
+    isSubmittingCopyLastYear = true;
 
     const form = document.createElement('form');
     form.method = 'POST';

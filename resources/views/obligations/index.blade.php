@@ -1157,6 +1157,13 @@
 
     /* Modal Create ObligationAdjustment - FIXED VERSION */
 let isSubmittingObligationAdjustment = false;
+let isSubmittingDisbursement = false;
+let isSubmittingPurchaseOrder = false;
+let isSubmittingPaymentRemarks = false;
+let isSubmittingCancellation = false;
+let isSubmittingCreateObligationAdjustment = false;
+let isSubmittingCreatePurchaseOrder = false;
+let isSubmittingCreateDisbursement = false;
 
 function openCreateObligationAdjustmentModal(obligationId) {
     closeAllDropdowns();
@@ -1202,6 +1209,11 @@ function closeCreateObligationAdjustmentModal() {
 }
 
 function validateCreateObligationAdjustmentForm() {
+    // Prevent multiple submissions
+    if (isSubmittingObligationAdjustment) {
+        return false;
+    }
+
     const modal = document.getElementById('createObligationAdjustmentModal');
     
     if (!modal) {
@@ -1420,6 +1432,7 @@ function updateAdjustedAmountTotal() {
     /* Modal Create PurchaseOrder */
     function openCreatePOModal(obligationId) {
         closeAllDropdowns();
+        isSubmittingPurchaseOrder = false;
 
         fetch(`/obligations/${obligationId}/purchase-order-modal`)
             .then(response => response.text())
@@ -1470,6 +1483,11 @@ function updateAdjustedAmountTotal() {
     }
 
     function validateFormCreatePO() {
+        // Prevent multiple submissions
+        if (isSubmittingPurchaseOrder) {
+            return false;
+        }
+
         const po_remarks = document.getElementById('po_remarks');
         const po_number = document.getElementById('po_number');
         const pr_no = document.getElementById('pr_no');
@@ -1482,7 +1500,8 @@ function updateAdjustedAmountTotal() {
         let isValid = true;
 
         // Validate PO Number
-        if (!po_number.value.trim()) {
+        const poNum = po_number.value.trim();
+        if (!poNum) {
             document.getElementById('po_numberError').innerText = 'PO Number is required.';
             isValid = false;
         } else {
@@ -1528,7 +1547,80 @@ function updateAdjustedAmountTotal() {
             document.getElementById('tableMessagePO').innerText = '';
         }
 
-        if (isValid) {
+        // If validations pass so far, check if PO number already exists for this obligation
+        if (isValid && poNum !== '') {
+            // Get obligationId from the form's hidden input
+            const obligationId = document.getElementById('CreatePurchaseOrderForm')?.querySelector('input[name="obligation_id"]')?.value;
+            
+            if (!obligationId) {
+                console.error('Obligation ID not found');
+                isSubmittingPurchaseOrder = false;
+                const errorElement = document.getElementById('po_numberError');
+                errorElement.innerText = 'Error: Obligation not found.';
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            
+            // Set flag to prevent multiple submissions
+            isSubmittingPurchaseOrder = true;
+            
+            // Fetch the year from the obligation's office allotment class
+            fetch(`/api/obligations/${obligationId}/year`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Year fetch failed: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(yearData => {
+                    // Make AJAX call to check PO uniqueness
+                    return fetch('{{ route("purchase_orders.checkPoNumber") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            po_number: poNum,
+                            year: yearData.year
+                        })
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`PO check failed: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.exists) {
+                        const errorElement = document.getElementById('po_numberError');
+                        errorElement.innerHTML = data.message;
+                        // Reset flag since we're not submitting
+                        isSubmittingPurchaseOrder = false;
+                        // Scroll error into view and focus on the field
+                        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        document.getElementById('po_number').focus();
+                        return;
+                    }
+
+                    // All validations passed, submit the form
+                    document.getElementById('CreatePurchaseOrderForm').submit();
+                })
+                .catch(error => {
+                    console.error('Error checking PO number:', error);
+                    console.error('Error details:', error.message);
+                    // Reset flag and show error
+                    isSubmittingPurchaseOrder = false;
+                    const errorElement = document.getElementById('po_numberError');
+                    errorElement.innerText = 'Error validating PO number. Please try again.';
+                    // Scroll error into view and focus on the field
+                    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('po_number').focus();
+                });
+        } else if (isValid) {
+            // If all validations pass, submit the form
+            isSubmittingPurchaseOrder = true;
             document.getElementById('CreatePurchaseOrderForm').submit();
         }
     }
@@ -1537,6 +1629,7 @@ function updateAdjustedAmountTotal() {
     /* Modal Create Disbursement */
     function openCreateDisbursementModal(obligationId) {
         closeAllDropdowns();
+        isSubmittingDisbursement = false;
         fetch(`/obligations/${obligationId}/disbursement-modal?from=obligation`)
             .then(response => response.text())
             .then(html => {
@@ -1573,6 +1666,13 @@ function updateAdjustedAmountTotal() {
 
                 // Run initial calculation inside modal
                 updateDVAmountTotal();
+
+                // Attach DV number validation listener if function exists
+                const dvNoField = modal.querySelector('#dv_no');
+                if (dvNoField && typeof validateDvNumberInput !== 'undefined') {
+                    dvNoField.addEventListener('blur', validateDvNumberInput);
+                    dvNoField.addEventListener('change', validateDvNumberInput);
+                }
             });
     }
 
@@ -1619,6 +1719,11 @@ function updateAdjustedAmountTotal() {
     });
 
     function validateFormCreateDisbursement() {
+        // Prevent multiple submissions
+        if (isSubmittingDisbursement) {
+            return false;
+        }
+
         let isValid = true;
 
         // Clear previous error messages
@@ -1685,13 +1790,96 @@ function updateAdjustedAmountTotal() {
             isValid = false;
         }
 
-        // If all validations pass, submit the form
-        if (isValid) {
+        // If validations pass so far, check if DV number already exists
+        if (isValid && poNumber && poNumber.value.trim() !== '') {
+            const dvNo = poNumber.value.trim();
+            
+            // Look for the obligation_id in the modal's form context
+            const modal = document.getElementById('createDisbursementModal');
+            const obligationIdInput = modal ? modal.querySelector('input[name="obligation_id"]') : document.querySelector('input[name="obligation_id"]');
+            const obligationId = obligationIdInput?.value;
+            
+            // Set flag to prevent multiple submissions
+            isSubmittingDisbursement = true;
+            
+            // Check if obligationId is available
+            if (!obligationId) {
+                isSubmittingDisbursement = false;
+                if (dvNoError) dvNoError.innerText = 'Error: Obligation ID not found. Please close and reopen the modal.';
+                console.warn('Obligation ID input not found. Modal HTML:', modal?.innerHTML);
+                return false;
+            }
+            
+            // Fetch the year from the obligation's office allotment class
+            fetch(`/api/obligations/${obligationId}/year`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(yearData => {
+                    if (!yearData.year) {
+                        throw new Error('No year data returned from server');
+                    }
+                    // Make AJAX call to check DV uniqueness
+                    return fetch('{{ route("disbursements.checkDvNumber") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            dv_no: dvNo,
+                            year: yearData.year
+                        })
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.exists) {
+                        if (dvNoError) {
+                            dvNoError.innerHTML = data.message;
+                            // Scroll error into view and focus on the DV field
+                            dvNoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            poNumber.focus();
+                        }
+                        // Reset flag since we're not submitting
+                        isSubmittingDisbursement = false;
+                        return;
+                    }
+
+                    // All validations passed, submit the form
+                    const form = document.getElementById('CreateDisbursementForm');
+                    if (form) {
+                        form.submit();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking DV number:', error);
+                    // Reset flag and show error with more details
+                    isSubmittingDisbursement = false;
+                    if (dvNoError) {
+                        dvNoError.innerText = 'Error validating DV number: ' + error.message;
+                        // Scroll error into view and focus on the DV field
+                        dvNoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        poNumber.focus();
+                    }
+                });
+        } else if (isValid) {
+            // If all validations pass, submit the form
+            isSubmittingDisbursement = true;
             const form = document.getElementById('CreateDisbursementForm');
             if (form) {
                 form.submit();
             }
         }
+        return false;
     }
 
     // Display Obligation Details Panel

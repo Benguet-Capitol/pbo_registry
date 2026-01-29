@@ -195,6 +195,8 @@ class DisbursementController extends Controller
 
         $savedDVs = 0;
         $accountCodes = [];
+        $totalDisbursementAmount = 0;
+        $dvNumbers = [];
 
         try {
             foreach ($validated['disbursement_amount'] as $obligationAmountId => $dvAmount) {
@@ -213,10 +215,24 @@ class DisbursementController extends Controller
                     continue; // Skip zero or negative amounts
                 }
 
+                // Generate unique DV number for each account (transaction)
+                $baseDVNo = $validated['dv_no'];
+                $suffix = 1;
+                $uniqueDVNo = $baseDVNo;
+                
+                // Check if this DV number already exists for this obligation
+                while (Disbursement::where('obligation_id', $validated['obligation_id'])
+                    ->where('dv_no', $uniqueDVNo)
+                    ->where('obligation_amounts_id', $obligationAmountId)
+                    ->exists()) {
+                    $uniqueDVNo = $baseDVNo . '-' . $suffix;
+                    $suffix++;
+                }
+
                 Disbursement::create([
                     'obligation_id' => $validated['obligation_id'],
                     'obligation_amounts_id' => $obligationAmountId,
-                    'dv_no' => $validated['dv_no'],
+                    'dv_no' => $uniqueDVNo,
                     'disbursement_date' => $validated['disbursement_date'],
                     'remarks' => $validated['remarks'],
                     'status' => $validated['status'],
@@ -224,6 +240,10 @@ class DisbursementController extends Controller
                 ]);
 
                 $savedDVs++;
+                $totalDisbursementAmount += $dvAmount;
+                if (!in_array($uniqueDVNo, $dvNumbers)) {
+                    $dvNumbers[] = $uniqueDVNo;
+                }
 
                 $appropriation = $obligationAmount->appropriation;
                 if ($appropriation && !in_array($appropriation->account_code, $accountCodes)) {
@@ -246,11 +266,13 @@ class DisbursementController extends Controller
         }
 
         $accountCodesMessage = count($accountCodes) > 1 ? implode(', ', $accountCodes) : ($accountCodes[0] ?? 'N/A');
+        $dvNumbersMessage = implode(', ', $dvNumbers);
+        $formattedAmount = number_format($totalDisbursementAmount, 2);
 
         return redirect()->route('disbursements.index', ['obligation_id' => $validated['obligation_id']])
             ->with('status', [
                 'type' => 'default',
-                'message' => "DV / Check No: <strong>{$validated['dv_no']}</strong> with Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"
+                'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> with Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"
             ]);
         }
 
@@ -333,6 +355,28 @@ class DisbursementController extends Controller
         ])->with('status', [
             'type' => 'delete',
             'message' => "DV / Check No: <strong>{$disbursement->dv_no}</strong> dated <strong>{$disbursement->disbursement_date}</strong> under Account Code: <strong>{$accountCode}</strong> has been <strong>deleted</strong>!"
+        ]);
+    }
+
+    /**
+     * Check if a DV number already exists for an obligation
+     */
+    public function checkDvNumber(Request $request)
+    {
+        $validated = $request->validate([
+            'dv_no' => 'required|string|max:255',
+            'year' => 'required|integer|min:2000|max:2999',
+        ]);
+
+        $exists = Disbursement::whereHas('obligation.officeAllotmentClass', function ($query) use ($validated) {
+            $query->where('year', $validated['year']);
+        })
+        ->where('dv_no', $validated['dv_no'])
+        ->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? "DV / Check Number '<strong>{$validated['dv_no']}</strong>' is already used in the year <strong>{$validated['year']}</strong>." : ''
         ]);
     }
 }

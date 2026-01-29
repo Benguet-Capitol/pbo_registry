@@ -86,7 +86,7 @@
             </div>
             <!-- Modal footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                <button type="button" onclick="proceedCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="if(isSubmittingCancellation) return false; proceedCancellation()" id="submitCancellationBtn" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-window-close mr-2"></i>
                     Proceed
                 </button>
@@ -102,6 +102,7 @@
 <script>
     function openCancellationModal(obligationId, obligationData) {
         closeAllDropdowns();
+        isSubmittingCancellation = false;
         const modal = document.getElementById('cancellationModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
@@ -158,6 +159,11 @@
     }
 
     function proceedCancellation() {
+        // Prevent multiple submissions
+        if (isSubmittingCancellation) {
+            return false;
+        }
+
         const modal = document.getElementById('cancellationModal');
         const obligationId = modal.dataset.obligationId;
         const remarks = document.getElementById('cancellationRemarks').value.trim();
@@ -173,6 +179,9 @@
             errorSpan.textContent = 'Remarks is required.';
             return;
         }
+
+        // Set flag before submission
+        isSubmittingCancellation = true;
 
         // Prepare the form
         const form = document.getElementById('cancelObligationForm');

@@ -371,7 +371,7 @@
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateCreateRealignmentForm()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingRealignment) validateCreateRealignmentForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
@@ -404,6 +404,8 @@
 </div>
 
 <script>
+    let isSubmittingRealignment = false;
+
     function attachTotalAmountListeners() {
         document.querySelectorAll('[name="source_amount[]"]').forEach(field => {
             field.removeEventListener('input', calculateTotalSourceAmount);
@@ -449,6 +451,7 @@
     //Open Create Modal
     function openCreateRealignmentModal() {
         closeAllDropdowns();
+        isSubmittingRealignment = false;
         const modal = document.getElementById('createRealignmentModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
@@ -1085,6 +1088,8 @@
     });
 
     function validateCreateRealignmentForm() {
+        if (isSubmittingRealignment) return false;
+        
         const form = document.getElementById('createRealignmentForm');
         let isValid = true;
 
@@ -1285,8 +1290,10 @@
 
         // If the form is valid, submit it
         if (isValid) {
+            isSubmittingRealignment = true;
             form.submit();
         }
+        return false;
     }
 
     function enforceAmountNotExceedBalance(amountField, balanceField) {

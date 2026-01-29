@@ -133,6 +133,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/obligations/by-appropriation/{appropriationId}', [ObligationController::class, 'getByAppropriation'])->name('obligations.api.byAppropriation');
     Route::get('/api/obligations/{obligationId}/details', [ObligationController::class, 'getObligationDetails'])->name('obligations.api.details');
     Route::get('/api/obligations/{obligationId}/amounts', [ObligationController::class, 'getObligationAmounts'])->name('obligations.api.amounts');
+    Route::get('/api/obligations/{obligationId}/year', [ObligationController::class, 'getObligationYear'])->name('obligations.api.year');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);
@@ -148,6 +149,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('disbursements', DisbursementController::class);
     // Unified Disbursement module view
     Route::get('disbursement/all', [DisbursementController::class, 'all'])->name('disbursements.all');
+    // Check DV number uniqueness
+    Route::post('/api/disbursements/check-dv-number', [DisbursementController::class, 'checkDvNumber'])->name('disbursements.checkDvNumber');
+    // Check PO number uniqueness
+    Route::post('/api/purchase-orders/check-po-number', [PurchaseOrderController::class, 'checkPoNumber'])->name('purchase_orders.checkPoNumber');
 
     // Realignments Routes
     Route::resource('realignments', RealignmentController::class);

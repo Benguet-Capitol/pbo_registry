@@ -122,7 +122,7 @@
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
-            <table id="disbursementsTable" class="text-center font-semibold w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
+            <table id="disbursementsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
                         @php
@@ -163,20 +163,20 @@
                 <tbody>
                     @forelse($disbursements as $disbursement)
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-600 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300">
                                 {{ optional($disbursement->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
                                 {{ optional($disbursement->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
                             </td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->dv_no }}</td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->disbursement_date ?? '-' }}</td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300 max-w-xs">
+                            <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
+                            <td class="px-2 py-3 font-bold text-left text-green-700 dark:text-green-300">{{ $disbursement->dv_no }}</td>
+                            <td class="px-2 py-3 font-bold text-left text-green-700 dark:text-green-300">{{ $disbursement->disbursement_date ?? '-' }}</td>
+                            <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300 max-w-xs">
                                 @php
                                     $programs = $disbursement->obligation->obligationAmounts->pluck('appropriation.programs')->unique()->filter()->implode(', ');
                                 @endphp
                                 {{ $programs ?: '-' }}
                             </td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 font-semibold text-left text-gray-700 dark:text-gray-300">
                                 @php
                                     $accountCodes = $disbursement->obligation->obligationAmounts->pluck('appropriation.account_code')->unique()->filter()->implode(', ');
                                 @endphp
@@ -201,7 +201,7 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ ucfirst($disbursement->status) }}</span>
                                 @endif
                             </td>
-                            <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">{{ number_format($disbursement->disbursement_amount, 2) }}</td>
+                            <td class="px-2 py-3 font-bold text-right text-green-600 dark:text-green-300">{{ number_format($disbursement->disbursement_amount, 2) }}</td>
                             <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->remarks ?? '-' }}</td>
                             <!-- <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
                             </td> -->

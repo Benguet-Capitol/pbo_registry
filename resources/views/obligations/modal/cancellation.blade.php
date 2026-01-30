@@ -86,11 +86,11 @@
             </div>
             <!-- Modal footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                <button type="button" onclick="if(isSubmittingCancellation) return false; proceedCancellation()" id="submitCancellationBtn" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="try { if(!window.isSubmittingCancellation) window.proceedCancellation(); } catch(e) { console.error('Cancellation error:', e); }" id="submitCancellationBtn" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-window-close mr-2"></i>
                     Proceed
                 </button>
-                <button type="button" onclick="closeCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="try { window.closeCancellationModal(); } catch(e) { console.error('Cancel modal error:', e); }" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     Cancel
                 </button>
@@ -100,9 +100,14 @@
 </form>
 
 <script>
-    function openCancellationModal(obligationId, obligationData) {
+// Global flag to prevent double submission - ensure it's truly global
+if (typeof window.isSubmittingCancellation === 'undefined') {
+    window.isSubmittingCancellation = false;
+}
+
+function openCancellationModal(obligationId, obligationData) {
         closeAllDropdowns();
-        isSubmittingCancellation = false;
+        window.isSubmittingCancellation = false;
         const modal = document.getElementById('cancellationModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
@@ -152,15 +157,15 @@
         }
     }
 
-    function closeCancellationModal() {
+    window.closeCancellationModal = function() {
         const modal = document.getElementById('cancellationModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
-    }
+    };
 
-    function proceedCancellation() {
+    window.proceedCancellation = function() {
         // Prevent multiple submissions
-        if (isSubmittingCancellation) {
+        if (window.isSubmittingCancellation) {
             return false;
         }
 
@@ -181,7 +186,7 @@
         }
 
         // Set flag before submission
-        isSubmittingCancellation = true;
+        window.isSubmittingCancellation = true;
 
         // Prepare the form
         const form = document.getElementById('cancelObligationForm');
@@ -192,5 +197,5 @@
     `;
 
         form.submit(); // Submit the form (will follow Laravel's redirect)
-    }
+    };
 </script>

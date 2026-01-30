@@ -144,7 +144,7 @@
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
-            <table id="purchaseOrdersTable" class="text-center font-semibold w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
+            <table id="purchaseOrdersTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
                         @php
@@ -193,18 +193,18 @@
                             data-po-id="{{ $purchaseOrder->id }}"
                             data-po-number="{{ $purchaseOrder->po_number }}"
                             data-obligation-id="{{ $purchaseOrder->obligation_id }}">
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300">
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
                             </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
+                            <td class="px-2 py-3 font-bold text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
                                 @php
                                     $programs = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.programs')->unique()->filter()->implode(', ');
                                 @endphp
                                 {{ $programs ?: '-' }}
                             </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">
                                 @php
                                     $accountCode = $purchaseOrder->obligation->obligationAmounts
                                         ->where('id', $purchaseOrder->obligation_amounts_id)
@@ -220,12 +220,12 @@
                                 @endphp
                                 {{ $description }}
                             </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_number }}</td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $purchaseOrder->po_date ?? '-' }}</td>
+                            <td class="px-2 py-3 font-semibold text-blue-700 dark:text-blue-300">{{ $purchaseOrder->po_number }}</td>
+                            <td class="px-2 py-3 font-semibold text-left text-blue-700 dark:text-blue-300">{{ $purchaseOrder->po_date ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->pr_no ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
+                            <td class="px-2 py-3 font-semibold text-gray-700 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
-                            <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">{{ number_format($purchaseOrder->po_amount, 2) }}</td>
+                            <td class="px-2 py-3 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($purchaseOrder->po_amount, 2) }}</td>
                             @php
                                 // Get all obligation amounts related to purchase orders with the same po_number
                                 $relatedPoIds = \App\Models\PurchaseOrder::where('po_number', $purchaseOrder->po_number)
@@ -238,7 +238,7 @@
                             @endphp
                             <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">
                                 @if($disbursementAmount > 0)
-                                    <span class="font-semibold text-green-600 dark:text-green-400">{{ number_format($disbursementAmount, 2) }}</span>
+                                    <span class="font-semibold text-green-700 dark:text-green-300">{{ number_format($disbursementAmount, 2) }}</span>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif

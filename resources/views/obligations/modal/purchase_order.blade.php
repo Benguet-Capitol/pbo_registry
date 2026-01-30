@@ -59,6 +59,7 @@
                                         </x-slot>
                                         <x-form.input withicon type='date' name="po_date" autocomplete="off" id="po_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
+                                    <span class="poDateError text-red-500 text-xs hidden"></span>
                                 </div>
                             </div>
                             <!-- PO Number -->
@@ -230,8 +231,8 @@
                                                     <span class="adjustment-amount">{{ number_format($balance, 2) }}</span>
                                                 </td>
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
-                                                    <x-form.input type="number" name="po_amount[{{ $obligationAmount->id }}]" min="0" step="0.01" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" placeholder="" oninput="validateAmountPO(this)" data-balance="{{ $balance  }}" />
-                                                    <span class="text-red-500 text-xs"></span>
+                                                    <x-form.input type="number" name="po_amount[{{ $obligationAmount->id }}]" min="0" step="0.01" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" placeholder="" oninput="window.validatePOAmount(this)" data-balance="{{ $balance  }}" />
+                                                    <span class="poAmountError text-red-500 text-xs hidden"></span>
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -254,11 +255,11 @@
             <!-- Modal footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
                 <x-input-error :messages="$errors->get('message')" class="mr-auto" />
-                <button type="button" onclick="if(!isSubmittingPurchaseOrder) validateFormCreatePO(); else return false;" id="submitPOBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="try { if(!window.isSubmittingPurchaseOrder) window.validateFormCreatePO(); } catch(e) { console.error('PO validation error:', e); }" id="submitPOBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-save mr-2"></i>
                     {{ __('Save') }}
                 </button>
-                <button type="button" onclick="closeCreatePOModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="try { window.closeCreatePOModal(); } catch(e) { console.error('PO close error:', e); }" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     {{ __('Cancel') }}
                 </button>
@@ -266,3 +267,125 @@
         </div>
     </div>
 </form>
+
+<script>
+// Global flag to prevent double submission
+let isSubmittingPurchaseOrder = false;
+
+// Validate PO amount input
+window.validatePOAmount = function(inputElement) {
+    if (!inputElement) return false;
+    
+    const value = inputElement.value;
+    const errorElement = inputElement.parentElement?.querySelector('.poAmountError');
+    
+    // If error element doesn't exist, we can't show errors but still validate
+    if (!errorElement) {
+        console.warn('Error element not found for PO amount input');
+        return true;
+    }
+    
+    if (value === '' || value === null) {
+        errorElement.textContent = 'This field is required';
+        errorElement.classList.remove('hidden');
+        return false;
+    }
+    
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+        errorElement.textContent = 'Please enter a valid number';
+        errorElement.classList.remove('hidden');
+        return false;
+    }
+    
+    if (numValue <= 0) {
+        errorElement.textContent = 'Purchase order amount must be greater than zero';
+        errorElement.classList.remove('hidden');
+        return false;
+    }
+    
+    errorElement.classList.add('hidden');
+    errorElement.textContent = '';
+    return true;
+};
+
+// Update total PO amount
+window.updatePOAmountTotal = function() {
+    const inputs = document.querySelectorAll('input[name^="po_amount"]');
+    let total = 0;
+    
+    inputs.forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        total += value;
+    });
+    
+    const totalCell = document.getElementById('poAmountTotalCell');
+    if (totalCell) {
+        totalCell.textContent = total.toFixed(2);
+    }
+};
+
+// Validate entire PO form
+window.validateFormCreatePO = function() {
+    const inputs = document.querySelectorAll('input[name^="po_amount"]');
+    const poDateInput = document.getElementById('po_date');
+    
+    let isValid = true;
+    let hasAtLeastOnePO = false;
+    
+    // Validate each PO amount input
+    inputs.forEach(input => {
+        if (!window.validatePOAmount(input)) {
+            isValid = false;
+        }
+        
+        const value = parseFloat(input.value) || 0;
+        if (value > 0) {
+            hasAtLeastOnePO = true;
+        }
+    });
+    
+    // Check if PO date is selected
+    if (!poDateInput || poDateInput.value === '') {
+        isValid = false;
+        if (poDateInput) {
+            const errorElement = poDateInput.parentElement?.querySelector('.poDateError');
+            if (errorElement) {
+                errorElement.textContent = 'Please select a PO date';
+                errorElement.classList.remove('hidden');
+            }
+        }
+    }
+    
+    // Check if at least one PO amount is greater than zero
+    if (!hasAtLeastOnePO) {
+        isValid = false;
+        const errorElements = document.querySelectorAll('.poAmountError');
+        errorElements.forEach(el => {
+            el.textContent = 'At least one obligation amount must have a purchase order amount';
+            el.classList.remove('hidden');
+        });
+    }
+    
+    if (isValid) {
+        window.isSubmittingPurchaseOrder = true;
+        document.getElementById('CreatePurchaseOrderForm')?.submit();
+    }
+};
+
+// Close the PO modal
+window.closeCreatePOModal = function() {
+    const modal = document.getElementById('createPOModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    window.isSubmittingPurchaseOrder = false;
+};
+
+// Update total when inputs change
+document.addEventListener('input', function(e) {
+    if (e.target.name && e.target.name.startsWith('po_amount')) {
+        window.updatePOAmountTotal();
+    }
+});
+</script>

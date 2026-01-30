@@ -201,7 +201,7 @@
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="if(!isSubmittingCreateObligationAdjustment) validateCreateObligationAdjustmentForm(); else return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="try { if(!window.isSubmittingCreateObligationAdjustment) validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
@@ -216,8 +216,10 @@
 </form>
 
 <script>
-    // Prevent multiple submissions
-    let isSubmittingCreateObligationAdjustment = false;
+    // Prevent multiple submissions - ensure it's truly global
+    if (typeof window.isSubmittingCreateObligationAdjustment === 'undefined') {
+        window.isSubmittingCreateObligationAdjustment = false;
+    }
 
     function openCreateObligationAdjustmentModal(obligationId) {
         if (typeof closeAllDropdowns === 'function') {
@@ -371,7 +373,7 @@
     }
 
     function validateCreateObligationAdjustmentForm() {
-    if (isSubmittingCreateObligationAdjustment) return false;
+    if (window.isSubmittingCreateObligationAdjustment) return false;
     
     const remarks = document.getElementById('adjustment_remarks');
     const adjustmentDate = document.getElementById('adjustment_date');
@@ -476,7 +478,7 @@
     }
 
     if (isValid) {
-        isSubmittingCreateObligationAdjustment = true;
+        window.isSubmittingCreateObligationAdjustment = true;
         document.getElementById('createObligationAdjustmentForm').submit();
     }
 }

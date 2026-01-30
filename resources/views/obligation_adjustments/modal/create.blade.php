@@ -314,20 +314,6 @@
         const poAmountCell = row.querySelector('.po-amount-cell'); 
         const errorSpan = row.querySelector('span.adjustmentAmountError');
 
-        let minAllowed = 0.01; // Minimum value must be greater than 0
-
-        // Check if PO amount exists - sets minimum constraint only (can exceed)
-        if (poAmountCell) {
-            const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
-            
-            // If PO amount > 0, it's an active PO
-            if (poAmount > 0) {
-                minAllowed = poAmount; // Adjusted amount cannot be less than PO amount
-            }
-        }
-
-        const currentValue = parseFloat(inputElement.value) || 0;
-
         // Clear error first
         inputElement.classList.remove('border-red-500');
         if (errorSpan) {
@@ -335,28 +321,50 @@
             errorSpan.classList.add('hidden');
         }
 
-        // Check if value is zero or empty
-        if (currentValue === 0 || inputElement.value.trim() === '') {
+        const inputTrimmed = inputElement.value.trim();
+        
+        // Allow empty values (no adjustment for this row)
+        if (inputTrimmed === '') {
+            return true;
+        }
+
+        const currentValue = parseFloat(inputElement.value);
+        
+        // If value is not a valid number, show error
+        if (isNaN(currentValue)) {
             inputElement.classList.add('border-red-500');
             if (errorSpan) {
-                errorSpan.innerText = 'Adjusted amount must be greater than 0';
+                errorSpan.innerText = 'Please enter a valid number';
                 errorSpan.classList.remove('hidden');
             }
             return false;
         }
 
-        // Check if value is less than minimum allowed
-        if (currentValue < minAllowed) {
-            inputElement.classList.add('border-red-500');
-            if (errorSpan) {
-                if (minAllowed > 0.01) {
-                    errorSpan.innerText = `Adjustment amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
-                } else {
-                    errorSpan.innerText = 'Adjusted amount must be greater than 0';
+        // For non-zero values, check PO minimum constraint
+        if (currentValue !== 0) {
+            let minAllowed = 0;
+            
+            // Check if PO amount exists - sets minimum constraint only (can exceed)
+            if (poAmountCell) {
+                const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
+                
+                // If PO amount > 0, it's an active PO
+                if (poAmount > 0) {
+                    minAllowed = poAmount; // Adjusted amount cannot be less than PO amount
                 }
-                errorSpan.classList.remove('hidden');
             }
-            return false;
+
+            // Check if value is less than minimum allowed
+            if (currentValue < minAllowed) {
+                inputElement.classList.add('border-red-500');
+                if (errorSpan) {
+                    if (minAllowed > 0) {
+                        errorSpan.innerText = `Adjusted amount must be at least ${minAllowed.toFixed(2)} (Purchase Order amount)`;
+                    }
+                    errorSpan.classList.remove('hidden');
+                }
+                return false;
+            }
         }
 
         return true;
@@ -390,44 +398,30 @@
     }
 
     // Validate adjustment amounts
-    let atLeastOneNonZero = false;
-    let hasZeroValue = false;
+    let atLeastOneValidAdjustment = false;
     let poValidationFailed = false;
-    let allAdjustmentsNoChange = true;
     
     adjustmentAmounts.forEach(input => {
         const val = parseFloat(input.value);
         const inputTrimmed = input.value.trim();
         
-        // Check if input has a value entered (even if it's 0)
+        // Check if input has a value entered (including 0)
         if (inputTrimmed !== '') {
-            // Check for zero value
-            if (val === 0) {
-                hasZeroValue = true;
-                input.classList.add('border-red-500');
-                const row = input.closest('tr');
-                const errorSpan = row.querySelector('.adjustmentAmountError');
-                if (errorSpan) {
-                    errorSpan.innerText = 'Adjusted amount must be greater than 0';
-                    errorSpan.classList.remove('hidden');
-                }
-            } else if (!isNaN(val) && val > 0) {
-                atLeastOneNonZero = true;
-                
+            if (!isNaN(val)) {
                 // Check if adjusted amount is different from current obligation amount
                 const row = input.closest('tr');
                 const obrAmountCell = row.querySelector("td:nth-child(5)");
                 const currentObrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
                 
-                // If adjusted amount is different from current, there's an actual change
-                if (val !== currentObrAmount) {
-                    allAdjustmentsNoChange = false;
+                // If adjusted amount is different from current, there's an actual adjustment
+                if (val.toFixed(2) !== currentObrAmount.toFixed(2)) {
+                    atLeastOneValidAdjustment = true;
                 }
                 
-                // Check PO validation
+                // Check PO validation - only applies to non-zero adjusted amounts
                 const poAmountCell = row.querySelector('.po-amount-cell');
                 
-                if (poAmountCell) {
+                if (poAmountCell && val !== 0) {
                     const poAmount = parseFloat(poAmountCell.textContent.replace(/,/g, '')) || 0;
                     
                     // If active PO exists (amount > 0), adjusted amount cannot be less
@@ -437,7 +431,7 @@
                         
                         const errorSpan = row.querySelector('.adjustmentAmountError');
                         if (errorSpan) {
-                            errorSpan.innerText = `Adjustment amount must be at least ${poAmount.toFixed(2)} (Purchase Order amount)`;
+                            errorSpan.innerText = `Adjusted amount must be at least ${poAmount.toFixed(2)} (Purchase Order amount)`;
                             errorSpan.classList.remove('hidden');
                         }
                     } else {
@@ -448,6 +442,13 @@
                             errorSpan.classList.add('hidden');
                         }
                     }
+                } else {
+                    input.classList.remove('border-red-500');
+                    const errorSpan = row.querySelector('.adjustmentAmountError');
+                    if (errorSpan) {
+                        errorSpan.innerText = '';
+                        errorSpan.classList.add('hidden');
+                    }
                 }
             }
         }
@@ -455,21 +456,9 @@
     
     const errorContainer = document.getElementById('tableMessage');
     
-    if (hasZeroValue) {
+    if (!atLeastOneValidAdjustment) {
         if (errorContainer) {
-            errorContainer.innerText = 'Adjusted amounts cannot be zero. Please enter a value greater than 0 or leave the field empty.';
-            errorContainer.classList.remove('hidden');
-        }
-        isValid = false;
-    } else if (!atLeastOneNonZero) {
-        if (errorContainer) {
-            errorContainer.innerText = 'At least one adjustment amount must be entered.';
-            errorContainer.classList.remove('hidden');
-        }
-        isValid = false;
-    } else if (allAdjustmentsNoChange) {
-        if (errorContainer) {
-            errorContainer.innerText = 'No adjustment was made. The adjusted amounts are the same as the current obligation amounts.';
+            errorContainer.innerText = 'At least one Adjusted Amount must differ from the current Amount of Obligation.';
             errorContainer.classList.remove('hidden');
         }
         isValid = false;
@@ -519,21 +508,21 @@
         }
     });
 
-    // Update the total calculation to only include non-zero values
-function updateAdjustedAmountTotal() {
-    const adjustedInputs = document.querySelectorAll("input[name^='adjusted_amount']");
-    let total = 0;
-    adjustedInputs.forEach(input => {
-        const val = parseFloat(input.value);
-        if (!isNaN(val) && val > 0) { // Changed from !== 0 to > 0
-            total += val;
+    // Update the total calculation to include all values (including 0)
+    function updateAdjustedAmountTotal() {
+        const adjustedInputs = document.querySelectorAll("input[name^='adjusted_amount']");
+        let total = 0;
+        adjustedInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val)) {
+                total += val;
+            }
+        });
+        const totalCell = document.getElementById('adjustedAmountTotalCell');
+        if (totalCell) {
+            totalCell.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
-    });
-    const totalCell = document.getElementById('adjustedAmountTotalCell');
-    if (totalCell) {
-        totalCell.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
-}
 
     document.addEventListener('input', function(event) {
         if (event.target.name && event.target.name.startsWith('adjusted_amount')) {

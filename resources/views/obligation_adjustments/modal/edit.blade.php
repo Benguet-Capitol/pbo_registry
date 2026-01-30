@@ -211,6 +211,7 @@
         const edit_adjustmentAmounts = document.querySelectorAll("input[name^='edit_adjusted_amount']");
 
         let isValid = true;
+        let atLeastOneValidAdjustment = false;
 
         // Validate adjustment date
         if (!edit_adjustment_date.value) {
@@ -233,18 +234,49 @@
         // Validate adjusted_amount fields
         edit_adjustmentAmounts.forEach(function(input) {
             const errorSpan = input.nextElementSibling;
-            const value = parseFloat(input.value);
-            if (!input.value.trim() || value === 0) {
+            const inputTrimmed = input.value.trim();
+            
+            // Allow empty values (no adjustment for this row)
+            if (inputTrimmed === '') {
                 if (errorSpan) {
-                    errorSpan.innerText = 'Adjusted amount must not be zero or empty.';
+                    errorSpan.innerText = '';
+                }
+                return;
+            }
+
+            const value = parseFloat(input.value);
+            
+            if (isNaN(value)) {
+                if (errorSpan) {
+                    errorSpan.innerText = 'Please enter a valid number.';
                 }
                 isValid = false;
             } else {
+                // Check if adjusted amount differs from current OBR amount
+                const row = input.closest('tr');
+                const obrAmountCell = row.querySelector("td:nth-child(5)");
+                const currentObrAmount = parseFloat(obrAmountCell.textContent.replace(/,/g, '')) || 0;
+                
+                // If adjusted amount differs from current OBR amount, it's a valid adjustment
+                if (value.toFixed(2) !== currentObrAmount.toFixed(2)) {
+                    atLeastOneValidAdjustment = true;
+                }
+                
                 if (errorSpan) {
                     errorSpan.innerText = '';
                 }
             }
         });
+
+        // Check if at least one valid adjustment exists
+        if (!atLeastOneValidAdjustment) {
+            const tableMessage = document.getElementById('edit_tableMessage');
+            if (tableMessage) {
+                tableMessage.innerText = 'At least one Adjusted Amount must differ from the current Amount of Obligation.';
+                tableMessage.classList.remove('hidden');
+            }
+            isValid = false;
+        }
 
         if (isValid) {
             document.getElementById('editObligationAdjustmentForm').submit();
@@ -303,7 +335,7 @@
         let total = 0;
         adjustedInputs.forEach(input => {
             const val = parseFloat(input.value);
-            if (!isNaN(val) && val !== 0) {
+            if (!isNaN(val)) {
                 total += val;
             }
         });

@@ -315,19 +315,19 @@
                         @endif
                     >
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->programs }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->account_code }}</td>
+                        <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->account_code }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->description }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->fpp_code }}</td>
+                        <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->fpp_code }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->project_no }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->project_location }}</td>
                         @if(optional($officeAllotmentClass->allotmentClass)->description === 'Continuing Capital Outlay')
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->cco_year }}</td>
                         @endif
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->appropriation, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter1, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter2, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter3, 2) }}</td>
-                        <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter4, 2) }}</td>
+                        <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->appropriation, 2) }}</td>
+                        <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter1, 2) }}</td>
+                        <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter2, 2) }}</td>
+                        <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter3, 2) }}</td>
+                        <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 text-right transition-colors duration-200">{{ number_format($appropriation->quarter4, 2) }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->remarks }}</td>
                     </tr>
                     @empty

@@ -276,10 +276,10 @@
                             data-class="{{ e($office_allotment_class->allotmentClass->description ?? '') }}"
                             data-json='@json($office_allotment_class)'
                         >
-                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                            <td class="font-semibold px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
                                 {{ $office_allotment_class->offices->office_abbreviation }}
                             </td>
-                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                            <td class="font-semibold px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
                                 {{ $office_allotment_class->allotmentClass->description ?? 'N/A' }}
                             </td>
                             <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
@@ -288,7 +288,7 @@
                             <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
                                 {{ $office_allotment_class->fund }}
                             </td>
-                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                            <td class="font-semibold px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
                                 {{ $office_allotment_class->fpp_code }}
                             </td>
                             <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">

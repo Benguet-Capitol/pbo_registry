@@ -145,7 +145,7 @@
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <table id="purchaseOrdersTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
-                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
+                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
                         @php
                             $columns = [
@@ -193,11 +193,11 @@
                             data-po-id="{{ $purchaseOrder->id }}"
                             data-po-number="{{ $purchaseOrder->po_number }}"
                             data-obligation-id="{{ $purchaseOrder->obligation_id }}">
-                            <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300">
+                            <td class="px-2 py-3 font-semibold text-left text-gray-700 dark:text-gray-300">
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
                             </td>
-                            <td class="px-2 py-3 font-bold text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
+                            <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
                                 @php
                                     $programs = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.programs')->unique()->filter()->implode(', ');

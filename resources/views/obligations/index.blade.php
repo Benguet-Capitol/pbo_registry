@@ -170,16 +170,8 @@
                 <div class="max-h-[560px] overflow-y-auto">
                     <table id="obligationsTable" class="mb-20 min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
                         <thead id="obligationTableHead"
-                            class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
+                            class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
                             <tr>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_date', 'sort_order' => $sortBy == 'obr_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        OBR Date
-                                        @if($sortBy == 'obr_date')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     <a href="{{ route('obligations.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                         Office & Class
@@ -189,17 +181,25 @@
                                     </a>
                                 </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_type', 'sort_order' => $sortBy == 'obr_type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        OBR Type
-                                        @if($sortBy == 'obr_type')
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_no', 'sort_order' => $sortBy == 'obr_no' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        OBR No.
+                                        @if($sortBy == 'obr_no')
                                         {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                         @endif
                                     </a>
                                 </th>
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_no', 'sort_order' => $sortBy == 'obr_no' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        OBR No.
-                                        @if($sortBy == 'obr_no')
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_date', 'sort_order' => $sortBy == 'obr_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        OBR Date
+                                        @if($sortBy == 'obr_date')
+                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                        @endif
+                                    </a>
+                                </th>
+                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_type', 'sort_order' => $sortBy == 'obr_type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                        OBR Type
+                                        @if($sortBy == 'obr_type')
                                         {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                         @endif
                                     </a>
@@ -283,11 +283,11 @@
                                 data-obligation-class="{{ $obligation->officeAllotmentClass->allotmentClass->class }}"
                                 data-obligation-amount="{{ $obligation->obr_amount }}"
                             >
-                                <td class="px-1 py-2">{{ $obligation->obr_date }}</td>
-                                <td class="px-1 py-2">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
-                                <td class="px-1 py-2">{{ $obligation->obr_type }}</td>
-                                <td class="px-1 py-2">{{ $obligation->obr_no }}</td>
-                                <td class="px-1 py-2 text-center max-w-sm">{{ $obligation->particulars }}</td>
+                                <td class="font-semibold px-1 py-2">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
+                                <td class="font-semibold text-left px-1 py-2">{{ $obligation->obr_no }}</td>
+                                <td class="text-left px-1 py-2">{{ $obligation->obr_date }}</td>
+                                <td class="text-left px-1 py-2">{{ $obligation->obr_type }}</td>
+                                <td class="text-center px-1 py-2 max-w-sm">{{ $obligation->particulars }}</td>
 
                                 <td class="px-1 py-2 text-right obligation-amount">
                                     <div class="relative inline-block group">
@@ -312,14 +312,14 @@
                                             @unlessrole('Disbursement')
                                                 <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
                                                     type="button"
-                                                    class="text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
+                                                    class="font-semibold text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
                                                     {{ number_format($obligation->obr_amount, 2) }}
                                                 </button>
                                                 <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
                                                     Add Obligation Adjustment
                                                 </span>
                                             @else
-                                                <span class="text-gray-700 dark:text-gray-400 px-2 py-1">
+                                                <span class="font-semibold text-gray-700 dark:text-gray-400 px-2 py-1">
                                                     {{ number_format($obligation->obr_amount, 2) }}
                                                 </span>
                                             @endunlessrole
@@ -351,7 +351,7 @@
                                                 @unlessrole('Disbursement')
                                                     <button onclick="openCreatePOModal({{ $obligation->id }})"
                                                         type="button"
-                                                        class="text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
+                                                        class="font-semibold text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
                                                         {{ number_format($poAmount, 2) }}
                                                     </button>
                                                     <!-- Tooltip -->
@@ -359,7 +359,7 @@
                                                         Add Purchase Order
                                                     </span>
                                                 @else
-                                                    <span class="text-blue-700 dark:text-blue-400 px-2 py-1">
+                                                    <span class="font-semibold text-blue-700 dark:text-blue-400 px-2 py-1">
                                                         {{ number_format($poAmount, 2) }}
                                                     </span>
                                                 @endunlessrole
@@ -391,15 +391,15 @@
                                             type="button"
                                             class="hover:underline px-2 py-1
                                                 @if ($isOBRZero)
-                                                    text-gray-700 dark:text-gray-400
+                                                    font-semibold text-gray-700 dark:text-gray-400
                                                 @elseif ($isEqual)
                                                     bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold
                                                 @elseif ($isLower)
                                                     bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 font-semibold
                                                 @elseif ($isZero)
-                                                    text-gray-700 dark:text-gray-400
+                                                    font-semibold text-gray-700 dark:text-gray-400
                                                 @else
-                                                    text-gray-700 dark:text-gray-400
+                                                    font-semibold text-gray-700 dark:text-gray-400
                                                 @endif
                                             ">
                                             {{ number_format($disbursementAmount, 2) }}
@@ -519,10 +519,10 @@
                         </tbody>
                     </table>
                     <!-- Sticky footer table for totals -->
-                    <div id="obligationTableFooter" class="sticky bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-2 border-b-2 border-gray-700 dark:border-gray-600 z-10">
-                        <table class="min-w-full text-sm text-center text-gray-600 dark:text-gray-300">
+                    <div id="obligationTableFooter" class="sticky bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t-2 border-b-2 border-gray-700 dark:border-gray-600 z-10">
+                        <table class="min-w-full text-sm text-center text-gray-600 bg-gray-200 dark:bg-gray-900 dark:text-gray-300">
                             <tbody>
-                                <tr class="bg-gray-200 dark:bg-gray-700 font-bold">
+                                <tr class="bg-gray-200 dark:bg-gray-900 font-bold">
                                     <td class="text-right px-4 py-3">Total Obligation:</td>
                                     <td class="text-left px-4 py-3 text-green-700 dark:text-green-300 font-semibold" id="footerTotalObligationAmount">0.00</td>
                                     <td class="text-right px-4 py-3">Total Purchase Order:</td>

@@ -123,7 +123,7 @@
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <table id="disbursementsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-50 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
+                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-green-100 border-t-2 dark:bg-green-700 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
                         @php
                             $columns = [
@@ -172,21 +172,21 @@
                             <td class="px-2 py-3 font-bold text-left text-green-700 dark:text-green-300">{{ $disbursement->disbursement_date ?? '-' }}</td>
                             <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300 max-w-xs">
                                 @php
-                                    $programs = $disbursement->obligation->obligationAmounts->pluck('appropriation.programs')->unique()->filter()->implode(', ');
+                                    $programs = $disbursement->obligationAmount?->appropriation?->programs ?? '-';
                                 @endphp
-                                {{ $programs ?: '-' }}
+                                {{ $programs }}
                             </td>
                             <td class="px-2 py-3 font-semibold text-left text-gray-700 dark:text-gray-300">
                                 @php
-                                    $accountCodes = $disbursement->obligation->obligationAmounts->pluck('appropriation.account_code')->unique()->filter()->implode(', ');
+                                    $accountCode = $disbursement->obligationAmount?->appropriation?->account_code ?? '-';
                                 @endphp
-                                {{ $accountCodes ?: '-' }}
+                                {{ $accountCode }}
                             </td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300 max-w-xs">
                                 @php
-                                    $descriptions = $disbursement->obligation->obligationAmounts->pluck('appropriation.description')->unique()->filter()->implode(', ');
+                                    $descriptions = $disbursement->obligationAmount?->appropriation?->description ?? '-';
                                 @endphp
-                                {{ $descriptions ?: '-' }}
+                                {{ $descriptions }}
                             </td>
                             <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">
                             @if($disbursement->status === 'Full Payment')

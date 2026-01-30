@@ -163,16 +163,8 @@
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <table id="supplementalTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
+                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('supplementals.index', ['sort_by' => 'supplemental_date', 'sort_order' => $sortBy == 'supplemental_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Date
-                                @if($sortBy == 'supplemental_date')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                             <a href="{{ route('supplementals.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                 Office & Class
@@ -182,17 +174,25 @@
                             </a>
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('supplementals.index', ['sort_by' => 'type', 'sort_order' => $sortBy == 'type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Type
-                                @if($sortBy == 'type')
+                            <a href="{{ route('supplementals.index', ['sort_by' => 'supplemental_no', 'sort_order' => $sortBy == 'supplemental_no' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                No.
+                                @if($sortBy == 'supplemental_no')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
                             </a>
                         </th>
                         <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('supplementals.index', ['sort_by' => 'supplemental_no', 'sort_order' => $sortBy == 'supplemental_no' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                No.
-                                @if($sortBy == 'supplemental_no')
+                            <a href="{{ route('supplementals.index', ['sort_by' => 'supplemental_date', 'sort_order' => $sortBy == 'supplemental_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                Date
+                                @if($sortBy == 'supplemental_date')
+                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                @endif
+                            </a>
+                        </th>
+                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                            <a href="{{ route('supplementals.index', ['sort_by' => 'type', 'sort_order' => $sortBy == 'type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                Type
+                                @if($sortBy == 'type')
                                 {{ $sortOrder == 'asc' ? '▲' : '▼' }}
                                 @endif
                             </a>
@@ -237,10 +237,11 @@
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
                             oncontextmenu="showSupplementalContextMenu(event, this)"
                             data-supplemental='@json($supplemental)'>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_date }}</td>
-                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <td class="font-semibold px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
                             </td>
+                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_no }}</td>
+                            <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_date }}</td>
                             <td class="px-3 py-3 border-b border-gray-300">
                                 @if($supplemental->type === 'Supplemental')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
@@ -254,11 +255,10 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ ucfirst($supplemental->type) }}</span>
                                 @endif
                             </td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->supplemental_no }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->programs ?? '-' }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->account_code ?? '-' }}</td>
+                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->appropriation->account_code ?? '-' }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $supplemental->appropriation->description ?? '-' }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->basis }}</td>
+                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $supplemental->basis }}</td>
                             <td class="px-2 py-2 border-b border-gray-300 text-right">
                                 @if($supplemental->type === 'Supplemental')
                                     <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
@@ -272,10 +272,10 @@
                                     <span class="text-gray-600 dark:text-gray-300">{{ number_format($supplemental->amount, 2) }}</span>
                                 @endif
                             </td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter1 }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter2 }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter3 }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter4 }}</td>
+                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter1 }}</td>
+                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter2 }}</td>
+                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter3 }}</td>
+                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter4 }}</td>
                             <!-- <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 <div class="relative inline-block text-left">
                                     <button onclick="toggleDropdown(this)" 

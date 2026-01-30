@@ -191,7 +191,7 @@
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <table id="employeesTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
-                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10 transition-colors duration-200">
+                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10 transition-colors duration-200">
                     <tr>
                         <th class="px-1 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
                             <a href="{{ route('office_allotment_classes.index', array_merge(request()->all(), ['sort_by' => 'office_abbreviation', 'sort_order' => $sortBy == 'office_abbreviation' && $sortOrder == 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200">
@@ -319,7 +319,7 @@
                     @endforelse
                 </tbody>
 
-                <tfoot class="bg-gray-200 dark:bg-gray-800 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
+                <tfoot class="bg-gray-200 dark:bg-gray-900 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
                     <tr>
                         <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Approved Appropriation:

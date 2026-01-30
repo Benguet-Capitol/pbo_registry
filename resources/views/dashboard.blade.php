@@ -692,7 +692,7 @@
             </div>
             <div class="overflow-auto max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
-                    <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
+                    <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
                             <th class="px-2 py-2 w-[70px] text-center">View Details</th>
                             <th class="px-2 py-2 w-[100px] text-center">Office</th>

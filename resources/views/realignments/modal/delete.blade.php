@@ -78,30 +78,6 @@
         </div>
     </div>
 </div>
-                <form id="bulkDeleteRealignmentForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <input type="hidden" name="year1" value="{{ request('year1') }}">
-                    <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
-                    <input type="hidden" name="realignment_type_filter" value="{{ request('realignment_type_filter') }}">
-                    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
-                    <input type="hidden" name="search" value="{{ request('search') }}">
-                    <input type="hidden" name="bulk_delete" value="1">
-                    <button type="submit" class="mr-1 text-orange-600 inline-flex items-center hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900">
-                        <i class="fas fa-trash-alt mr-1 -ml-1"></i>
-                        {{ __('Delete All') }}
-                    </button>
-                </form>
-                <button onclick="closeBulkDeleteRealignmentModal()" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-gray-200 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
-                    <i class="fas fa-times mr-1 -ml-1"></i>
-                    {{ __('Cancel') }}
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
 
 <style>
     @keyframes scaleInUp {

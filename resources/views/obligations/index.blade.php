@@ -15,6 +15,9 @@
                         $filters[] = $officeClass->offices->office_abbreviation . ' - ' . $officeClass->allotmentClass->class;
                     }
                 }
+                if (request('fund_filter')) {
+                    $filters[] = 'Fund: ' . request('fund_filter');
+                }
                 if (request('obr_type_filter')) {
                     $filters[] = request('obr_type_filter');
                 }
@@ -99,7 +102,7 @@
         </h4>
 
         <form id="filterForm" method="GET" action="{{ route('obligations.index') }}">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
@@ -119,6 +122,19 @@
                         @foreach($officeAllotmentClasses as $officeAllotmentClass)
                         <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_filter') == $officeAllotmentClass->id ? 'selected' : '' }}>
                             {{ $officeAllotmentClass->offices->office_abbreviation }} - {{ $officeAllotmentClass->allotmentClass->class }}
+                        </option>
+                        @endforeach
+                    </x-form.select>
+                </div>
+
+                <!-- Fund Filter -->
+                <div class="flex items-center space-x-2">
+                    <label for="fundFilter" class="sr-only">Fund</label>
+                    <x-form.select name="fund_filter" id="fundFilter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                        <option value="">All Funds</option>
+                        @foreach($funds as $fund)
+                        <option value="{{ $fund }}" {{ request('fund_filter') == $fund ? 'selected' : '' }}>
+                            {{ $fund }}
                         </option>
                         @endforeach
                     </x-form.select>
@@ -161,9 +177,32 @@
                 </button>
                 @endcan
                 <!-- Search Input -->
-                <div class="flex items-center space-x-2">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for obligations" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                </div>
+                <form id="searchForm" method="GET" action="{{ route('obligations.index') }}" class="flex items-center space-x-2">
+                    <!-- Hidden inputs to preserve filters -->
+                    <input type="hidden" name="year1" value="{{ $selectedYear }}">
+                    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+                    <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
+                    <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
+                    <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+                    <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
+                    
+                    <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Columns</option>
+                        <option value="obr_no" {{ request('search_column') == 'obr_no' ? 'selected' : '' }}>OBR No.</option>
+                        <option value="obr_date" {{ request('search_column') == 'obr_date' ? 'selected' : '' }}>OBR Date</option>
+                        <option value="obr_type" {{ request('search_column') == 'obr_type' ? 'selected' : '' }}>OBR Type</option>
+                        <option value="particulars" {{ request('search_column') == 'particulars' ? 'selected' : '' }}>Particulars</option>
+                        <option value="office_abbreviation" {{ request('search_column') == 'office_abbreviation' ? 'selected' : '' }}>Office</option>
+                        <option value="allotment_class" {{ request('search_column') == 'allotment_class' ? 'selected' : '' }}>Allotment Class</option>
+                        <option value="processed_by" {{ request('search_column') == 'processed_by' ? 'selected' : '' }}>Processed By</option>
+                        <option value="remarks" {{ request('search_column') == 'remarks' ? 'selected' : '' }}>Remarks</option>
+                    </x-form.select>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for obligations" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
@@ -287,7 +326,7 @@
                                 <td class="font-semibold text-left px-1 py-2">{{ $obligation->obr_no }}</td>
                                 <td class="text-left px-1 py-2">{{ $obligation->obr_date }}</td>
                                 <td class="text-left px-1 py-2">{{ $obligation->obr_type }}</td>
-                                <td class="text-center px-1 py-2 max-w-sm">{{ $obligation->particulars }}</td>
+                                <td class="text-left px-1 py-2 max-w-sm">{{ $obligation->particulars }}</td>
 
                                 <td class="px-1 py-2 text-right obligation-amount">
                                     <div class="relative inline-block group">

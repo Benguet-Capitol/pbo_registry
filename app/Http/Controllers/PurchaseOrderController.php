@@ -83,6 +83,7 @@ class PurchaseOrderController extends Controller
         // Get the per page value from the request
         $perPage = $request->input('per_page', 'all');
         $search = $request->input('search');
+        $searchColumn = $request->input('search_column', '');
         // Get the sort by and sort order values from the request
         $sortBy = $request->query('sort_by', 'obr_date');
         $sortOrder = $request->query('sort_order', 'desc');
@@ -109,20 +110,61 @@ class PurchaseOrderController extends Controller
 
         // Apply search filter
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('po_number', 'like', '%' . $search . '%')
-                  ->orWhere('pr_no', 'like', '%' . $search . '%')
-                  ->orWhere('supplier', 'like', '%' . $search . '%')
-                  ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
-                      $q2->where('account_code', 'like', '%' . $search . '%')
-                         ->orWhere('description', 'like', '%' . $search . '%');
-                  })
-                  ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
-                      $q3->where('office_abbreviation', 'like', '%' . $search . '%');
-                  })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
-                      $q4->where('class', 'like', '%' . $search . '%');
-                  });
-            });
+            if ($searchColumn) {
+                // Search in specific column
+                switch ($searchColumn) {
+                    case 'po_number':
+                        $query->where('po_number', 'like', '%' . $search . '%');
+                        break;
+                    case 'po_date':
+                        $query->where('po_date', 'like', '%' . $search . '%');
+                        break;
+                    case 'pr_no':
+                        $query->where('pr_no', 'like', '%' . $search . '%');
+                        break;
+                    case 'supplier':
+                        $query->where('supplier', 'like', '%' . $search . '%');
+                        break;
+                    case 'delivery_period':
+                        $query->where('delivery_period', 'like', '%' . $search . '%');
+                        break;
+                    case 'po_remarks':
+                        $query->where('po_remarks', 'like', '%' . $search . '%');
+                        break;
+                    default:
+                        // General search if column not recognized
+                        $query->where(function ($q) use ($search) {
+                            $q->where('po_number', 'like', '%' . $search . '%')
+                              ->orWhere('pr_no', 'like', '%' . $search . '%')
+                              ->orWhere('supplier', 'like', '%' . $search . '%')
+                              ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
+                                  $q2->where('account_code', 'like', '%' . $search . '%')
+                                     ->orWhere('description', 'like', '%' . $search . '%');
+                              })
+                              ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
+                                  $q3->where('office_abbreviation', 'like', '%' . $search . '%');
+                              })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
+                                  $q4->where('class', 'like', '%' . $search . '%');
+                              });
+                        });
+                }
+            } else {
+                // General search across all columns
+                $query->where(function ($q) use ($search) {
+                    $q->where('po_number', 'like', '%' . $search . '%')
+                      ->orWhere('pr_no', 'like', '%' . $search . '%')
+                      ->orWhere('supplier', 'like', '%' . $search . '%')
+                      ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
+                          $q2->where('account_code', 'like', '%' . $search . '%')
+                             ->orWhere('description', 'like', '%' . $search . '%');
+                      })
+                      ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
+                          $q3->where('office_abbreviation', 'like', '%' . $search . '%');
+                      })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
+                          $q4->where('class', 'like', '%' . $search . '%');
+                      });
+                });
+            }
         }
 
         // Apply sorting and pagination

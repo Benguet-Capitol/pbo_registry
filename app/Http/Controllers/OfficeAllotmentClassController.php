@@ -91,7 +91,9 @@ class OfficeAllotmentClassController extends Controller
             );
         } else {
             // Apply database-level sorting for other fields, including the default 'id'
-            $query->orderBy($sortBy, $sortOrder);
+            // First sort by office, then by class (allotment class id)
+            $query->orderBy('office', 'asc')
+                  ->orderBy('class', 'desc');
 
             // Use Laravel's paginate method
             $office_allotment_classes = $perPage == 'all' ? $query->get() : $query->paginate($perPage)

@@ -115,9 +115,27 @@
                     {{ __('Add Purchase Order') }}
                 </button>
                 @endcan -->
-                <div class="flex items-center space-x-2">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                </div>
+                <form id="searchForm" method="GET" action="{{ route('disbursements.all') }}" class="flex items-center space-x-2">
+                    <!-- Hidden inputs to preserve filters -->
+                    <input type="hidden" name="year1" value="{{ $selectedYear }}">
+                    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
+                    <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+                    <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
+                    
+                    <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Columns</option>
+                        <option value="dv_no" {{ request('search_column') == 'dv_no' ? 'selected' : '' }}>DV No.</option>
+                        <option value="dv_date" {{ request('search_column') == 'dv_date' ? 'selected' : '' }}>DV Date</option>
+                        <option value="payee" {{ request('search_column') == 'payee' ? 'selected' : '' }}>Payee</option>
+                        <option value="address" {{ request('search_column') == 'address' ? 'selected' : '' }}>Address</option>
+                        <option value="dv_remarks" {{ request('search_column') == 'dv_remarks' ? 'selected' : '' }}>Remarks</option>
+                    </x-form.select>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">

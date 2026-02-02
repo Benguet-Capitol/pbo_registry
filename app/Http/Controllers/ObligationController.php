@@ -29,6 +29,7 @@ class ObligationController extends Controller
         // --- Filters & Sorting setup ---
         $perPage = $request->input('per_page', 'all');
         $search = $request->input('search');
+        $searchColumn = $request->input('search_column', '');
         $sortBy = $request->query('sort_by', 'obr_date');
         $sortOrder = $request->query('sort_order', 'desc');
         $currentYear = date('Y');
@@ -51,22 +52,74 @@ class ObligationController extends Controller
         if ($request->filled('office_allotment_class_filter')) {
             $query->where('office_allotment_class_id', $request->office_allotment_class_filter);
         }
+        if ($request->filled('fund_filter')) {
+            $query->whereHas('officeAllotmentClass', function ($q) use ($request) {
+                $q->where('fund', $request->fund_filter);
+            });
+        }
         if ($request->filled('obr_type_filter')) {
             $query->where('obr_type', $request->obr_type_filter);
         }
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('obr_date', 'like', "%{$search}%")
-                    ->orWhere('obr_no', 'like', "%{$search}%")
-                    ->orWhere('obr_type', 'like', "%{$search}%")
-                    ->orWhere('particulars', 'like', "%{$search}%")
-                    ->orWhere('processed_by', 'like', "%{$search}%")
-                    ->orWhere('remarks', 'like', "%{$search}%");
-            })
-            ->orWhereHas('officeAllotmentClass.offices', fn($q) => 
-                $q->where('office_abbreviation', 'like', "%{$search}%"))
-            ->orWhereHas('officeAllotmentClass.allotmentClass', fn($q) => 
-                $q->where('class', 'like', "%{$search}%"));
+            if ($searchColumn) {
+                // Search in specific column
+                switch ($searchColumn) {
+                    case 'obr_date':
+                        $query->where('obr_date', 'like', "%{$search}%");
+                        break;
+                    case 'obr_no':
+                        $query->where('obr_no', 'like', "%{$search}%");
+                        break;
+                    case 'obr_type':
+                        $query->where('obr_type', 'like', "%{$search}%");
+                        break;
+                    case 'particulars':
+                        $query->where('particulars', 'like', "%{$search}%");
+                        break;
+                    case 'office_abbreviation':
+                        $query->whereHas('officeAllotmentClass.offices', fn($q) => 
+                            $q->where('office_abbreviation', 'like', "%{$search}%"));
+                        break;
+                    case 'allotment_class':
+                        $query->whereHas('officeAllotmentClass.allotmentClass', fn($q) => 
+                            $q->where('class', 'like', "%{$search}%"));
+                        break;
+                    case 'remarks':
+                        $query->where('remarks', 'like', "%{$search}%");
+                        break;
+                    case 'processed_by':
+                        $query->where('processed_by', 'like', "%{$search}%");
+                        break;
+                    default:
+                        // General search if column not recognized
+                        $query->where(function ($q) use ($search) {
+                            $q->where('obr_date', 'like', "%{$search}%")
+                                ->orWhere('obr_no', 'like', "%{$search}%")
+                                ->orWhere('obr_type', 'like', "%{$search}%")
+                                ->orWhere('particulars', 'like', "%{$search}%")
+                                ->orWhere('processed_by', 'like', "%{$search}%")
+                                ->orWhere('remarks', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('officeAllotmentClass.offices', fn($q) => 
+                            $q->where('office_abbreviation', 'like', "%{$search}%"))
+                        ->orWhereHas('officeAllotmentClass.allotmentClass', fn($q) => 
+                            $q->where('class', 'like', "%{$search}%"));
+                }
+            } else {
+                // General search across all columns
+                $query->where(function ($q) use ($search) {
+                    $q->where('obr_date', 'like', "%{$search}%")
+                        ->orWhere('obr_no', 'like', "%{$search}%")
+                        ->orWhere('obr_type', 'like', "%{$search}%")
+                        ->orWhere('particulars', 'like', "%{$search}%")
+                        ->orWhere('processed_by', 'like', "%{$search}%")
+                        ->orWhere('remarks', 'like', "%{$search}%");
+                })
+                ->orWhereHas('officeAllotmentClass.offices', fn($q) => 
+                    $q->where('office_abbreviation', 'like', "%{$search}%"))
+                ->orWhereHas('officeAllotmentClass.allotmentClass', fn($q) => 
+                    $q->where('class', 'like', "%{$search}%"));
+            }
         }
 
         // --- Sorting ---
@@ -101,9 +154,11 @@ class ObligationController extends Controller
             : $query->paginate($perPage)->appends([
                 'year1' => $selectedYear,
                 'search' => $search,
+                'search_column' => $searchColumn,
                 'sort_by' => $sortBy,
                 'sort_order' => $sortOrder,
                 'office_allotment_class_filter' => $request->office_allotment_class_filter,
+                'fund_filter' => $request->fund_filter,
                 'obr_type_filter' => $request->obr_type_filter,
                 'per_page' => $perPage,
             ]);
@@ -213,6 +268,15 @@ class ObligationController extends Controller
             ->where('year', $selectedYear)
             ->get();
 
+        // Get all unique funds that have obligations in the selected year
+        $funds = OfficeAllotmentClass::join('obligations', 'office_allotment_classes.id', '=', 'obligations.office_allotment_class_id')
+            ->where('office_allotment_classes.year', $selectedYear)
+            ->distinct()
+            ->pluck('office_allotment_classes.fund')
+            ->filter()
+            ->unique()
+            ->values();
+
         $obligations_check = Obligation::select('obr_no')
         ->whereHas('officeAllotmentClass', function($q) use ($selectedYear) {
             $q->where('year', $selectedYear);
@@ -237,7 +301,8 @@ class ObligationController extends Controller
             'selectedYear',
             'office_allotment_classes',
             'obligations_check',
-            'breadcrumb'
+            'breadcrumb',
+            'funds'
         ));
     }
 
@@ -489,7 +554,7 @@ class ObligationController extends Controller
                 } else {
                     // If not preselected, redirect to obligations index
                     return redirect()
-                        ->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
+                        ->route('obligations.index', $request->only(['search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter']))
                         ->with('status', $statusMessage);
                 }
             } catch (\Exception $e) {
@@ -701,7 +766,7 @@ class ObligationController extends Controller
                 ]);
             }
 
-            return redirect()->route('obligations.index', $request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']))
+            return redirect()->route('obligations.index', $request->only(['search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter']))
                 ->with('status', [
                     'type' => 'update',
                     'message' => "Obligation Request No. <strong>{$validated['edit_obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
@@ -717,7 +782,7 @@ class ObligationController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'An error occurred while updating the obligation: ' . $e->getMessage())
-                ->with($request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']) );
+                ->with($request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter']) );
         }
     }
 
@@ -775,8 +840,8 @@ class ObligationController extends Controller
 
             return redirect()
                 ->route('obligations.index', $request->only([
-                    'search', 'sort_by', 'sort_order', 'per_page', 'year1',
-                    'office_allotment_class_filter', 'obr_type_filter'
+                    'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1',
+                    'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
                 ]))
                 ->with('status', [
                     'type' => 'delete',
@@ -793,8 +858,8 @@ class ObligationController extends Controller
             ]);
 
             return redirect()->route('obligations.index', $request->only([
-                'search', 'sort_by', 'sort_order', 'per_page', 'year1', 
-                'office_allotment_class_filter', 'obr_type_filter'
+                'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 
+                'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
             ]))->with('error', 'Failed to delete obligation. Please try again.');
         }
     }
@@ -905,8 +970,8 @@ class ObligationController extends Controller
             ]);
 
             return redirect()->route('obligations.index', $request->only([
-                'search', 'sort_by', 'sort_order', 'per_page', 'year1', 
-                'office_allotment_class_id', 'obr_type_filter'
+                'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 
+                'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
             ]))->with('error', 'Failed to cancel obligation. Please try again.');
         }
     }
@@ -1412,7 +1477,7 @@ class ObligationController extends Controller
                 'payment_remarks' => $request->payment_remarks,
             ]);
 
-            return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_id', 'obr_type_filter', 'per_page', 'search']))
+            return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
                 ->with('status', [
                     'type' => 'update',
                     'message' => '<strong>Payment remarks</strong> for OBR No. <strong>' . $obligation->obr_no . '</strong> has been updated successfully!'

@@ -176,8 +176,12 @@
 
                                                     // Determine balance based on where modal is called from
                                                     if ($from === 'purchase_order' && isset($purchaseOrder)) {
-                                                        // Balance from the purchase orders for THIS specific obligation amount
-                                                        $balance = $totalPO - $disbursements;
+                                                        // Balance from THIS specific purchase order
+                                                        $poAmount = \App\Models\PurchaseOrder::where('id', $purchaseOrder->id)->value('po_amount');
+                                                        $poDisbursements = \App\Models\Disbursement::where('purchase_order_id', $purchaseOrder->id)
+                                                            ->where('obligation_amounts_id', $obligationAmount->id)
+                                                            ->sum('disbursement_amount');
+                                                        $balance = ($poAmount ?? 0) - $poDisbursements;
                                                     } else {
                                                         // Balance from obligation (default)
                                                         $balance = (($obligationAmount->obr_amount - $disbursements) + $adjustments);

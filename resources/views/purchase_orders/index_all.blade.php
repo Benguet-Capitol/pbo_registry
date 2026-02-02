@@ -219,9 +219,11 @@
                             <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
                                 @php
-                                    $programs = $purchaseOrder->obligation->obligationAmounts->pluck('appropriation.programs')->unique()->filter()->implode(', ');
+                                    $programs = $purchaseOrder->obligation->obligationAmounts
+                                        ->where('id', $purchaseOrder->obligation_amounts_id)
+                                        ->first()?->appropriation?->programs ?? '-';
                                 @endphp
-                                {{ $programs ?: '-' }}
+                                {{ $programs }}
                             </td>
                             <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">
                                 @php
@@ -245,19 +247,9 @@
                             <td class="px-2 py-3 font-semibold text-gray-700 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
                             <td class="px-2 py-3 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($purchaseOrder->po_amount, 2) }}</td>
-                            @php
-                                // Get all obligation amounts related to purchase orders with the same po_number
-                                $relatedPoIds = \App\Models\PurchaseOrder::where('po_number', $purchaseOrder->po_number)
-                                    ->pluck('obligation_amounts_id')
-                                    ->toArray();
-                                
-                                // Get disbursement amount for this specific obligation amount and purchase order
-                                $disbursementAmount = \App\Models\Disbursement::where('obligation_amounts_id', $purchaseOrder->obligation_amounts_id)
-                                    ->sum('disbursement_amount');
-                            @endphp
                             <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">
-                                @if($disbursementAmount > 0)
-                                    <span class="font-semibold text-green-700 dark:text-green-300">{{ number_format($disbursementAmount, 2) }}</span>
+                                @if($purchaseOrder->disbursement_amount > 0)
+                                    <span class="font-semibold text-green-700 dark:text-green-300">{{ number_format($purchaseOrder->disbursement_amount, 2) }}</span>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
@@ -281,7 +273,7 @@
                         </td>
                         <td colspan="4" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Purchase Order Amount:
-                            <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold ml-2">
+                            <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">
                                 0.00
                             </span>
                         </td>

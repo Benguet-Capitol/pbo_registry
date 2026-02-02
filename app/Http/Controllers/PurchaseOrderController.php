@@ -182,6 +182,15 @@ class PurchaseOrderController extends Controller
             $purchaseOrders = $query->paginate($perPage)->appends($request->query());
         }
 
+        // Calculate disbursement amounts for each purchase order
+        $purchaseOrders = $purchaseOrders->map(function ($purchaseOrder) {
+            $disbursementAmount = Disbursement::where('purchase_order_id', $purchaseOrder->id)
+                ->where('obligation_amounts_id', $purchaseOrder->obligation_amounts_id)
+                ->sum('disbursement_amount');
+            $purchaseOrder->disbursement_amount = $disbursementAmount;
+            return $purchaseOrder;
+        });
+
         // Fetch distinct years from the database
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
         // Get the list of office allotment classes filtered by the selected year

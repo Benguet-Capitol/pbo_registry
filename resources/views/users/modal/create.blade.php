@@ -1,5 +1,5 @@
 <!-- Create User Modal -->
-<form id="createUserForm" method="POST" action="{{ route('users.store') }}" onsubmit="return validateCreateUSerForm()">
+<form id="createUserForm" method="POST" action="{{ route('users.store') }}" onsubmit="return validateCreateUserForm()">
     @csrf
     <div id="createUserModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="w-full max-w-4xl rounded-xl shadow-2xl transform transition-all duration-300 ease-out bg-white dark:bg-gray-800 overflow-hidden hidden animate-scaleInUp max-h-[90vh] flex flex-col" style="animation: scaleInUp 0.3s ease-out;">

@@ -177,19 +177,35 @@ class PurchaseOrderController extends Controller
 
         if ($perPage === 'all') {
             $purchaseOrders = $query->get();
+            // Calculate disbursement amounts for each purchase order
+            $purchaseOrders = $purchaseOrders->map(function ($purchaseOrder) {
+                // Get all PO IDs with the same po_number
+                $relatedPoIds = PurchaseOrder::where('po_number', $purchaseOrder->po_number)->pluck('id')->toArray();
+                
+                // Sum disbursements for this obligation_amounts_id from any related PO
+                $disbursementAmount = Disbursement::where('obligation_amounts_id', $purchaseOrder->obligation_amounts_id)
+                    ->whereIn('purchase_order_id', $relatedPoIds)
+                    ->sum('disbursement_amount');
+                $purchaseOrder->disbursement_amount = $disbursementAmount;
+                return $purchaseOrder;
+            });
         } else {
             $perPage = is_numeric($perPage) ? (int)$perPage : 10; // Default to 10 if invalid
             $purchaseOrders = $query->paginate($perPage)->appends($request->query());
+            
+            // Calculate disbursement amounts for paginated results
+            $purchaseOrders->getCollection()->transform(function ($purchaseOrder) {
+                // Get all PO IDs with the same po_number
+                $relatedPoIds = PurchaseOrder::where('po_number', $purchaseOrder->po_number)->pluck('id')->toArray();
+                
+                // Sum disbursements for this obligation_amounts_id from any related PO
+                $disbursementAmount = Disbursement::where('obligation_amounts_id', $purchaseOrder->obligation_amounts_id)
+                    ->whereIn('purchase_order_id', $relatedPoIds)
+                    ->sum('disbursement_amount');
+                $purchaseOrder->disbursement_amount = $disbursementAmount;
+                return $purchaseOrder;
+            });
         }
-
-        // Calculate disbursement amounts for each purchase order
-        $purchaseOrders = $purchaseOrders->map(function ($purchaseOrder) {
-            $disbursementAmount = Disbursement::where('purchase_order_id', $purchaseOrder->id)
-                ->where('obligation_amounts_id', $purchaseOrder->obligation_amounts_id)
-                ->sum('disbursement_amount');
-            $purchaseOrder->disbursement_amount = $disbursementAmount;
-            return $purchaseOrder;
-        });
 
         // Fetch distinct years from the database
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');

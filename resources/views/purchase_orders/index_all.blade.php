@@ -221,9 +221,9 @@
                                 @php
                                     $programs = $purchaseOrder->obligation->obligationAmounts
                                         ->where('id', $purchaseOrder->obligation_amounts_id)
-                                        ->first()?->appropriation?->programs ?? '-';
+                                        ->first()?->appropriation?->programs;
                                 @endphp
-                                {{ $programs }}
+                                {{ $programs ?: '-' }}
                             </td>
                             <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">
                                 @php

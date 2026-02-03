@@ -204,7 +204,7 @@
                             <th class="px-1 py-1 w-[100px] text-center">Allotments</th>
                             <th class="px-1 py-1 w-[100px] text-center">For Later Release</th>
                             <th class="px-1 py-1 w-[100px] text-center">Obligations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balances from Authorized AppropriationsSSS</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balances from Authorized Appropriations</th>
                             <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">Percent of Utilization</th>
                             <th class="px-1 py-1 w-[100px] text-center">Balances from Allotments</th>
                             <th class="px-1 py-1 w-[70px] text-center">Percent of Utilization</th>

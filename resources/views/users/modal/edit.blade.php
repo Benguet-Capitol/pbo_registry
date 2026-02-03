@@ -157,6 +157,12 @@
 
     function openEditUserModal(user) {
         closeAllDropdowns();
+        
+        // Clear previous error messages
+        document.getElementById('nameError').innerText = '';
+        document.getElementById('username_Error').innerText = '';
+        document.getElementById('usertypeError').innerText = '';
+        document.getElementById('editOfficeError').innerText = '';
 
         document.querySelector("input[name='user_id']").value = user.id ?? '';
         document.getElementById('editUserForm').action = '/users/' + user.id;
@@ -172,6 +178,22 @@
             if (box) box.classList.remove('hidden');
         }, 10);
         updateTextColor();
+        
+        // Display server-side validation errors if they exist
+        @if($errors->any())
+            @if($errors->has('edit_name'))
+                document.getElementById('nameError').innerText = '{{ $errors->first('edit_name') }}';
+            @endif
+            @if($errors->has('edit_username'))
+                document.getElementById('username_Error').innerText = '{{ $errors->first('edit_username') }}';
+            @endif
+            @if($errors->has('edit_usertype'))
+                document.getElementById('usertypeError').innerText = '{{ $errors->first('edit_usertype') }}';
+            @endif
+            @if($errors->has('edit_office'))
+                document.getElementById('editOfficeError').innerText = '{{ $errors->first('edit_office') }}';
+            @endif
+        @endif
     }
 
     function closeEditUserModal() {

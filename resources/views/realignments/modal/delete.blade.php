@@ -97,6 +97,8 @@
 </style>
 
 <script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
     function openDeleteRealignmentModal(realignmentId, realignmentNo, realignmentType, realignmentAmount, appropriationsId) {
         closeAllDropdowns();
 

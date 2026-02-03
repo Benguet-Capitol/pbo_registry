@@ -85,6 +85,8 @@ class UserController extends Controller
             'usertype' => 'required|string|max:255',
             'office' => 'required|integer|exists:offices,id',
             'password' => 'required|string|min:6|confirmed', // Add password validation
+        ], [
+            'username.unique' => 'The username has already been taken. Please choose a different username.',
         ]);
 
         $user = User::create([

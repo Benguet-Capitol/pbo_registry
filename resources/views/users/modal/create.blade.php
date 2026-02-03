@@ -184,6 +184,28 @@
         setTimeout(() => {
             modal.querySelector('div.hidden').classList.remove('hidden');
         }, 10);
+        
+        // Display server-side validation errors if they exist
+        @if($errors->any())
+            @if($errors->has('name'))
+                document.getElementById('nameError').innerText = '{{ $errors->first('name') }}';
+            @endif
+            @if($errors->has('username'))
+                document.getElementById('usernameError').innerText = '{{ $errors->first('username') }}';
+            @endif
+            @if($errors->has('usertype'))
+                document.getElementById('usertypeError').innerText = '{{ $errors->first('usertype') }}';
+            @endif
+            @if($errors->has('office'))
+                document.getElementById('officeError').innerText = '{{ $errors->first('office') }}';
+            @endif
+            @if($errors->has('password'))
+                document.getElementById('passwordError').innerText = '{{ $errors->first('password') }}';
+            @endif
+            @if($errors->has('password_confirmation'))
+                document.getElementById('passwordConfirmationError').innerText = '{{ $errors->first('password_confirmation') }}';
+            @endif
+        @endif
     }
 
     function closeCreateUserModal() {

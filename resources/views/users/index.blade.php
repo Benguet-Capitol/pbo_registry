@@ -20,6 +20,19 @@
     </div>
     @endif
 
+    @if (session('error'))
+    <div class="border-l-4 p-4 mb-4 bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-700 dark:text-red-200" role="alert">
+        <div class="flex justify-between items-center">
+            <div>
+                <p>{!! session('error') !!}</p>
+            </div>
+            <button type="button" class="text-2xl font-semibold leading-none dark:text-gray-200" onclick="this.parentElement.parentElement.remove();">
+                &times;
+            </button>
+        </div>
+    </div>
+    @endif
+
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">

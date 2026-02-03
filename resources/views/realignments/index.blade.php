@@ -501,7 +501,10 @@
             document.addEventListener('click', hideRealignmentContextMenu);
             window.addEventListener('resize', hideRealignmentContextMenu);
             window.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
-            container.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
+            const container = document.querySelector('.overflow-x-auto');
+            if (container) {
+                container.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
+            }
         }, 30);
     };
 

@@ -1230,6 +1230,8 @@
         table = document.getElementById("obligationsTable");
         tr = table.getElementsByTagName("tr");
 
+        let firstVisibleRowId = null;
+
         // Loop through all table rows, and hide those who don't match the search query
         for (i = 1; i < tr.length; i++) {
             tr[i].style.display = "none";
@@ -1239,11 +1241,21 @@
                     txtValue = td[j].textContent || td[j].innerText;
                     if (txtValue.toLowerCase().indexOf(filter) > -1) {
                         tr[i].style.display = "";
+                        // Store the first visible row ID
+                        if (firstVisibleRowId === null) {
+                            firstVisibleRowId = tr[i].dataset.obligationId;
+                        }
                         break;
                     }
                 }
             }
         }
+
+        // Auto-display the details of the first visible row after filtering
+        if (firstVisibleRowId) {
+            displayObligationDetails(firstVisibleRowId);
+        }
+
         computeTableTotals();
     }
 
@@ -2083,6 +2095,14 @@ function updateAdjustedAmountTotal() {
                 }
             });
         });
+
+        // Auto-select and display the first obligation's details
+        if (rows.length > 0) {
+            const firstObligationId = rows[0].dataset.obligationId;
+            if (firstObligationId) {
+                displayObligationDetails(firstObligationId);
+            }
+        }
     });
 </script>
 

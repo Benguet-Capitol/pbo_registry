@@ -1251,9 +1251,12 @@
             }
         }
 
-        // Auto-display the details of the first visible row after filtering
+        // Auto-display the details of the first visible row after filtering, or hide if no results
         if (firstVisibleRowId) {
             displayObligationDetails(firstVisibleRowId);
+        } else {
+            // Hide the panel if no data is found
+            closeObligationDetails();
         }
 
         computeTableTotals();

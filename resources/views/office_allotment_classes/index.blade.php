@@ -181,10 +181,19 @@
                     {{ __('Create Allotment Class per Office') }}
                 </button>
                 @endcan
-                <!-- Search Input -->
-                <div class="flex items-center space-x-2 flex-1 max-w-sm">
-                    <i class="fas fa-search text-gray-400"></i>
-                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400" />
+                <!-- Total Records and Search Input -->
+                <div class="flex items-center space-x-4">
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    </div>
+                    <!-- Search Input -->
+                    <div class="flex items-center space-x-2 min-w-96">
+                        <i class="fas fa-search text-gray-400"></i>
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400" />
+                    </div>
                 </div>
             </div>
 
@@ -505,18 +514,24 @@
         }
     });
 
-    // Calculate total appropriation for visible rows only
+    // Calculate total appropriation for visible rows only and update total records
     function calculateVisibleTotalAppropriation() {
         const rows = document.querySelectorAll('#employeesTable tbody tr');
         let total = 0;
+        let visibleCount = 0;
 
         rows.forEach(row => {
+            // Check if row is visible
             if (row.offsetParent !== null) {
-                const cell = row.querySelector('td:nth-child(7)');
-                if (cell) {
-                    const value = parseFloat(cell.textContent.replace(/,/g, ''));
-                    if (!isNaN(value)) {
-                        total += value;
+                // Exclude the "No records found" row by checking if it has data attributes
+                if (row.dataset.id) {
+                    visibleCount++;
+                    const cell = row.querySelector('td:nth-child(7)');
+                    if (cell) {
+                        const value = parseFloat(cell.textContent.replace(/,/g, ''));
+                        if (!isNaN(value)) {
+                            total += value;
+                        }
                     }
                 }
             }
@@ -528,6 +543,7 @@
         });
 
         document.getElementById('totalAppropriationFooter').textContent = formattedTotal;
+        document.getElementById('totalRecordsCount').textContent = visibleCount;
     }
 
     // Filter table rows based on search input

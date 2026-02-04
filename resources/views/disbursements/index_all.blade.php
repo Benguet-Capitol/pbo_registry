@@ -115,27 +115,37 @@
                     {{ __('Add Purchase Order') }}
                 </button>
                 @endcan -->
-                <form id="searchForm" method="GET" action="{{ route('disbursements.all') }}" class="flex items-center space-x-2">
-                    <!-- Hidden inputs to preserve filters -->
-                    <input type="hidden" name="year1" value="{{ $selectedYear }}">
-                    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
-                    <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
-                    <input type="hidden" name="sort_by" value="{{ $sortBy }}">
-                    <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
-                    
-                    <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="">All Columns</option>
-                        <option value="dv_no" {{ request('search_column') == 'dv_no' ? 'selected' : '' }}>DV No.</option>
-                        <option value="dv_date" {{ request('search_column') == 'dv_date' ? 'selected' : '' }}>DV Date</option>
-                        <option value="payee" {{ request('search_column') == 'payee' ? 'selected' : '' }}>Payee</option>
-                        <option value="address" {{ request('search_column') == 'address' ? 'selected' : '' }}>Address</option>
-                        <option value="dv_remarks" {{ request('search_column') == 'dv_remarks' ? 'selected' : '' }}>Remarks</option>
-                    </x-form.select>
-                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </form>
+                <!-- Right: Total Records and Search Input -->
+                <div class="flex items-center space-x-4">
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    </div>
+                    <!-- Search Form -->
+                    <form id="searchForm" method="GET" action="{{ route('disbursements.all') }}" class="flex items-center space-x-2 min-w-96">
+                        <!-- Hidden inputs to preserve filters -->
+                        <input type="hidden" name="year1" value="{{ $selectedYear }}">
+                        <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+                        <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
+                        <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+                        <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
+                        
+                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">All Columns</option>
+                            <option value="dv_no" {{ request('search_column') == 'dv_no' ? 'selected' : '' }}>DV No.</option>
+                            <option value="dv_date" {{ request('search_column') == 'dv_date' ? 'selected' : '' }}>DV Date</option>
+                            <option value="payee" {{ request('search_column') == 'payee' ? 'selected' : '' }}>Payee</option>
+                            <option value="address" {{ request('search_column') == 'address' ? 'selected' : '' }}>Address</option>
+                            <option value="dv_remarks" {{ request('search_column') == 'dv_remarks' ? 'selected' : '' }}>Remarks</option>
+                        </x-form.select>
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search disbursements" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                        <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
@@ -180,7 +190,8 @@
                 </thead>
                 <tbody>
                     @forelse($disbursements as $disbursement)
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-600 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-600 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                            data-dv-no="{{ $disbursement->dv_no }}">
                             <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300">
                                 {{ optional($disbursement->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
                                 {{ optional($disbursement->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
@@ -273,6 +284,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         updateDisbursementFooterTotal();
+        updateTotalRecordsCount();
     });
     function filterTable() {
             // Declare variables
@@ -295,6 +307,27 @@
                         }
                     }
                 }
+            }
+            updateTotalRecordsCount();
+        }
+
+        /**
+         * Update total records count based on visible rows (counted per dv_no)
+         */
+        function updateTotalRecordsCount() {
+            const rows = document.querySelectorAll('#disbursementsTable tbody tr');
+            let dvNumbers = new Set();
+
+            rows.forEach(row => {
+                // Check if row is visible (display is not 'none')
+                if (row.style.display !== 'none' && row.dataset.dvNo) {
+                    dvNumbers.add(row.dataset.dvNo);
+                }
+            });
+
+            const totalRecordsElement = document.getElementById('totalRecordsCount');
+            if (totalRecordsElement) {
+                totalRecordsElement.textContent = dvNumbers.size;
             }
         }
 

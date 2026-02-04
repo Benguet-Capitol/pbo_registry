@@ -72,6 +72,30 @@ class AppropriationController extends Controller
         
         $query->orderBy('id');
 
+        // Get total count of appropriations based on filters
+        $totalRecords = Appropriation::query()
+            ->when($officeAllotmentClassId, function ($q) use ($officeAllotmentClassId) {
+                return $q->where('office_allotment_class_id', $officeAllotmentClassId);
+            })
+            ->when($search, function ($q) use ($search) {
+                return $q->where(function ($subQ) use ($search) {
+                    $subQ->where('programs', 'like', "%{$search}%")
+                        ->orWhere('account_code', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('fpp_code', 'like', "%{$search}%")
+                        ->orWhere('project_location', 'like', "%{$search}%")
+                        ->orWhere('project_no', 'like', "%{$search}%")
+                        ->orWhere('cco_year', 'like', "%{$search}%")
+                        ->orWhere('appropriation', 'like', "%{$search}%")
+                        ->orWhere('quarter1', 'like', "%{$search}%")
+                        ->orWhere('quarter2', 'like', "%{$search}%")
+                        ->orWhere('quarter3', 'like', "%{$search}%")
+                        ->orWhere('quarter4', 'like', "%{$search}%")
+                        ->orWhere('buffer_fund', 'like', "%{$search}%");
+                });
+            })
+            ->count();
+
         $appropriations = ($perPage == 'all')
             ? $query->get()
             : $query->paginate($perPage)->appends($request->query());
@@ -85,7 +109,7 @@ class AppropriationController extends Controller
             ['label' => 'Accounts']
         ];
 
-        return view('appropriations.index', compact('appropriations', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClass', 'allotmentClassDescription', 'officeName', 'account_codes', 'officeAllotmentClassId', 'totalAppropriation', 'breadcrumb', 'programs', 'totalAllotment'))->with('status', session('status'));
+        return view('appropriations.index', compact('appropriations', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClass', 'allotmentClassDescription', 'officeName', 'account_codes', 'officeAllotmentClassId', 'totalAppropriation', 'breadcrumb', 'programs', 'totalAllotment', 'totalRecords'))->with('status', session('status'));
     }
 
     /**

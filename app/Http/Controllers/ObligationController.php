@@ -258,6 +258,76 @@ class ObligationController extends Controller
         // --- Other variables ---
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
 
+        // Get total count of obligations based on filters
+        $totalRecords = Obligation::with([
+            'officeAllotmentClass.offices',
+            'officeAllotmentClass.allotmentClass'
+        ])->whereHas('officeAllotmentClass', function ($q) use ($selectedYear) {
+            $q->where('year', $selectedYear);
+        })
+        ->when($request->filled('office_allotment_class_filter'), function ($q) use ($request) {
+            return $q->where('office_allotment_class_id', $request->office_allotment_class_filter);
+        })
+        ->when($request->filled('fund_filter'), function ($q) use ($request) {
+            return $q->whereHas('officeAllotmentClass', function ($subQ) use ($request) {
+                $subQ->where('fund', $request->fund_filter);
+            });
+        })
+        ->when($request->filled('obr_type_filter'), function ($q) use ($request) {
+            return $q->where('obr_type', $request->obr_type_filter);
+        })
+        ->when($search, function ($q) use ($search, $searchColumn) {
+            if ($searchColumn) {
+                switch ($searchColumn) {
+                    case 'obr_date':
+                        return $q->where('obr_date', 'like', "%{$search}%");
+                    case 'obr_no':
+                        return $q->where('obr_no', 'like', "%{$search}%");
+                    case 'obr_type':
+                        return $q->where('obr_type', 'like', "%{$search}%");
+                    case 'particulars':
+                        return $q->where('particulars', 'like', "%{$search}%");
+                    case 'office_abbreviation':
+                        return $q->whereHas('officeAllotmentClass.offices', fn($subQ) => 
+                            $subQ->where('office_abbreviation', 'like', "%{$search}%"));
+                    case 'allotment_class':
+                        return $q->whereHas('officeAllotmentClass.allotmentClass', fn($subQ) => 
+                            $subQ->where('class', 'like', "%{$search}%"));
+                    case 'remarks':
+                        return $q->where('remarks', 'like', "%{$search}%");
+                    case 'processed_by':
+                        return $q->where('processed_by', 'like', "%{$search}%");
+                    default:
+                        return $q->where(function ($subQ) use ($search) {
+                            $subQ->where('obr_date', 'like', "%{$search}%")
+                                ->orWhere('obr_no', 'like', "%{$search}%")
+                                ->orWhere('obr_type', 'like', "%{$search}%")
+                                ->orWhere('particulars', 'like', "%{$search}%")
+                                ->orWhere('processed_by', 'like', "%{$search}%")
+                                ->orWhere('remarks', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('officeAllotmentClass.offices', fn($subQ) => 
+                            $subQ->where('office_abbreviation', 'like', "%{$search}%"))
+                        ->orWhereHas('officeAllotmentClass.allotmentClass', fn($subQ) => 
+                            $subQ->where('class', 'like', "%{$search}%"));
+                }
+            } else {
+                return $q->where(function ($subQ) use ($search) {
+                    $subQ->where('obr_date', 'like', "%{$search}%")
+                        ->orWhere('obr_no', 'like', "%{$search}%")
+                        ->orWhere('obr_type', 'like', "%{$search}%")
+                        ->orWhere('particulars', 'like', "%{$search}%")
+                        ->orWhere('processed_by', 'like', "%{$search}%")
+                        ->orWhere('remarks', 'like', "%{$search}%");
+                })
+                ->orWhereHas('officeAllotmentClass.offices', fn($subQ) => 
+                    $subQ->where('office_abbreviation', 'like', "%{$search}%"))
+                ->orWhereHas('officeAllotmentClass.allotmentClass', fn($subQ) => 
+                    $subQ->where('class', 'like', "%{$search}%"));
+            }
+        })
+        ->count();
+
         $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
             ->where('year', $selectedYear)
             ->orderBy('office', 'asc')
@@ -302,7 +372,8 @@ class ObligationController extends Controller
             'office_allotment_classes',
             'obligations_check',
             'breadcrumb',
-            'funds'
+            'funds',
+            'totalRecords'
         ));
     }
 

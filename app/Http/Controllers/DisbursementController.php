@@ -206,8 +206,81 @@ class DisbursementController extends Controller
             ['label' => 'Disbursements']
         ];
 
-            
-    return view('disbursements.index_all', compact('disbursements', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'isPaginated'));
+        // Calculate total records (unique dv_no values)
+        $totalRecordsQuery = Disbursement::with([
+                'obligation.obligationAmounts.appropriation',
+                'obligation.officeAllotmentClass.offices',
+                'obligation.officeAllotmentClass.allotmentClass',
+                ])
+            ->whereHas('obligation.officeAllotmentClass', function ($q) use ($selectedYear) {
+                $q->where('year', $selectedYear);
+            });
+
+        if ($request->filled('office_allotment_class_filter')) {
+            $totalRecordsQuery->whereHas('obligation.officeAllotmentClass', function ($q) use ($request) {
+                $q->where('id', $request->input('office_allotment_class_filter'));
+            });
+        }
+
+        if ($search) {
+            if ($searchColumn) {
+                switch ($searchColumn) {
+                    case 'dv_no':
+                        $totalRecordsQuery->where('dv_no', 'like', '%' . $search . '%');
+                        break;
+                    case 'dv_date':
+                        $totalRecordsQuery->where('disbursement_date', 'like', '%' . $search . '%');
+                        break;
+                    case 'payee':
+                        $totalRecordsQuery->where('payee', 'like', '%' . $search . '%');
+                        break;
+                    case 'address':
+                        $totalRecordsQuery->where('address', 'like', '%' . $search . '%');
+                        break;
+                    case 'dv_remarks':
+                        $totalRecordsQuery->where('dv_remarks', 'like', '%' . $search . '%');
+                        break;
+                    default:
+                        $totalRecordsQuery->where(function ($q) use ($search) {
+                            $q->where('disbursement_date', 'like', '%' . $search . '%')
+                              ->orWhere('dv_no', 'like', '%' . $search . '%')
+                              ->orWhere('status', 'like', '%' . $search . '%')
+                              ->orWhere('remarks', 'like', '%' . $search . '%')
+                                ->orWhere('disbursement_amount', 'like', '%' . $search . '%')
+                              ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
+                                  $q2->where('account_code', 'like', '%' . $search . '%')
+                                     ->orWhere('description', 'like', '%' . $search . '%');
+                              })
+                              ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
+                                  $q3->where('office_abbreviation', 'like', '%' . $search . '%');
+                              })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
+                                  $q4->where('class', 'like', '%' . $search . '%');
+                              });
+                        });
+                }
+            } else {
+                $totalRecordsQuery->where(function ($q) use ($search) {
+                    $q->where('disbursement_date', 'like', '%' . $search . '%')
+                      ->orWhere('dv_no', 'like', '%' . $search . '%')
+                      ->orWhere('status', 'like', '%' . $search . '%')
+                      ->orWhere('remarks', 'like', '%' . $search . '%')
+                        ->orWhere('disbursement_amount', 'like', '%' . $search . '%')
+                      ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
+                          $q2->where('account_code', 'like', '%' . $search . '%')
+                             ->orWhere('description', 'like', '%' . $search . '%');
+                      })
+                      ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
+                          $q3->where('office_abbreviation', 'like', '%' . $search . '%');
+                      })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
+                          $q4->where('class', 'like', '%' . $search . '%');
+                      });
+                });
+            }
+        }
+
+        $totalRecords = $totalRecordsQuery->distinct('dv_no')->count('dv_no');
+
+        return view('disbursements.index_all', compact('disbursements', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'isPaginated', 'totalRecords'));
     }
 
     /**

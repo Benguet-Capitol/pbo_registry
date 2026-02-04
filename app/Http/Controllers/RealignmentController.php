@@ -159,6 +159,31 @@ class RealignmentController extends Controller
             })
             ->get();
 
+        // Get total count of realignments based on filters (grouped by realignment_no)
+        $totalRecords = Realignment::with('appropriation.officeAllotmentClass')
+            ->whereHas('officeAllotmentClass', function ($q) use ($selectedYear) {
+                $q->where('year', $selectedYear);
+            })
+            ->when($request->filled('office_allotment_class_id'), function ($q) use ($request) {
+                return $q->where('office_allotment_classes_id', $request->office_allotment_class_id);
+            })
+            ->when($request->filled('realignment_type_filter'), function ($q) use ($request) {
+                return $q->where('type', $request->realignment_type_filter);
+            })
+            ->when($search, function ($q) use ($search) {
+                return $q->where(function ($subQ) use ($search) {
+                    $subQ->where('realignment_no', 'like', "%{$search}%")
+                        ->orWhere('realignment_date', 'like', "%{$search}%")
+                        ->orWhere('amount', 'like', "%{$search}%")
+                        ->orWhere('type', 'like', "%{$search}%")
+                        ->orWhere('basis', 'like', "%{$search}%")
+                        ->orWhere('remarks', 'like', "%{$search}%");
+                });
+            })
+            ->distinct('realignment_no')
+            ->count('realignment_no');
+
+
         // --- Return View ---
         return view('realignments.index', compact(
             'realignments',
@@ -174,7 +199,8 @@ class RealignmentController extends Controller
             'appropriations',
             'officeAllotmentClassesJs',
             'appropriationsJs',
-            'realignmentsBulkDelete'
+            'realignmentsBulkDelete',
+            'totalRecords'
         ));
     }
 

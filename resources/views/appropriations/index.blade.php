@@ -145,20 +145,29 @@
                     </button>
                     @endcan
                 </div>
-                <div class="flex items-center text-xs gap-3 flex-1 max-w-2xl">
-                    <i class="fas fa-search text-gray-400"></i>
-                    <form method="GET" action="{{ route('appropriations.index') }}" class="flex items-center gap-2 w-full">
-                        <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search accounts..." class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400" />
-                        <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400">
-                            <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
-                            <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
-                            <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
-                            <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>All</option>
-                        </x-form.select>
-                        <button type="submit" class="hidden"></button>
-                    </form>
+                <div class="flex items-center space-x-4">
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    </div>
+                    <!-- Search Input -->
+                    <div class="flex items-center text-xs gap-3 min-w-96">
+                        <i class="fas fa-search text-gray-400"></i>
+                        <form method="GET" action="{{ route('appropriations.index') }}" class="flex items-center gap-2 w-full">
+                            <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
+                            <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search accounts..." class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400" />
+                            <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400">
+                                <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
+                                <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
+                                <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>All</option>
+                            </x-form.select>
+                            <button type="submit" class="hidden"></button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -383,6 +392,7 @@
         filter = input.value.toLowerCase();
         table = document.getElementById("appropriationsTable");
         tr = table.getElementsByTagName("tr");
+        let visibleCount = 0;
 
         // Loop through all table rows, and hide those who don't match the search query
         for (i = 1; i < tr.length; i++) {
@@ -393,11 +403,15 @@
                     txtValue = td[j].textContent || td[j].innerText;
                     if (txtValue.toLowerCase().indexOf(filter) > -1) {
                         tr[i].style.display = "";
+                        visibleCount++;
                         break;
                     }
                 }
             }
         }
+        
+        // Update total records count
+        document.getElementById('totalRecordsCount').textContent = visibleCount;
     }
 
     // Add event listener for input event to filter table as you type

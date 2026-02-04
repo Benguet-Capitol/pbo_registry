@@ -174,8 +174,19 @@
                     </button>
                     @endcan
                 </div>
-                <div class="flex items-center">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for realignments" class="form-control border border-gray-300 rounded-lg w-72 px-4 py-2 mr-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                <!-- Right: Total Records and Search Input -->
+                <div class="flex items-center space-x-4">
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    </div>
+                    <!-- Search Input -->
+                    <div class="flex items-center space-x-2 min-w-96">
+                        <i class="fas fa-search text-gray-400"></i>
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for realignments" class="form-control border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    </div>
                 </div>
             </div>
 
@@ -259,7 +270,8 @@
                         @endphp
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             oncontextmenu="showRealignmentContextMenu(event, this)"
-                            data-realignment='@json($realignment)'>
+                            data-realignment='@json($realignment)'
+                            data-realignment-no="{{ $realignment->realignment_no }}">
                             <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
                             </td>
@@ -534,6 +546,73 @@
         if (e.key === 'Escape') hideRealignmentContextMenu();
     });
 
+    /**
+     * Filter table rows based on search input
+     */
+    function filterRealignments(searchValue) {
+        const rows = document.querySelectorAll('#realignmentsTable tbody tr');
+        const lowerSearch = searchValue.toLowerCase();
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            if (rowText.includes(lowerSearch)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update total records count and footer totals
+        updateTotalRecordsCount();
+        updateFooterTotals();
+    }
+
+    function updateFooterTotals() {
+        let table = document.getElementById("realignmentsTable");
+        let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+        let totalSource = 0;
+        let totalRecipient = 0;
+        for (let i = 0; i < tr.length; i++) {
+            if (tr[i].style.display === "none") continue;
+            let typeCell = tr[i].getElementsByTagName("td")[3];
+            let amountCell = tr[i].getElementsByTagName("td")[8];
+            if (!typeCell || !amountCell) continue;
+            let type = typeCell.textContent.trim();
+            let amountText = amountCell.textContent.replace(/[^\d.-]/g, '');
+            let amount = parseFloat(amountText);
+            if (isNaN(amount)) amount = 0;
+            if (type === 'Source') {
+                totalSource += amount;
+            } else if (type === 'Recipient') {
+                totalRecipient += amount;
+            }
+        }
+        document.getElementById('totalSourceFooter').textContent = totalSource.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('totalRecipientFooter').textContent = totalRecipient.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        // Always show the footer
+        document.getElementById('realignmentsFooter').style.display = '';
+    }
+
+    /**
+     * Update total records count based on visible rows (counted per realignment_no)
+     */
+    function updateTotalRecordsCount() {
+        const rows = document.querySelectorAll('#realignmentsTable tbody tr');
+        let realignmentNos = new Set();
+
+        rows.forEach(row => {
+            // Check if row is visible (display is not 'none')
+            if (row.style.display !== 'none' && row.dataset.realignmentNo) {
+                realignmentNos.add(row.dataset.realignmentNo);
+            }
+        });
+
+        const totalRecordsElement = document.getElementById('totalRecordsCount');
+        if (totalRecordsElement) {
+            totalRecordsElement.textContent = realignmentNos.size;
+        }
+    }
+
     // Initial setup
     document.addEventListener('DOMContentLoaded', () => {
         // Hide context menu when clicking outside
@@ -542,38 +621,19 @@
                 hideRealignmentContextMenu();
             }
         });
+
+        // Initialize total records count
+        updateTotalRecordsCount();
+
+        // Add search input listener for real-time updates
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                filterRealignments(this.value);
+            });
+        }
     });
     })();
-</script>
-
-<script>
-    function filterTable() {
-        // Declare variables
-        var input, filter, table, tr, td, i, j, txtValue;
-        input = document.getElementById("searchInput");
-        filter = input.value.toLowerCase();
-        table = document.getElementById("realignmentsTable");
-        tr = table.getElementsByTagName("tr");
-
-        // Loop through all table rows, and hide those who don't match the search query
-        for (i = 1; i < tr.length; i++) {
-            tr[i].style.display = "none";
-            td = tr[i].getElementsByTagName("td");
-            for (j = 0; j < td.length; j++) {
-                if (td[j]) {
-                    txtValue = td[j].textContent || td[j].innerText;
-                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                        break;
-                    }
-                }
-            }
-        }
-        updateFooterTotals();
-    }
-
-    // Add event listener for input event to filter table as you type
-    document.getElementById('searchInput').addEventListener('input', filterTable);
 
     // Function to toggle dropdown menu
     function toggleDropdown(button) {
@@ -603,32 +663,6 @@
         document.querySelectorAll('.dropdown, .autocomplete-dropdown').forEach(drop => {
             drop.classList.add('hidden');
         });
-    }
-
-    function updateFooterTotals() {
-        let table = document.getElementById("realignmentsTable");
-        let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-        let totalSource = 0;
-        let totalRecipient = 0;
-        for (let i = 0; i < tr.length; i++) {
-            if (tr[i].style.display === "none") continue;
-            let typeCell = tr[i].getElementsByTagName("td")[3];
-            let amountCell = tr[i].getElementsByTagName("td")[8];
-            if (!typeCell || !amountCell) continue;
-            let type = typeCell.textContent.trim();
-            let amountText = amountCell.textContent.replace(/[^\d.-]/g, '');
-            let amount = parseFloat(amountText);
-            if (isNaN(amount)) amount = 0;
-            if (type === 'Source') {
-                totalSource += amount;
-            } else if (type === 'Recipient') {
-                totalRecipient += amount;
-            }
-        }
-        document.getElementById('totalSourceFooter').textContent = totalSource.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        document.getElementById('totalRecipientFooter').textContent = totalRecipient.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        // Always show the footer
-        document.getElementById('realignmentsFooter').style.display = '';
     }
 
     document.addEventListener('DOMContentLoaded', function() {

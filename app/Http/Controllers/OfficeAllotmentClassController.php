@@ -114,6 +114,30 @@ class OfficeAllotmentClassController extends Controller
             }
         }
 
+        // Get total count of office_allotment_classes
+        $totalRecords = OfficeAllotmentClass::where('year', $selectedYear)->with('allotmentClass')
+            ->when($search, function ($q) use ($search) {
+                return $q->where(function ($subQ) use ($search) {
+                    $subQ->where('year', 'like', "%{$search}%")
+                        ->orWhere('office', 'like', "%{$search}%")
+                        ->orWhere('fund', 'like', "%{$search}%")
+                        ->orWhere('fund_source', 'like', "%{$search}%")
+                        ->orWhere('class', 'like', "%{$search}%")
+                        ->orWhere('fpp_code', 'like', "%{$search}%")
+                        ->orWhere('responsibility_code', 'like', "%{$search}%");
+                });
+            })
+            ->when($officeFilter, function ($q) use ($officeFilter) {
+                return $q->where('office', $officeFilter);
+            })
+            ->when($allotmentClassFilter, function ($q) use ($allotmentClassFilter) {
+                return $q->where('class', $allotmentClassFilter);
+            })
+            ->when($fundSourceFilter, function ($q) use ($fundSourceFilter) {
+                return $q->where('fund_source', $fundSourceFilter);
+            })
+            ->count();
+
         // Fetch distinct years from the database
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
 
@@ -139,6 +163,7 @@ class OfficeAllotmentClassController extends Controller
             'allotmentClasses',
             'availableYears',
             'selectedYear',
+            'totalRecords',
             'breadcrumb'
         ))->with('status', session('status'));
     }

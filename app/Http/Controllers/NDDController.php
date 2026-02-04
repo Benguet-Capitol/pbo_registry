@@ -150,11 +150,18 @@ class NDDController extends Controller
                         ->get();
                     
                     if ($purchaseOrders->isNotEmpty()) {
-                        // If there are Purchase Orders, create a row for each PO
-                        foreach ($purchaseOrders as $po) {
-                            // Use supplier from Purchase Order, fallback to default payee
-                            $poPayee = $po->supplier ?? $defaultPayee;
-                            $poDateFormatted = $po->po_date ? Carbon::parse($po->po_date)->format('m/d/Y') : '';
+                        // Group purchase orders by po_number and sum po_amount across all obligation amounts
+                        $groupedByPoNumber = $purchaseOrders->groupBy('po_number');
+                        
+                        foreach ($groupedByPoNumber as $poNumber => $posWithSameNumber) {
+                            // Get the first PO to extract metadata (po_date, supplier)
+                            $firstPo = $posWithSameNumber->first();
+                            
+                            // Sum po_amount across all rows with the same po_number
+                            $totalPoAmount = $posWithSameNumber->sum('po_amount');
+                            
+                            $poPayee = $firstPo->supplier ?? $defaultPayee;
+                            $poDateFormatted = $firstPo->po_date ? Carbon::parse($firstPo->po_date)->format('m/d/Y') : '';
 
                             $results->push([
                                 'office_id' => $officeId,
@@ -162,11 +169,11 @@ class NDDController extends Controller
                                 'office_abbr' => $officeAbbr,
                                 'payee' => $poPayee,
                                 'budget_control_no' => $budgetControlNo,
-                                'po_number' => $po->po_number ?? '',
+                                'po_number' => $poNumber ?? '',
                                 'po_date' => $poDateFormatted,
-                                'po_date_sort' => $po->po_date ? Carbon::parse($po->po_date)->format('Y-m-d') : '',
+                                'po_date_sort' => $firstPo->po_date ? Carbon::parse($firstPo->po_date)->format('Y-m-d') : '',
                                 'obr_date_sort' => $obligation->obr_date ? Carbon::parse($obligation->obr_date)->format('Y-m-d') : '',
-                                'amount' => number_format($po->po_amount ?? 0, 2),
+                                'amount' => number_format($totalPoAmount, 2),
                                 'remarks' => $remarks,
                                 'obligation_id' => $obligation->id,
                                 'obligation_balance' => $obligationBalance

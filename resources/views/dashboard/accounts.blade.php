@@ -748,15 +748,24 @@
                 </button>
             </div>
 
-            <!-- Search Input -->
+            <!-- Search and Total Records Section -->
             <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                <input 
-                    type="text" 
-                    id="accountObligationsSearchInput" 
-                    placeholder="Search obligations..." 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
-                    oninput="filterObligationsTable(this.value, 'accounts')"
-                >
+                <div class="flex items-center space-x-4">
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 flex-shrink-0">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="accountObligationsTotalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">0</span>
+                    </div>
+                    <!-- Search Input -->
+                    <input 
+                        type="text" 
+                        id="accountObligationsSearchInput" 
+                        placeholder="Search obligations..." 
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        oninput="filterObligationsTable(this.value, 'accounts')"
+                    >
+                </div>
             </div>
 
             <!-- Modal Body -->
@@ -2186,8 +2195,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                 </colgroup>
                                 <tfoot class="bg-gray-200 dark:bg-gray-700 font-semibold border-t-2 border-gray-400 dark:border-gray-600">
                                     <tr>
-                                        <td colspan="3" class="px-3 py-2">Total Records: ${recordCount}</td>
-                                        <td colspan="3" class="px-3 py-2 text-right">Total:</td>
+                                        <td colspan="6" class="px-3 py-2 text-right">Total:</td>
                                         <td class="px-3 py-2 text-right text-blue-700 dark:text-blue-300">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                         <td class="px-3 py-2 text-right text-green-700 dark:text-green-300">${totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
                                         <td class="px-3 py-2 text-right text-orange-700 dark:text-orange-300">${totalDisbursement > 0 ? totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
@@ -2199,6 +2207,12 @@ if (typeof originalUpdateCardValues === 'function') {
                     
                     if (content) {
                         content.innerHTML = tableHTML;
+                        
+                        // Initialize header total records count
+                        const headerCountElement = document.getElementById('accountObligationsTotalRecordsCount');
+                        if (headerCountElement) {
+                            headerCountElement.textContent = recordCount;
+                        }
                         
                         // Add click event listeners to obligation rows
                         document.querySelectorAll('.obligation-row').forEach(row => {

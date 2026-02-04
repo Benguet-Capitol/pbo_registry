@@ -225,8 +225,80 @@ class PurchaseOrderController extends Controller
             ['label' => 'Purchase Orders']
         ];
 
-            
-        return view('purchase_orders.index_all', compact('purchaseOrders', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes'));
+        // Calculate total records (unique po_number values)
+        $totalRecordsQuery = PurchaseOrder::with([
+                'obligation.obligationAmounts.appropriation',
+                'obligation.officeAllotmentClass.offices',
+                'obligation.officeAllotmentClass.allotmentClass',
+                ])
+            ->whereHas('obligation.officeAllotmentClass', function ($q) use ($selectedYear) {
+                $q->where('year', $selectedYear);
+            });
+
+        if ($request->filled('office_allotment_class_filter')) {
+            $totalRecordsQuery->whereHas('obligation.officeAllotmentClass', function ($q) use ($request) {
+                $q->where('id', $request->input('office_allotment_class_filter'));
+            });
+        }
+
+        if ($search) {
+            if ($searchColumn) {
+                switch ($searchColumn) {
+                    case 'po_number':
+                        $totalRecordsQuery->where('po_number', 'like', '%' . $search . '%');
+                        break;
+                    case 'po_date':
+                        $totalRecordsQuery->where('po_date', 'like', '%' . $search . '%');
+                        break;
+                    case 'pr_no':
+                        $totalRecordsQuery->where('pr_no', 'like', '%' . $search . '%');
+                        break;
+                    case 'supplier':
+                        $totalRecordsQuery->where('supplier', 'like', '%' . $search . '%');
+                        break;
+                    case 'delivery_period':
+                        $totalRecordsQuery->where('delivery_period', 'like', '%' . $search . '%');
+                        break;
+                    case 'po_remarks':
+                        $totalRecordsQuery->where('po_remarks', 'like', '%' . $search . '%');
+                        break;
+                    default:
+                        $totalRecordsQuery->where(function ($q) use ($search) {
+                            $q->where('po_number', 'like', '%' . $search . '%')
+                              ->orWhere('pr_no', 'like', '%' . $search . '%')
+                              ->orWhere('supplier', 'like', '%' . $search . '%')
+                              ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
+                                  $q2->where('account_code', 'like', '%' . $search . '%')
+                                     ->orWhere('description', 'like', '%' . $search . '%');
+                              })
+                              ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
+                                  $q3->where('office_abbreviation', 'like', '%' . $search . '%');
+                              })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
+                                  $q4->where('class', 'like', '%' . $search . '%');
+                              });
+                        });
+                }
+            } else {
+                $totalRecordsQuery->where(function ($q) use ($search) {
+                    $q->where('po_number', 'like', '%' . $search . '%')
+                      ->orWhere('pr_no', 'like', '%' . $search . '%')
+                      ->orWhere('supplier', 'like', '%' . $search . '%')
+                      ->orWhereHas('obligation.obligationAmounts.appropriation', function ($q2) use ($search) {
+                          $q2->where('account_code', 'like', '%' . $search . '%')
+                             ->orWhere('description', 'like', '%' . $search . '%');
+                      })
+                      ->orWhereHas('obligation.officeAllotmentClass.offices', function ($q3) use ($search) {
+                          $q3->where('office_abbreviation', 'like', '%' . $search . '%');
+                      })->orWhereHas('obligation.officeAllotmentClass.allotmentClass', function ($q4) use ($search) {
+                          $q4->where('class', 'like', '%' . $search . '%');
+                      });
+                });
+            }
+        }
+
+        $totalRecords = $totalRecordsQuery->distinct('po_number')->count('po_number');
+
+        return view('purchase_orders.index_all', compact('purchaseOrders', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'totalRecords'));
     }
 
     /**

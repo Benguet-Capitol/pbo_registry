@@ -156,8 +156,19 @@
                     </button>
                     @endcan
                 </div>
-                <div class="flex items-center">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="form-control border border-gray-300 rounded-lg px-4 py-2 mr-2 text-xs w-72 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                <!-- Right: Total Records and Search Input -->
+                <div class="flex items-center space-x-4">
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    </div>
+                    <!-- Search Input -->
+                    <div class="flex items-center space-x-2 min-w-96">
+                        <i class="fas fa-search text-gray-400"></i>
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for supplementals" class="form-control border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    </div>
                 </div>
             </div>
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
@@ -234,9 +245,10 @@
                 </thead>
                 <tbody>
                     @forelse($supplementals as $supplemental)
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             oncontextmenu="showSupplementalContextMenu(event, this)"
-                            data-supplemental='@json($supplemental)'>
+                            data-supplemental='@json($supplemental)'
+                            data-supplemental-no="{{ $supplemental->supplemental_no }}">
                             <td class="font-semibold px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
                             </td>
@@ -517,36 +529,60 @@
                 hideSupplementalContextMenu();
             }
         });
+
+        // Initialize total records count
+        updateTotalRecordsCount();
+
+        // Add search input listener for real-time updates
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                filterSupplementals(this.value);
+            });
+        }
     });
     })();
 
-    function filterTable() {
-        // Declare variables
-        var input, filter, table, tr, td, i, j, txtValue;
-        input = document.getElementById("searchInput");
-        filter = input.value.toLowerCase();
-        table = document.getElementById("supplementalTable");
-        tr = table.getElementsByTagName("tr");
+    /**
+     * Update total records count based on visible rows (counted per supplemental_no)
+     */
+    function updateTotalRecordsCount() {
+        const rows = document.querySelectorAll('#supplementalTable tbody tr');
+        let supplementalNos = new Set();
 
-        // Loop through all table rows, and hide those who don't match the search query
-        for (i = 1; i < tr.length; i++) {
-            tr[i].style.display = "none";
-            td = tr[i].getElementsByTagName("td");
-            for (j = 0; j < td.length; j++) {
-                if (td[j]) {
-                    txtValue = td[j].textContent || td[j].innerText;
-                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                        break;
-                    }
-                }
+        rows.forEach(row => {
+            // Check if row is visible (display is not 'none')
+            if (row.style.display !== 'none' && row.dataset.supplementalNo) {
+                supplementalNos.add(row.dataset.supplementalNo);
             }
+        });
+
+        const totalRecordsElement = document.getElementById('totalRecordsCount');
+        if (totalRecordsElement) {
+            totalRecordsElement.textContent = supplementalNos.size;
         }
-        updateFooterTotals();
     }
 
-    // Add event listener for input event to filter table as you type
-    document.getElementById('searchInput').addEventListener('input', filterTable);
+    /**
+     * Filter table rows based on search input
+     */
+    function filterSupplementals(searchValue) {
+        const rows = document.querySelectorAll('#supplementalTable tbody tr');
+        const lowerSearch = searchValue.toLowerCase();
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            if (rowText.includes(lowerSearch)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update total records count and footer totals
+        updateTotalRecordsCount();
+        updateFooterTotals();
+    }
 
 
    // Function to toggle dropdown menu

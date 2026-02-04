@@ -133,10 +133,34 @@ class SupplementalController extends Controller
         })
         ->get();
 
+    // Calculate total records (unique supplemental_no values)
+    $totalRecordsQuery = Supplemental::with(['officeAllotmentClass', 'appropriation'])
+        ->whereHas('officeAllotmentClass', fn($q) => $q->where('year', $selectedYear));
+
+    if ($request->filled('office_allotment_class_id')) {
+        $totalRecordsQuery->where('office_allotment_classes_id', $request->office_allotment_class_id);
+    }
+
+    if ($request->filled('supplemental_type_filter')) {
+        $totalRecordsQuery->where('type', $request->supplemental_type_filter);
+    }
+
+    if ($search) {
+        $totalRecordsQuery->where(fn($q) => $q->where('supplemental_no', 'like', "%{$search}%")
+            ->orWhere('supplemental_date', 'like', "%{$search}%")
+            ->orWhere('basis_no', 'like', "%{$search}%")
+            ->orWhere('basis', 'like', "%{$search}%")
+            ->orWhere('type', 'like', "%{$search}%")
+            ->orWhere('amount', 'like', "%{$search}%")
+            ->orWhere('remarks', 'like', "%{$search}%"));
+    }
+
+    $totalRecords = $totalRecordsQuery->distinct('supplemental_no')->count('supplemental_no');
+
     return view('supplementals.index', compact(
         'supplementals', 'perPage', 'search', 'sortBy', 'sortOrder',
         'availableYears', 'selectedYear', 'officeAllotmentClasses',
-        'office_allotment_classes', 'appropriations', 'breadcrumb', 'supplementalsBulkDelete'
+        'office_allotment_classes', 'appropriations', 'breadcrumb', 'supplementalsBulkDelete', 'totalRecords'
     ));
 }
 

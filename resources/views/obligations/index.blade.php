@@ -175,6 +175,8 @@
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Create Obligation') }}
                 </button>
+                @else
+                <div></div>
                 @endcan
                 <!-- Right: Total Records and Search Input -->
                 <div class="flex items-center space-x-4">

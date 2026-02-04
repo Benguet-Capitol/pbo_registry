@@ -341,7 +341,7 @@
                     @endforelse
                 </tbody>
                 <tfoot>
-                    <tr id="realignmentsFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600" style="display: none;">
+                    <tr id="realignmentsFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
                         <td colspan="5" class="text-center text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Source:
                             <span id="totalSourceFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">

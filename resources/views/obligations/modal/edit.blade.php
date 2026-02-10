@@ -905,6 +905,13 @@
     function validateEditObligationsForm() {
         const form = document.getElementById('editObligationsForm');
         
+        // Update hidden search input with current search field value
+        const searchInput = document.getElementById('searchInput');
+        const hiddenSearchInput = document.querySelector('#editObligationsForm input[name="search"]');
+        if (searchInput && hiddenSearchInput) {
+            hiddenSearchInput.value = searchInput.value;
+        }
+        
        // Log the current state BEFORE any modifications
         const fromDashboardField = document.querySelector('#editObligationsForm input[name="from_dashboard"]');
         console.log('validateEditObligationsForm - from_dashboard value:', fromDashboardField ? fromDashboardField.value : 'NOT FOUND');
@@ -929,9 +936,13 @@
             obrDate.classList.add('border-gray-300');
         }
         const obrType = document.getElementById('edit_obr_type');
-        if (!obrType.value.trim()) {
-            document.getElementById('edit_obrTypeError').textContent = 'Obligation Type is required.';
-            isValid = false;
+        if (obrType.value.trim()) {
+            // Optionally validate the value is a valid option
+            const validTypes = ['Regular', 'Purchase Request', 'Project/Contract'];
+            if (!validTypes.includes(obrType.value)) {
+                document.getElementById('obrTypeError').textContent = 'Please select a valid Obligation Type.';
+                isValid = false;
+            }
         }
         const obrNo = document.getElementById('edit_obr_no');
         if (!obrNo.value.trim()) {

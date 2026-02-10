@@ -108,7 +108,11 @@ class DashboardController extends Controller
                     ->orWhere('responsibility_code', 'like', "%$search%")
                     ->orWhere('class', 'like', "%$search%")
                     ->orWhere('fund', 'like', "%$search%")
-                    ->orWhere('fund_source', 'like', "%$search%");
+                    ->orWhere('fund_source', 'like', "%$search%")
+                    ->orWhereHas('offices', function ($query) use ($search) {
+                        $query->where('office_abbreviation', 'like', "%$search%")
+                              ->orWhere('office_name', 'like', "%$search%");
+                    });
             });
         }
 

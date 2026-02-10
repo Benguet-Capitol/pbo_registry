@@ -1204,6 +1204,13 @@ function validateForm() {
 
 // CLEANUP FORM DATA - Remove formatting before submission
 function cleanupFormData() {
+    // Update hidden search input with current search field value
+    const searchInput = document.getElementById('searchInput');
+    const hiddenSearchInput = document.querySelector('#createObligationsForm input[name="search"]');
+    if (searchInput && hiddenSearchInput) {
+        hiddenSearchInput.value = searchInput.value;
+    }
+    
     // Remove commas from all amount_of_obligation fields
     const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
     amountFields.forEach(field => {

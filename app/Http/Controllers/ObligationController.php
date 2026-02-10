@@ -613,11 +613,12 @@ class ObligationController extends Controller
                             ->with('reopen_modal', true)
                             ->with('preselected_class_id', $validated['office_allotment_class_id'])
                             ->with('preselected_appropriation_id', $request->input('preselected_appropriation_id'))
-                            ->with('preselected_account_code', $preselectedAccountCode);
+                            ->with('preselected_account_code', $preselectedAccountCode)
+                            ->with($request->only(['search']));
                     } else {
                         // Redirect back to dashboard with modal reopen
                         return redirect()
-                            ->route('dashboard', $request->only(['year1', 'office_filter', 'allotment_class_filter', 'group_filter', 'fund_type_filter', 'fund_filter']))
+                            ->route('dashboard', $request->only(['year1', 'office_filter', 'allotment_class_filter', 'group_filter', 'fund_type_filter', 'fund_filter', 'search', 'sort_by', 'sort_order']))
                             ->with('status', $statusMessage)
                             ->with('reopen_modal', true)
                             ->with('preselected_class_id', $validated['office_allotment_class_id']);
@@ -831,10 +832,12 @@ class ObligationController extends Controller
                 ]);
                 
                 $accountsClassId = $request->input('accounts_class_id');
-                return redirect()->route('dashboard.accounts', $accountsClassId)->with('status', [
-                    'type' => 'update',
-                    'message' => "Obligation Request No. <strong>{$validated['edit_obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
-                ]);
+                return redirect()->route('dashboard.accounts', $accountsClassId)
+                    ->with('status', [
+                        'type' => 'update',
+                        'message' => "Obligation Request No. <strong>{$validated['edit_obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
+                    ])
+                    ->with($request->only(['search']));
             }
 
             return redirect()->route('obligations.index', $request->only(['search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter']))
@@ -1529,11 +1532,12 @@ class ObligationController extends Controller
         $accountCodesMessage = count($accountCodes) > 1 ? implode(', ', $accountCodes) : ($accountCodes[0] ?? 'N/A');
         $dvNumbersMessage = implode(', ', $dvNumbers);
         $formattedAmount = number_format($totalDisbursementAmount, 2);
+        $obrNo = $obligation->obr_no ?? 'N/A';
 
         return redirect()->to(url()->previous())
             ->with('status', [
                 'type' => 'default',
-                'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> with Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"
+                'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> for OBR No. <strong>{$obrNo}</strong> with DV / Check Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"
             ]);
         }
 

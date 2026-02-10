@@ -13,6 +13,14 @@
     .animate-scaleInUp {
         animation: scaleInUp 0.3s ease-out;
     }
+
+    .obligation-row-highlighted {
+        background-color: #debeef !important;
+    }
+
+    .dark .obligation-row-highlighted {
+        background-color: #3b82f6 !important;
+    }
 </style>
 
 <!-- Obligation Details Modal -->
@@ -58,6 +66,18 @@
         const modal = document.getElementById('obligationModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
+
+        // Remove highlight from any previously highlighted row
+        const previouslyHighlighted = document.querySelector('tr.obligation-row-highlighted');
+        if (previouslyHighlighted) {
+            previouslyHighlighted.classList.remove('obligation-row-highlighted');
+        }
+
+        // Add highlight to the current row
+        const currentRow = document.querySelector(`tr[data-obligation-id="${obligationId}"]`);
+        if (currentRow) {
+            currentRow.classList.add('obligation-row-highlighted');
+        }
 
         // Request obligation data from the server
         fetch(`/obligations/${obligationId}`)
@@ -530,5 +550,11 @@
         const modal = document.getElementById('obligationModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
+
+        // Remove highlight from the row when closing modal
+        const highlightedRow = document.querySelector('tr.obligation-row-highlighted');
+        if (highlightedRow) {
+            highlightedRow.classList.remove('obligation-row-highlighted');
+        }
     }
 </script>

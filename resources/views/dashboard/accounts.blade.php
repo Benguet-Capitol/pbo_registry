@@ -58,7 +58,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
             <!-- Search Input -->
                 <div class="flex items-center space-x-2 lg:col-span-3">
-                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ session('search') ?? request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                 </div>
         </div>
     </div>
@@ -3059,6 +3059,23 @@ if (typeof originalUpdateCardValues === 'function') {
     // Initialize card click handlers when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
         setupCardClickHandlers();
+        
+        // Set up search input listener and apply initial filter
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            // Use a small delay to ensure DOM is fully rendered
+            setTimeout(function() {
+                // Apply filter if there's an initial search value
+                if (searchInput.value.trim()) {
+                    filterTable(searchInput.value);
+                }
+            }, 100);
+            
+            // Listen for search input changes
+            searchInput.addEventListener('input', function() {
+                filterTable(this.value);
+            });
+        }
     });
 
     window.handleAccountMenuOption = handleAccountMenuOption;

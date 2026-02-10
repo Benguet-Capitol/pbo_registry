@@ -197,7 +197,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
      <!-- Search Input -->
             <div class="flex items-center space-x-2 lg:col-span-3">
-                <x-form.input type="text" name="search" id="searchInput" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                <x-form.input type="text" name="search" id="searchInput" value="{{ session('search') ?? request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
             </div>
     </div>
     </div>
@@ -1273,9 +1273,21 @@
         // Also update your DOMContentLoaded event listener
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', function() {
-                filterTable(this.value);
-            });
+            
+            // Use a small delay to ensure DOM is fully rendered
+            setTimeout(function() {
+                // Apply filter if there's an initial search value
+                if (searchInput && searchInput.value.trim()) {
+                    filterTable(searchInput.value);
+                }
+            }, 100);
+            
+            // Listen for search input changes
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    filterTable(this.value);
+                });
+            }
         });
 
                 function CloseAllDropdowns() {

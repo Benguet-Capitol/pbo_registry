@@ -6,7 +6,7 @@
         <!-- Finance/Budget Logo using FontAwesome -->
         <i class="ml-1 mr-1 fas fa-code-compare text-3xl text-gray-700 dark:text-white"></i>
 
-        <span x-show="isSidebarOpen || isSidebarHovered" class="text-xl font-semibold text-gray-900 dark:text-white">PBO|REGISTRY</span>
+        <span x-show="isSidebarOpen || isSidebarHovered" class="text-xl font-semibold text-gray-900 dark:text-white">PBO|Registry</span>
 
         <span class="sr-only">Dashboard</span>
     </a>

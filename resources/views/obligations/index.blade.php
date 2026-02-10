@@ -2014,6 +2014,18 @@ function updateAdjustedAmountTotal() {
 
     // Display Obligation Details Panel
     function displayObligationDetails(obligationId) {
+        // Remove highlight from any previously highlighted row
+        const previouslyHighlighted = document.querySelector('tr.obligation-row-highlighted');
+        if (previouslyHighlighted) {
+            previouslyHighlighted.classList.remove('obligation-row-highlighted');
+        }
+
+        // Add highlight to the current row
+        const currentRow = document.querySelector(`tr[data-obligation-id="${obligationId}"]`);
+        if (currentRow) {
+            currentRow.classList.add('obligation-row-highlighted');
+        }
+
         // Fetch obligation details with amounts
         fetch(`/api/obligations/${obligationId}/details`)
             .then(response => {
@@ -2081,6 +2093,12 @@ function updateAdjustedAmountTotal() {
     // Close Obligation Details Panel
     function closeObligationDetails() {
         document.getElementById('obligationDetailsPanel').classList.add('hidden');
+        
+        // Remove highlight from the row when closing panel
+        const highlightedRow = document.querySelector('tr.obligation-row-highlighted');
+        if (highlightedRow) {
+            highlightedRow.classList.remove('obligation-row-highlighted');
+        }
     }
 
     // Add click listeners to obligation rows (left click)
@@ -2123,6 +2141,14 @@ function updateAdjustedAmountTotal() {
 
     .page-transition {
         animation: pageSlideUp 0.4s ease-in-out;
+    }
+
+    .obligation-row-highlighted {
+        background-color: #bfdbfe !important;
+    }
+
+    .dark .obligation-row-highlighted {
+        background-color: #1e40af !important;
     }
 </style>
     </div>

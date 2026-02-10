@@ -820,11 +820,15 @@
                 obrDate.classList.add('border-gray-300');
             }
 
-            // Validate Obligation Type
+            // Validate Obligation Type (only if it has a value)
             const obrType = document.getElementById('obr_type');
-            if (!obrType.value.trim()) {
-                document.getElementById('obrTypeError').textContent = 'Obligation Type is required.';
-                isValid = false;
+            if (obrType.value.trim()) {
+                // Optionally validate the value is a valid option
+                const validTypes = ['Regular', 'Purchase Request', 'Project/Contract'];
+                if (!validTypes.includes(obrType.value)) {
+                    document.getElementById('obrTypeError').textContent = 'Please select a valid Obligation Type.';
+                    isValid = false;
+                }
             }
 
             // Validate OBR Number

@@ -18,7 +18,7 @@
                         <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
                             {{ __('Add Disbursement') }}
                         </h3>
-                        <span class="text-xs text-blue-700 dark:text-blue-300">
+                        <span class="text-lg text-blue-700 dark:text-blue-300 font-semibold">
                             {{ $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A' }} - {{ $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A' }} | {{ $obligation->obr_no ?? 'N/A' }}
                         </span>
                     </div>

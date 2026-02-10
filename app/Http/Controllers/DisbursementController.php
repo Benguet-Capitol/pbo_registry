@@ -482,15 +482,24 @@ class DisbursementController extends Controller
             'year' => 'required|integer|min:2000|max:2999',
         ]);
 
-        $exists = Disbursement::whereHas('obligation.officeAllotmentClass', function ($query) use ($validated) {
-            $query->where('year', $validated['year']);
-        })
-        ->where('dv_no', $validated['dv_no'])
-        ->exists();
+        $disbursement = Disbursement::with('obligation')
+            ->whereHas('obligation.officeAllotmentClass', function ($query) use ($validated) {
+                $query->where('year', $validated['year']);
+            })
+            ->where('dv_no', $validated['dv_no'])
+            ->first();
+
+        $exists = $disbursement ? true : false;
+        $message = '';
+        
+        if ($exists) {
+            $obrNo = $disbursement->obligation->obr_no ?? 'N/A';
+            $message = "DV / Check Number '<strong>{$validated['dv_no']}</strong>' is already used for OBR No. <strong>{$obrNo}</strong>.";
+        }
 
         return response()->json([
             'exists' => $exists,
-            'message' => $exists ? "DV / Check Number '<strong>{$validated['dv_no']}</strong>' is already used in the year <strong>{$validated['year']}</strong>." : ''
+            'message' => $message
         ]);
     }
 }

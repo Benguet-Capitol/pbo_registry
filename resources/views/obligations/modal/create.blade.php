@@ -6,6 +6,7 @@
     <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
+    <input type="hidden" name="search_column" value="{{ request('search_column') }}">
     <input type="hidden" name="group_filter" value="{{ request('group_filter') }}">
     <input type="hidden" name="fund_type_filter" value="{{ request('fund_type_filter') }}">
     <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">

@@ -7,6 +7,7 @@
     <input type="hidden" name="supplemental_type_filter" value="{{ request('supplemental_type_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
+    <input type="hidden" name="search_column" value="{{ request('search_column') }}">
     <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
     <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
     <input type="hidden" name="group_filter" value="{{ request('group_filter') }}">

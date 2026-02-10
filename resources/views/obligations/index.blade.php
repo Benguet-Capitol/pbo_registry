@@ -102,6 +102,12 @@
         </h4>
 
         <form id="filterForm" method="GET" action="{{ route('obligations.index') }}">
+            <!-- Hidden inputs to preserve search parameters -->
+            <input type="hidden" name="search" value="{{ request('search') }}">
+            <input type="hidden" name="search_column" value="{{ request('search_column') }}">
+            <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+            <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
+            
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
                 <!-- Year Filter -->

@@ -167,61 +167,7 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 ">
-                                            <tr>
-                                                <td class="px-1 py-2 relative">
-                                                    <x-form.input
-                                                        name="account_code[]"
-                                                        id="account_code"
-                                                        placeholder="{{ __('Account Code') }}"
-                                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
-                                                        oninput="filterAccountCodes(this)"
-                                                        onchange="resetAmountOnAccountCodeChange(this)"
-                                                        autocomplete="off" />
-                                                    <div class="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-[10004]" id="AccountCodeDropdown" style="width: auto; min-width: 200px;">
-                                                        <!-- Suggestions will appear here -->
-                                                    </div>
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.textarea
-                                                        name="description[]"
-                                                        placeholder="{{ __('Description') }}"
-                                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
-                                                        autocomplete="off"></x-form.textarea>
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.textarea
-                                                        name="programs[]"
-                                                        placeholder="{{ __('Program') }}"
-                                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
-                                                        autocomplete="off"></x-form.textarea>
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.input
-                                                        type="text"
-                                                        name="balance_from_allotment[]"
-                                                        oninput="formatCurrency(this)"
-                                                        placeholder="{{ __('Balance') }}"
-                                                        autocomplete="off"
-                                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
-                                                        readonly />
-                                                </td>
-                                                <td class="px-1 py-2">
-                                                    <x-form.input
-                                                        type="text"
-                                                        name="amount_of_obligation[]"
-                                                        oninput="validateAmountInput(this); calculateTotalObligation();"
-                                                        onblur="formatAmountField(this); calculateTotalObligation();"
-                                                        placeholder="{{ __('Amount') }}"
-                                                        autocomplete="off"
-                                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                                                </td>
-                                                <td class="px-1 py-2 text-center">
-                                                    <button type="button" onclick="deleteRow(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <!-- Additional rows can be dynamically added using JavaScript -->
+                                            <!-- Appropriations rows will be populated here by JavaScript -->
                                         </tbody>
                                         <!-- Fixed Total Row -->
                                         <tfoot class="bg-gray-50 dark:bg-gray-800">
@@ -238,7 +184,7 @@
                                     </table>
                                 </div>
                                 <!-- Add Button for Dynamic Rows -->
-                                <div class="sm:col-span-6 mt-4">
+                                <div class="mt-4">
                                     <button type="button" onclick="addRow()" class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                                         <i class="fas fa-plus text-sm mr-2"></i>
                                         {{ __('Add Row') }}
@@ -401,6 +347,13 @@ function openCreateModal(officeAllotmentClassId = null, appropriationId = null, 
                 
                 // Generate OBR number
                 generateObrNumber();
+                
+                // Populate table or setup filtering based on class type
+                if (selectedClass.class === 'PS' || selectedClass.fund === 'Provincial Development Fund') {
+                    populateAppropriationsTable(selectedClass.id);
+                } else {
+                    setupAccountCodeFiltering(selectedClass.id);
+                }
             }
         }
     }
@@ -499,6 +452,7 @@ const existingObrNumbers = [
 ];
 
 let selectedOfficeAllotmentClass = null;
+let isTablePopulationMode = false;
 
 // 3. Filter Office Allotment Classes
 function filterOfficeAllotmentClasses() {
@@ -530,16 +484,17 @@ function filterOfficeAllotmentClasses() {
             
             selectedOfficeAllotmentClass = item;
             
-            document.querySelectorAll('[name="account_code[]"]').forEach(field => field.value = '');
-            document.querySelectorAll('[name="description[]"]').forEach(field => field.value = '');
-            document.querySelectorAll('[name="programs[]"]').forEach(field => field.value = '');
-            document.querySelectorAll('[name="balance_from_allotment[]"]').forEach(field => field.value = '');
-            document.querySelectorAll('[name="amount_of_obligation[]"]').forEach(field => field.value = '');
-            
             document.getElementById('obr_type').value = '';
             
             updateObligationTypes(item.class);
             generateObrNumber();
+            
+            // Populate table or setup filtering based on class type
+            if (item.class === 'PS' || item.fund === 'Provincial Development Fund') {
+                populateAppropriationsTable(item.id);
+            } else {
+                setupAccountCodeFiltering(item.id);
+            }
             
             dropdown.classList.add("hidden");
         };
@@ -669,7 +624,81 @@ const appropriations = [
     @endforeach
 ];
 
-// 8. FILTER ACCOUNT CODES
+// 8. SETUP ACCOUNT CODE FILTERING (for non-PS classes)
+function setupAccountCodeFiltering(officeAllotmentClassId) {
+    isTablePopulationMode = false;
+    const tableBody = document.querySelector('#programs_table tbody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    if (!officeAllotmentClassId) {
+        return;
+    }
+
+    // Show Add Row button
+    const addRowBtn = document.querySelector('button[onclick="addRow()"]');
+    if (addRowBtn) addRowBtn.style.display = 'inline-flex';
+
+    // Create a single input row for filtering account codes
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td class="px-1 py-2 relative">
+            <input 
+                type="text" 
+                name="account_code[]" 
+                placeholder="{{ __('Account Code') }}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                oninput="filterAccountCodes(this)"
+                onchange="resetAmountOnAccountCodeChange(this)"
+                autocomplete="off" />
+            <div class="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-[10004]" style="width: auto; min-width: 200px;">
+                <!-- Filtered suggestions will appear here -->
+            </div>
+        </td>
+        <td class="px-1 py-2">
+            <textarea 
+                name="description[]" 
+                placeholder="{{ __('Description') }}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                autocomplete="off"></textarea>
+        </td>
+        <td class="px-1 py-2">
+            <textarea 
+                name="programs[]" 
+                placeholder="{{ __('Program') }}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                autocomplete="off"></textarea>
+        </td>
+        <td class="px-1 py-2">
+            <input 
+                type="text" 
+                name="balance_from_allotment[]" 
+                placeholder="{{ __('Balance') }}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                readonly />
+        </td>
+        <td class="px-1 py-2">
+            <input 
+                type="text" 
+                name="amount_of_obligation[]" 
+                placeholder="{{ __('Amount') }}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                oninput="validateAmountInput(this); calculateTotalObligation();"
+                onblur="formatAmountField(this); calculateTotalObligation();"
+                autocomplete="off" />
+        </td>
+        <td class="px-1 py-2 text-center">
+            <button type="button" onclick="deleteRow(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    tableBody.appendChild(row);
+    
+    // Reset total obligation
+    calculateTotalObligation();
+}
+
+// 9. FILTER ACCOUNT CODES (for non-PS classes)
 function filterAccountCodes(inputElement) {
     const officeAllotmentClassId = document.getElementById('office_allotment_class_id').value;
     const dropdown = inputElement.nextElementSibling;
@@ -717,7 +746,89 @@ function filterAccountCodes(inputElement) {
     dropdown.style.width = rect.width + 'px';
 }
 
-// 9. POPULATE FIELDS
+// 10. DISPLAY ALL APPROPRIATIONS IN TABLE (for PS classes)
+function populateAppropriationsTable(officeAllotmentClassId) {
+    isTablePopulationMode = true;
+    const tableBody = document.querySelector('#programs_table tbody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    if (!officeAllotmentClassId) {
+        return;
+    }
+
+    // Hide Add Row button
+    const addRowBtn = document.querySelector('button[onclick="addRow()"]');
+    if (addRowBtn) addRowBtn.style.display = 'none';
+
+    // Get all appropriations for the selected office allotment class
+    const appropriationsForClass = appropriations.filter(item =>
+        item.office_allotment_class_id === officeAllotmentClassId
+    );
+
+    if (appropriationsForClass.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="6" class="px-4 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                {{ __('No appropriations found for this office and allotment class') }}
+            </td>
+        `;
+        tableBody.appendChild(row);
+        return;
+    }
+
+    // Create a row for each appropriation (without delete button)
+    appropriationsForClass.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="px-1 py-2">
+                <input 
+                    type="text" 
+                    name="account_code[]" 
+                    value="${item.account_code}" 
+                    class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                    readonly />
+            </td>
+            <td class="px-1 py-2">
+                <textarea 
+                    name="description[]" 
+                    class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded text-gray-600 dark:text-gray-400"
+                    readonly>${item.description || ''}</textarea>
+            </td>
+            <td class="px-1 py-2">
+                <textarea 
+                    name="programs[]" 
+                    class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded text-gray-600 dark:text-gray-400"
+                    readonly>${item.program || ''}</textarea>
+            </td>
+            <td class="px-1 py-2">
+                <input 
+                    type="text" 
+                    name="balance_from_allotment[]" 
+                    value="${parseFloat(item.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}" 
+                    class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                    readonly />
+            </td>
+            <td class="px-1 py-2">
+                <input 
+                    type="text" 
+                    name="amount_of_obligation[]" 
+                    placeholder="{{ __('Amount') }}"
+                    class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                    oninput="validateAmountInput(this); calculateTotalObligation();"
+                    onblur="formatAmountField(this); calculateTotalObligation();"
+                    autocomplete="off" />
+            </td>
+            <td class="px-1 py-2 text-center">
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    // Reset total obligation
+    calculateTotalObligation();
+}
+
+// 11. POPULATE FIELDS
 function populateFields(inputElement, item) {
     const row = inputElement.closest('tr');
     const programField = row.querySelector('[name="programs[]"]');
@@ -727,7 +838,7 @@ function populateFields(inputElement, item) {
     if (descriptionField) descriptionField.value = item.description ? item.description.trim() : '';
 }
 
-// 10. CALCULATE BALANCE
+// 12. CALCULATE BALANCE
 function calculateBalance(inputElement, item) {
     const row = inputElement.closest('tr');
     const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
@@ -739,7 +850,7 @@ function calculateBalance(inputElement, item) {
     if (balanceField) balanceField.value = formattedBalance;
 }
 
-// 10b. RESET AMOUNT ON ACCOUNT CODE CHANGE
+// 12b. RESET AMOUNT ON ACCOUNT CODE CHANGE
 function resetAmountOnAccountCodeChange(inputElement) {
     const row = inputElement.closest('tr');
     const amountField = row.querySelector('[name="amount_of_obligation[]"]');
@@ -749,7 +860,7 @@ function resetAmountOnAccountCodeChange(inputElement) {
     }
 }
 
-// 11. VALIDATE AMOUNT INPUT (on input - only validation, no formatting)
+// 13. VALIDATE AMOUNT INPUT (on input - only validation, no formatting)
 function validateAmountInput(inputElement) {
     const row = inputElement.closest('tr');
     const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
@@ -776,7 +887,7 @@ function validateAmountInput(inputElement) {
     }
 }
 
-// 11b. FORMAT AMOUNT FIELD (on blur - format and final validation)
+// 13b. FORMAT AMOUNT FIELD (on blur - format and final validation)
 function formatAmountField(inputElement) {
     const row = inputElement.closest('tr');
     const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
@@ -807,7 +918,7 @@ function formatAmountField(inputElement) {
     }
 }
 
-// 12. CALCULATE TOTAL OBLIGATION
+// 14. CALCULATE TOTAL OBLIGATION
 function calculateTotalObligation() {
     const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
     let total = 0;
@@ -825,7 +936,7 @@ function calculateTotalObligation() {
     });
 }
 
-// 13. ADD ROW
+// 15. ADD ROW
 function addRow() {
     const tableBody = document.querySelector('#programs_table tbody');
     const lastRow = tableBody.querySelector('tr:last-child');
@@ -839,7 +950,7 @@ function addRow() {
     calculateTotalObligation();
 }
 
-// 14. DELETE ROW
+// 16. DELETE ROW
 let rowToDelete = null;
 
 function deleteRow(button) {
@@ -869,7 +980,7 @@ document.getElementById('cancelDeleteBtn').addEventListener('click', function() 
     document.getElementById('deleteConfirmModal').classList.add('hidden');
 });
 
-// 15. UPDATE TEXT COLOR
+// 17. UPDATE TEXT COLOR
 function updateTextColor(element) {
     if (element.value.trim() !== "") {
         element.classList.remove("text-gray-500");
@@ -898,7 +1009,7 @@ function updateTextColor(element) {
     }
 }
 
-// 16. SETUP TEXT COLOR ON DOM LOAD
+// 18. SETUP TEXT COLOR ON DOM LOAD
 document.addEventListener("DOMContentLoaded", function() {
     const fields = document.querySelectorAll("input, select, textarea"); 
 
@@ -933,7 +1044,7 @@ document.addEventListener("DOMContentLoaded", function() {
     enableDropdownKeyboardNavigation("account_code", "AccountCodeDropdown");
 });
 
-// 17. KEYBOARD NAVIGATION
+// 19. KEYBOARD NAVIGATION
 function enableDropdownKeyboardNavigation(inputId, dropdownId) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
@@ -995,7 +1106,7 @@ function enableDropdownKeyboardNavigation(inputId, dropdownId) {
     });
 }
 
-// 18. HIDE DROPDOWNS WHEN CLICKING OUTSIDE
+// 20. HIDE DROPDOWNS WHEN CLICKING OUTSIDE
 document.addEventListener('click', function(event) {
     // Hide Office Allotment Class dropdown
     const officeDropdown = document.getElementById("OfficeAllotmentClassDropdown");
@@ -1056,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 19. VALIDATE FORM
+// 21. VALIDATE FORM
 function validateForm() {
     const form = document.getElementById('createObligationsForm');
     let isValid = true;
@@ -1140,62 +1251,49 @@ function validateForm() {
 
     if (tableBody.rows.length === 0) {
         const tableMessage = document.getElementById('tableMessage');
-        tableMessage.textContent = 'At least one row is required in the table.';
+        tableMessage.textContent = 'At least one appropriation must be available.';
         tableMessage.classList.remove('hidden');
         isValid = false;
     }
 
     const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
+    let hasAtLeastOneAmount = false;
+    
     amountFields.forEach((field, index) => {
         const value = parseFloat((field.value || '').replace(/,/g, '')) || 0;
         const row = field.closest('tr');
         const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
         const balanceValue = parseFloat((balanceField.value || '').replace(/,/g, '')) || 0;
         
-        // Check if amount is greater than 0
-        if (value <= 0) {
-            field.classList.add('border-red-500');
-            field.classList.remove('border-gray-300');
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'text-red-500 text-xs mt-1';
-            errorMessage.textContent = `Row ${index + 1}: Amount of Obligation must be greater than 0.`;
-            errorMessage.style.gridColumn = 'span 2';
-            field.parentNode.appendChild(errorMessage);
-            isValid = false;
-        }
-        // Check if amount exceeds balance
-        else if (value > balanceValue) {
-            field.classList.add('border-red-500');
-            field.classList.remove('border-gray-300');
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'text-red-500 text-xs mt-1';
-            errorMessage.textContent = `Row ${index + 1}: Amount of Obligation (${value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}) cannot exceed Balance from Allotment (${balanceValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}).`;
-            errorMessage.style.gridColumn = 'span 2';
-            field.parentNode.appendChild(errorMessage);
-            isValid = false;
+        // Only validate if an amount is entered (not empty/0)
+        if (value > 0) {
+            hasAtLeastOneAmount = true;
+            
+            // Check if amount exceeds balance
+            if (value > balanceValue) {
+                field.classList.add('border-red-500');
+                field.classList.remove('border-gray-300');
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'text-red-500 text-xs mt-1';
+                errorMessage.textContent = `Row ${index + 1}: Amount of Obligation (${value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}) cannot exceed Balance from Allotment (${balanceValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}).`;
+                errorMessage.style.gridColumn = 'span 2';
+                field.parentNode.appendChild(errorMessage);
+                isValid = false;
+            } else {
+                field.classList.remove('border-red-500');
+                field.classList.add('border-gray-300');
+            }
         } else {
+            // Clear any red styling if amount is empty/0
             field.classList.remove('border-red-500');
             field.classList.add('border-gray-300');
         }
     });
 
-    const balanceFields = document.querySelectorAll('[name="balance_from_allotment[]"]');
-    let totalBalance = 0;
-    let hasNull = false;
-
-    balanceFields.forEach(field => {
-        const rawValue = field.value;
-        if (rawValue === null || rawValue === '' || typeof rawValue === 'undefined') {
-            hasNull = true;
-        } else {
-            const value = parseFloat(rawValue);
-            totalBalance += value || 0;
-        }
-    });
-
-    if (!hasNull && totalBalance === 0) {
+    // Check that at least one amount is entered
+    if (!hasAtLeastOneAmount) {
         const tableMessage = document.getElementById('tableMessage');
-        tableMessage.textContent = 'The Balance from Allotment has been exhausted.';
+        tableMessage.textContent = 'At least one Amount of Obligation must be entered.';
         tableMessage.classList.remove('hidden');
         isValid = false;
     }
@@ -1203,7 +1301,7 @@ function validateForm() {
     return isValid;
 }
 
-// CLEANUP FORM DATA - Remove formatting before submission
+// CLEANUP FORM DATA - Remove formatting before submission and remove empty rows
 function cleanupFormData() {
     // Update hidden search input with current search field value
     const searchInput = document.getElementById('searchInput');
@@ -1212,20 +1310,26 @@ function cleanupFormData() {
         hiddenSearchInput.value = searchInput.value;
     }
     
-    // Remove commas from all amount_of_obligation fields
-    const amountFields = document.querySelectorAll('[name="amount_of_obligation[]"]');
-    amountFields.forEach(field => {
-        if (field.value) {
-            // Remove commas to convert "5,000.00" to "5000.00"
-            field.value = field.value.replace(/,/g, '');
-        }
-    });
+    // Remove empty rows and format amounts
+    const tableBody = document.querySelector('#programs_table tbody');
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
     
-    // Remove commas from all balance_from_allotment fields as well
-    const balanceFields = document.querySelectorAll('[name="balance_from_allotment[]"]');
-    balanceFields.forEach(field => {
-        if (field.value) {
-            field.value = field.value.replace(/,/g, '');
+    rows.forEach(row => {
+        const amountField = row.querySelector('[name="amount_of_obligation[]"]');
+        const value = (amountField.value || '').replace(/,/g, '').trim();
+        
+        // Remove row if amount is empty
+        if (!value || parseFloat(value) === 0) {
+            row.remove();
+        } else {
+            // Remove commas from amount field
+            amountField.value = value;
+            
+            // Remove commas from balance field
+            const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
+            if (balanceField && balanceField.value) {
+                balanceField.value = balanceField.value.replace(/,/g, '');
+            }
         }
     });
 }

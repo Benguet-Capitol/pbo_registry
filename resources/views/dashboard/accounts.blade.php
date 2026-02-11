@@ -546,9 +546,9 @@
                 <table id="accountsTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left border-collapse">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
-                            <th class="px-2 py-2 w-[120px] text-center">Programs</th>
-                            <th class="px-2 py-2 w-[120px] text-center">Account Code</th>
-                            <th class="px-2 py-2 w-[130px] text-center">Description</th>
+                            <th class="px-2 py-2 w-[200px] text-center">Programs</th>
+                            <th class="px-2 py-2 w-[150px] text-center">Account Code</th>
+                            <th class="px-2 py-2 w-[200px] text-center">Description</th>
                             @role('Disbursement|Administrator|Developer|Obligation')
                             <th class="px-2 py-2 w-[100px] text-center">FPP Code</th>
                             @endrole

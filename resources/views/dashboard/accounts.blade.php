@@ -3170,6 +3170,7 @@ if (typeof originalFilterTable === 'function') {
                 contextMenu.classList.add('hidden');
                 
                 if (currentAccountAppropriation && currentAccountAppropriation.officeAllotmentClassId) {
+                    // Call with appropriation ID and account code to pre-populate first row
                     openCreateModalWithAppropriation(
                         currentAccountAppropriation.officeAllotmentClassId,
                         currentAccountAppropriation.appropriationId,
@@ -3180,106 +3181,6 @@ if (typeof originalFilterTable === 'function') {
         }
     });
 
-    /**
-     * Open the create modal with preselected office allotment class and appropriation
-     */
-    function openCreateModalWithAppropriation(officeAllotmentClassId, appropriationId, accountCode) {
-        // Close any open dropdowns
-        if (typeof closeAllDropdowns === 'function') {
-            closeAllDropdowns();
-        }
-        
-        const createModal = document.getElementById('createModal');
-        if (!createModal) {
-            console.error('Create modal element not found');
-            return;
-        }
-        
-        // Trigger reflow to ensure CSS transitions work
-        createModal.offsetHeight;
-        createModal.style.display = 'flex';
-        createModal.setAttribute('aria-hidden', 'false');
-        
-        // Update date field based on current year
-        if (typeof updateDateFieldBasedOnYear === 'function') {
-            updateDateFieldBasedOnYear();
-        }
-        
-        // Set preselection flags to 1 (coming from accounts page)
-        const preselectedInput = document.getElementById('preselected_class');
-        if (preselectedInput) {
-            preselectedInput.value = '1';
-        }
-        
-        // Set preselected appropriation ID so controller knows this came from accounts page
-        const preselectedAppropriationInput = document.getElementById('preselected_appropriation_id');
-        if (preselectedAppropriationInput && appropriationId) {
-            preselectedAppropriationInput.value = appropriationId;
-        }
-        
-        // Find and select the office allotment class
-        const selectedClass = officeAllotmentClasses.find(oac => oac.id == officeAllotmentClassId);
-        if (selectedClass) {
-            const classInput = document.getElementById('office_allotment_class');
-            const classIdInput = document.getElementById('office_allotment_class_id');
-            
-            if (classInput && classIdInput) {
-                classInput.value = selectedClass.name;
-                classIdInput.value = selectedClass.id;
-                selectedOfficeAllotmentClass = selectedClass;
-                
-                // Update obligation types based on the selected class
-                updateObligationTypes(selectedClass.class);
-                
-                // Generate OBR number
-                generateObrNumber();
-            }
-        }
-        
-        // Pre-populate the account code in the first row if appropriationId is provided
-        if (appropriationId && accountCode) {
-            setTimeout(() => {
-                const firstAccountCodeInput = document.querySelector('[name="account_code[]"]');
-                if (firstAccountCodeInput) {
-                    // Find the appropriation details
-                    const appropriation = appropriations.find(app => 
-                        app.id == appropriationId || app.account_code == accountCode
-                    );
-                    
-                    if (appropriation) {
-                        // Set the account code
-                        firstAccountCodeInput.value = appropriation.account_code;
-                        
-                        // Populate other fields
-                        const row = firstAccountCodeInput.closest('tr');
-                        const programField = row.querySelector('[name="programs[]"]');
-                        const descriptionField = row.querySelector('[name="description[]"]');
-                        const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
-                        
-                        if (programField) programField.value = appropriation.program || '';
-                        if (descriptionField) descriptionField.value = appropriation.description || '';
-                        
-                        // Calculate and set balance
-                        if (balanceField) {
-                            const balance = parseFloat(appropriation.balance || 0);
-                            const formattedBalance = balance.toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                            balanceField.value = formattedBalance;
-                        }
-                        
-                        // Focus on the amount field for immediate data entry
-                        const amountField = row.querySelector('[name="amount_of_obligation[]"]');
-                        if (amountField) {
-                            amountField.focus();
-                        }
-                    }
-                }
-            }, 300);
-        }
-    }
-
     // Handle modal reopening after successful save from accounts page
     document.addEventListener('DOMContentLoaded', function() {
         @if(session('reopen_modal') && session('preselected_class_id'))
@@ -3288,6 +3189,7 @@ if (typeof originalFilterTable === 'function') {
             const preselectedAccountCode = '{{ session("preselected_account_code") }}';
             
             setTimeout(function() {
+                // Reopen with appropriation details if available
                 if (preselectedAppropriationId && preselectedAccountCode) {
                     openCreateModalWithAppropriation(
                         {{ session('preselected_class_id') }},
@@ -3468,8 +3370,6 @@ if (typeof originalFilterTable === 'function') {
         }
     }
 
-    // Make the function globally available
-    window.openCreateModalWithAppropriation = openCreateModalWithAppropriation;
     </script>
 
     @include('obligations.modal.edit')

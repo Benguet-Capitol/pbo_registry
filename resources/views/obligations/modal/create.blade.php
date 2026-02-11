@@ -351,56 +351,42 @@ function openCreateModal(officeAllotmentClassId = null, appropriationId = null, 
                 // Populate table or setup filtering based on class type
                 if (selectedClass.class === 'PS' || selectedClass.fund === 'Provincial Development Fund') {
                     populateAppropriationsTable(selectedClass.id);
-                } else {
+                } else if (!appropriationId) {
+                    // Only setup account code filtering if we don't have a pre-populated appropriation
                     setupAccountCodeFiltering(selectedClass.id);
                 }
             }
         }
     }
     
-    // Pre-populate the account code in the first row if appropriationId is provided
+    // Pre-populate the first row if appropriationId is provided
     if (appropriationId && accountCode) {
         setTimeout(() => {
-            const firstAccountCodeInput = document.querySelector('[name="account_code[]"]');
-            if (firstAccountCodeInput) {
-                // Find the appropriation details
-                const appropriation = appropriations.find(app => 
-                    app.id == appropriationId || app.account_code == accountCode
-                );
+            // Find the appropriation details
+            const appropriation = appropriations.find(app => 
+                app.id == appropriationId || app.account_code == accountCode
+            );
+            
+            if (appropriation) {
+                // Clear existing rows
+                const tableBody = document.querySelector('#programs_table tbody');
+                tableBody.innerHTML = '';
                 
-                if (appropriation) {
-                    // Set the account code
-                    firstAccountCodeInput.value = appropriation.account_code;
-                    
-                    // Populate other fields
-                    const row = firstAccountCodeInput.closest('tr');
-                    const programField = row.querySelector('[name="programs[]"]');
-                    const descriptionField = row.querySelector('[name="description[]"]');
-                    const balanceField = row.querySelector('[name="balance_from_allotment[]"]');
-                    
-                    if (programField) programField.value = appropriation.program || '';
-                    if (descriptionField) descriptionField.value = appropriation.description || '';
-                    
-                    // Calculate and set balance
-                    if (balanceField) {
-                        const balance = parseFloat(appropriation.balance || 0);
-                        const formattedBalance = balance.toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        balanceField.value = formattedBalance;
-                    }
-                    
-                    // Update text colors for all fields
-                    if (typeof updateTextColor === 'function') {
-                        row.querySelectorAll('input, textarea').forEach(field => updateTextColor(field));
-                    }
-                    
-                    // Focus on the amount field for immediate data entry
-                    const amountField = row.querySelector('[name="amount_of_obligation[]"]');
-                    if (amountField) {
-                        setTimeout(() => amountField.focus(), 100);
-                    }
+                // Create pre-populated readonly first row
+                const row = createPrePopulatedRow(appropriation);
+                tableBody.appendChild(row);
+                
+                // Show add row button to allow adding more rows with filtering
+                const addRowBtn = document.querySelector('button[onclick="addRow()"]');
+                if (addRowBtn) addRowBtn.style.display = 'inline-flex';
+                
+                // Calculate total obligation
+                calculateTotalObligation();
+                
+                // Focus on the amount field for immediate data entry
+                const amountField = tableBody.querySelector('[name="amount_of_obligation[]"]');
+                if (amountField) {
+                    amountField.focus();
                 }
             }
         }, 300);
@@ -624,21 +610,8 @@ const appropriations = [
     @endforeach
 ];
 
-// 8. SETUP ACCOUNT CODE FILTERING (for non-PS classes)
-function setupAccountCodeFiltering(officeAllotmentClassId) {
-    isTablePopulationMode = false;
-    const tableBody = document.querySelector('#programs_table tbody');
-    tableBody.innerHTML = ''; // Clear existing rows
-
-    if (!officeAllotmentClassId) {
-        return;
-    }
-
-    // Show Add Row button
-    const addRowBtn = document.querySelector('button[onclick="addRow()"]');
-    if (addRowBtn) addRowBtn.style.display = 'inline-flex';
-
-    // Create a single input row for filtering account codes
+// 8. CREATE FILTERING ROW (used for adding new rows in hybrid mode)
+function createFilteringRow() {
     const row = document.createElement('tr');
     row.innerHTML = `
         <td class="px-1 py-2 relative">
@@ -692,6 +665,84 @@ function setupAccountCodeFiltering(officeAllotmentClassId) {
             </button>
         </td>
     `;
+    return row;
+}
+
+// 8a. CREATE PRE-POPULATED READONLY ROW (for first row when opening from accounts)
+function createPrePopulatedRow(appropriation) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-prepopulated', 'true');
+    
+    const balance = parseFloat(appropriation.balance || 0);
+    const formattedBalance = balance.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    
+    row.innerHTML = `
+        <td class="px-1 py-2">
+            <input 
+                type="text" 
+                name="account_code[]" 
+                value="${appropriation.account_code}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
+                readonly />
+        </td>
+        <td class="px-1 py-2">
+            <textarea 
+                name="description[]" 
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
+                readonly>${appropriation.description || ''}</textarea>
+        </td>
+        <td class="px-1 py-2">
+            <textarea 
+                name="programs[]" 
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
+                readonly>${appropriation.program || ''}</textarea>
+        </td>
+        <td class="px-1 py-2">
+            <input 
+                type="text" 
+                name="balance_from_allotment[]" 
+                value="${formattedBalance}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
+                readonly />
+        </td>
+        <td class="px-1 py-2">
+            <input 
+                type="text" 
+                name="amount_of_obligation[]" 
+                placeholder="{{ __('Amount') }}"
+                class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                oninput="validateAmountInput(this); calculateTotalObligation();"
+                onblur="formatAmountField(this); calculateTotalObligation();"
+                autocomplete="off" />
+        </td>
+        <td class="px-1 py-2 text-center">
+            <button type="button" onclick="deleteRow(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    return row;
+}
+
+// 8b. SETUP ACCOUNT CODE FILTERING (for non-PS classes)
+function setupAccountCodeFiltering(officeAllotmentClassId) {
+    isTablePopulationMode = false;
+    const tableBody = document.querySelector('#programs_table tbody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    if (!officeAllotmentClassId) {
+        return;
+    }
+
+    // Show Add Row button
+    const addRowBtn = document.querySelector('button[onclick="addRow()"]');
+    if (addRowBtn) addRowBtn.style.display = 'inline-flex';
+
+    // Create a single input row for filtering account codes
+    const row = createFilteringRow();
     tableBody.appendChild(row);
     
     // Reset total obligation
@@ -939,14 +990,27 @@ function calculateTotalObligation() {
 // 15. ADD ROW
 function addRow() {
     const tableBody = document.querySelector('#programs_table tbody');
-    const lastRow = tableBody.querySelector('tr:last-child');
-    const newRow = lastRow.cloneNode(true);
+    const firstRow = tableBody.querySelector('tr');
+    
+    // Check if first row is pre-populated (readonly)
+    const isFirstRowPrePopulated = firstRow && firstRow.getAttribute('data-prepopulated') === 'true';
+    
+    if (isFirstRowPrePopulated) {
+        // Add a filtering row instead of cloning
+        const newRow = createFilteringRow();
+        tableBody.appendChild(newRow);
+    } else {
+        // Clone last row (normal behavior)
+        const lastRow = tableBody.querySelector('tr:last-child');
+        const newRow = lastRow.cloneNode(true);
 
-    newRow.querySelectorAll('input, textarea').forEach(input => {
-        input.value = '';
-    });
+        newRow.querySelectorAll('input, textarea').forEach(input => {
+            input.value = '';
+        });
 
-    tableBody.appendChild(newRow);
+        tableBody.appendChild(newRow);
+    }
+    
     calculateTotalObligation();
 }
 
@@ -1333,4 +1397,13 @@ function cleanupFormData() {
         }
     });
 }
+
+// Wrapper function for opening modal with pre-populated appropriation (called from accounts page)
+function openCreateModalWithAppropriation(officeAllotmentClassId, appropriationId, accountCode) {
+    openCreateModal(officeAllotmentClassId, appropriationId, accountCode);
+}
+
+// Make functions globally available
+window.openCreateModal = openCreateModal;
+window.openCreateModalWithAppropriation = openCreateModalWithAppropriation;
 </script>

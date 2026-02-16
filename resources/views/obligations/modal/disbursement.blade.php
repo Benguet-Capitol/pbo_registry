@@ -35,6 +35,17 @@
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id }}">
                             <input type="hidden" name="purchase_order_id" value="{{ isset($purchaseOrder) ? $purchaseOrder->id : null }}">
+                            <input type="hidden" name="from" value="{{ request('from') ?? 'obligation' }}">
+                            <!-- Filter Parameters -->
+                            <input type="hidden" name="search" value="{{ request('search') ?? '' }}">
+                            <input type="hidden" name="search_column" value="{{ request('search_column') ?? '' }}">
+                            <input type="hidden" name="sort_by" value="{{ request('sort_by') ?? '' }}">
+                            <input type="hidden" name="sort_order" value="{{ request('sort_order') ?? '' }}">
+                            <input type="hidden" name="per_page" value="{{ request('per_page') ?? '' }}">
+                            <input type="hidden" name="year1" value="{{ request('year1') ?? '' }}">
+                            <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') ?? '' }}">
+                            <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') ?? '' }}">
+                            <input type="hidden" name="fund_filter" value="{{ request('fund_filter') ?? '' }}">
                             <!-- DV Date -->
                             <div class="sm:col-span-3">
                                 <x-form.label for="disbursement_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Date')" />
@@ -92,7 +103,33 @@
                             <!-- Current Disbursements Table -->
                             <div class="sm:col-span-6">
                                 <h4 class="text-sm text-gray-900 dark:text-gray-200 mb-3 bold">Current Disbursements for this Obligation</h4>
-                                @if($obligation->disbursements && $obligation->disbursements->count())
+                                @php
+                                    // Determine if this is a complex obligation with multiple POs per OA
+                                    $filteredDisbursements = $obligation->disbursements;
+                                    
+                                    if ($from === 'purchase_order' && isset($purchaseOrder)) {
+                                        // Get all PO IDs with the current po_number across all OAs
+                                        $poIdsForThisNumber = \App\Models\PurchaseOrder::where('po_number', $purchaseOrder->po_number)
+                                            ->pluck('id');
+                                        
+                                        // Check if any OA has multiple different PO numbers
+                                        $hasComplexOAs = false;
+                                        foreach ($obligationAmounts as $oa) {
+                                            $totalPOsForOA = \App\Models\PurchaseOrder::where('obligation_amounts_id', $oa->id)->count();
+                                            if ($totalPOsForOA > 1) {
+                                                $hasComplexOAs = true;
+                                                break;
+                                            }
+                                        }
+                                        
+                                        if ($hasComplexOAs) {
+                                            // Complex: only show disbursements linked to this po_number
+                                            $filteredDisbursements = $obligation->disbursements->whereIn('purchase_order_id', $poIdsForThisNumber);
+                                        }
+                                        // Simple: show all disbursements (they all belong to this PO anyway)
+                                    }
+                                @endphp
+                                @if($filteredDisbursements && $filteredDisbursements->count())
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
                                         <thead class="bg-gray-50 dark:bg-gray-800">
@@ -110,7 +147,7 @@
                                             @php
                                                 $lastDvNo = null;
                                             @endphp
-                                            @foreach($obligation->disbursements as $disbursement)
+                                            @foreach($filteredDisbursements as $disbursement)
                                             <tr>
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">{{ $disbursement->dv_no !== $lastDvNo ? $disbursement->dv_no : '' }}</td>
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">{{ $disbursement->dv_no !== $lastDvNo ? $disbursement->disbursement_date : '' }}</td>
@@ -128,7 +165,7 @@
                                         <tfoot>
                                             <tr class="bg-gray-50 dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700">
                                                 <td colspan="5" class="px-2 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">Obligation:   <span class="text-green-700 dark:text-green-300 font-semibold">{{ number_format($totalObligationAmount, 2) }}</span></td>
-                                                <td colspan="2" class="px-2 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">Total DV / Check Amount:   <span class="text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($obligation->disbursements->sum('disbursement_amount'), 2) }}</span></td>
+                                                <td colspan="2" class="px-2 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">Total DV / Check Amount:   <span class="text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($filteredDisbursements->sum('disbursement_amount'), 2) }}</span></td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -170,21 +207,41 @@
                                             @foreach($obligationAmounts as $obligationAmount)
                                                 @php
                                                     $adjustments = \App\Models\ObligationAdjustment::where('obligation_amounts_id', $obligationAmount->id)->sum('adjustment_amount');
-                                                    $disbursements = \App\Models\Disbursement::where('obligation_amounts_id', $obligationAmount->id)->sum('disbursement_amount');
+                                                    $allDisbursements = \App\Models\Disbursement::where('obligation_amounts_id', $obligationAmount->id)->sum('disbursement_amount');
                                                     $totalPO = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)->sum('po_amount');
                                                     $appropriation = $obligationAmount->appropriation;
 
                                                     // Determine balance based on where modal is called from
                                                     if ($from === 'purchase_order' && isset($purchaseOrder)) {
-                                                        // Balance from THIS specific purchase order
-                                                        $poAmount = \App\Models\PurchaseOrder::where('id', $purchaseOrder->id)->value('po_amount');
-                                                        $poDisbursements = \App\Models\Disbursement::where('purchase_order_id', $purchaseOrder->id)
-                                                            ->where('obligation_amounts_id', $obligationAmount->id)
-                                                            ->sum('disbursement_amount');
-                                                        $balance = ($poAmount ?? 0) - $poDisbursements;
+                                                        // Get PO amount for THIS specific obligation amount with the same po_number
+                                                        $poAmountForThisOA = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)
+                                                            ->where('po_number', $purchaseOrder->po_number)
+                                                            ->sum('po_amount');
+                                                        
+                                                        // Count total POs for this OA vs POs with current po_number
+                                                        $totalPOsForOA = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)->count();
+                                                        $posWithThisNumber = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)
+                                                            ->where('po_number', $purchaseOrder->po_number)
+                                                            ->count();
+                                                        
+                                                        if ($totalPOsForOA > 1 && $posWithThisNumber < $totalPOsForOA) {
+                                                            // Multiple different PO numbers for this OA: strictly deduct only disbursements for this po_number
+                                                            $poIdsWithThisNumber = \App\Models\PurchaseOrder::where('obligation_amounts_id', $obligationAmount->id)
+                                                                ->where('po_number', $purchaseOrder->po_number)
+                                                                ->pluck('id');
+                                                            
+                                                            $disbursementsForThisPN = \App\Models\Disbursement::where('obligation_amounts_id', $obligationAmount->id)
+                                                                ->whereIn('purchase_order_id', $poIdsWithThisNumber)
+                                                                ->sum('disbursement_amount');
+                                                        } else {
+                                                            // Only this po_number for this OA: deduct all disbursements
+                                                            $disbursementsForThisPN = $allDisbursements;
+                                                        }
+                                                        
+                                                        $balance = ($poAmountForThisOA ?? 0) - $disbursementsForThisPN;
                                                     } else {
                                                         // Balance from obligation (default)
-                                                        $balance = (($obligationAmount->obr_amount - $disbursements) + $adjustments);
+                                                        $balance = (($obligationAmount->obr_amount - $allDisbursements) + $adjustments);
                                                     }
                                                 @endphp
                                             <tr>

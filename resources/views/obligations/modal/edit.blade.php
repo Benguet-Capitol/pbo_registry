@@ -3,8 +3,9 @@
     @csrf
     @method('PUT')
     <input type="hidden" name="year1" value="{{ request('year1') }}">
-    <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
-    <input type="hidden" name="supplemental_type_filter" value="{{ request('supplemental_type_filter') }}">
+    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+    <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
+    <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
     <input type="hidden" name="search_column" value="{{ request('search_column') }}">
@@ -12,7 +13,6 @@
     <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
     <input type="hidden" name="group_filter" value="{{ request('group_filter') }}">
     <input type="hidden" name="fund_type_filter" value="{{ request('fund_type_filter') }}">
-    <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
     <input type="hidden" name="office_filter" value="{{ request('office_filter') }}">
     <input type="hidden" name="allotment_class_filter" value="{{ request('allotment_class_filter') }}">
     <input type="hidden" name="from_dashboard" value="0">

@@ -1,10 +1,15 @@
 <!-- Cancellation Modal -->
 <form id="cancelObligationForm" method="POST">
+    @csrf
     <input type="hidden" name="year1" value="{{ request('year1') }}">
     <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
     <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
+    <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
     <input type="hidden" name="search" value="{{ request('search') }}">
+    <input type="hidden" name="search_column" value="{{ request('search_column') }}">
+    <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
+    <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
     
     <style>
         @keyframes scaleInUp {
@@ -191,10 +196,16 @@ function openCancellationModal(obligationId, obligationData) {
         // Prepare the form
         const form = document.getElementById('cancelObligationForm');
         form.action = `/obligations/${obligationId}/cancel`;
-        form.innerHTML = `
-        <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-        <input type="hidden" name="remarks" value="${remarks}">
-    `;
+        
+        // Update or add remarks input while preserving other hidden inputs
+        let remarksInput = form.querySelector('input[name="remarks"]');
+        if (!remarksInput) {
+            remarksInput = document.createElement('input');
+            remarksInput.type = 'hidden';
+            remarksInput.name = 'remarks';
+            form.appendChild(remarksInput);
+        }
+        remarksInput.value = remarks;
 
         form.submit(); // Submit the form (will follow Laravel's redirect)
     };

@@ -1317,7 +1317,9 @@ function openCreateObligationAdjustmentModal(obligationId) {
     closeAllDropdowns();
     isSubmittingObligationAdjustment = false;
     
-    fetch(`/obligations/${obligationId}/obligation-adjustment-modal`)
+    // Get current query parameters from the URL
+    const currentParams = new URLSearchParams(window.location.search);
+    fetch(`/obligations/${obligationId}/obligation-adjustment-modal?${currentParams.toString()}`)
         .then(response => response.text())
         .then(html => {
             document.getElementById('createObligationAdjustmentModalContainer').innerHTML = html;
@@ -1566,20 +1568,22 @@ function updateAdjustedAmountTotal() {
 
 
     /* Modal Create PurchaseOrder */
-    function openCreatePOModal(obligationId) {
-        closeAllDropdowns();
-        isSubmittingPurchaseOrder = false;
+function openCreatePOModal(obligationId) {
+    closeAllDropdowns();
+    isSubmittingPurchaseOrder = false;
 
-        fetch(`/obligations/${obligationId}/purchase-order-modal`)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('createPOModalContainer').innerHTML = html;
-                // Show the modal after content is loaded
-                const modal = document.getElementById('createPOModal');
-                modal.style.display = 'flex';
-                modal.setAttribute('aria-hidden', 'false');
-            });
-    }
+    // Get current query parameters from the URL
+    const currentParams = new URLSearchParams(window.location.search);
+    fetch(`/obligations/${obligationId}/purchase-order-modal?${currentParams.toString()}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('createPOModalContainer').innerHTML = html;
+            // Show the modal after content is loaded
+            const modal = document.getElementById('createPOModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+        });
+}
 
     function closeCreatePOModal() {
         const modal = document.getElementById('createPOModal');
@@ -1617,6 +1621,12 @@ function updateAdjustedAmountTotal() {
             });
         }
     }
+
+    document.addEventListener('input', function(event) {
+        if (event.target.name && event.target.name.startsWith('po_amount')) {
+            updatePOAmountTotal();
+        }
+    });
 
     function validateFormCreatePO() {
         // Prevent multiple submissions
@@ -1766,7 +1776,10 @@ function updateAdjustedAmountTotal() {
     function openCreateDisbursementModal(obligationId) {
         closeAllDropdowns();
         isSubmittingDisbursement = false;
-        fetch(`/obligations/${obligationId}/disbursement-modal?from=obligation`)
+        // Get current query parameters from the URL
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.append('from', 'obligation');
+        fetch(`/obligations/${obligationId}/disbursement-modal?${currentParams.toString()}`)
             .then(response => response.text())
             .then(html => {
                 document.getElementById('createDisbursementModalContainer').innerHTML = html;

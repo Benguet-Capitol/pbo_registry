@@ -537,9 +537,13 @@
         /* Modal Create Disbursement */
         function openCreateDisbursementModal(obligationId, purchaseOrderId = null) {
             closeAllDropdowns();
-            const url = purchaseOrderId 
-                ? `/obligations/${obligationId}/disbursement-modal?from=purchase_order&purchase_order_id=${purchaseOrderId}`
-                : `/obligations/${obligationId}/disbursement-modal?from=purchase_order`;
+            // Get current query parameters from the URL
+            const currentParams = new URLSearchParams(window.location.search);
+            currentParams.set('from', 'purchase_order');
+            if (purchaseOrderId) {
+                currentParams.set('purchase_order_id', purchaseOrderId);
+            }
+            const url = `/obligations/${obligationId}/disbursement-modal?${currentParams.toString()}`;
             fetch(url)
                 .then(response => response.text())
                 .then(html => {
@@ -661,7 +665,7 @@
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
                                 <x-form.input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
-                                       value="${poAmount.toFixed(2)}" data-balance="${balance}" oninput="updateEditPOTotal()" />
+                                       value="${poAmount.toFixed(2)}" data-balance="${balance}" oninput="validateAmountPO(this); updateEditPOTotal()" />
                             </td>
                         `;
                         tbody.appendChild(row);
@@ -689,7 +693,7 @@
                             <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">
                                 <x-form.input type="number" name="edit_po_amount[${amount.id}]" min="0" step="0.01" 
                                        class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs rounded border border-gray-300" 
-                                       value="${parseFloat(purchaseOrder.po_amount).toFixed(2)}" data-balance="${balance}" oninput="updateEditPOTotal()" />
+                                       value="${parseFloat(purchaseOrder.po_amount).toFixed(2)}" data-balance="${balance}" oninput="validateAmountPO(this); updateEditPOTotal()" />
                             </td>
                         `;
                         tbody.appendChild(row);
@@ -710,6 +714,43 @@
             if (totalCell) {
                 totalCell.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
+        }
+
+        // Validate PO amount - auto-cap to balance
+        function validateAmountPO(inputElement) {
+            const maxBalance = parseFloat(inputElement.dataset.balance || "0");
+            const inputValue = parseFloat(inputElement.value || "0");
+
+            if (inputValue > maxBalance) {
+                inputElement.value = maxBalance.toFixed(2);
+                inputElement.title = `Max allowed is ₱${maxBalance.toFixed(2)}`;
+            }
+        }
+
+        // Event listener for edit_po_amount inputs
+        document.addEventListener('input', function(event) {
+            if (event.target.name && event.target.name.startsWith('edit_po_amount')) {
+                updateEditPOTotal();
+            }
+        });
+
+        function validateEditPurchaseOrderForm() {
+            const inputs = document.querySelectorAll("input[name^='edit_po_amount']");
+            let isValid = true;
+
+            inputs.forEach(input => {
+                const maxBalance = parseFloat(input.dataset.balance || "0");
+                const inputValue = parseFloat(input.value || "0");
+
+                if (inputValue > maxBalance) {
+                    isValid = false;
+                    alert(`PO Amount cannot exceed the available balance of ₱${maxBalance.toFixed(2)}`);
+                    input.focus();
+                    return false;
+                }
+            });
+
+            return isValid;
         }
 
         function closeEditPurchaseOrderModal() {
@@ -1075,7 +1116,7 @@
 
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
-                    <button type="submit" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="submit" onclick="if(!validateEditPurchaseOrderForm()) { event.preventDefault(); return false; }" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Update') }}
                     </button>

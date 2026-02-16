@@ -642,7 +642,7 @@ class ObligationController extends Controller
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'An error occurred while saving the obligation: ' . $e->getMessage())
-                    ->with($request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']));
+                    ->with($request->only(['search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']));
             }
         } catch (\Exception $e) {
             // Log the error for debugging
@@ -1028,11 +1028,13 @@ class ObligationController extends Controller
             $account_code = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
             $class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
 
-            return redirect()->to(url()->previous())
-                ->with('status', [
-                    'type' => 'delete',
-                    'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!"
-                ]);
+            return redirect()->route('obligations.index', $request->only([
+                'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1',
+                'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
+            ]))->with('status', [
+                'type' => 'delete',
+                'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!"
+            ]);
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1276,7 +1278,7 @@ class ObligationController extends Controller
             ]);
         }
 
-        return redirect()->to(url()->previous())
+        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
             ->with('status', [
                 'type' => 'default',
                 'message' => "Purchase Order No: <strong>{$validated['po_number']}</strong> with Date: <strong>{$validated['po_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"
@@ -1379,7 +1381,7 @@ class ObligationController extends Controller
         $obr = Obligation::find($validated['obligation_id']);
         $obrNo = $obr ? $obr->obr_no : '';
         // Redirect back to the index page with a success message
-        return redirect()->to(url()->previous())
+        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
             ->with('status', [
                 'type' => 'default',
                 'message' => "<strong>$adjustmentsSaved Obligation Adjustments</strong> for OBR No.: <strong>{$obrNo}</strong> has been created successfully. <strong>Details: Adjustment Date:</strong> {$validated['adjustment_date']} with <strong>Account Code(s):</strong> {$accountCodesMessage}"
@@ -1526,7 +1528,8 @@ class ObligationController extends Controller
         }
 
         if ($savedDVs === 0) {
-            return redirect()->back()->with('error', 'No valid disbursement were saved.');
+            return redirect()->back()
+                ->with('error', 'No valid disbursement were saved.');
         }
 
         $accountCodesMessage = count($accountCodes) > 1 ? implode(', ', $accountCodes) : ($accountCodes[0] ?? 'N/A');
@@ -1534,7 +1537,16 @@ class ObligationController extends Controller
         $formattedAmount = number_format($totalDisbursementAmount, 2);
         $obrNo = $obligation->obr_no ?? 'N/A';
 
-        return redirect()->to(url()->previous())
+        // Check if this is from purchase_orders.all
+        if ($request->input('from') === 'purchase_order') {
+            return redirect()->route('purchase_orders.all', $request->only(['year1', 'office_allotment_class_filter', 'per_page']))
+                ->with('status', [
+                    'type' => 'default',
+                    'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> for OBR No. <strong>{$obrNo}</strong> with DV / Check Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"
+                ]);
+        }
+
+        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
             ->with('status', [
                 'type' => 'default',
                 'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> for OBR No. <strong>{$obrNo}</strong> with DV / Check Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"

@@ -231,28 +231,28 @@
                                 @endif
                             </td>
                             <td class="px-2 py-3 font-bold text-right text-green-600 dark:text-green-300">{{ number_format($disbursement->disbursement_amount, 2) }}</td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300">{{ $disbursement->remarks ?? '-' }}</td>
+                            <td class="px-2 py-3 text-left max-w-xs text-gray-600 dark:text-gray-300">{{ $disbursement->remarks ?? '-' }}</td>
                             <!-- <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
                             </td> -->
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="py-4 text-center text-gray-500">No disbursements found.</td>
+                            <td colspan="10" class="py-4 text-center text-gray-500">No disbursements found.</td>
                         </tr>
                     @endforelse
                 </tbody>
                 <tfoot>
                     <tr id="disbursementsFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
-                        <td colspan="7" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                        <td colspan="6" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
 
                         </td>
-                        <td colspan="2" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                        <td colspan="3" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total DV / Check Amount:
                             <span id="totalDVAmountFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold ml-2">
                                 0.00
                             </span>
                         </td>
-                        <td colspan="2" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                        <td colspan="1" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
 
                         </td>
                     </tr>

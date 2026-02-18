@@ -583,8 +583,10 @@
                                     <td class="text-left px-4 py-3 text-green-700 dark:text-green-300 font-semibold" id="footerTotalObligationAmount">0.00</td>
                                     <td class="text-right px-4 py-3">Total Purchase Order:</td>
                                     <td class="text-left px-4 py-3 text-blue-700 dark:text-blue-300 font-semibold" id="footerTotalPOAmount">0.00</td>
+                                    @hasanyrole('Disbursement|Administrator|Developer')
                                     <td class="text-right px-4 py-3">Total Disbursement:</td>
                                     <td class="text-left px-4 py-3 text-orange-700 dark:text-orange-300 font-semibold" id="footerTotalDisbursementAmount">0.00</td>
+                                    @endhasanyrole
                                 </tr>
                             </tbody>
                         </table>

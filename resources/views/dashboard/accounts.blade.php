@@ -2064,52 +2064,26 @@ if (typeof originalUpdateCardValues === 'function') {
                     let recordCount = 0;
 
                     data.data.forEach((obligation, index) => {
-                        // Filter to get only the selected appropriation
-                        const selectedApps = obligation.appropriations.filter(app => app.id == currentAccountAppropriation.appropriationId);
+                        // Get total obligation amount from API (sum of all obligation_amounts)
+                        const totalOblAmount = parseFloat(obligation.amount.replace(/,/g, ''));
                         
-                        // Calculate amount for only the selected appropriation
-                        let appropriationAmount = 0;
-                        let adjustmentAmount = 0;
-                        let adjustedAmount = 0;
-                        let purchaseOrderAmount = 0;
-
-                        selectedApps.forEach(app => {
-                            // Parse the amount (already formatted with commas)
-                            const baseAmount = parseFloat(app.amount.replace(/,/g, ''));
-                            appropriationAmount += baseAmount;
-                            
-                            // Parse adjustment amount
-                            const adjAmt = parseFloat(app.adjustment_amount ? app.adjustment_amount.replace(/,/g, '') : '0');
-                            adjustmentAmount += adjAmt;
-                            
-                            // Parse adjusted amount (which should be base + adjustments)
-                            const adjTotal = parseFloat(app.adjusted_amount ? app.adjusted_amount.replace(/,/g, '') : '0');
-                            adjustedAmount += adjTotal;
-
-                            // Parse purchase order amount
-                            const poAmount = parseFloat(app.purchase_order_amount ? app.purchase_order_amount.replace(/,/g, '') : '0');
-                            purchaseOrderAmount += isNaN(poAmount) ? 0 : poAmount;
-                        });
+                        // Get total purchase order amount
+                        const poAmount = obligation.purchase_order !== '-' ? parseFloat(obligation.purchase_order.replace(/,/g, '')) : 0;
                         
-                        // Use adjusted_amount if available, otherwise calculate base + adjustments
-                        const displayAmount = adjustedAmount > 0 ? adjustedAmount : (appropriationAmount + adjustmentAmount);
-                        const formattedAppAmount = displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        const formattedPOAmount = purchaseOrderAmount > 0 ? purchaseOrderAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                        // Get total disbursement amount
+                        const disbAmount = obligation.disbursement !== '-' ? parseFloat(obligation.disbursement.replace(/,/g, '')) : 0;
                         
                         // Check if obligation is cancelled (amount is 0)
-                        const isCancelled = displayAmount === 0;
+                        const isCancelled = totalOblAmount === 0;
                         
-                        // Check if obligation has adjustments in selected appropriations
-                        const hasAdjustments = selectedApps.some(app => {
-                            const adjAmount = parseFloat(app.adjustment_amount ? app.adjustment_amount.replace(/,/g, '') : '0');
-                            return adjAmount !== 0;
-                        });
+                        // Format amounts for display
+                        const formattedOblAmount = totalOblAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const formattedPOAmount = poAmount > 0 ? poAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                        const formattedDisbAmount = disbAmount > 0 ? disbAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
                         
                         const amountDisplay = isCancelled ? 
                             '<span class="text-red-600 dark:text-red-400 font-semibold">Cancelled</span>' : 
-                            (hasAdjustments ?
-                                `<span class="text-green-600 dark:text-green-400 font-semibold">${formattedAppAmount}</span>` :
-                                formattedAppAmount);
+                            formattedOblAmount;
                         
                         tableHTML += `
                             <tr class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer obligation-row" data-obligation-index="${index}">
@@ -2121,7 +2095,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                 <td class="px-3 py-2">${obligation.remarks || '-'}</td>
                                 <td class="px-3 py-2 text-right font-semibold">${amountDisplay}</td>
                                 <td class="px-3 py-2 text-right">${formattedPOAmount}</td>
-                                <td class="px-3 py-2 text-right">${obligation.disbursement}</td>
+                                <td class="px-3 py-2 text-right">${formattedDisbAmount}</td>
                             </tr>
                             <tr class="hidden appropriations-row" data-obligation-index="${index}">
                                 <td colspan="9" class="px-2 py-2">
@@ -2141,7 +2115,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-400 dark:border-gray-600">
                         `;
                         
-                        // Display all appropriations in the detail row, but calculate amount only for selected
+                        // Display all appropriations in the detail row
                         obligation.appropriations.forEach(app => {
                             tableHTML += `
                                                 <tr>
@@ -2164,16 +2138,10 @@ if (typeof originalUpdateCardValues === 'function') {
                             </tr>
                         `;
                         
-                        // Add to total for the selected appropriation only (using adjusted amounts)
-                        totalAmount += displayAmount;
-                        totalPurchaseOrder += purchaseOrderAmount;
-                        // Add disbursement amount from selected appropriations
-                        let appropriationDisbursement = 0;
-                        selectedApps.forEach(app => {
-                            const disbAmt = parseFloat(app.disbursement_amount ? app.disbursement_amount.replace(/,/g, '') : '0');
-                            appropriationDisbursement += isNaN(disbAmt) ? 0 : disbAmt;
-                        });
-                        totalDisbursement += appropriationDisbursement;
+                        // Add to total (using total obligation amounts from API)
+                        totalAmount += totalOblAmount;
+                        totalPurchaseOrder += poAmount;
+                        totalDisbursement += disbAmount;
                         recordCount++;
                     });
                     

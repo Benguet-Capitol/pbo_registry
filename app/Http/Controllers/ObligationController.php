@@ -164,7 +164,18 @@ class ObligationController extends Controller
             ]);
 
         // --- Preload Appropriations and related data ---
-        $appropriations = Appropriation::with([
+        $appropriations = Appropriation::select(
+            'id',
+            'office_allotment_class_id',
+            'account_code',
+            'description',
+            'programs',
+            'project_no',
+            'quarter1',
+            'quarter2',
+            'quarter3',
+            'quarter4'
+        )->with([
             'obligationAmounts.obligationAdjustments',
             'realignments',
             'supplementals'

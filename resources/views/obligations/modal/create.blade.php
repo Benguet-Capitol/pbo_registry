@@ -153,7 +153,7 @@
                                                 <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
                                                     {{ __('Description') }}
                                                 </th>
-                                                <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
+                                                <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200" id="programColumnHeader">
                                                     {{ __('Program') }}
                                                 </th>
                                                 <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
@@ -603,6 +603,7 @@ const appropriations = [
         id: "{{ $appropriation->id }}",
         account_code: "{{ $appropriation->account_code }}",
         program: "{{ $appropriation->programs }}",
+        project_no: "{{ $appropriation->project_no }}",
         description: "{{ $appropriation->description }}",
         office_allotment_class_id: "{{ $appropriation->office_allotment_class_id }}",
         balance: "{{ $appropriation->balance }}"
@@ -612,6 +613,8 @@ const appropriations = [
 
 // 8. CREATE FILTERING ROW (used for adding new rows in hybrid mode)
 function createFilteringRow() {
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const programLabel = isPDF ? "{{ __('Project No') }}" : "{{ __('Program') }}";
     const row = document.createElement('tr');
     row.innerHTML = `
         <td class="px-1 py-2 relative">
@@ -637,7 +640,7 @@ function createFilteringRow() {
         <td class="px-1 py-2">
             <textarea 
                 name="programs[]" 
-                placeholder="{{ __('Program') }}"
+                placeholder="${programLabel}"
                 class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
                 autocomplete="off"></textarea>
         </td>
@@ -679,6 +682,9 @@ function createPrePopulatedRow(appropriation) {
         maximumFractionDigits: 2
     });
     
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const programValue = isPDF ? (appropriation.project_no || '') : (appropriation.program || '');
+    
     row.innerHTML = `
         <td class="px-1 py-2">
             <input 
@@ -698,7 +704,7 @@ function createPrePopulatedRow(appropriation) {
             <textarea 
                 name="programs[]" 
                 class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
-                readonly>${appropriation.program || ''}</textarea>
+                readonly>${programValue}</textarea>
         </td>
         <td class="px-1 py-2">
             <input 
@@ -772,13 +778,16 @@ function filterAccountCodes(inputElement) {
         return;
     }
 
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+
     filteredCodes.forEach(item => {
         const option = document.createElement('div');
         option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+        const programValue = isPDF ? (item.project_no || 'No project no') : (item.program || 'No program');
         option.innerHTML = `
             <strong>${item.account_code}</strong><br>
             <span class="text-gray-700 dark:text-gray-400">${item.description || 'No description'}</span><br>
-            <span class="text-gray-700 dark:text-gray-400">${item.program || 'No program'}</span>
+            <span class="text-gray-700 dark:text-gray-400">${programValue}</span>
         `;
         option.onclick = function() {
             inputElement.value = item.account_code;
@@ -797,7 +806,7 @@ function filterAccountCodes(inputElement) {
     dropdown.style.width = rect.width + 'px';
 }
 
-// 10. DISPLAY ALL APPROPRIATIONS IN TABLE (for PS classes)
+// 10. DISPLAY ALL APPROPRIATIONS IN TABLE (for PS classes or Provincial Development Fund)
 function populateAppropriationsTable(officeAllotmentClassId) {
     isTablePopulationMode = true;
     const tableBody = document.querySelector('#programs_table tbody');
@@ -810,6 +819,9 @@ function populateAppropriationsTable(officeAllotmentClassId) {
     // Hide Add Row button
     const addRowBtn = document.querySelector('button[onclick="addRow()"]');
     if (addRowBtn) addRowBtn.style.display = 'none';
+
+    // Update column header based on fund type
+    updateProgramColumnHeader();
 
     // Get all appropriations for the selected office allotment class
     const appropriationsForClass = appropriations.filter(item =>
@@ -827,9 +839,14 @@ function populateAppropriationsTable(officeAllotmentClassId) {
         return;
     }
 
+    // Check if this is Provincial Development Fund
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+
     // Create a row for each appropriation (without delete button)
     appropriationsForClass.forEach((item, index) => {
         const row = document.createElement('tr');
+        const programValue = isPDF ? (item.project_no || '') : (item.program || '');
+        
         row.innerHTML = `
             <td class="px-1 py-2">
                 <input 
@@ -849,7 +866,7 @@ function populateAppropriationsTable(officeAllotmentClassId) {
                 <textarea 
                     name="programs[]" 
                     class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded text-gray-600 dark:text-gray-400"
-                    readonly>${item.program || ''}</textarea>
+                    readonly>${programValue}</textarea>
             </td>
             <td class="px-1 py-2">
                 <input 
@@ -879,13 +896,25 @@ function populateAppropriationsTable(officeAllotmentClassId) {
     calculateTotalObligation();
 }
 
+// 10b. UPDATE PROGRAM COLUMN HEADER
+function updateProgramColumnHeader() {
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const columnHeader = document.getElementById('programColumnHeader');
+    if (columnHeader) {
+        columnHeader.textContent = isPDF ? "{{ __('Project No') }}" : "{{ __('Program') }}";
+    }
+}
+
 // 11. POPULATE FIELDS
 function populateFields(inputElement, item) {
     const row = inputElement.closest('tr');
     const programField = row.querySelector('[name="programs[]"]');
     const descriptionField = row.querySelector('[name="description[]"]');
 
-    if (programField) programField.value = item.program ? item.program.trim() : '';
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const programValue = isPDF ? (item.project_no || '') : (item.program || '');
+    
+    if (programField) programField.value = programValue ? programValue.trim() : '';
     if (descriptionField) descriptionField.value = item.description ? item.description.trim() : '';
 }
 

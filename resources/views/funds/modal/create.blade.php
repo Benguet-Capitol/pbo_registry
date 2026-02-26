@@ -39,6 +39,7 @@
                                     <option value="General Fund">General Fund</option>
                                     <option value="Benguet General Hospital Economic Enterprise">Benguet General Hospital Economic Enterprise</option>
                                     <option value="Special Education Fund">Special Education Fund</option>
+                                    <option value="Special Health Fund">Special Health Fund</option>
                                 </x-form.select>
                             </x-form.input-with-icon-wrapper>
                             <span id="fund_typeError" class="text-red-500 text-sm"></span>

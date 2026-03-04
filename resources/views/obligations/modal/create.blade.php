@@ -199,7 +199,7 @@
             <!-- Modal footer -->
             <div class="justify-center items-center mt-0 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                 <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                <button type="button" onclick="if(!validateForm()) return false; cleanupFormData(); document.getElementById('createObligationsForm').submit();" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="handleSaveObligation()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Save') }}
                 </button>
@@ -262,6 +262,14 @@ function openCreateModal(officeAllotmentClassId = null, appropriationId = null, 
     if (fromDashboardField && window.isFromDashboard) {
         fromDashboardField.value = '1';
     }
+    
+    // Ensure existing OBR numbers are fetched/populated BEFORE displaying modal
+    const loadPromise = (typeof loadExistingObrNumbers === 'function') 
+        ? loadExistingObrNumbers() 
+        : Promise.resolve([]);
+    
+    loadPromise.then(() => {
+        // Now proceed with opening modal after data is loaded
     
     createModal.style.display = 'flex';
     createModal.setAttribute('aria-hidden', 'false');
@@ -391,6 +399,7 @@ function openCreateModal(officeAllotmentClassId = null, appropriationId = null, 
             }
         }, 300);
     }
+    });
 }
 
 // Add this function to handle modal reopening after successful save from dashboard
@@ -431,7 +440,7 @@ const allowedObligationTypes = {
     'FE': ['Regular']
 };
 
-const existingObrNumbers = [
+let existingObrNumbers = [
     @foreach($obligations_check ?? [] as $obligation)
         "{{ $obligation->obr_no }}",
     @endforeach
@@ -556,6 +565,35 @@ function generateObrNumber() {
     console.log('Generated OBR Number:', obrNumber);
 }
 
+// 5b. LOAD EXISTING OBR NUMBERS (dynamically from server)
+function loadExistingObrNumbers() {
+    // Get the selected year from the year filter
+    const yearFilter = document.getElementById('year1');
+    const selectedYear = yearFilter ? yearFilter.value : new Date().getFullYear();
+    
+    // Fetch existing OBR numbers from the server
+    return fetch(`/api/obligations/existing-obr-numbers?year=${selectedYear}`)
+        .then(response => {
+            if (!response.ok) {
+                console.error('Failed to fetch OBR numbers');
+                return [];
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update the global existingObrNumbers array
+            if (data && Array.isArray(data)) {
+                window.existingObrNumbers = data.map(item => item.obr_no);
+                console.log('Loaded OBR numbers:', window.existingObrNumbers);
+            }
+            return data;
+        })
+        .catch(error => {
+            console.error('Error loading OBR numbers:', error);
+            return [];
+        });
+}
+
 // 6. CHECK OBR NUMBER EXISTS
 function checkObrNumberExists() {
     const obrNoField = document.getElementById('obr_no');
@@ -581,7 +619,9 @@ function checkObrNumberExists() {
         return false;
     }
     
-    const serialExists = existingObrNumbers.some(existingObr => {
+    // Use the global existingObrNumbers array
+    const existingList = window.existingObrNumbers || existingObrNumbers || [];
+    const serialExists = existingList.some(existingObr => {
         const existingParts = existingObr.split('-');
         const existingSerial = existingParts[existingParts.length - 1];
         return existingSerial === serial;
@@ -1261,6 +1301,41 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 21. VALIDATE FORM
+function handleSaveObligation() {
+    // Reload existing OBR numbers before validation
+    const yearFilter = document.getElementById('year1');
+    const selectedYear = yearFilter ? yearFilter.value : new Date().getFullYear();
+    
+    fetch(`/api/obligations/existing-obr-numbers?year=${selectedYear}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update the global existingObrNumbers array
+            if (data && Array.isArray(data)) {
+                window.existingObrNumbers = data.map(item => item.obr_no);
+                console.log('Reloaded OBR numbers:', window.existingObrNumbers);
+            }
+            
+            // Now validate and submit
+            if (!validateForm()) {
+                return false;
+            }
+            
+            cleanupFormData();
+            document.getElementById('createObligationsForm').submit();
+        })
+        .catch(error => {
+            console.error('Error reloading OBR numbers:', error);
+            // Still allow validation to proceed even if API fails
+            if (!validateForm()) {
+                return false;
+            }
+            
+            cleanupFormData();
+            document.getElementById('createObligationsForm').submit();
+        });
+}
+
+// 22. VALIDATE FORM
 function validateForm() {
     const form = document.getElementById('createObligationsForm');
     let isValid = true;
@@ -1314,7 +1389,7 @@ function validateForm() {
             obrNoError.textContent = 'OBR Number is incomplete. Please enter the serial number.';
             isValid = false;
         } else {
-            const serialExists = existingObrNumbers.some(existingObr => {
+            const serialExists = (window.existingObrNumbers || existingObrNumbers || []).some(existingObr => {
                 const existingParts = existingObr.split('-');
                 const existingSerial = existingParts[existingParts.length - 1];
                 return existingSerial === sequence;
@@ -1435,4 +1510,7 @@ function openCreateModalWithAppropriation(officeAllotmentClassId, appropriationI
 // Make functions globally available
 window.openCreateModal = openCreateModal;
 window.openCreateModalWithAppropriation = openCreateModalWithAppropriation;
+window.checkObrNumberExists = checkObrNumberExists;
+window.loadExistingObrNumbers = loadExistingObrNumbers;
+window.handleSaveObligation = handleSaveObligation;
 </script>

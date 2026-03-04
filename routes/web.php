@@ -134,6 +134,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/obligations/{obligationId}/details', [ObligationController::class, 'getObligationDetails'])->name('obligations.api.details');
     Route::get('/api/obligations/{obligationId}/amounts', [ObligationController::class, 'getObligationAmounts'])->name('obligations.api.amounts');
     Route::get('/api/obligations/{obligationId}/year', [ObligationController::class, 'getObligationYear'])->name('obligations.api.year');
+    Route::get('/api/obligations/existing-obr-numbers', [ObligationController::class, 'getExistingObrNumbers'])->name('obligations.api.existingObrNumbers');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);

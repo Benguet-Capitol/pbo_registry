@@ -1889,5 +1889,28 @@ class ObligationController extends Controller
         }
     }
 
+    /**
+     * Get existing OBR numbers for a specific year (API endpoint)
+     */
+    public function getExistingObrNumbers(Request $request)
+    {
+        try {
+            $year = $request->query('year', now()->year);
+            
+            $obligations = Obligation::select('obr_no')
+                ->whereHas('officeAllotmentClass', function($q) use ($year) {
+                    $q->where('year', $year);
+                })
+                ->get();
+            
+            return response()->json($obligations);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch OBR numbers',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }
 

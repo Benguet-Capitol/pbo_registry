@@ -60,8 +60,9 @@ class PermissionRoleSeeder extends Seeder
             ->get();
         $obligation->syncPermissions($obligationPermissions);
 
-        // Payment role: all permissions for disbursement
+        // Payment role: all permissions for disbursement and view obligation adjustments
         $paymentPermissions = Permission::where('name', 'like', '%disbursement%')
+            ->orWhere('name', 'view obligation adjustments')
             ->get();
         $payment->syncPermissions($paymentPermissions);
 

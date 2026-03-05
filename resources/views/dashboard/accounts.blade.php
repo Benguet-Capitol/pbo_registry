@@ -65,7 +65,7 @@
 
     {{-- Account Distribution Graph --}}
     <div class="mb-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
                     Account Distribution by Authorized Appropriations
@@ -191,6 +191,189 @@
                         </div>
                     @endif
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4 mb-4 dark:bg-gray-800">
+        <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <label for="dashboardTable" class="ml-4 block text-md font-semibold text-blue-800 dark:text-blue-400">
+                    {{ $officeAllotmentClasses->offices->office_name ?? 'Office N/A' }} -
+                    {{ $officeAllotmentClasses->allotmentClass->description ?? 'Class N/A' }} Accounts
+                </label>
+            </div>
+            <div class="overflow-x-auto max-h-[720px] border border-gray-300 dark:border-gray-700 rounded-lg">
+                <table id="accountsTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left border-collapse">
+                    <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
+                        <tr>
+                            <th class="px-2 py-2 w-[200px] text-center">Programs</th>
+                            <th class="px-2 py-2 w-[150px] text-center">Account Code</th>
+                            <th class="px-2 py-2 w-[200px] text-center">Description</th>
+                            @role('Disbursement|Administrator|Developer|Obligation')
+                            <th class="px-2 py-2 w-[100px] text-center">FPP Code</th>
+                            @endrole
+                            <th class="px-2 py-2 w-[100px] text-center">Approved Appropriations</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Supplemental Appropriations</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Reversions</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Realignments</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Authorized Appropriations</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Allotments</th>
+                            @role('Disbursement|Administrator|Developer|Obligation')
+                            <th class="px-2 py-2 w-[100px] text-center">For Later Release</th>
+                            @endrole
+                            <th class="px-2 py-2 w-[100px] text-center">Obligations</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Authorized Approp. Balance</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Appropriations Utilization</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Allotments Balance</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Allotments Utilization</th>
+                            @role('Disbursement|Administrator|Developer')
+                            <th class="px-2 py-2 w-[100px] text-center">Disbursements</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Obligations Balance</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Disbursements / Oblgations</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Disbursements / Approp.</th>
+                            @endrole
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($officeAllotmentClasses->appropriations as $appropriation)
+                        <tr data-appropriations="{{ $appropriation->appropriation_sum }}"
+                            data-supplementals="{{ $appropriation->supplemental_sum }}"
+                            data-reversions="{{ $appropriation->reversion_sum }}"
+                            data-realignments="{{ $appropriation->realignments_sum }}"
+                            data-authorized-appropriations="{{ $appropriation->authorized_appropriations }}"
+                            data-allotments="{{ $appropriation->allotments_sum }}"
+                            data-for-later-release="{{ $appropriation->for_later_release }}"
+                            data-obligations="{{ $appropriation->obligations_sum }}"
+                            data-balance-appropriations="{{ $appropriation->balance_appropriations }}"
+                            data-balance-allotments="{{ $appropriation->balance_allotments }}"
+                            data-disbursements="{{ $appropriation->disbursements }}"
+                            data-disbursement-balance="{{ $appropriation->disbursement_balance }}"
+                            data-appropriation-accomplishment="{{ $appropriation->appropriation_accomplishment }}"
+                            data-allotment-accomplishment="{{ $appropriation->allotment_accomplishment }}"
+                            data-disbursements-to-obligations="{{ $appropriation->disbursements_to_obligations }}"
+                            data-disbursements-to-appropriations="{{ $appropriation->disbursements_to_appropriations }}"
+                            data-account-code="{{ $appropriation->account_code }}"
+                            data-description="{{ $appropriation->description }}"
+                            data-appropriation-id="{{ $appropriation->id }}"
+                            class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->programs }}</td>
+                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->account_code }}</td>
+                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->description }}</td>
+                            @role('Disbursement|Administrator|Developer|Obligation')
+                            <td class="px-1 py-2 text-center">{{ $appropriation->fpp_code }}</td>
+                            @endrole
+                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->appropriation_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right {{ $appropriation->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
+                                {{ number_format($appropriation->supplemental_sum, 2) }}
+                            </td>
+                            <td class="px-1 py-2 text-right {{ $appropriation->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
+                                {{ number_format($appropriation->reversion_sum, 2) }}
+                            </td>
+                            <td class="px-1 py-2 text-right 
+                                    {{ $appropriation->realignments_sum < 0 ? 'text-red-600 font-semibold' : '' }} 
+                                    {{ $appropriation->realignments_sum > 0 ? 'text-green-600 font-semibold' : '' }} 
+                                    {{ $appropriation->realignments_sum == 0 ? 'text-gray-600 dark:text-gray-300' : '' }}">
+                                {{ number_format($appropriation->realignments_sum, 2) }}
+                            </td>
+                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->authorized_appropriations, 2) }}</td>
+                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->allotments_sum, 2) }}</td>
+                            @role('Disbursement|Administrator|Developer|Obligation')
+                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->for_later_release, 2) }}</td>
+                            @endrole
+                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->obligations_sum, 2) }}</td>
+                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->balance_appropriations, 2) }}</td>
+                            <!-- For Appropriations Utilization column -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition-all duration-300"
+                                            style="width: {{ min($appropriation->appropriation_accomplishment, 100) }}%">
+                                        </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->appropriation_accomplishment, 1) }}%</span>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Appropriation Utilization</div>
+                                        <div>{{ number_format($appropriation->appropriation_accomplishment, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->obligations_sum, 2) }} / {{ number_format($appropriation->authorized_appropriations, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->balance_allotments, 2) }}</td>
+                            <!-- For Allotments Utilization column -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300"
+                                            style="width: {{ min($appropriation->allotment_accomplishment, 100) }}%">
+                                        </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->allotment_accomplishment, 1) }}%</span>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Allotments Utilization</div>
+                                        <div>{{ number_format($appropriation->allotment_accomplishment, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->obligations_sum, 2) }} / {{ number_format($appropriation->allotments_sum, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            @role('Disbursement|Administrator|Developer')
+                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->disbursements, 2) }}</td>
+                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->disbursement_balance, 2) }}</td>
+                            <!-- For Disbursements / Obligations column -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-4 rounded-full transition-all duration-300"
+                                            style="width: {{ min($appropriation->disbursements_to_obligations, 100) }}%">
+                                        </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->disbursements_to_obligations, 1) }}%</span>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Disbursements / Obligations</div>
+                                        <div>{{ number_format($appropriation->disbursements_to_obligations, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->disbursements, 2) }} / {{ number_format($appropriation->obligations_sum, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- For Disbursements / Appropriations column -->
+                            <td class="px-1 py-2">
+                                <div class="relative group">
+                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
+                                        <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-4 rounded-full transition-all duration-300"
+                                            style="width: {{ min($appropriation->disbursements_to_appropriations, 100) }}%">
+                                        </div>
+                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->disbursements_to_appropriations, 1) }}%</span>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <div class="font-semibold">Disbursements / Appropriations</div>
+                                        <div>{{ number_format($appropriation->disbursements_to_appropriations, 2) }}%</div>
+                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->disbursements, 2) }} / {{ number_format($appropriation->authorized_appropriations, 2) }}</div>
+                                        <!-- Arrow -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            @endrole
+                        </tr>
+                        @empty
+                        <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700">
+                            <td colspan="20" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                                No accounts and appropriations found for this Office Allotment Class.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -534,189 +717,6 @@
         </div>
     </div>
 
-    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4 mb-4 dark:bg-gray-800">
-        <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-                <label for="dashboardTable" class="ml-4 block text-md font-semibold text-blue-800 dark:text-blue-400">
-                    {{ $officeAllotmentClasses->offices->office_name ?? 'Office N/A' }} -
-                    {{ $officeAllotmentClasses->allotmentClass->description ?? 'Class N/A' }} Accounts
-                </label>
-            </div>
-            <div class="overflow-x-auto max-h-[720px] border border-gray-300 dark:border-gray-700 rounded-lg">
-                <table id="accountsTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left border-collapse">
-                    <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
-                        <tr>
-                            <th class="px-2 py-2 w-[200px] text-center">Programs</th>
-                            <th class="px-2 py-2 w-[150px] text-center">Account Code</th>
-                            <th class="px-2 py-2 w-[200px] text-center">Description</th>
-                            @role('Disbursement|Administrator|Developer|Obligation')
-                            <th class="px-2 py-2 w-[100px] text-center">FPP Code</th>
-                            @endrole
-                            <th class="px-2 py-2 w-[100px] text-center">Approved Appropriations</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Supplemental Appropriations</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Reversions</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Realignments</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Authorized Appropriations</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Allotments</th>
-                            @role('Disbursement|Administrator|Developer|Obligation')
-                            <th class="px-2 py-2 w-[100px] text-center">For Later Release</th>
-                            @endrole
-                            <th class="px-2 py-2 w-[100px] text-center">Obligations</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Authorized Approp. Balance</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Appropriations Utilization</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Allotments Balance</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Allotments Utilization</th>
-                            @role('Disbursement|Administrator|Developer')
-                            <th class="px-2 py-2 w-[100px] text-center">Disbursements</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Obligations Balance</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Disbursements / Oblgations</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Disbursements / Approp.</th>
-                            @endrole
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($officeAllotmentClasses->appropriations as $appropriation)
-                        <tr data-appropriations="{{ $appropriation->appropriation_sum }}"
-                            data-supplementals="{{ $appropriation->supplemental_sum }}"
-                            data-reversions="{{ $appropriation->reversion_sum }}"
-                            data-realignments="{{ $appropriation->realignments_sum }}"
-                            data-authorized-appropriations="{{ $appropriation->authorized_appropriations }}"
-                            data-allotments="{{ $appropriation->allotments_sum }}"
-                            data-for-later-release="{{ $appropriation->for_later_release }}"
-                            data-obligations="{{ $appropriation->obligations_sum }}"
-                            data-balance-appropriations="{{ $appropriation->balance_appropriations }}"
-                            data-balance-allotments="{{ $appropriation->balance_allotments }}"
-                            data-disbursements="{{ $appropriation->disbursements }}"
-                            data-disbursement-balance="{{ $appropriation->disbursement_balance }}"
-                            data-appropriation-accomplishment="{{ $appropriation->appropriation_accomplishment }}"
-                            data-allotment-accomplishment="{{ $appropriation->allotment_accomplishment }}"
-                            data-disbursements-to-obligations="{{ $appropriation->disbursements_to_obligations }}"
-                            data-disbursements-to-appropriations="{{ $appropriation->disbursements_to_appropriations }}"
-                            data-account-code="{{ $appropriation->account_code }}"
-                            data-description="{{ $appropriation->description }}"
-                            data-appropriation-id="{{ $appropriation->id }}"
-                            class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->programs }}</td>
-                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->account_code }}</td>
-                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->description }}</td>
-                            @role('Disbursement|Administrator|Developer|Obligation')
-                            <td class="px-1 py-2 text-center">{{ $appropriation->fpp_code }}</td>
-                            @endrole
-                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->appropriation_sum, 2) }}</td>
-                            <td class="px-1 py-2 text-right {{ $appropriation->supplemental_sum != 0 ? 'text-green-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
-                                {{ number_format($appropriation->supplemental_sum, 2) }}
-                            </td>
-                            <td class="px-1 py-2 text-right {{ $appropriation->reversion_sum != 0 ? 'text-red-600 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
-                                {{ number_format($appropriation->reversion_sum, 2) }}
-                            </td>
-                            <td class="px-1 py-2 text-right 
-                                    {{ $appropriation->realignments_sum < 0 ? 'text-red-600 font-semibold' : '' }} 
-                                    {{ $appropriation->realignments_sum > 0 ? 'text-green-600 font-semibold' : '' }} 
-                                    {{ $appropriation->realignments_sum == 0 ? 'text-gray-600 dark:text-gray-300' : '' }}">
-                                {{ number_format($appropriation->realignments_sum, 2) }}
-                            </td>
-                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->authorized_appropriations, 2) }}</td>
-                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->allotments_sum, 2) }}</td>
-                            @role('Disbursement|Administrator|Developer|Obligation')
-                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->for_later_release, 2) }}</td>
-                            @endrole
-                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->obligations_sum, 2) }}</td>
-                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->balance_appropriations, 2) }}</td>
-                            <!-- For Appropriations Utilization column -->
-                            <td class="px-1 py-2">
-                                <div class="relative group">
-                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
-                                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-4 rounded-full transition-all duration-300"
-                                            style="width: {{ min($appropriation->appropriation_accomplishment, 100) }}%">
-                                        </div>
-                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->appropriation_accomplishment, 1) }}%</span>
-                                    </div>
-                                    <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                                        <div class="font-semibold">Appropriation Utilization</div>
-                                        <div>{{ number_format($appropriation->appropriation_accomplishment, 2) }}%</div>
-                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->obligations_sum, 2) }} / {{ number_format($appropriation->authorized_appropriations, 2) }}</div>
-                                        <!-- Arrow -->
-                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-1 py-2 text-right text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($appropriation->balance_allotments, 2) }}</td>
-                            <!-- For Allotments Utilization column -->
-                            <td class="px-1 py-2">
-                                <div class="relative group">
-                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
-                                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300"
-                                            style="width: {{ min($appropriation->allotment_accomplishment, 100) }}%">
-                                        </div>
-                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->allotment_accomplishment, 1) }}%</span>
-                                    </div>
-                                    <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                                        <div class="font-semibold">Allotments Utilization</div>
-                                        <div>{{ number_format($appropriation->allotment_accomplishment, 2) }}%</div>
-                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->obligations_sum, 2) }} / {{ number_format($appropriation->allotments_sum, 2) }}</div>
-                                        <!-- Arrow -->
-                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            @role('Disbursement|Administrator|Developer')
-                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->disbursements, 2) }}</td>
-                            <td class="px-1 py-2 text-right">{{ number_format($appropriation->disbursement_balance, 2) }}</td>
-                            <!-- For Disbursements / Obligations column -->
-                            <td class="px-1 py-2">
-                                <div class="relative group">
-                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
-                                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-4 rounded-full transition-all duration-300"
-                                            style="width: {{ min($appropriation->disbursements_to_obligations, 100) }}%">
-                                        </div>
-                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->disbursements_to_obligations, 1) }}%</span>
-                                    </div>
-                                    <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                                        <div class="font-semibold">Disbursements / Obligations</div>
-                                        <div>{{ number_format($appropriation->disbursements_to_obligations, 2) }}%</div>
-                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->disbursements, 2) }} / {{ number_format($appropriation->obligations_sum, 2) }}</div>
-                                        <!-- Arrow -->
-                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <!-- For Disbursements / Appropriations column -->
-                            <td class="px-1 py-2">
-                                <div class="relative group">
-                                    <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-visible">
-                                        <div class="bg-gradient-to-r from-amber-500 to-amber-600 h-4 rounded-full transition-all duration-300"
-                                            style="width: {{ min($appropriation->disbursements_to_appropriations, 100) }}%">
-                                        </div>
-                                        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($appropriation->disbursements_to_appropriations, 1) }}%</span>
-                                    </div>
-                                    <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                                        <div class="font-semibold">Disbursements / Appropriations</div>
-                                        <div>{{ number_format($appropriation->disbursements_to_appropriations, 2) }}%</div>
-                                        <div class="text-[10px] text-gray-300">{{ number_format($appropriation->disbursements, 2) }} / {{ number_format($appropriation->authorized_appropriations, 2) }}</div>
-                                        <!-- Arrow -->
-                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            @endrole
-                        </tr>
-                        @empty
-                        <tr class="bg-white border dark:bg-gray-800 dark:border-gray-700">
-                            <td colspan="20" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
-                                No accounts and appropriations found for this Office Allotment Class.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <!-- Right-Click Context Menu for Accounts Table -->
     <div id="accountContextMenu" class="hidden fixed text-xs bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg shadow-2xl z-[10000] text-blue-900 dark:text-blue-100 min-w-max border-2 border-blue-400 dark:border-blue-600">
         @role('Administrator|Developer|Obligation')
@@ -750,13 +750,35 @@
 
             <!-- Search and Total Records Section -->
             <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
                     <!-- Total Records -->
                     <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 flex-shrink-0">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
                         <span id="accountObligationsTotalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">0</span>
                     </div>
+                    <!-- Date Range Filter -->
+                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-shrink-0">Date Range:</span>
+                    <input 
+                        type="date" 
+                        id="accountObligationsDateFrom" 
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        onchange="filterObligationsTable(document.getElementById('accountObligationsSearchInput').value, 'accounts')"
+                    >
+                    <span class="text-gray-600 dark:text-gray-400 text-xs">to</span>
+                    <input 
+                        type="date" 
+                        id="accountObligationsDateTo" 
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        onchange="filterObligationsTable(document.getElementById('accountObligationsSearchInput').value, 'accounts')"
+                    >
+                    <button 
+                        onclick="document.getElementById('accountObligationsDateFrom').value = ''; document.getElementById('accountObligationsDateTo').value = ''; filterObligationsTable(document.getElementById('accountObligationsSearchInput').value, 'accounts')"
+                        class="px-2 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
+                        title="Clear date range"
+                    >
+                        <i class="fas fa-times"></i>
+                    </button>
                     <!-- Search Input -->
                     <input 
                         type="text" 
@@ -780,6 +802,10 @@
 
             <!-- Modal Footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
+                <button onclick="printObligationsModal('accounts')" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-print mr-2"></i>
+                    Print
+                </button>
                 <button onclick="closeAccountObligationsModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     Close
@@ -2012,6 +2038,17 @@ if (typeof originalUpdateCardValues === 'function') {
             .then(data => {
                 if (loading) loading.style.display = 'none';
                 
+                // Store office and allotment class info for print function
+                if (data.success) {
+                    window.currentObligationsInfo = {
+                        office: data.office || '-',
+                        allotmentClass: data.allotmentClass || '-',
+                        cyYear: data.cy_year || '-'
+                    };
+                    // Update header with office and allotment class
+                    headerInfo.textContent = ` | ${currentAccountAppropriation.accountCode} - ${currentAccountAppropriation.description} | Office: ${data.office || '-'} - Class: ${data.allotmentClass || '-'} (CY ${data.cy_year || '-'})`;
+                }
+                
                 if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
                     // Create table with obligations
                     let tableHTML = `
@@ -2099,7 +2136,17 @@ if (typeof originalUpdateCardValues === 'function') {
                             </tr>
                             <tr class="hidden appropriations-row" data-obligation-index="${index}">
                                 <td colspan="9" class="px-2 py-2">
-                                        <table class="w-full text-xs text-gray-600 dark:text-gray-400">
+                                        <table class="w-full text-xs text-gray-600 dark:text-gray-400" style="table-layout: fixed;">
+                                            <colgroup>
+                                                <col style="width: 80px;">
+                                                <col style="width: 80px;">
+                                                <col style="width: 150px;">
+                                                <col style="width: 100px;">
+                                                <col style="width: 110px;">
+                                                <col style="width: 110px;">
+                                                <col style="width: 100px;">
+                                                <col style="width: 100px;">
+                                            </colgroup>
                                             <thead class="border border-gray-400 dark:border-gray-600 text-center">
                                                 <tr class="bg-gray-100 dark:bg-gray-800">
                                                     <th class="px-3 py-2">Programs</th>
@@ -2226,6 +2273,192 @@ if (typeof originalUpdateCardValues === 'function') {
         if (searchInput) {
             searchInput.value = '';
         }
+    }
+
+    /**
+     * Print obligations table
+     */
+    function printObligationsModal(source = 'dashboard') {
+        const modalId = source === 'dashboard' ? 'obligationsModal' : 'accountObligationsModal';
+        const modal = document.getElementById(modalId);
+        
+        if (!modal || !window.currentObligationsInfo) {
+            alert('No data to print');
+            return;
+        }
+        
+        // Clone the modal content for printing
+        const printWindow = window.open('', '', 'height=800,width=1200');
+        
+        // Get header information
+        const headerInfo = window.currentObligationsInfo;
+        
+        // Get the table content
+        const contentDiv = source === 'dashboard' ? 
+            document.getElementById('obligationsContent') :
+            document.getElementById('accountObligationsContent');
+        
+        if (!contentDiv) {
+            alert('Could not retrieve table data');
+            return;
+        }
+        
+        // Find the main table container (overflow-x-auto div)
+        const tableContainer = contentDiv.querySelector('div.overflow-x-auto');
+        if (!tableContainer) {
+            alert('Could not locate table container');
+            return;
+        }
+        
+        // Clone the container to avoid modifying the original
+        const printableContent = tableContainer.cloneNode(true);
+        
+        // Remove all hidden obligation rows and their corresponding appropriations rows
+        const allObligationRows = printableContent.querySelectorAll('tbody tr.obligation-row');
+        const rowsToRemove = [];
+        
+        allObligationRows.forEach(row => {
+            if (row.style.display === 'none') {
+                const obligationIndex = row.dataset.obligationIndex;
+                // Mark this row for removal
+                rowsToRemove.push(row);
+                // Also mark its corresponding appropriations row for removal
+                const appRow = printableContent.querySelector(`tr.appropriations-row[data-obligation-index="${obligationIndex}"]`);
+                if (appRow) {
+                    rowsToRemove.push(appRow);
+                }
+            } else {
+                // Make visible appropriations rows display properly
+                const obligationIndex = row.dataset.obligationIndex;
+                const appRow = printableContent.querySelector(`tr.appropriations-row[data-obligation-index="${obligationIndex}"]`);
+                if (appRow) {
+                    appRow.classList.remove('hidden');
+                    appRow.style.display = '';
+                }
+            }
+        });
+        
+        // Remove hidden rows from the DOM
+        rowsToRemove.forEach(row => {
+            row.remove();
+        });
+        
+        // Get the HTML of the cloned container
+        const tableHTML = printableContent.outerHTML;
+        
+        // Create a comprehensive print document
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Obligations Report</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                        color: #333;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 20px;
+                        border-bottom: 2px solid #333;
+                        padding-bottom: 10px;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 18px;
+                    }
+                    .header p {
+                        margin: 5px 0;
+                        font-size: 12px;
+                    }
+                    .office-info {
+                        text-align: center;
+                        margin-bottom: 15px;
+                        font-size: 14px;
+                        font-weight: bold;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 11px;
+                        margin-bottom: 20px;
+                    }
+                    table th {
+                        background-color: #e8e8e8;
+                        border: 1px solid #ccc;
+                        padding: 8px;
+                        text-align: left;
+                        font-weight: bold;
+                    }
+                    table td {
+                        border: 1px solid #ccc;
+                        padding: 6px;
+                        text-align: left;
+                    }
+                    table tfoot td {
+                        background-color: #f0f0f0;
+                        font-weight: bold;
+                        border: 1px solid #ccc;
+                        padding: 8px;
+                    }
+                    .text-right {
+                        text-align: right;
+                    }
+                    .text-center {
+                        text-align: center;
+                    }
+                    .text-red {
+                        color: #dc2626;
+                    }
+                    .text-green {
+                        color: #16a34a;
+                    }
+                    .text-blue {
+                        color: #2563eb;
+                    }
+                    .text-orange {
+                        color: #ea580c;
+                    }
+                    .print-date {
+                        text-align: right;
+                        font-size: 10px;
+                        margin-top: 15px;
+                        color: #666;
+                    }
+                    @media print {
+                        body {
+                            margin: 0;
+                        }
+                        .print-date {
+                            display: none;
+                        }
+                    }
+                </style>
+            </head>
+            <body onload="window.print()">
+                <div class="header">
+                    <h1>OBLIGATIONS REPORT</h1>
+                    <p>Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+                
+                <div class="office-info">
+                    Office: ${headerInfo.office} | Allotment Class: ${headerInfo.allotmentClass} | CY ${headerInfo.cyYear}
+                </div>
+                
+                <div class="table-container">
+                    ${tableHTML}
+                    <div class="print-date">
+                        Printed on: ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        // Write content and close document to trigger print dialog
+        printWindow.document.write(printContent);
+        printWindow.document.close();
     }
 
     // Show context menu for account obligations
@@ -3250,6 +3483,15 @@ if (typeof originalFilterTable === 'function') {
         const contentId = source === 'dashboard' ? 'obligationsContent' : 'accountObligationsContent';
         const content = document.getElementById(contentId);
         
+        // Get date range values
+        const dateFromSelector = source === 'dashboard' ? 'obligationsDateFrom' : 'accountObligationsDateFrom';
+        const dateToSelector = source === 'dashboard' ? 'obligationsDateTo' : 'accountObligationsDateTo';
+        const dateFromInput = document.getElementById(dateFromSelector);
+        const dateToInput = document.getElementById(dateToSelector);
+        
+        const dateFrom = dateFromInput ? dateFromInput.value : '';
+        const dateTo = dateToInput ? dateToInput.value : '';
+        
         if (!content) return;
         
         const rows = content.querySelectorAll('tbody tr.obligation-row');
@@ -3259,12 +3501,39 @@ if (typeof originalFilterTable === 'function') {
         
         rows.forEach(row => {
             const rowText = row.textContent.toLowerCase();
-            if (rowText.includes(lowerSearch)) {
+            const cells = row.querySelectorAll('td');
+            let dateCell = cells[2]?.textContent || ''; // Date is in column 2
+            
+            // Parse the date string (format: "Jan 15, 2026" or similar)
+            let rowDate = null;
+            try {
+                rowDate = new Date(dateCell);
+            } catch (e) {
+                rowDate = null;
+            }
+            
+            // Check search filter
+            const matchesSearch = searchValue === '' || rowText.includes(lowerSearch);
+            
+            // Check date range filter
+            let matchesDateRange = true;
+            if (rowDate && (dateFrom || dateTo)) {
+                const checkFrom = dateFrom ? new Date(dateFrom) : null;
+                const checkTo = dateTo ? new Date(dateTo) : null;
+                
+                if (checkFrom && rowDate < checkFrom) {
+                    matchesDateRange = false;
+                }
+                if (checkTo && rowDate > checkTo) {
+                    matchesDateRange = false;
+                }
+            }
+            
+            if (matchesSearch && matchesDateRange) {
                 row.style.display = '';
                 visibleCount++;
                 
                 // Calculate totals for visible rows
-                const cells = row.querySelectorAll('td');
                 if (cells.length >= 6) {
                     // Dashboard: Amount in index 4, PO in index 5
                     // Accounts: Amount in index 5, PO in index 6

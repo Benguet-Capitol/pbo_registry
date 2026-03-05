@@ -1303,7 +1303,13 @@ class ObligationController extends Controller
             'officeAllotmentClass.allotmentClass',
             'obligationAmounts.appropriation',
             'obligationAmounts.obligationAdjustments',
+            'disbursements',
         ])->findOrFail($obligation_id);
+
+        // Check if total disbursements equal the adjusted obligation amount
+        $totalAdjustedAmount = $obligation->getTotalAmount();
+        $totalDisbursementAmount = $obligation->disbursements()->sum('disbursement_amount');
+        $isDisbursementComplete = ($totalDisbursementAmount >= $totalAdjustedAmount && $totalAdjustedAmount > 0);
 
         // Prepare obligationAmounts with adjustedObrAmount
         $obligationAmounts = $obligation->obligationAmounts->map(function ($amount) {
@@ -1317,7 +1323,8 @@ class ObligationController extends Controller
 
         return view('obligations.modal.obligation_adjustment', compact(
             'obligation',
-            'obligationAmounts'
+            'obligationAmounts',
+            'isDisbursementComplete'
         ));
     }
 
@@ -1680,6 +1687,7 @@ class ObligationController extends Controller
                 'count' => count($obligationsData),
                 'office' => $officeAllotmentClass->offices->office_abbreviation ?? '-',
                 'allotmentClass' => $officeAllotmentClass->allotmentClass->class ?? '-',
+                'cy_year' => $officeAllotmentClass->year ?? '-',
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -1697,7 +1705,8 @@ class ObligationController extends Controller
     public function getByAppropriation($appropriationId): JsonResponse
     {
         try {
-            $appropriation = Appropriation::findOrFail($appropriationId);
+            $appropriation = Appropriation::with('officeAllotmentClass.offices', 'officeAllotmentClass.allotmentClass')
+                ->findOrFail($appropriationId);
 
             $obligations = Obligation::whereHas('obligationAmounts', function ($query) use ($appropriationId) {
                 $query->where('appropriation_id', $appropriationId);
@@ -1777,6 +1786,9 @@ class ObligationController extends Controller
                 'data' => $obligationsData,
                 'count' => count($obligationsData),
                 'appropriation' => $appropriation->description ?? '-',
+                'office' => $appropriation->officeAllotmentClass->offices->office_abbreviation ?? '-',
+                'allotmentClass' => $appropriation->officeAllotmentClass->allotmentClass->class ?? '-',
+                'cy_year' => $appropriation->officeAllotmentClass->year ?? '-',
             ]);
         } catch (\Exception $e) {
             return response()->json([

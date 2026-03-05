@@ -139,6 +139,11 @@ class ObligationAdjustmentController extends Controller
             ];
         });
 
+        // Check if total disbursements equal the adjusted obligation amount
+        $totalAdjustedAmount = $obligation->getTotalAmount();
+        $totalDisbursementAmount = $obligation->disbursements()->sum('disbursement_amount');
+        $isDisbursementComplete = ($totalDisbursementAmount >= $totalAdjustedAmount && $totalAdjustedAmount > 0);
+
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'Obligations', 'route' => route('obligations.index')],
@@ -151,7 +156,8 @@ class ObligationAdjustmentController extends Controller
             'adjustments' => $adjustments,
             'obligationAmounts' => $obligationAmounts,
             'appropriations' => $appropriations,
-            'breadcrumb' => $breadcrumb
+            'breadcrumb' => $breadcrumb,
+            'isDisbursementComplete' => $isDisbursementComplete
         ]);
     }
     /**

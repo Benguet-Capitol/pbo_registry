@@ -42,7 +42,25 @@
             <!-- Modal body (scrollable) -->
             <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-7 py-3 text-xs">
 
-                    <div class="grid gap-3">
+                    @if($isDisbursementComplete)
+                    <div class="mb-4 p-4 bg-red-50 dark:bg-red-900 border-l-4 border-red-500 rounded">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-lg mt-0.5"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+                                    {{ __('Cannot Adjust Obligation') }}
+                                </h3>
+                                <p class="mt-2 text-sm text-red-700 dark:text-red-300">
+                                    {{ __('This obligation has been fully disbursed. No additional adjustments can be made on obligations that have been completely paid.') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <div class="grid gap-3" @if($isDisbursementComplete) style="pointer-events: none; opacity: 0.5;" @endif>
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id }}">
@@ -285,7 +303,7 @@
             <!-- Modal footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
                 <x-input-error :messages="$errors->get('message')" class="mr-auto" />
-                <button type="button" onclick="try { if(!window.isSubmittingObligationAdjustment) window.validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" id="submitAdjustmentBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="try { if(!window.isSubmittingObligationAdjustment) window.validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" id="submitAdjustmentBtn" @if($isDisbursementComplete) disabled @endif class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg @if($isDisbursementComplete) opacity-50 cursor-not-allowed !hover:bg-transparent @endif">
                     <i class="fas fa-save mr-2"></i>
                     {{ __('Save') }}
                 </button>

@@ -94,11 +94,11 @@
                 <div class="flex items-center space-x-2">
                     <label for="perPage" class="sr-only">Show per page</label>
                     <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="this.form.submit()">
-                        <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
-                        <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>All</option>
+                        <option value="10" {{ request('per_page', '10') == 10 ? 'selected' : '' }}>10</option>
+                        <option value="25" {{ request('per_page', '10') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page', '10') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page', '10') == 100 ? 'selected' : '' }}>100</option>
+                        <option value="all" {{ request('per_page', '10') == 'all' ? 'selected' : '' }}>All</option>
                     </x-form.select>
                 </div>
             </div>

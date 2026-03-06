@@ -27,7 +27,7 @@ class ObligationController extends Controller
     public function index(Request $request)
     {
         // --- Filters & Sorting setup ---
-        $perPage = $request->input('per_page', 'all');
+        $perPage = $request->input('per_page', 10);
         $search = $request->input('search');
         $searchColumn = $request->input('search_column', '');
         $sortBy = $request->query('sort_by', 'obr_date');

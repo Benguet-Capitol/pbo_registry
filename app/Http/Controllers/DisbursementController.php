@@ -83,7 +83,7 @@ class DisbursementController extends Controller
      public function all(Request $request)
     {
         // Get the per page value from the request
-        $perPage = $request->input('per_page', 'all');
+        $perPage = $request->input('per_page', 10);
         $search = $request->input('search');
         $searchColumn = $request->input('search_column', '');
         // Get the sort by and sort order values from the request

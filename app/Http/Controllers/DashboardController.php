@@ -14,6 +14,7 @@ use App\Models\ObligationAdjustment;
 use App\Models\Supplemental;
 use App\Models\Realignment;
 use App\Models\Disbursement;
+use App\Models\PurchaseOrder;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -378,6 +379,75 @@ class DashboardController extends Controller
 
         $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass', 'fundSourceRelation', 'fund'])->where('year', $currentYear)->get();
 
+        // Volume Metrics Calculations
+        // Total Number of Obligations Created
+        $totalObligationCount = ObligationAmount::whereIn('appropriation_id', $appropriationIds)->count();
+        
+        // Total Number of Purchase Orders Created
+        $totalPurchaseOrderCount = \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
+        )->count();
+
+        // Total Number of Disbursements Created
+        $totalDisbursementCount = \App\Models\Disbursement::whereIn('purchase_order_id',
+            \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
+                ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
+            )->pluck('id')
+        )->count();
+        
+        // Get all obligation amounts for average and median calculations
+        $obligationAmounts = ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obr_amount')->toArray();
+        
+        // Calculate Average Obligation Amount
+        $averageObligation = !empty($obligationAmounts) ? array_sum($obligationAmounts) / count($obligationAmounts) : 0;
+        
+        // Calculate Median Obligation Amount
+        $medianObligation = 0;
+        if (!empty($obligationAmounts)) {
+            sort($obligationAmounts);
+            $count = count($obligationAmounts);
+            if ($count % 2 == 0) {
+                $medianObligation = ($obligationAmounts[$count/2 - 1] + $obligationAmounts[$count/2]) / 2;
+            } else {
+                $medianObligation = $obligationAmounts[floor($count/2)];
+            }
+        }
+        
+        // Obligation Distribution by Amount Range (histogram)
+        $obligationRanges = [
+            ['label' => '< 10,000', 'min' => 0, 'max' => 10000, 'count' => 0],
+            ['label' => '10,000 - 50,000', 'min' => 10000, 'max' => 50000, 'count' => 0],
+            ['label' => '50,000 - 100,000', 'min' => 50000, 'max' => 100000, 'count' => 0],
+            ['label' => '100,000 - 500,000', 'min' => 100000, 'max' => 500000, 'count' => 0],
+            ['label' => '500,000 - 1,000,000', 'min' => 500000, 'max' => 1000000, 'count' => 0],
+            ['label' => '> 1,000,000', 'min' => 1000000, 'max' => PHP_INT_MAX, 'count' => 0],
+        ];
+        
+        foreach ($obligationAmounts as $amount) {
+            foreach ($obligationRanges as &$range) {
+                if ($amount >= $range['min'] && $amount < $range['max']) {
+                    $range['count']++;
+                    break;
+                }
+            }
+        }
+        
+        // Obligations by Quarter
+        $obligationsByQuarter = [];
+        for ($q = 1; $q <= 4; $q++) {
+            $quarterStart = Carbon::createFromDate($currentYear, ($q - 1) * 3 + 1, 1);
+            $quarterEnd = Carbon::createFromDate($currentYear, ($q - 1) * 3 + 3, 1)->endOfMonth();
+            
+            $count = ObligationAmount::whereIn('appropriation_id', $appropriationIds)
+                ->whereBetween('created_at', [$quarterStart, $quarterEnd])
+                ->count();
+            
+            $obligationsByQuarter[] = [
+                'quarter' => 'Q' . $q,
+                'count' => $count
+            ];
+        }
+
         return view('dashboard', compact(
             'officeAllotmentClasses',
             'totalAppropriations',
@@ -413,7 +483,14 @@ class DashboardController extends Controller
             'isGuest',
             'office_allotment_classes',
             'appropriations',
-            'isSEFConsolidated'
+            'isSEFConsolidated',
+            'totalObligationCount',
+            'totalPurchaseOrderCount',
+            'totalDisbursementCount',
+            'averageObligation',
+            'medianObligation',
+            'obligationRanges',
+            'obligationsByQuarter'
         ));
     }
 

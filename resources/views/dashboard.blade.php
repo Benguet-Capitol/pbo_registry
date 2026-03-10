@@ -202,22 +202,25 @@
     </div>
     </div>
 
-    {{-- Allotment Class Distribution Graph --}}
-    <div class="mb-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                    Allotment Class Distribution by Authorized Appropriations
-                </h3>
-                <button onclick="toggleWidget('allotmentDistributionWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                    <i class="fas fa-chevron-down" id="allotmentDistributionToggle"></i>
-                </button>
-            </div>
-            
-            <!-- Collapsible Content -->
-            <div id="allotmentDistributionContent" style="display: none;">
+    {{-- Insights & Analytics Panel --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                Insights & Analytics
+            </h3>
+            <button onclick="toggleWidget('analyticsPanel')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <i class="fas fa-chevron-down" id="analyticsPanelToggle"></i>
+            </button>
+        </div>
+
+        <div id="analyticsPanelContent" style="display: none;">
+
+            <!-- 1. Allotment Class Distribution Graph -->
+            <div class="mb-6">
+                <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-3">Allotment Class Distribution by Authorized Appropriations</h4>
+                
                 <!-- Stacked Bar - Reduced height -->
-                <div id="stackedBarContainer" class="mb-2 relative">
+                <div id="stackedBarContainer" class="mb-4 relative">
                     <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">
                         @php
                             // Calculate total authorized appropriations for percentage calculation
@@ -323,26 +326,148 @@
                     @endforeach
                 </div>
             </div>
-        </div>
-    </div>
 
-    {{-- Top 5 Highest Utilization Widget --}}
-    @role('Disbursement|Administrator|Developer|Obligation')
-    <div id="topPerformersWidget" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                <span class="text-2xl mr-2">🏆</span>
-                Top 5 Highest Utilization
-            </h3>
-            <button onclick="toggleWidget('topPerformersWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <i class="fas fa-chevron-down" id="topPerformersToggle"></i>
-            </button>
-        </div>
-        <div id="topPerformersContent" class="space-y-2" style="display: none;">
-            <!-- Content will be populated by JavaScript -->
+            <hr class="border-gray-200 dark:border-gray-700 mb-6">
+
+            <!-- 2. Activity Metrics Cards -->
+            <div class="mb-6">
+                <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-3">Activity Metrics</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- Total Obligations Card -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-4 border-l-4 border-blue-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Total Obligations Created</p>
+                                <p class="text-3xl font-bold text-blue-700 dark:text-blue-300">{{ number_format($totalObligationCount) }}</p>
+                            </div>
+                            <div class="text-5xl text-blue-200 dark:text-blue-700">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Purchase Orders Card -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-4 border-l-4 border-green-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Total Purchase Orders Created</p>
+                                <p class="text-3xl font-bold text-green-700 dark:text-green-300">{{ number_format($totalPurchaseOrderCount) }}</p>
+                            </div>
+                            <div class="text-5xl text-green-200 dark:text-green-700">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Disbursements Card -->
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 rounded-lg p-4 border-l-4 border-red-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Total Disbursements Created</p>
+                                <p class="text-3xl font-bold text-red-700 dark:text-red-300">{{ number_format($totalDisbursementCount) }}</p>
+                            </div>
+                            <div class="text-5xl text-red-200 dark:text-red-700">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Average Obligation Amount Card -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-4 border-l-4 border-purple-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Average Obligation</p>
+                                <p class="text-2xl font-bold text-purple-700 dark:text-purple-300">₱{{ number_format($averageObligation, 0) }}</p>
+                            </div>
+                            <div class="text-5xl text-purple-200 dark:text-purple-700">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Median Obligation Amount Card -->
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-lg p-4 border-l-4 border-orange-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Median Obligation</p>
+                                <p class="text-2xl font-bold text-orange-700 dark:text-orange-300">₱{{ number_format($medianObligation, 0) }}</p>
+                            </div>
+                            <div class="text-5xl text-orange-200 dark:text-orange-700">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-200 dark:border-gray-700 mb-6">
+
+            <!-- 3. Top 5 Highest Utilization -->
+            @role('Disbursement|Administrator|Developer|Obligation')
+            <div id="topPerformersWidget" class="mb-6">
+                <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
+                    Top 5 Highest Utilization
+                </h4>
+                <div id="topPerformersContent" class="space-y-2">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <hr class="border-gray-200 dark:border-gray-700 mb-6">
+            @endrole
+
+            <!-- 4. Charts Row -->
+            <div class="mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Obligation Distribution by Amount Range (Histogram) -->
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Obligation Distribution by Amount Range</h4>
+                        <div id="obligationHistogram" class="h-64"></div>
+                    </div>
+
+                    <!-- Obligations by Quarter (Line Chart) -->
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Obligations Created by Quarter</h4>
+                        <div id="obligationsByQuarter" class="h-64"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Obligation Distribution Table -->
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Obligation Amount Ranges Breakdown</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                        <thead class="bg-gray-200 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-4 py-2">Amount Range</th>
+                                <th class="px-4 py-2 text-center">Count</th>
+                                <th class="px-4 py-2 text-center">Percentage</th>
+                                <th class="px-4 py-2 text-center">Visual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $totalRange = array_sum(array_column($obligationRanges, 'count')); @endphp
+                            @foreach($obligationRanges as $range)
+                            @php $percentage = $totalRange > 0 ? ($range['count'] / $totalRange) * 100 : 0; @endphp
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold">{{ $range['label'] }}</td>
+                                <td class="px-4 py-2 text-center font-semibold text-blue-600 dark:text-blue-400">{{ $range['count'] }}</td>
+                                <td class="px-4 py-2 text-center text-gray-700 dark:text-gray-300">{{ number_format($percentage, 1) }}%</td>
+                                <td class="px-4 py-2">
+                                    <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ $percentage }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
-    @endrole
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4 mb-4 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
@@ -3567,12 +3692,18 @@
     function toggleWidget(widgetId) {
         let content, toggle;
         
-        if (widgetId === 'topPerformersWidget') {
+        if (widgetId === 'analyticsPanel') {
+            content = document.getElementById('analyticsPanelContent');
+            toggle = document.getElementById('analyticsPanelToggle');
+        } else if (widgetId === 'topPerformersWidget') {
             content = document.getElementById('topPerformersContent');
             toggle = document.getElementById('topPerformersToggle');
         } else if (widgetId === 'allotmentDistributionWidget') {
             content = document.getElementById('allotmentDistributionContent');
             toggle = document.getElementById('allotmentDistributionToggle');
+        } else if (widgetId === 'volumeMetricsWidget') {
+            content = document.getElementById('volumeMetricsContent');
+            toggle = document.getElementById('volumeMetricsToggle');
         }
         
         if (content && toggle) {
@@ -3580,8 +3711,8 @@
             content.style.display = isHidden ? 'block' : 'none';
             toggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
             
-            // If opening the allotment distribution, trigger animation
-            if (isHidden && widgetId === 'allotmentDistributionWidget') {
+            // If opening the analytics panel, trigger animation
+            if (isHidden && widgetId === 'analyticsPanel') {
                 setTimeout(() => {
                     animateStackedBar();
                 }, 100);
@@ -3967,7 +4098,117 @@
                 closeSuccessAlert();
             }, 5000);
         }
+
+        // Initialize Volume Metrics Charts
+        initializeVolumeMetricsCharts();
     });
+
+    // Function to initialize volume metrics charts
+    function initializeVolumeMetricsCharts() {
+        // Obligation Distribution Histogram
+        const obligationRanges = @json($obligationRanges);
+        const ranges = obligationRanges.map(r => r.label);
+        const counts = obligationRanges.map(r => r.count);
+
+        const histogramOptions = {
+            chart: {
+                type: 'bar',
+                height: 260,
+                toolbar: { show: false }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    distributed: true,
+                    dataLabels: { position: 'top' }
+                }
+            },
+            colors: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899'],
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) { return val; }
+            },
+            xaxis: { categories: ranges },
+            yaxis: { 
+                title: { text: 'Count' },
+                labels: {
+                    formatter: function(val) { return Math.floor(val); }
+                }
+            },
+            tooltip: {
+                y: { formatter: function(val) { return val + ' obligations'; } }
+            },
+            legend: { show: false }
+        };
+
+        const histogramSeries = [{
+            name: 'Obligations',
+            data: counts
+        }];
+
+        new ApexCharts(document.querySelector('#obligationHistogram'), { 
+            ...histogramOptions, 
+            series: histogramSeries 
+        }).render();
+
+        // Obligations by Quarter Chart
+        const obligationsByQuarter = @json($obligationsByQuarter);
+        const quarters = obligationsByQuarter.map(q => q.quarter);
+        const quarterCounts = obligationsByQuarter.map(q => q.count);
+
+        const quarterOptions = {
+            chart: {
+                type: 'line',
+                height: 260,
+                toolbar: { show: false }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            colors: ['#3b82f6'],
+            markers: {
+                size: 6,
+                colors: ['#3b82f6'],
+                strokeWidth: 2,
+                fillOpacity: 1
+            },
+            xaxis: { categories: quarters },
+            yaxis: {
+                title: { text: 'Number of Obligations' },
+                labels: {
+                    formatter: function(val) { return Math.floor(val); }
+                }
+            },
+            tooltip: {
+                y: { formatter: function(val) { return val + ' obligations created'; } }
+            },
+            grid: { 
+                borderColor: '#e5e7eb',
+                strokeDashArray: 5
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 0.1,
+                    opacityFrom: 0.45,
+                    opacityTo: 0.05,
+                    stops: [20, 100, 100, 100]
+                }
+            }
+        };
+
+        const quarterSeries = [{
+            name: 'Obligations Created',
+            data: quarterCounts
+        }];
+
+        new ApexCharts(document.querySelector('#obligationsByQuarter'), { 
+            ...quarterOptions, 
+            series: quarterSeries 
+        }).render();
+    }
     
     </script>
 

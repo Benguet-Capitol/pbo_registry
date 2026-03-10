@@ -173,6 +173,10 @@
             </div>
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
+            @php
+                $totalSupplemental = 0;
+                $totalReversion = 0;
+            @endphp
             <table id="supplementalTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
                     <tr>
@@ -245,6 +249,16 @@
                 </thead>
                 <tbody>
                     @forelse($supplementals as $supplemental)
+                        @php
+                            $amount = isset($supplemental->amount) ? (float)$supplemental->amount : 0;
+                            $type = trim($supplemental->type ?? '');
+                            
+                            if ($type === 'Supplemental') {
+                                $totalSupplemental += $amount;
+                            } elseif ($type === 'Reversion') {
+                                $totalReversion += $amount;
+                            }
+                        @endphp
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             oncontextmenu="showSupplementalContextMenu(event, this)"
                             data-supplemental='@json($supplemental)'
@@ -326,13 +340,13 @@
                         <td colspan="7" class="text-center text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Supplemental Appropriations:
                             <span id="totalSourceFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold ml-2">
-                                0.00
+                                {{ number_format($totalSupplemental, 2) }}
                             </span>
                         </td>
                         <td colspan="7" class="text-center text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Reversions:
                             <span id="totalRecipientFooter" class="px-2 py-1 rounded text-red-700 bg-red-100 dark:bg-red-900 dark:text-red-300 font-semibold ml-2">
-                                0.00
+                                {{ number_format($totalReversion, 2) }}
                             </span>
                         </td>
                     </tr>
@@ -615,7 +629,7 @@
         let totalRecipient = 0;
         for (let i = 0; i < tr.length; i++) {
             if (tr[i].style.display === "none") continue;
-            let typeCell = tr[i].getElementsByTagName("td")[2];
+            let typeCell = tr[i].getElementsByTagName("td")[3];
             let amountCell = tr[i].getElementsByTagName("td")[8];
             if (!typeCell || !amountCell) continue;
             let type = typeCell.textContent.trim();

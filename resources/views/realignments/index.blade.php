@@ -345,13 +345,13 @@
                         <td colspan="5" class="text-center text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Source:
                             <span id="totalSourceFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">
-                                0.00
+                                {{ number_format($totalSource, 2) }}
                             </span>
                         </td>
                         <td colspan="5" class="text-center text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Recipient:
                             <span id="totalRecipientFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold ml-2">
-                                0.00
+                                {{ number_format($totalRecipient, 2) }}
                             </span>
                         </td>
                     </tr>

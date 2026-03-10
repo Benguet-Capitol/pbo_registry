@@ -14,6 +14,7 @@ use App\Models\ObligationAdjustment;
 use App\Models\Supplemental;
 use App\Models\Realignment;
 use App\Models\Disbursement;
+use App\Models\Obligation;
 use App\Models\PurchaseOrder;
 use Carbon\Carbon;
 
@@ -380,36 +381,41 @@ class DashboardController extends Controller
         $office_allotment_classes = OfficeAllotmentClass::with(['offices', 'allotmentClass', 'fundSourceRelation', 'fund'])->where('year', $currentYear)->get();
 
         // Volume Metrics Calculations
-        // Total Number of Obligations Created
-        $totalObligationCount = ObligationAmount::whereIn('appropriation_id', $appropriationIds)->count();
+        // Total Number of Obligations Created (unique obr_no from appropriations)
+        $totalObligationCount = Obligation::whereIn('id', 
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
+        )->distinct('obr_no')->count('obr_no');
         
-        // Total Number of Purchase Orders Created
+        // Total Number of unique Purchase Orders (by po_number)
         $totalPurchaseOrderCount = \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-        )->count();
+        )->distinct('po_number')->count('po_number');
 
-        // Total Number of Disbursements Created
-        $totalDisbursementCount = \App\Models\Disbursement::whereIn('purchase_order_id',
-            \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
-                ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-            )->pluck('id')
-        )->count();
+        // Total Number of unique Disbursements (by dv_no)
+        $totalDisbursementCount = \App\Models\Disbursement::whereIn('obligation_amounts_id',
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
+        )->distinct('dv_no')->count('dv_no');
+
+        // Calculate days elapsed in the current year
+        $startOfYear = Carbon::createFromDate($currentYear, 1, 1);
+        $daysElapsed = $startOfYear->diffInDays(now()) + 1; // +1 to include the current day
         
-        // Get all obligation amounts for average and median calculations
-        $obligationAmounts = ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obr_amount')->toArray();
+        // Calculate Average Obligation Count per Day
+        $averageObligationCountPerDay = $daysElapsed > 0 ? round($totalObligationCount / $daysElapsed, 2) : 0;
         
-        // Calculate Average Obligation Amount
-        $averageObligation = !empty($obligationAmounts) ? array_sum($obligationAmounts) / count($obligationAmounts) : 0;
+        // Calculate Average Disbursement Count per Day
+        $averageDisbursementCountPerDay = $daysElapsed > 0 ? round($totalDisbursementCount / $daysElapsed, 2) : 0;
         
-        // Calculate Median Obligation Amount
-        $medianObligation = 0;
-        if (!empty($obligationAmounts)) {
-            sort($obligationAmounts);
-            $count = count($obligationAmounts);
-            if ($count % 2 == 0) {
-                $medianObligation = ($obligationAmounts[$count/2 - 1] + $obligationAmounts[$count/2]) / 2;
-            } else {
-                $medianObligation = $obligationAmounts[floor($count/2)];
+        // Get all obligations with unique obr_no and their amounts
+        $obligations = Obligation::whereIn('id', 
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
+        )->get();
+        
+        $obligationAmounts = [];
+        foreach ($obligations as $obligation) {
+            $amount = $obligation->obligationAmounts->sum('obr_amount');
+            if ($amount > 0) {
+                $obligationAmounts[] = $amount;
             }
         }
         
@@ -432,15 +438,17 @@ class DashboardController extends Controller
             }
         }
         
-        // Obligations by Quarter
+        // Obligations by Quarter (unique obr_no) - based on when obligations were created
         $obligationsByQuarter = [];
         for ($q = 1; $q <= 4; $q++) {
             $quarterStart = Carbon::createFromDate($currentYear, ($q - 1) * 3 + 1, 1);
             $quarterEnd = Carbon::createFromDate($currentYear, ($q - 1) * 3 + 3, 1)->endOfMonth();
             
-            $count = ObligationAmount::whereIn('appropriation_id', $appropriationIds)
-                ->whereBetween('created_at', [$quarterStart, $quarterEnd])
-                ->count();
+            $count = Obligation::whereIn('id',
+                ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
+            )->whereBetween('created_at', [$quarterStart, $quarterEnd])
+                ->distinct('obr_no')
+                ->count('obr_no');
             
             $obligationsByQuarter[] = [
                 'quarter' => 'Q' . $q,
@@ -487,8 +495,8 @@ class DashboardController extends Controller
             'totalObligationCount',
             'totalPurchaseOrderCount',
             'totalDisbursementCount',
-            'averageObligation',
-            'medianObligation',
+            'averageObligationCountPerDay',
+            'averageDisbursementCountPerDay',
             'obligationRanges',
             'obligationsByQuarter'
         ));
@@ -750,6 +758,86 @@ class DashboardController extends Controller
             if ($currentQuarter < 3) $forLater += $app->quarter3 ?? 0;
             if ($currentQuarter < 4) $forLater += $app->quarter4 ?? 0;
         }
+
+        // Volume Metrics for Accounts Page
+        // Total Number of Obligations Created (unique obr_no from appropriations)
+        $totalObligationCount = Obligation::whereIn('id', 
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
+        )->distinct('obr_no')->count('obr_no');
+        
+        // Total Number of unique Purchase Orders (by po_number)
+        $totalPurchaseOrderCount = \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
+        )->distinct('po_number')->count('po_number');
+        
+        // Total Number of unique Disbursements (by dv_no)
+        $totalDisbursementCount = \App\Models\Disbursement::whereIn('obligation_amounts_id',
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
+        )->distinct('dv_no')->count('dv_no');
+
+        // Calculate days elapsed in the current year
+        $startOfYear = Carbon::createFromDate($selectedYear, 1, 1);
+        $daysElapsed = $startOfYear->diffInDays(now()) + 1; // +1 to include the current day
+        
+        // Calculate Average Obligation Count per Day
+        $averageObligationCountPerDay = $daysElapsed > 0 ? round($totalObligationCount / $daysElapsed, 2) : 0;
+        
+        // Calculate Average Disbursement Count per Day
+        $averageDisbursementCountPerDay = $daysElapsed > 0 ? round($totalDisbursementCount / $daysElapsed, 2) : 0;
+        
+        // Get all obligations with unique obr_no and their amounts
+        $obligations = Obligation::whereIn('id', 
+            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
+        )->get();
+        
+        $obligationAmountsData = [];
+        foreach ($obligations as $obligation) {
+            $amount = $obligation->obligationAmounts->sum('obr_amount');
+            if ($amount > 0) {
+                $obligationAmountsData[] = $amount;
+            }
+        }
+        
+        // Obligation Distribution by Amount Range (histogram)
+        $obligationRanges = [
+            ['label' => '< 10,000', 'min' => 0, 'max' => 10000, 'count' => 0],
+            ['label' => '10,000 - 50,000', 'min' => 10000, 'max' => 50000, 'count' => 0],
+            ['label' => '50,000 - 100,000', 'min' => 50000, 'max' => 100000, 'count' => 0],
+            ['label' => '100,000 - 500,000', 'min' => 100000, 'max' => 500000, 'count' => 0],
+            ['label' => '500,000 - 1,000,000', 'min' => 500000, 'max' => 1000000, 'count' => 0],
+            ['label' => '> 1,000,000', 'min' => 1000000, 'max' => PHP_INT_MAX, 'count' => 0],
+        ];
+        
+        foreach ($obligationAmountsData as $amount) {
+            foreach ($obligationRanges as &$range) {
+                if ($amount >= $range['min'] && $amount < $range['max']) {
+                    $range['count']++;
+                    break;
+                }
+            }
+        }
+        
+        // Obligations by Quarter (unique obr_no)
+        $obligationsByQuarter = [];
+        for ($q = 1; $q <= 4; $q++) {
+        // Obligations by Quarter (unique obr_no) - based on when obligations were created
+        $obligationsByQuarter = [];
+        for ($q = 1; $q <= 4; $q++) {
+            $quarterStart = Carbon::createFromDate($selectedYear, ($q - 1) * 3 + 1, 1);
+            $quarterEnd = Carbon::createFromDate($selectedYear, ($q - 1) * 3 + 3, 1)->endOfMonth();
+            
+            $count = Obligation::whereIn('id',
+                ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
+            )->whereBetween('created_at', [$quarterStart, $quarterEnd])
+                ->distinct('obr_no')
+                ->count('obr_no');
+            
+            $obligationsByQuarter[] = [
+                'quarter' => 'Q' . $q,
+                'count' => $count
+            ];
+        }
+        }
         
         return view('dashboard.accounts', compact(
             'officeAllotmentClasses',
@@ -758,7 +846,14 @@ class DashboardController extends Controller
             'isGuest',
             'selectedYear',
             'office_allotment_classes',
-            'appropriations'
+            'appropriations',
+            'totalObligationCount',
+            'totalPurchaseOrderCount',
+            'totalDisbursementCount',
+            'averageObligationCountPerDay',
+            'averageDisbursementCountPerDay',
+            'obligationRanges',
+            'obligationsByQuarter'
         ));
     }
 }

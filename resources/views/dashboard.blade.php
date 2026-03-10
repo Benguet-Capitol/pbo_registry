@@ -204,7 +204,7 @@
 
     {{-- Insights & Analytics Panel --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-        <div class="flex justify-between items-center mb-3">
+        <div class="flex justify-between items-center mb-3 border-b border-gray-200 dark:border-gray-700 pb-2">
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                 Insights & Analytics
             </h3>
@@ -327,10 +327,10 @@
                 </div>
             </div>
 
-            <hr class="border-gray-200 dark:border-gray-700 mb-6">
+            <hr class="border-gray-200 dark:border-gray-700 mb-4">
 
             <!-- 2. Activity Metrics Cards -->
-            <div class="mb-6">
+            <div class="mb-4">
                 <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-3">Activity Metrics</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <!-- Total Obligations Card -->
@@ -372,28 +372,28 @@
                         </div>
                     </div>
 
-                    <!-- Average Obligation Amount Card -->
+                    <!-- Average Obligation Count Per Day Card -->
                     <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-4 border-l-4 border-purple-500">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Average Obligation</p>
-                                <p class="text-2xl font-bold text-purple-700 dark:text-purple-300">₱{{ number_format($averageObligation, 0) }}</p>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Average Obligations Created/Day</p>
+                                <p class="text-3xl font-bold text-purple-700 dark:text-purple-300">{{ number_format($averageObligationCountPerDay, 2) }}</p>
                             </div>
                             <div class="text-5xl text-purple-200 dark:text-purple-700">
-                                <i class="fas fa-calculator"></i>
+                                <i class="fas fa-chart-line"></i>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Median Obligation Amount Card -->
+                    <!-- Average Disbursement Count Per Day Card -->
                     <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-lg p-4 border-l-4 border-orange-500">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Median Obligation</p>
-                                <p class="text-2xl font-bold text-orange-700 dark:text-orange-300">₱{{ number_format($medianObligation, 0) }}</p>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Average Disbursements Created/Day</p>
+                                <p class="text-3xl font-bold text-orange-700 dark:text-orange-300">{{ number_format($averageDisbursementCountPerDay, 2) }}</p>
                             </div>
                             <div class="text-5xl text-orange-200 dark:text-orange-700">
-                                <i class="fas fa-chart-pie"></i>
+                                <i class="fas fa-coins"></i>
                             </div>
                         </div>
                     </div>
@@ -4105,6 +4105,11 @@
 
     // Function to initialize volume metrics charts
     function initializeVolumeMetricsCharts() {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        const textColor = isDarkMode ? '#d1d5db' : '#6b7280';
+        const gridColor = isDarkMode ? '#4b5563' : '#e5e7eb';
+        const bgColor = isDarkMode ? '#111827' : '#ffffff';
+        
         // Obligation Distribution Histogram
         const obligationRanges = @json($obligationRanges);
         const ranges = obligationRanges.map(r => r.label);
@@ -4127,18 +4132,32 @@
             colors: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899'],
             dataLabels: {
                 enabled: true,
-                formatter: function(val) { return val; }
+                formatter: function(val) { return val; },
+                style: { colors: [textColor] }
             },
-            xaxis: { categories: ranges },
-            yaxis: { 
-                title: { text: 'Count' },
+            xaxis: { 
+                categories: ranges,
                 labels: {
-                    formatter: function(val) { return Math.floor(val); }
+                    style: { colors: textColor }
+                },
+                axisBorder: { color: gridColor }
+            },
+            yaxis: { 
+                title: { text: 'Count', style: { color: textColor } },
+                labels: {
+                    formatter: function(val) { return Math.floor(val); },
+                    style: { colors: textColor }
                 }
             },
             tooltip: {
-                y: { formatter: function(val) { return val + ' obligations'; } }
+                y: { formatter: function(val) { return val + ' obligations'; } },
+                theme: isDarkMode ? 'dark' : 'light',
+                style: {
+                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    color: isDarkMode ? '#f3f4f6' : '#111827'
+                }
             },
+            grid: { borderColor: gridColor },
             legend: { show: false }
         };
 
@@ -4174,18 +4193,30 @@
                 strokeWidth: 2,
                 fillOpacity: 1
             },
-            xaxis: { categories: quarters },
-            yaxis: {
-                title: { text: 'Number of Obligations' },
+            xaxis: { 
+                categories: quarters,
                 labels: {
-                    formatter: function(val) { return Math.floor(val); }
+                    style: { colors: textColor }
+                },
+                axisBorder: { color: gridColor }
+            },
+            yaxis: {
+                title: { text: 'Number of Obligations', style: { color: textColor } },
+                labels: {
+                    formatter: function(val) { return Math.floor(val); },
+                    style: { colors: textColor }
                 }
             },
             tooltip: {
-                y: { formatter: function(val) { return val + ' obligations created'; } }
+                y: { formatter: function(val) { return val + ' obligations created'; } },
+                theme: isDarkMode ? 'dark' : 'light',
+                style: {
+                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    color: isDarkMode ? '#f3f4f6' : '#111827'
+                }
             },
             grid: { 
-                borderColor: '#e5e7eb',
+                borderColor: gridColor,
                 strokeDashArray: 5
             },
             fill: {
@@ -4254,6 +4285,56 @@
 
         .animate-fade-out {
             animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        /* ApexCharts Dark Mode Styling */
+        .dark #obligationHistogram,
+        .dark #obligationsByQuarter {
+            background-color: #111827 !important;
+        }
+
+        .dark #obligationHistogram .apexcharts-canvas {
+            background-color: #111827 !important;
+        }
+
+        .dark #obligationsByQuarter .apexcharts-canvas {
+            background-color: #111827 !important;
+        }
+
+        .dark svg[data-testid="apexcharts-svg"] {
+            background-color: #111827 !important;
+        }
+
+        .apexcharts-tooltip {
+            background-color: #1f2937 !important;
+            border: 1px solid #374151 !important;
+        }
+
+        .apexcharts-tooltip-title {
+            background-color: #111827 !important;
+            color: #f3f4f6 !important;
+            border-color: #374151 !important;
+        }
+
+        .apexcharts-tooltip-series-group {
+            background-color: #1f2937 !important;
+        }
+
+        .apexcharts-tooltip-text {
+            color: #f3f4f6 !important;
+        }
+
+        .apexcharts-tooltip.apexcharts-theme-light {
+            background-color: #ffffff !important;
+        }
+
+        .dark .apexcharts-tooltip.apexcharts-theme-dark {
+            background-color: #1f2937 !important;
+            color: #f3f4f6 !important;
+        }
+
+        .dark .apexcharts-tooltip-text {
+            color: #f3f4f6 !important;
         }
     </style>
 

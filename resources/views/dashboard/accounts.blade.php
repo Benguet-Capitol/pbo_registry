@@ -63,20 +63,23 @@
         </div>
     </div>
 
-    {{-- Account Distribution Graph --}}
-    <div class="mb-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                    Account Distribution by Authorized Appropriations
-                </h3>
-                <button onclick="toggleWidget('accountDistributionWidget')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                    <i class="fas fa-chevron-down" id="accountDistributionToggle"></i>
-                </button>
-            </div>
-            
-            <!-- Collapsible Content -->
-            <div id="accountDistributionContent" style="display: none;">
+    {{-- Analytics & Insights Panel (for Accounts) --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                Insights & Analytics
+            </h3>
+            <button onclick="toggleWidget('accountAnalyticsPanel')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <i class="fas fa-chevron-down" id="accountAnalyticsPanelToggle"></i>
+            </button>
+        </div>
+
+        <div id="accountAnalyticsPanelContent" style="display: none;">
+
+            <!-- 0. Account Distribution Graph -->
+            <div class="mb-4">
+                <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-3">Account Distribution by Authorized Appropriations</h4>
+                
                 <!-- Stacked Bar -->
                 <div id="stackedBarContainer" class="mb-4 relative">
                     <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-visible flex relative">
@@ -192,6 +195,132 @@
                     @endif
                 </div>
             </div>
+
+            <hr class="border-gray-200 dark:border-gray-700 mb-4">
+
+            <!-- 1. Activity Metrics Cards -->
+            <div class="mb-4">
+                <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-3">Activity Metrics</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- Total Obligations Card -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-4 border-l-4 border-blue-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Total Obligations Created</p>
+                                <p class="text-3xl font-bold text-blue-700 dark:text-blue-300">{{ number_format($totalObligationCount) }}</p>
+                            </div>
+                            <div class="text-5xl text-blue-200 dark:text-blue-700">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Purchase Orders Card -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-4 border-l-4 border-green-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Total Purchase Orders Created</p>
+                                <p class="text-3xl font-bold text-green-700 dark:text-green-300">{{ number_format($totalPurchaseOrderCount) }}</p>
+                            </div>
+                            <div class="text-5xl text-green-200 dark:text-green-700">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Disbursements Card -->
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 rounded-lg p-4 border-l-4 border-red-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Total Disbursements Created</p>
+                                <p class="text-3xl font-bold text-red-700 dark:text-red-300">{{ number_format($totalDisbursementCount) }}</p>
+                            </div>
+                            <div class="text-5xl text-red-200 dark:text-red-700">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Average Obligation Count Per Day Card -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-4 border-l-4 border-purple-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Average Obligations Created/Day</p>
+                                <p class="text-3xl font-bold text-purple-700 dark:text-purple-300">{{ number_format($averageObligationCountPerDay, 2) }}</p>
+                            </div>
+                            <div class="text-5xl text-purple-200 dark:text-purple-700">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Average Disbursement Count Per Day Card -->
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-lg p-4 border-l-4 border-orange-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm font-semibold">Average Disbursements Created/Day</p>
+                                <p class="text-3xl font-bold text-orange-700 dark:text-orange-300">{{ number_format($averageDisbursementCountPerDay, 2) }}</p>
+                            </div>
+                            <div class="text-5xl text-orange-200 dark:text-orange-700">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-200 dark:border-gray-700 mb-6">
+
+            <!-- 2. Charts Row -->
+            <div class="mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Obligation Distribution by Amount Range (Histogram) -->
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Obligation Distribution by Amount Range</h4>
+                        <div id="accountObligationHistogram" class="h-64"></div>
+                    </div>
+
+                    <!-- Obligations by Quarter (Line Chart) -->
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Obligations Created by Quarter</h4>
+                        <div id="accountObligationsByQuarter" class="h-64"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Obligation Distribution Table -->
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Obligation Amount Ranges Breakdown</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                        <thead class="bg-gray-200 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-4 py-2">Amount Range</th>
+                                <th class="px-4 py-2 text-center">Count</th>
+                                <th class="px-4 py-2 text-center">Percentage</th>
+                                <th class="px-4 py-2 text-center">Visual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $totalRange = array_sum(array_column($obligationRanges, 'count')); @endphp
+                            @foreach($obligationRanges as $range)
+                            @php $percentage = $totalRange > 0 ? ($range['count'] / $totalRange) * 100 : 0; @endphp
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <td class="px-4 py-2 font-semibold">{{ $range['label'] }}</td>
+                                <td class="px-4 py-2 text-center font-semibold text-blue-600 dark:text-blue-400">{{ $range['count'] }}</td>
+                                <td class="px-4 py-2 text-center text-gray-700 dark:text-gray-300">{{ number_format($percentage, 1) }}%</td>
+                                <td class="px-4 py-2">
+                                    <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ $percentage }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -1641,21 +1770,21 @@ function animateGraphOnLoad() {
     }, 200);
 }
 
-// toggleWidget function for accounts blade (only handles account distribution)
+// toggleWidget function for accounts blade (handles analytics panel with account distribution and metrics)
 function toggleWidget(widgetId) {
-    if (widgetId === 'accountDistributionWidget') {
-        const content = document.getElementById('accountDistributionContent');
-        const toggle = document.getElementById('accountDistributionToggle');
+    if (widgetId === 'accountAnalyticsPanel') {
+        const content = document.getElementById('accountAnalyticsPanelContent');
+        const toggle = document.getElementById('accountAnalyticsPanelToggle');
         
         if (content && toggle) {
             const isHidden = content.style.display === 'none';
             content.style.display = isHidden ? 'block' : 'none';
             toggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
             
-            // If opening the account distribution, trigger animation
+            // If opening the analytics panel, initialize charts
             if (isHidden) {
                 setTimeout(() => {
-                    animateGraphOnLoad();
+                    initializeAccountAnalyticsCharts();
                 }, 100);
             }
         }
@@ -3306,7 +3435,222 @@ if (typeof originalFilterTable === 'function') {
         updateGraphAnimated();
     };
 }
+
+    /**
+     * Initialize charts for Account Analytics Panel
+     */
+    function initializeAccountAnalyticsCharts() {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        const textColor = isDarkMode ? '#d1d5db' : '#6b7280';
+        const gridColor = isDarkMode ? '#4b5563' : '#e5e7eb';
+        const bgColor = isDarkMode ? '#111827' : '#ffffff';
+        
+        // Prepare data from server-side collections
+        @php
+        $histogramCountData = isset($obligationRanges) ? array_map(function($r) { return $r['count']; }, $obligationRanges) : array_fill(0, 6, 0);
+        $quarterCategories = isset($obligationsByQuarter) ? array_map(function($q) { return $q['quarter']; }, $obligationsByQuarter) : array_fill(0, 4, 'Q0');
+        $quarterCountData = isset($obligationsByQuarter) ? array_map(function($q) { return $q['count']; }, $obligationsByQuarter) : array_fill(0, 4, 0);
+        @endphp
+
+        // Obligation Distribution Histogram
+        const histogramData = {
+            categories: [
+                '< 10K',
+                '10K - 50K',
+                '50K - 100K',
+                '100K - 500K',
+                '500K - 1M',
+                '> 1M'
+            ],
+            series: [{
+                name: 'Count',
+                data: @json($histogramCountData)
+            }]
+        };
+
+        const histogramOptions = {
+            chart: {
+                type: 'bar',
+                height: 260,
+                toolbar: { show: false }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    distributed: true,
+                    dataLabels: { position: 'top' }
+                }
+            },
+            colors: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899'],
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) { return val; },
+                style: { colors: [textColor] }
+            },
+            xaxis: { 
+                categories: histogramData.categories,
+                labels: {
+                    style: { colors: textColor }
+                },
+                axisBorder: { color: gridColor }
+            },
+            yaxis: { 
+                title: { text: 'Count', style: { color: textColor } },
+                labels: {
+                    formatter: function(val) { return Math.floor(val); },
+                    style: { colors: textColor }
+                }
+            },
+            tooltip: {
+                y: { formatter: function(val) { return val + ' obligations'; } },
+                theme: isDarkMode ? 'dark' : 'light',
+                style: {
+                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    color: isDarkMode ? '#f3f4f6' : '#111827'
+                }
+            },
+            grid: { borderColor: gridColor },
+            legend: { show: false }
+        };
+
+        if (document.getElementById('accountObligationHistogram')) {
+            new ApexCharts(document.getElementById('accountObligationHistogram'), { 
+                ...histogramOptions, 
+                series: [{
+                    name: 'Obligations',
+                    data: histogramData.series[0].data
+                }]
+            }).render();
+        }
+
+        // Obligations by Quarter Line Chart
+        const obligationsByQuarter = @json($obligationsByQuarter);
+        const categories = obligationsByQuarter.map(q => q.quarter);
+        const counts = obligationsByQuarter.map(q => q.count);
+        
+        const quarterlyData = {
+            categories: categories,
+            series: [{
+                name: 'Obligations Created',
+                data: counts
+            }]
+        };
+
+        const quarterlyOptions = {
+            chart: {
+                type: 'line',
+                height: 260,
+                toolbar: { show: false }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            colors: ['#3b82f6'],
+            markers: {
+                size: 6,
+                colors: ['#3b82f6'],
+                strokeWidth: 2,
+                fillOpacity: 1
+            },
+            xaxis: { 
+                categories: quarterlyData.categories,
+                labels: {
+                    style: { colors: textColor }
+                },
+                axisBorder: { color: gridColor }
+            },
+            yaxis: {
+                title: { text: 'Number of Obligations', style: { color: textColor } },
+                labels: {
+                    formatter: function(val) { return Math.floor(val); },
+                    style: { colors: textColor }
+                }
+            },
+            tooltip: {
+                y: { formatter: function(val) { return val + ' obligations created'; } },
+                theme: isDarkMode ? 'dark' : 'light',
+                style: {
+                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    color: isDarkMode ? '#f3f4f6' : '#111827'
+                }
+            },
+            grid: { 
+                borderColor: gridColor,
+                strokeDashArray: 5
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 0.1,
+                    opacityFrom: 0.45,
+                    opacityTo: 0.05,
+                    stops: [20, 100, 100, 100]
+                }
+            }
+        };
+
+        if (document.getElementById('accountObligationsByQuarter')) {
+            new ApexCharts(document.getElementById('accountObligationsByQuarter'), { 
+                ...quarterlyOptions, 
+                series: quarterlyData.series 
+            }).render();
+        }
+    }
     </script>
+
+    <style>
+        /* ApexCharts Dark Mode Styling */
+        .dark #accountObligationHistogram,
+        .dark #accountObligationsByQuarter {
+            background-color: #111827 !important;
+        }
+
+        .dark #accountObligationHistogram .apexcharts-canvas {
+            background-color: #111827 !important;
+        }
+
+        .dark #accountObligationsByQuarter .apexcharts-canvas {
+            background-color: #111827 !important;
+        }
+
+        .dark svg[data-testid="apexcharts-svg"] {
+            background-color: #111827 !important;
+        }
+
+        .apexcharts-tooltip {
+            background-color: #1f2937 !important;
+            border: 1px solid #374151 !important;
+        }
+
+        .apexcharts-tooltip-title {
+            background-color: #111827 !important;
+            color: #f3f4f6 !important;
+            border-color: #374151 !important;
+        }
+
+        .apexcharts-tooltip-series-group {
+            background-color: #1f2937 !important;
+        }
+
+        .apexcharts-tooltip-text {
+            color: #f3f4f6 !important;
+        }
+
+        .apexcharts-tooltip.apexcharts-theme-light {
+            background-color: #ffffff !important;
+        }
+
+        .dark .apexcharts-tooltip.apexcharts-theme-dark {
+            background-color: #1f2937 !important;
+            color: #f3f4f6 !important;
+        }
+
+        .dark .apexcharts-tooltip-text {
+            color: #f3f4f6 !important;
+        }
+    </style>
 
 <!-- Include the Create Obligations Modal -->
 @include('obligations.modal.create')

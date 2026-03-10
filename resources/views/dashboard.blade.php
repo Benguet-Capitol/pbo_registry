@@ -1477,7 +1477,7 @@
                                                 <col style="width: 120px;">
                                                 <col style="width: 100px;">
                                                 <col style="width: 100px;">
-                                                <col style="width: auto;">
+                                                <col style="width: 300px;">
                                                 <col style="width: 150px;">
                                                 <col style="width: 130px;">
                                                 <col style="width: 130px;">
@@ -1504,7 +1504,7 @@
                                                     <col style="width: 120px;">
                                                     <col style="width: 100px;">
                                                     <col style="width: 100px;">
-                                                    <col style="width: auto;">
+                                                    <col style="width: 300px;">
                                                     <col style="width: 150px;">
                                                     <col style="width: 130px;">
                                                     <col style="width: 130px;">

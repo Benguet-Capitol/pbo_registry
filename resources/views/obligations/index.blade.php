@@ -1,4 +1,6 @@
 <x-app-layout>
+    <!-- Load SheetJS Library for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <x-slot name="header">
         <div class="flex justify-between items-center">
@@ -186,6 +188,11 @@
                 @endcan
                 <!-- Right: Total Records and Search Input -->
                 <div class="flex items-center space-x-4">
+                    <!-- Export Button -->
+                    <button type="button" onclick="exportObligationsToExcel()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900" title="Export filtered data to Excel">
+                        <i class="fas fa-download text-lg mr-2 -ml-1 w-4 h-4"></i>
+                        Export to Excel
+                    </button>
                     <!-- Total Records -->
                     <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
@@ -294,7 +301,7 @@
                                     </a>
                                 </th>
                                 @endhasanyrole
-                                @hasanyrole('Disbursement|Administrator|Developer')
+                                @hasanyrole('Disbursement|Administrator|Developer|Obligation')
                                 <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     <a href="{{ route('obligations.index', ['sort_by' => 'dv_amount', 'sort_order' => $sortBy == 'dv_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                         Disbursement
@@ -429,7 +436,7 @@
                                 <td class="px-1 py-2 text-center max-w-48">{{ $obligation->remarks ? : '-' }}</td>
                                 @endhasanyrole
 
-                                @hasanyrole('Disbursement|Administrator|Developer')
+                                @hasanyrole('Disbursement|Administrator|Developer|Obligation')
                                 <td class="px-1 py-2 text-right dv-amount">
                                 @php
                                     $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
@@ -2146,6 +2153,90 @@ function openCreatePOModal(obligationId) {
             }
         }
     });
+
+    /**
+     * Show toast notification
+     */
+    function showToast(message, type = 'success') {
+        const toastId = 'toast_' + Date.now();
+        const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+        
+        const bgColor = type === 'success' ? 'bg-blue-500' : 'bg-red-500';
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slideInRight`;
+        toast.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            const element = document.getElementById(toastId);
+            if (element) {
+                element.classList.add('animate-slideOutRight');
+                setTimeout(() => element.remove(), 300);
+            }
+        }, 4000);
+    }
+
+    /**
+     * Create toast container if it doesn't exist
+     */
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'fixed top-4 right-4 z-50 space-y-3';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    /**
+     * Export filtered obligations data to Excel XLSX
+     */
+    function exportObligationsToExcel() {
+        const table = document.getElementById('obligationsTable');
+        const rows = table.querySelectorAll('tbody tr');
+        
+        // Collect visible rows data
+        const data = [];
+        const headers = [];
+        
+        // Get headers from table
+        table.querySelectorAll('thead th').forEach(th => {
+            headers.push(th.textContent.trim());
+        });
+        data.push(headers);
+        
+        // Get visible rows
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(td => {
+                    rowData.push(td.textContent.trim());
+                });
+                data.push(rowData);
+            }
+        });
+        
+        // Create workbook and worksheet
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Obligations');
+        
+        // Set column widths
+        const colWidths = headers.map(() => 15);
+        ws['!cols'] = colWidths.map(w => ({ wch: w }));
+        
+        // Generate Excel file with current date
+        const today = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `obligations_${today}.xlsx`);
+        
+        // Show success toast
+        showToast('Obligations data exported successfully!', 'success');
+    }
 </script>
 
 <style>
@@ -2170,6 +2261,36 @@ function openCreatePOModal(obligationId) {
 
     .dark .obligation-row-highlighted {
         background-color: #1e40af !important;
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+    }
+
+    .animate-slideInRight {
+        animation: slideInRight 0.3s ease-out;
+    }
+
+    .animate-slideOutRight {
+        animation: slideOutRight 0.3s ease-out;
     }
 </style>
     </div>

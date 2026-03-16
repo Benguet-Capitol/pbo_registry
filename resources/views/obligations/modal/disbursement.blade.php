@@ -140,6 +140,7 @@
                                                 <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">Program</th>
                                                 <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">Account Code</th>
                                                 <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">Description</th>
+                                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-900 dark:text-gray-200">Remarks</th>
                                                 <th class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">DV / Check Amount</th>
                                             </tr>
                                         </thead>
@@ -155,6 +156,7 @@
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">{{ optional($disbursement->appropriation)->programs ?? '-' }}</td>
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">{{ optional($disbursement->appropriation)->account_code ?? '-' }}</td>
                                                 <td class="px-2 py-2 text-center text-xs text-gray-700 dark:text-gray-200">{{ optional($disbursement->appropriation)->description ?? '-' }}</td>
+                                                <td class="px-3 py-2 text-right text-xs text-gray-700 dark:text-gray-200">{{ $disbursement->remarks ?? '-' }}</td>
                                                 <td class="px-3 py-2 text-right text-xs text-gray-700 dark:text-gray-200">{{ number_format($disbursement->disbursement_amount, 2) }}</td>
                                             </tr>
                                             @php
@@ -165,7 +167,7 @@
                                         <tfoot>
                                             <tr class="bg-gray-50 dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700">
                                                 <td colspan="5" class="px-2 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">Obligation:   <span class="text-green-700 dark:text-green-300 font-semibold">{{ number_format($totalObligationAmount, 2) }}</span></td>
-                                                <td colspan="2" class="px-2 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">Total DV / Check Amount:   <span class="text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($filteredDisbursements->sum('disbursement_amount'), 2) }}</span></td>
+                                                <td colspan="3" class="px-2 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">Total DV / Check Amount:   <span class="text-blue-700 dark:text-blue-300 font-semibold">{{ number_format($filteredDisbursements->sum('disbursement_amount'), 2) }}</span></td>
                                             </tr>
                                         </tfoot>
                                     </table>

@@ -338,10 +338,10 @@
                             <thead class="text-xs text-gray-600 bg-gray-100 dark:bg-gray-900 border-b dark:text-gray-300">
                                 <tr>
                                     <th scope="col" class="px-4 py-2 text-center">Date</th>
-                                    <th scope="col" class="px-4 py-2 text-center">Remarks</th>
                                     <th scope="col" class="px-4 py-2 text-center">Programs</th>
                                     <th scope="col" class="px-4 py-2 text-center">Account Code</th>
                                     <th scope="col" class="px-4 py-2 text-center">Description</th>
+                                    <th scope="col" class="px-4 py-2 text-center">Remarks</th>
                                     <th scope="col" class="px-4 py-2 text-center">Adjustment</th>
                                 </tr>
                             </thead>
@@ -361,10 +361,10 @@
                                             return `
                                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                                     <td class="px-3 py-2 text-center">${showCells ? (row.adjustment_date || 'N/A') : ''}</td>
-                                                    <td class="px-3 py-2 text-center">${showCells ? (row.remarks || 'N/A') : ''}</td>
                                                     <td class="px-3 py-2 text-center">${row.programs || '-'}</td>
                                                     <td class="px-3 py-2 text-center">${row.account_code || 'N/A'}</td>
                                                     <td class="px-3 py-2 text-center">${row.description || 'N/A'}</td>
+                                                    <td class="px-3 py-2 text-center">${showCells ? (row.remarks || 'N/A') : ''}</td>
                                                     <td class="px-3 py-2 text-right">${adjDisplay}</td>
                                                 </tr>
                                             `;
@@ -403,6 +403,7 @@
                                     <th class="px-3 py-2">Programs</th>
                                     <th class="px-3 py-2">Account Code</th>
                                     <th class="px-3 py-2">Description</th>
+                                    <th class="px-3 py-2">Remarks</th>
                                     <th class="px-3 py-2">Amount</th>
                                 </tr>
                             </thead>
@@ -421,6 +422,7 @@
                                             { class: 'px-2 py-2', render: r => r.programs?.trim() ? r.programs : '-' },
                                             { class: 'px-2 py-2', render: r => r.account_code },
                                             { class: 'px-2 py-2', render: r => r.description },
+                                            { class: 'px-2 py-2', render: r => r.remarks || '-' },
                                             {
                                                 class: 'px-2 py-2 text-right',
                                                 render: r => {
@@ -437,7 +439,7 @@
                                 }
                             </tbody>
                             <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
-                                <td colspan="8" class="text-right px-3 py-2">Total Purchase Order Amount:</td>
+                                <td colspan="9" class="text-right px-3 py-2">Total Purchase Order Amount:</td>
                                 <td class="text-right px-3 py-2">${
                                     (() => {
                                         const total = purchase_orders.reduce((sum, r) => sum + parseFloat(r.po_amount || 0), 0);
@@ -465,6 +467,7 @@
                                     <th class="px-2 py-2 text-center">Program</th>
                                     <th class="px-2 py-2 text-center">Account Code</th>
                                     <th class="px-2 py-2 text-center">Description</th>
+                                    <th class="px-3 py-2 text-center">Remarks</th>
                                     <th class="px-3 py-2 text-center">DV / Check Amount</th>
                                 </tr>
                             </thead>
@@ -486,16 +489,17 @@
                                                     <td class="px-2 py-2">${r.programs || '-'}</td>
                                                     <td class="px-2 py-2">${r.account_code || '-'}</td>
                                                     <td class="px-2 py-2">${r.description || '-'}</td>
+                                                    <td class="px-2 py-2">${r.remarks || '-'}</td>
                                                     <td class="px-2 py-2 text-right">${display}</td>
                                                 </tr>
                                             `;
                                         }).join('')
-                                        : `<tr><td colspan="7" class="px-3 py-3 text-center text-gray-500">No disbursements found.</td></tr>`
+                                        : `<tr><td colspan="8" class="px-3 py-3 text-center text-gray-500">No disbursements found.</td></tr>`
                                 }
                             </tbody>
                             <tfoot>
                                 <tr class="bg-gray-100 dark:bg-gray-900 font-semibold">
-                                    <td colspan="6" class="text-right px-3 py-2">Total DV / Check Amount:</td>
+                                    <td colspan="7" class="text-right px-3 py-2">Total DV / Check Amount:</td>
                                     <td class="text-right px-3 py-2">${
                                         (() => {
                                             const total = total_disbursement_amount || 0;

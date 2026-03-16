@@ -503,7 +503,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-1 py-2 text-center max-w-sm payment-remarks">
+                            <td class="px-1 py-2 text-center max-w-48 payment-remarks">
                                 <div class="relative inline-block group">
                                     {{ $obligation->payment_remarks ? $obligation->payment_remarks : '-' }}
                                 </div>

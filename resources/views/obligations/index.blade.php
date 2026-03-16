@@ -505,7 +505,7 @@
                             </td>
                             <td class="px-1 py-2 text-center max-w-sm payment-remarks">
                                 <div class="relative inline-block group">
-                                    {{ $obligation->payment_remarks ? Str::limit($obligation->payment_remarks, 50) : '-' }}
+                                    {{ $obligation->payment_remarks ? $obligation->payment_remarks : '-' }}
                                 </div>
                             </td>
                             @endhasanyrole

@@ -280,13 +280,11 @@
     <div id="disbursementContextMenu" 
         class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
-        @role('Developer|Administrator|Obligation')
-        @can('view obligations')
+        @role('Developer|Administrator|Obligation|Disbursement')
         <button id="contextViewObligation"
                 class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
             <i class="fas fa-eye mr-2 text-blue-600"></i>View Obligation Details
         </button>
-        @endcan
         @endrole
     </div>
 

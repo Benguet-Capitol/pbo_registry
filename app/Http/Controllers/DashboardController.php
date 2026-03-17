@@ -125,8 +125,8 @@ class DashboardController extends Controller
         $query = $officeAllotmentClassesQuery;
         $selectedYear = $currentYear; // for appends
         $officeAllotmentClasses = $perPage == 'all'
-            ? $query->orderBy('office')->get()
-            : $query->orderBy('office')->paginate($perPage)->appends([
+            ? $query->orderBy('office')->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')->orderBy('allotment_classes.id')->select('office_allotment_classes.*')->get()
+            : $query->orderBy('office')->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')->orderBy('allotment_classes.id')->select('office_allotment_classes.*')->paginate($perPage)->appends([
                 'search' => $search,
                 'sort_by' => $sortBy,
                 'sort_order' => $sortOrder,

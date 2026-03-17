@@ -208,7 +208,7 @@
                                 {{ optional($disbursement->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
                             </td>
                             <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $disbursement->obligation->particulars ?? '-' }}</td>
+                            <td class="px-2 py-3 text-gray-600 text-left dark:text-gray-300 max-w-xs">{{ $disbursement->obligation->particulars ?? '-' }}</td>
                             <td class="px-2 py-3 font-bold text-left text-green-700 dark:text-green-300">{{ $disbursement->dv_no }}</td>
                             <td class="px-2 py-3 font-bold text-left text-green-700 dark:text-green-300">{{ $disbursement->disbursement_date ?? '-' }}</td>
                             <td class="px-2 py-3 font-bold text-left text-gray-700 dark:text-gray-300 max-w-xs">

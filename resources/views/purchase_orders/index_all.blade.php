@@ -235,7 +235,7 @@
                                 {{ optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
                             </td>
                             <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->obligation->particulars ?? '-' }}</td>
+                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->obligation->particulars ?? '-' }}</td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
                                 @php
                                     $programs = $purchaseOrder->obligation->obligationAmounts

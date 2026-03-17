@@ -8,6 +8,7 @@ use App\Models\OfficeAllotmentClass;
 use App\Models\Appropriation;
 use App\Models\Office;
 use App\Models\AllotmentClass;
+use App\Traits\SortsAppropriations;
 use Carbon\Carbon;
 use App\Exports\SAAODBExport;
 use App\Models\AccountCode;
@@ -19,6 +20,7 @@ use App\Traits\LogsActivity;
 class SAAODBOfficeController extends Controller
 {
     use LogsActivity;
+    use SortsAppropriations;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -82,8 +84,6 @@ class SAAODBOfficeController extends Controller
                 if (!empty($selectedAccountCode)) {
                     $query->where('account_code', 'LIKE', $selectedAccountCode . '%');
                 }
-                $query->orderByRaw("CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC")
-                    ->orderBy('account_code', 'asc');
             },
             'officeAllotmentClasses.appropriations.realignments',
             'officeAllotmentClasses.appropriations.supplementals',
@@ -119,12 +119,10 @@ class SAAODBOfficeController extends Controller
                 ->values();
 
             foreach ($office->officeAllotmentClasses as $oac) {
+                    // Apply custom sorting to appropriations
+                    $oac->appropriations = $this->sortAppropriations($oac->appropriations);
+                    
                     $grouped = $oac->appropriations
-                        ->sortBy(fn ($a) => [
-                            $a->id,
-                            $a->programs === null ? 0 : 1,
-                            $a->account_code,
-                        ])
                         ->groupBy(fn ($a) => $a->programs ?? '');
 
                 foreach ($grouped as $program => $appropriations) {

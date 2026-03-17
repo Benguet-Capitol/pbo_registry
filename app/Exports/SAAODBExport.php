@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\AccountCode;
 use Illuminate\Contracts\View\View;
 use App\Models\Office;
+use App\Traits\SortsAppropriations;
 use Carbon\Carbon;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -19,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class SAAODBExport implements FromView, WithStyles, WithEvents
 {
+    use SortsAppropriations;
     protected $selectedYear;
     protected $selectedOffice;
     protected $accountCode;
@@ -420,9 +422,6 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                 if (!empty($accountCode)) {
                     $query->where('account_code', 'LIKE', $accountCode . '%');
                 }
-
-                $query->orderByRaw("CASE WHEN programs IS NULL OR programs = '' THEN 0 ELSE 1 END ASC")
-                    ->orderBy('account_code', 'asc');
             },
             'officeAllotmentClasses.appropriations.realignments',
             'officeAllotmentClasses.appropriations.supplementals',
@@ -458,12 +457,10 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
             ->values();
 
             foreach ($office->officeAllotmentClasses as $oac) {
+                // Apply custom sorting to appropriations
+                $oac->appropriations = $this->sortAppropriations($oac->appropriations);
+                
                 $grouped = $oac->appropriations
-                    ->sortBy(fn ($a) => [
-                        $a->id,
-                        $a->programs === null ? 0 : 1,
-                        $a->account_code,
-                    ])
                     ->groupBy(fn ($a) => $a->programs ?? '');
 
                 foreach ($grouped as $program => $appropriations) {

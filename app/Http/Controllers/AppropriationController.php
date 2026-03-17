@@ -6,6 +6,7 @@ use App\Models\AccountCode;
 use App\Models\Appropriation;
 use App\Models\ObligationAmount;
 use App\Models\Program;
+use App\Traits\SortsAppropriations;
 use Illuminate\Http\Request;
 use App\Models\OfficeAllotmentClass;
 use App\Models\Realignment;
@@ -18,6 +19,7 @@ use Spatie\SimpleExcel\SimpleExcelReader;
 
 class AppropriationController extends Controller
 {
+    use SortsAppropriations;
     /**
      * Display a listing of the resource.
      */
@@ -99,6 +101,13 @@ class AppropriationController extends Controller
         $appropriations = ($perPage == 'all')
             ? $query->get()
             : $query->paginate($perPage)->appends($request->query());
+
+        // Apply custom sorting to appropriations
+        if ($appropriations instanceof \Illuminate\Pagination\AbstractPaginator) {
+            $appropriations->setCollection($this->sortAppropriations($appropriations->getCollection()));
+        } else {
+            $appropriations = $this->sortAppropriations($appropriations);
+        }
 
         $account_codes = AccountCode::all()->sortBy('id');
         $programs = Program::all()->sortBy('id');

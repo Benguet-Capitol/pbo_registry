@@ -16,10 +16,13 @@ use App\Models\Realignment;
 use App\Models\Disbursement;
 use App\Models\Obligation;
 use App\Models\PurchaseOrder;
+use App\Traits\SortsAppropriations;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    use SortsAppropriations;
+
     /**
      * Display the dashboard with all office allotment classes.
      */
@@ -517,11 +520,14 @@ class DashboardController extends Controller
                             ->orWhere('fpp_code', 'like', "%{$search}%");
                     });
                 }
-                $query->orderBy('id', 'asc');
             },
             'supplementals',
             'realignments',
         ])->findOrFail($id);
+
+        // Custom sorting: Accounts without program first, then by program
+        // All accounts sort by account code LEFT to RIGHT
+        $officeAllotmentClasses->appropriations = $this->sortAppropriations($officeAllotmentClasses->appropriations);
 
         // Check if user is a Guest and verify they have access to this office
         $isGuest = auth()->user()->hasRole('Guest');

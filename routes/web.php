@@ -13,6 +13,7 @@ use App\Http\Controllers\AppropriationController;
 use App\Http\Controllers\ObligationAdjustmentController;
 use App\Http\Controllers\OfficeAllotmentClassController;
 use App\Http\Controllers\ObligationController;
+use App\Http\Controllers\ObligationFileController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\AllotmentClassController;
 use App\Http\Controllers\FundController;
@@ -135,6 +136,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/obligations/{obligationId}/amounts', [ObligationController::class, 'getObligationAmounts'])->name('obligations.api.amounts');
     Route::get('/api/obligations/{obligationId}/year', [ObligationController::class, 'getObligationYear'])->name('obligations.api.year');
     Route::get('/api/obligations/existing-obr-numbers', [ObligationController::class, 'getExistingObrNumbers'])->name('obligations.api.existingObrNumbers');
+
+    // Obligation Files Routes
+    Route::post('/obligations/{obligation}/files', [ObligationFileController::class, 'store'])->name('obligation_files.store');
+    Route::get('/obligations/{obligation}/files', [ObligationFileController::class, 'getFiles'])->name('obligation_files.get');
+    Route::get('/obligation-files/{obligationFileId}/view', [ObligationFileController::class, 'view'])->name('obligation_files.view');
+    Route::get('/obligation-files/{obligationFile}/download', [ObligationFileController::class, 'download'])->name('obligation_files.download');
+    Route::get('/obligation-files/{obligationFile}/preview', [ObligationFileController::class, 'preview'])->name('obligation_files.preview');
+    Route::put('/obligation-files/{obligationFile}', [ObligationFileController::class, 'update'])->name('obligation_files.update');
+    Route::delete('/obligation-files/{obligationFile}', [ObligationFileController::class, 'destroy'])->name('obligation_files.destroy');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);

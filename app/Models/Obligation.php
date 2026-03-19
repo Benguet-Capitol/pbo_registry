@@ -110,4 +110,9 @@ class Obligation extends Model
     {
         return $this->hasMany(Disbursement::class, 'obligation_id', 'id');
     }
+
+    public function files()
+    {
+        return $this->hasMany(ObligationFile::class, 'obligation_id', 'id');
+    }
 }

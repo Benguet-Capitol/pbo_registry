@@ -63,6 +63,7 @@
     @include('obligations.modal.create')
     @include('obligations.modal.edit')
     @include('obligations.modal.payment_remarks')
+    @include('obligations.modal.obligation_files')
 
     <!-- Page Content Wrapper with Transition -->
     <div class="page-transition">
@@ -327,6 +328,9 @@
                                     </a>
                                 </th>
                                 @endhasanyrole
+                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                    Files
+                                </th>
                                 <!-- <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                                     Actions
                                 </th> -->
@@ -509,68 +513,22 @@
                                 </div>
                             </td>
                             @endhasanyrole
-                                
-
-                                <!-- <td class="px-1 py-2">
-                                    <div class="relative inline-block text-left">
-                                        <button onclick="toggleDropdown(this)"
-                                            class="relative text-xs group px-2 py-1.5">
-                                            <span class="fas fa-ellipsis-v"></span>
-                                            
-                                            <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                {{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }} | {{ $obligation->obr_no }} | {{ number_format($obligation->obr_amount, 2) }}
-                                            </span>
-                                        </button>
-                                        <div class="absolute right-0 mt-1 w-44 z-50 hidden dropdown-menu bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-md">
-                                            <button onclick="openModal({{ json_encode($obligation->id) }})"
-                                                class="w-full px-4 py-2 text-left text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                <i class="fas fa-eye mr-2"></i>View Details
-                                            </button>
-                                            @can('view obligation adjustments')
-                                            <a href="{{ route('obligation_adjustments.index', ['obligation_id' => $obligation->id]) }}"
-                                                class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                <i class="fas fa-file-edit mr-2"></i>Adjustments
-                                            </a>
-                                            @endcan
-                                            @can('view purchase orders')
-                                            @if ($obligation->obr_type === 'Purchase Request')
-                                            <a href="{{ route('purchase_orders.index', ['obligation_id' => $obligation->id]) }}"
-                                                class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                <i class="fas fa-file-invoice mr-2"></i>Purchase Order
-                                            </a>
-                                            @endif
-                                            @endcan
-                                            @can('view disbursement')
-                                            <a href="{{ route('disbursements.index', ['obligation_id' => $obligation->id]) }}"
-                                                class="block px-4 py-2 text-xs hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                <i class="fas fa-file-medical-alt mr-2"></i>Disbursement
-                                            </a>
-                                            @endcan
-
-                                            @can('cancel obligations')
-                                            <button onclick="openCancellationModal(this.dataset.id, JSON.parse(this.dataset.obligation))"
-                                                data-id="{{ $obligation->id }}"
-                                                data-obligation='{{ $obligation->obligation_data }}'
-                                                class="w-full px-4 py-2 text-left text-xs text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                <i class="fas fa-window-close mr-2"></i>Cancellation
-                                            </button>
-                                            @endcan
-                                            
-                                            @can('edit obligations')
-                                            <button onclick='openEditObligationsModal(@json($obligation))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
-                                            <i class="fas fa-edit mr-2"></i>Edit
-                                            </button>
-                                            @endcan
-
-                                            @can('delete obligations')
-                                            <button onclick="openDeleteModal({{ $obligation->id }}, '{{ $obligation->obr_no }}', '{{ $obligation->officeAllotmentClass->offices->office_abbreviation }}', '{{ $obligation->officeAllotmentClass->allotmentClass->class }}', '{{ $obligation->obr_amount }}')"
-                                                class="w-full px-4 py-2 text-left text-xs text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-600">
-                                                <i class="fas fa-trash mr-2"></i>Delete
-                                            </button>
-                                            @endcan
-                                        </div>
-                                    </div>
-                                </td> -->
+                            <td class="px-1 py-2 text-center">
+                                @php
+                                    $fileCount = $obligation->files()->count();
+                                @endphp
+                                <button onclick="openObligationFilesModal({{ $obligation->id }}, '{{ $obligation->obr_no }}')" 
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
+                                    @if($fileCount > 0)
+                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
+                                    @else
+                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
+                                    @endif"
+                                    title="View files">
+                                    <i class="fas fa-file"></i>
+                                    <span>{{ $fileCount }}</span>
+                                </button>
+                            </td>
                             </tr>
                             @empty
                                 <tr>
@@ -680,6 +638,10 @@
             <i class="fas fa-comment-dollar mr-2 text-blue-600"></i>Payment Remarks
         </button>
         @endhasanyrole
+        <button id="contextFiles"
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
+            <i class="fas fa-file-upload mr-2 text-blue-600"></i>Upload Files
+        </button>
         <button id="contextHistory"
                 class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
             <i class="fas fa-history mr-2 text-blue-600"></i>Status/History
@@ -908,6 +870,15 @@
                         obligation.obr_no,
                         obligation.payment_remarks || ''
                     );
+                };
+            }
+
+            // Files button
+            const filesBtn = menu.querySelector('#contextFiles');
+            if (filesBtn && obligation.id) {
+                filesBtn.onclick = () => {
+                    hideObligationContextMenu();
+                    openObligationFilesModal(obligation.id, obligation.obr_no);
                 };
             }
 

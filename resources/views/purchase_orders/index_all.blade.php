@@ -1048,12 +1048,29 @@
             const toastId = 'toast_' + Date.now();
             const toastContainer = document.getElementById('toastContainer') || createToastContainer();
             
-            const bgColor = type === 'success' ? 'bg-blue-500' : 'bg-red-500';
+            // Determine color and icon based on type
+            let bgColor = 'bg-blue-500'; // Default: blue
+            let iconClass = 'check-circle';
+            
+            if (type === 'create' || type === 'success') {
+                bgColor = 'bg-green-500'; // Green for success/create
+                iconClass = 'check-circle';
+            } else if (type === 'edit') {
+                bgColor = 'bg-blue-500'; // Blue for edit
+                iconClass = 'edit';
+            } else if (type === 'delete') {
+                bgColor = 'bg-red-500'; // Red for delete
+                iconClass = 'trash';
+            } else if (type === 'error') {
+                bgColor = 'bg-red-500'; // Red for error
+                iconClass = 'exclamation-circle';
+            }
+            
             const toast = document.createElement('div');
             toast.id = toastId;
             toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slideInRight`;
             toast.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <i class="fas fa-${iconClass}"></i>
                 <span>${message}</span>
             `;
             

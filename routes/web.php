@@ -140,7 +140,7 @@ Route::middleware('auth')->group(function () {
     // Obligation Files Routes
     Route::post('/obligations/{obligation}/files', [ObligationFileController::class, 'store'])->name('obligation_files.store');
     Route::get('/obligations/{obligation}/files', [ObligationFileController::class, 'getFiles'])->name('obligation_files.get');
-    Route::get('/obligation-files/{obligationFileId}/view', [ObligationFileController::class, 'view'])->name('obligation_files.view');
+    Route::get('/obligation-files/{obligationFile}/view', [ObligationFileController::class, 'view'])->name('obligation_files.view');
     Route::get('/obligation-files/{obligationFile}/download', [ObligationFileController::class, 'download'])->name('obligation_files.download');
     Route::get('/obligation-files/{obligationFile}/preview', [ObligationFileController::class, 'preview'])->name('obligation_files.preview');
     Route::put('/obligation-files/{obligationFile}', [ObligationFileController::class, 'update'])->name('obligation_files.update');

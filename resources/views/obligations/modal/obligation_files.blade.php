@@ -59,9 +59,9 @@
 
 <!-- File View Modal -->
 <div id="viewFileModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
-    <div class="relative w-full max-w-7xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp h-5/6" style="animation: scaleInUp 0.3s ease-out;">
+    <div class="relative w-full max-w-7xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp flex flex-col" style="animation: scaleInUp 0.3s ease-out; height: 90vh; max-height: 90vh;">
         <!-- Modal header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900 dark:to-blue-900 dark:border-gray-600">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900 dark:to-blue-900 dark:border-gray-600 flex-shrink-0">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <i class="fas fa-eye text-cyan-600 dark:text-cyan-400"></i>
                 <span id="viewFileName">View File</span>
@@ -72,8 +72,8 @@
         </div>
 
         <!-- Modal body -->
-        <div class="px-6 py-4 overflow-auto" style="max-height: calc(83.333% - 100px);">
-            <div id="fileViewContent" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+        <div class="flex-1 overflow-auto">
+            <div id="fileViewContent" class="h-full bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600 flex flex-col">
                 <div class="text-center py-8">
                     <i class="fas fa-spinner fa-spin text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
                     <p class="text-gray-600 dark:text-gray-400">Loading file...</p>
@@ -416,7 +416,6 @@
             /^text\//,
             /application\/json/,
             /application\/xml/,
-            /application\/vnd.openxmlformats/,
             // Video
             /^video\//,
             // Audio
@@ -459,7 +458,7 @@
                                 <button onclick="openEditFileModal(${file.id}, '${file.original_file_name}')" title="Rename file" aria-label="Rename file" class="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button onclick="openDeleteFileModal(${file.id})" title="Delete file" aria-label="Delete file" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
+                                <button onclick="openDeleteFileModal(${file.id}, '${file.original_file_name}')" title="Delete file" aria-label="Delete file" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -528,8 +527,9 @@
     /**
      * Delete file
      */
-    function openDeleteFileModal(fileId) {
+    function openDeleteFileModal(fileId, fileName) {
         window.currentDeleteFileId = fileId;
+        document.getElementById('deleteFileName').textContent = fileName;
         const modal = document.getElementById('deleteFileModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
@@ -608,7 +608,7 @@
         
         // Image types - PNG, JPG, GIF, WebP, SVG, BMP, TIFF, etc.
         if (fileType.startsWith('image/')) {
-            content.innerHTML = `<div class="overflow-auto flex items-center justify-center" style="max-height: 100%;"><img src="${fileUrl}" alt="File preview" class="rounded-lg" style="max-width: none; width: auto; height: auto;" onerror="console.error('Image failed to load from:', '${fileUrl}'); this.closest('div').innerHTML='<div class=\\'text-center py-8\\'><i class=\\'fas fa-exclamation-circle text-2xl text-red-500 mb-3\\'></i><p class=\\'text-red-600 dark:text-red-400\\'>Failed to load image. <a href=\\'${fileUrl}\\' class=\\'text-blue-600 hover:underline\\'>Try downloading instead</a></p></div>';"></div>`;
+            content.innerHTML = `<div class="flex-1 overflow-auto flex items-center justify-center"><img src="${fileUrl}" alt="File preview" class="rounded-lg" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="console.error('Image failed to load from:', '${fileUrl}'); this.closest('div').innerHTML='<div class=\'text-center py-8\'><i class=\'fas fa-exclamation-circle text-2xl text-red-500 mb-3\'></i><p class=\'text-red-600 dark:text-red-400\'>Failed to load image. <a href=\'${fileUrl}\' class=\'text-blue-600 hover:underline\'>Try downloading instead</a></p></div>';"></div>`;
             return;
         }
 
@@ -625,28 +625,28 @@
                 .then(response => response.text())
                 .then(text => {
                     const lines = text.split('\n').slice(0, 100).join('\n');
-                    content.innerHTML = `<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs line-numbers" style="max-height: 400px; overflow-y: auto;"><code>${escapeHtml(lines)}${text.split('\n').length > 100 ? '\n\n... (file truncated)' : ''}</code></pre>`;
+                    content.innerHTML = `<pre class="flex-1 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto text-xs line-numbers"><code>${escapeHtml(lines)}${text.split('\n').length > 100 ? '\n\n... (file truncated)' : ''}</code></pre>`;
                 })
                 .catch(() => {
-                    content.innerHTML = `<div class="text-center py-8"><p class="text-gray-600 dark:text-gray-400 mb-4">File preview temporarily unavailable</p><a href="${fileUrl}" download class="text-blue-600 dark:text-blue-400 hover:underline">Download file</a></div>`;
+                    content.innerHTML = `<div class="flex-1 flex items-center justify-center text-center py-8"><div><p class="text-gray-600 dark:text-gray-400 mb-4">File preview temporarily unavailable</p><a href="${fileUrl}" download class="text-blue-600 dark:text-blue-400 hover:underline">Download file</a></div></div>`;
                 });
             return;
         }
 
         // Video types
         if (fileType.startsWith('video/')) {
-            content.innerHTML = `<video controls class="w-full max-h-96 rounded-lg bg-black"><source src="${fileUrl}" type="${fileType}">Your browser does not support the video tag.</video>`;
+            content.innerHTML = `<div class="flex-1 flex items-center justify-center"><video controls class="w-full rounded-lg bg-black" style="max-height: 100%; object-fit: contain;"><source src="${fileUrl}" type="${fileType}">Your browser does not support the video tag.</video></div>`;
             return;
         }
 
         // Audio types
         if (fileType.startsWith('audio/')) {
-            content.innerHTML = `<audio controls class="w-full rounded-lg"><source src="${fileUrl}" type="${fileType}">Your browser does not support the audio element.</audio>`;
+            content.innerHTML = `<div class="flex-1 flex items-center justify-center"><audio controls class="w-full rounded-lg"><source src="${fileUrl}" type="${fileType}">Your browser does not support the audio element.</audio></div>`;
             return;
         }
 
         // Default
-        content.innerHTML = `<div class="text-center py-8"><i class="fas fa-file text-4xl text-gray-400 dark:text-gray-500 mb-3"></i><p class="text-gray-600 dark:text-gray-400 mb-4">This file type cannot be previewed</p><a href="${fileUrl}" download class="text-blue-600 dark:text-blue-400 hover:underline">Click here to download</a></div>`;
+        content.innerHTML = `<div class="flex-1 flex items-center justify-center text-center"><div><i class="fas fa-file text-4xl text-gray-400 dark:text-gray-500 mb-3"></i><p class="text-gray-600 dark:text-gray-400 mb-4">This file type cannot be previewed</p><a href="${fileUrl}" download class="text-blue-600 dark:text-blue-400 hover:underline">Click here to download</a></div></div>`;
     }
 
     function escapeHtml(text) {
@@ -685,12 +685,12 @@
                 await renderPdfAsImage(fileUrl, page);
             } else {
                 // Regular PDF with text, use iframe
-                content.innerHTML = `<iframe src="${fileUrl}" class="w-full h-96 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
+                content.innerHTML = `<iframe src="${fileUrl}" class="w-full flex-1 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
             }
         } catch (error) {
             console.error('Error rendering PDF:', error);
             // Fallback to iframe for corrupted or problematic PDFs
-            content.innerHTML = `<iframe src="${fileUrl}" class="w-full h-96 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
+            content.innerHTML = `<iframe src="${fileUrl}" class="w-full flex-1 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
         }
     }
 
@@ -711,11 +711,11 @@
             
             const imageDataUrl = canvas.toDataURL('image/png');
             content.innerHTML = `
-                <div class="flex flex-col items-center">
-                    <div class="overflow-auto" style="max-height: 100%;">
-                        <img src="${imageDataUrl}" alt="PDF preview" class="rounded-lg" style="max-width: none; width: auto; height: auto;">
+                <div class="flex flex-col flex-1 items-center justify-center">
+                    <div class="flex-1 overflow-auto w-full flex items-center justify-center">
+                        <img src="${imageDataUrl}" alt="PDF preview" class="rounded-lg" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">This is an image-based PDF (scanned document)</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3 flex-shrink-0">This is an image-based PDF (scanned document)</p>
                 </div>
             `;
         } catch (error) {
@@ -760,9 +760,27 @@
         const toast = document.createElement('div');
         toast.id = toastId;
         
+        // Determine color and icon based on type
+        let backgroundColor = '#3b82f6'; // Default: blue
+        let iconClass = 'check-circle';
+        
+        if (type === 'create' || type === 'success') {
+            backgroundColor = '#10b981'; // Green for success/create
+            iconClass = 'check-circle';
+        } else if (type === 'edit') {
+            backgroundColor = '#3b82f6'; // Blue for edit
+            iconClass = 'edit';
+        } else if (type === 'delete') {
+            backgroundColor = '#ef4444'; // Red for delete
+            iconClass = 'trash';
+        } else if (type === 'error') {
+            backgroundColor = '#ef4444'; // Red for error
+            iconClass = 'exclamation-circle';
+        }
+        
         // Create inner div with inline styles
         const innerDiv = document.createElement('div');
-        innerDiv.style.backgroundColor = '#3b82f6 !important';
+        innerDiv.style.backgroundColor = backgroundColor + ' !important';
         innerDiv.style.color = 'white !important';
         innerDiv.style.padding = '12px 24px !important';
         innerDiv.style.borderRadius = '8px !important';
@@ -771,12 +789,6 @@
         innerDiv.style.alignItems = 'center !important';
         innerDiv.style.gap = '12px !important';
         innerDiv.style.animation = 'slideInRight 0.3s ease-out !important';
-        
-        // Determine icon
-        let iconClass = 'check-circle';
-        if (type === 'error') {
-            iconClass = 'exclamation-circle';
-        }
         
         innerDiv.innerHTML = `
             <i class="fas fa-${iconClass}"></i>

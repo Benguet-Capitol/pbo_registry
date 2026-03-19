@@ -164,11 +164,9 @@ class ObligationFileController extends Controller
     /**
      * Serve file inline for viewing (images, PDFs, etc.)
      */
-    public function view($obligationFileId)
+    public function view(ObligationFile $obligationFile)
     {
         try {
-            $obligationFile = ObligationFile::findOrFail($obligationFileId);
-            
             if (!Storage::disk('private')->exists($obligationFile->file_path)) {
                 \Log::error('File path not found in storage', [
                     'file_id' => $obligationFile->id,
@@ -205,11 +203,11 @@ class ObligationFileController extends Controller
                 'Pragma' => 'public',
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error('ObligationFile not found', ['file_id' => $obligationFileId]);
+            \Log::error('ObligationFile not found', ['obligationFile_id' => $obligationFile->id]);
             abort(404, 'File record not found');
         } catch (\Exception $e) {
             \Log::error('Error serving file: ' . $e->getMessage(), [
-                'file_id' => $obligationFileId,
+                'file_id' => $obligationFile->id,
                 'exception' => $e->getTraceAsString(),
             ]);
             abort(500, 'Error serving file');

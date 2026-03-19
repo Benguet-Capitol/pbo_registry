@@ -422,7 +422,7 @@
                                             { class: 'px-2 py-2', render: r => r.programs?.trim() ? r.programs : '-' },
                                             { class: 'px-2 py-2', render: r => r.account_code },
                                             { class: 'px-2 py-2', render: r => r.description },
-                                            { class: 'px-2 py-2', render: r => r.remarks || '-' },
+                                            { class: 'px-2 py-2', render: r => r.po_remarks || '-' },
                                             {
                                                 class: 'px-2 py-2 text-right',
                                                 render: r => {

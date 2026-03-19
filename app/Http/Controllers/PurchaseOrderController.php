@@ -412,27 +412,72 @@ class PurchaseOrderController extends Controller
      */
     public function update(Request $request, PurchaseOrder $purchaseOrder)
         {
-            $validated = $request->validate([
-                'purchase_order_id' => 'required|exists:purchase_orders,id',
-                'edit_po_date' => 'required|date',
-                'edit_po_number' => 'required|string|max:255',
-                'edit_pr_no' => 'required|string|max:255',
-                'edit_delivery_period' => 'required|string|max:255',
-                'edit_supplier' => 'required|string|max:255',
-                'edit_po_remarks' => 'nullable|string|max:1000',
-                'edit_po_amount' => 'required|array',
-                'edit_po_amount.*' => 'nullable|numeric|min:0',
-                'redirect' => 'nullable|string',
-            ]);
+            // Check if user has Disbursement role
+            $isDisbursementRole = auth()->user()->hasRole('Disbursement');
+            
+            // Conditionally validate based on user role
+            if ($isDisbursementRole) {
+                // For Disbursement role, only validate remarks field
+                $validated = $request->validate([
+                    'purchase_order_id' => 'required|exists:purchase_orders,id',
+                    'edit_po_remarks' => 'nullable|string|max:1000',
+                    'redirect' => 'nullable|string',
+                ]);
+            } else {
+                // For other roles, validate all fields
+                $validated = $request->validate([
+                    'purchase_order_id' => 'required|exists:purchase_orders,id',
+                    'edit_po_date' => 'required|date',
+                    'edit_po_number' => 'required|string|max:255',
+                    'edit_pr_no' => 'required|string|max:255',
+                    'edit_delivery_period' => 'required|string|max:255',
+                    'edit_supplier' => 'required|string|max:255',
+                    'edit_po_remarks' => 'nullable|string|max:1000',
+                    'edit_po_amount' => 'required|array',
+                    'edit_po_amount.*' => 'nullable|numeric|min:0',
+                    'redirect' => 'nullable|string',
+                ]);
+            }
 
             $purchaseOrder = PurchaseOrder::findOrFail($validated['purchase_order_id']);
+            
+            if ($isDisbursementRole) {
+                // For Disbursement role, only allow remarks update
+                $purchaseOrder->update([
+                    'po_remarks' => $validated['edit_po_remarks'],
+                ]);
+                
+                // Also update all related purchase orders with the same po_number to keep remarks consistent
+                $originalPoNumber = $purchaseOrder->po_number;
+                PurchaseOrder::where('po_number', $originalPoNumber)
+                    ->where('id', '!=', $purchaseOrder->id)
+                    ->update(['po_remarks' => $validated['edit_po_remarks']]);
+                
+                $accountCodesMessage = optional($purchaseOrder->obligationAmount->appropriation)->account_code ?? 'N/A';
+                
+                // Check if redirect to all purchase orders is requested
+                if (($validated['redirect'] ?? null) === 'all') {
+                    return redirect()->route('purchase_orders.all')->with('status', [
+                        'type' => 'update',
+                        'message' => "Purchase Order No: <strong>{$purchaseOrder->po_number}</strong> remarks have been <strong>updated</strong> under <strong>Account Code:</strong> {$accountCodesMessage}."
+                    ]);
+                }
+
+                return redirect()->route('purchase_orders.index', [
+                    'obligation_id' => $purchaseOrder->obligation_id,
+                ])->with('status', [
+                    'type' => 'update',
+                    'message' => "Purchase Order No: <strong>{$purchaseOrder->po_number}</strong> remarks have been <strong>updated</strong> under <strong>Account Code:</strong> {$accountCodesMessage}."
+                ]);
+            }
+
             $obligationId = $purchaseOrder->obligation_amounts_id;
             $originalPoNumber = $purchaseOrder->po_number;
 
             // Get PO amount specifically for this obligation
             $poAmount = $validated['edit_po_amount'][$obligationId] ?? 0;
 
-            // Prepare common data that applies to all related POs
+            // Prepare common data that applies to all related POs (including remarks which should be shared)
             $commonData = [
                 'po_date' => $validated['edit_po_date'],
                 'po_number' => $validated['edit_po_number'],
@@ -446,7 +491,7 @@ class PurchaseOrderController extends Controller
             $purchaseOrder->update(array_merge($commonData, ['po_amount' => $poAmount]));
 
             // Update all related purchase orders with the same ORIGINAL po_number (except the current one)
-            // This ensures that if po_number is changed, all related POs get the new po_number too
+            // This ensures that if po_number, remarks, or other common fields are changed, all related POs get updated too
             PurchaseOrder::where('po_number', $originalPoNumber)
                 ->where('id', '!=', $purchaseOrder->id)
                 ->update($commonData);

@@ -483,6 +483,7 @@ class ObligationController extends Controller
                 'programs' => $appropriation->programs ?? '-',
                 'account_code' => $appropriation->account_code ?? '-',
                 'description' => $appropriation->description ?? '-',
+                'remarks' => $disb->remarks,
                 'disbursement_amount' => $disb->disbursement_amount,
             ];
         });
@@ -513,6 +514,7 @@ class ObligationController extends Controller
                     'pr_no' => $po->pr_no,
                     'delivery_period' => $po->delivery_period,
                     'po_amount' => $po->po_amount,
+                    'po_remarks' => $po->po_remarks,
                     'programs' => $appropriation->programs ?? '',
                     'account_code' => $appropriation->account_code ?? '',
                     'description' => $appropriation->description ?? '',

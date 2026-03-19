@@ -320,13 +320,11 @@
         </button>
         @endrole
         
-        @role('Developer|Administrator|Obligation')
-        @can('edit purchase orders')
+        @role('Developer|Administrator|Obligation|Disbursement')
         <button id="contextEditPO"
                 class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
             <i class="fas fa-edit mr-2 text-blue-600"></i>Edit Purchase Order
         </button>
-        @endcan
         @endrole
         
         @role('Developer|Administrator|Disbursement')
@@ -653,6 +651,75 @@
             const modal = document.getElementById('editPurchaseOrderModal');
             modal.style.display = 'flex';
             modal.setAttribute('aria-hidden', 'false');
+
+            // Check user role and disable/enable fields accordingly
+            applyFieldRestrictionsBasedOnRole();
+        }
+
+        /**
+         * Apply field restrictions based on user role
+         * If role is Disbursement, only remarks field is enabled
+         */
+        function applyFieldRestrictionsBasedOnRole() {
+            const modal = document.getElementById('editPurchaseOrderModal');
+            const userRole = modal.getAttribute('data-user-role');
+
+            // Fields to disable when role is Disbursement
+            const fieldsToDisable = [
+                'edit_po_date',
+                'edit_po_number',
+                'edit_pr_no',
+                'edit_delivery_period',
+                'edit_supplier'
+            ];
+
+            if (userRole === 'Disbursement') {
+                // Disable fields
+                fieldsToDisable.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.disabled = true;
+                        field.classList.add('opacity-60', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-700');
+                    }
+                });
+
+                // Disable PO amount inputs in the table
+                const poAmountInputs = document.querySelectorAll("input[name^='edit_po_amount']");
+                poAmountInputs.forEach(input => {
+                    input.disabled = true;
+                    input.classList.add('opacity-60', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-700');
+                });
+
+                // Keep remarks field enabled
+                const remarksField = document.getElementById('edit_po_remarks');
+                if (remarksField) {
+                    remarksField.disabled = false;
+                    remarksField.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-700');
+                }
+            } else {
+                // Enable all fields for non-Disbursement roles
+                fieldsToDisable.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.disabled = false;
+                        field.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-700');
+                    }
+                });
+
+                // Enable PO amount inputs in the table
+                const poAmountInputs = document.querySelectorAll("input[name^='edit_po_amount']");
+                poAmountInputs.forEach(input => {
+                    input.disabled = false;
+                    input.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-700');
+                });
+
+                // Enable remarks field
+                const remarksField = document.getElementById('edit_po_remarks');
+                if (remarksField) {
+                    remarksField.disabled = false;
+                    remarksField.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-700');
+                }
+            }
         }
 
         function populateEditProgramsTable(obligationAmounts, purchaseOrder) {
@@ -699,6 +766,8 @@
                     });
 
                     updateEditPOTotal();
+                    // Re-apply field restrictions after table is populated
+                    applyFieldRestrictionsBasedOnRole();
                 })
                 .catch(error => {
                     console.error('Error fetching purchase orders by number:', error);
@@ -727,6 +796,8 @@
                     });
 
                     updateEditPOTotal();
+                    // Re-apply field restrictions after table is populated
+                    applyFieldRestrictionsBasedOnRole();
                 });
         }
 
@@ -762,6 +833,16 @@
         });
 
         function validateEditPurchaseOrderForm() {
+            const modal = document.getElementById('editPurchaseOrderModal');
+            const userRole = modal.getAttribute('data-user-role');
+            
+            // For Disbursement role, only validate that remarks field is present
+            if (userRole === 'Disbursement') {
+                // Simple validation - no specific validation needed for remarks only
+                return true;
+            }
+
+            // For other roles, validate PO amounts
             const inputs = document.querySelectorAll("input[name^='edit_po_amount']");
             let isValid = true;
 
@@ -1211,7 +1292,7 @@
                                         <td class="px-2 py-2">${po.programs || '-'}</td>
                                         <td class="px-2 py-2">${po.account_code}</td>
                                         <td class="px-2 py-2">${po.description}</td>
-                                        <td class="px-2 py-2">${po.remarks || '-'}</td>
+                                        <td class="px-2 py-2">${po.po_remarks || '-'}</td>
                                         <td class="px-2 py-2 text-right">${buildCurrencyDisplay(po.po_amount)}</td>
                                     </tr>
                                 `;
@@ -1440,7 +1521,13 @@
     <form id="EditPurchaseOrderForm" method="POST" action="">
         @csrf
         @method('PUT')
-        <div id="editPurchaseOrderModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+        <div id="editPurchaseOrderModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50"
+            @role('Disbursement')
+            data-user-role="Disbursement"
+            @else
+            data-user-role="other"
+            @endrole
+        >
             <div class="relative w-full max-w-5xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
                 <!-- Modal header -->
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
@@ -1455,6 +1542,16 @@
 
                 <!-- Modal body -->
                 <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 200px);">
+                    <!-- Role-based restriction notice for Disbursement -->
+                    @role('Disbursement')
+                    <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900 dark:border-blue-700 flex items-start gap-2">
+                        <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 mt-0.5"></i>
+                        <div class="text-sm text-blue-700 dark:text-blue-300">
+                            <p class="font-semibold">Restricted Edit Mode</p>
+                            <p class="text-xs mt-1">You can only update the Remarks field. Other fields are read-only in your role.</p>
+                        </div>
+                    </div>
+                    @endrole
                     <div class="grid gap-3">
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                                 <input type="hidden" name="purchase_order_id" id="purchase_order_id">
@@ -1613,6 +1710,28 @@
                 opacity: 1;
                 transform: scale(1) translateY(0);
             }
+        }
+
+        /* Disabled input styles for Disbursement role */
+        input:disabled,
+        textarea:disabled {
+            background-color: #f3f4f6 !important;
+            color: #9ca3af !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+
+        .dark input:disabled,
+        .dark textarea:disabled {
+            background-color: #1f2937 !important;
+            color: #6b7280 !important;
+        }
+
+        /* Remove focus styles from disabled inputs */
+        input:disabled:focus,
+        textarea:disabled:focus {
+            outline: none !important;
+            box-shadow: none !important;
         }
     </style>
 

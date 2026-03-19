@@ -774,7 +774,7 @@
                                         <td class="px-2 py-2">${po.programs || '-'}</td>
                                         <td class="px-2 py-2">${po.account_code}</td>
                                         <td class="px-2 py-2">${po.description}</td>
-                                        <td class="px-2 py-2">${po.remarks || '-'}</td>
+                                        <td class="px-2 py-2">${po.po_remarks || '-'}</td>
                                         <td class="px-2 py-2 text-right">${buildCurrencyDisplay(po.po_amount)}</td>
                                     </tr>
                                 `;

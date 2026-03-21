@@ -1,5 +1,11 @@
 <!-- Obligation Files Modal -->
-<div id="obligationFilesModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
+<div id="obligationFilesModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50"
+    @role('Disbursement')
+    data-user-role="Disbursement"
+    @else
+    data-user-role="other"
+    @endrole
+>
     <div class="relative w-full max-w-2xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900 dark:to-cyan-900 dark:border-gray-600">
@@ -433,6 +439,9 @@
             .then(response => response.json())
             .then(data => {
                 const filesList = document.getElementById('filesList');
+                const modal = document.getElementById('obligationFilesModal');
+                const userRole = modal.getAttribute('data-user-role');
+                const isDisbursement = userRole === 'Disbursement';
                 
                 if (data.success && data.files.length > 0) {
                     filesList.innerHTML = data.files.map(file => {
@@ -455,12 +464,12 @@
                                 <a href="/obligation-files/${file.id}/download" title="Download file" aria-label="Download file" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
                                     <i class="fas fa-download"></i>
                                 </a>
-                                <button onclick="openEditFileModal(${file.id}, '${file.original_file_name}')" title="Rename file" aria-label="Rename file" class="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors">
+                                ${!isDisbursement ? `<button onclick="openEditFileModal(${file.id}, '${file.original_file_name}')" title="Rename file" aria-label="Rename file" class="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors">
                                     <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="openDeleteFileModal(${file.id}, '${file.original_file_name}')" title="Delete file" aria-label="Delete file" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
+                                </button>` : ''}
+                                ${!isDisbursement ? `<button onclick="openDeleteFileModal(${file.id}, '${file.original_file_name}')" title="Delete file" aria-label="Delete file" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
                                     <i class="fas fa-trash"></i>
-                                </button>
+                                </button>` : ''}
                             </div>
                         </div>
                     `;

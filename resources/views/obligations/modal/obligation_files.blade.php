@@ -615,9 +615,37 @@
         
         console.log('Rendering preview for:', { fileType, fileUrl, fileId });
         
+        // Clear previous content
+        content.innerHTML = '';
+        
         // Image types - PNG, JPG, GIF, WebP, SVG, BMP, TIFF, etc.
         if (fileType.startsWith('image/')) {
-            content.innerHTML = `<div class="flex-1 overflow-auto flex items-center justify-center"><img src="${fileUrl}" alt="File preview" class="rounded-lg" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="console.error('Image failed to load from:', '${fileUrl}'); this.closest('div').innerHTML='<div class=\'text-center py-8\'><i class=\'fas fa-exclamation-circle text-2xl text-red-500 mb-3\'></i><p class=\'text-red-600 dark:text-red-400\'>Failed to load image. <a href=\'${fileUrl}\' class=\'text-blue-600 hover:underline\'>Try downloading instead</a></p></div>';"></div>`;
+            const container = document.createElement('div');
+            container.className = 'flex-1 overflow-auto flex items-center justify-center';
+            
+            const img = document.createElement('img');
+            img.src = fileUrl;
+            img.alt = 'File preview';
+            img.className = 'rounded-lg';
+            img.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
+            
+            img.onerror = function() {
+                console.error('Image failed to load from:', fileUrl);
+                container.innerHTML = '';
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'text-center py-8 flex-1 flex items-center justify-center';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle text-2xl text-red-500 mb-3"></i><p class="text-red-600 dark:text-red-400">Failed to load image.</p>';
+                const link = document.createElement('a');
+                link.href = fileUrl;
+                link.textContent = 'Try downloading instead';
+                link.className = 'text-blue-600 hover:underline';
+                errorDiv.appendChild(document.createElement('br'));
+                errorDiv.appendChild(link);
+                container.appendChild(errorDiv);
+            };
+            
+            container.appendChild(img);
+            content.appendChild(container);
             return;
         }
 
@@ -629,7 +657,6 @@
 
         // Text files
         if (fileType.startsWith('text/') || fileType.includes('application/json') || fileType.includes('application/xml') || fileType.includes('application/vnd.openxmlformats')) {
-            // For text files, create a fetch request to get the content
             fetch(`${fileUrl}?preview=true`)
                 .then(response => response.text())
                 .then(text => {
@@ -637,25 +664,75 @@
                     content.innerHTML = `<pre class="flex-1 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto text-xs line-numbers"><code>${escapeHtml(lines)}${text.split('\n').length > 100 ? '\n\n... (file truncated)' : ''}</code></pre>`;
                 })
                 .catch(() => {
-                    content.innerHTML = `<div class="flex-1 flex items-center justify-center text-center py-8"><div><p class="text-gray-600 dark:text-gray-400 mb-4">File preview temporarily unavailable</p><a href="${fileUrl}" download class="text-blue-600 dark:text-blue-400 hover:underline">Download file</a></div></div>`;
+                    content.innerHTML = '';
+                    const container = document.createElement('div');
+                    container.className = 'flex-1 flex items-center justify-center text-center py-8';
+                    container.innerHTML = '<p class="text-gray-600 dark:text-gray-400 mb-4">File preview temporarily unavailable</p>';
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    link.download = true;
+                    link.textContent = 'Download file';
+                    link.className = 'text-blue-600 dark:text-blue-400 hover:underline';
+                    container.appendChild(link);
+                    content.appendChild(container);
                 });
             return;
         }
 
         // Video types
         if (fileType.startsWith('video/')) {
-            content.innerHTML = `<div class="flex-1 flex items-center justify-center"><video controls class="w-full rounded-lg bg-black" style="max-height: 100%; object-fit: contain;"><source src="${fileUrl}" type="${fileType}">Your browser does not support the video tag.</video></div>`;
+            const container = document.createElement('div');
+            container.className = 'flex-1 flex items-center justify-center';
+            
+            const video = document.createElement('video');
+            video.controls = true;
+            video.className = 'w-full rounded-lg bg-black';
+            video.style.cssText = 'max-height: 100%; object-fit: contain;';
+            
+            const source = document.createElement('source');
+            source.src = fileUrl;
+            source.type = fileType;
+            
+            video.appendChild(source);
+            video.appendChild(document.createTextNode('Your browser does not support the video tag.'));
+            
+            container.appendChild(video);
+            content.appendChild(container);
             return;
         }
 
         // Audio types
         if (fileType.startsWith('audio/')) {
-            content.innerHTML = `<div class="flex-1 flex items-center justify-center"><audio controls class="w-full rounded-lg"><source src="${fileUrl}" type="${fileType}">Your browser does not support the audio element.</audio></div>`;
+            const container = document.createElement('div');
+            container.className = 'flex-1 flex items-center justify-center';
+            
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.className = 'w-full rounded-lg';
+            
+            const source = document.createElement('source');
+            source.src = fileUrl;
+            source.type = fileType;
+            
+            audio.appendChild(source);
+            audio.appendChild(document.createTextNode('Your browser does not support the audio element.'));
+            
+            container.appendChild(audio);
+            content.appendChild(container);
             return;
         }
 
         // Default
-        content.innerHTML = `<div class="flex-1 flex items-center justify-center text-center"><div><i class="fas fa-file text-4xl text-gray-400 dark:text-gray-500 mb-3"></i><p class="text-gray-600 dark:text-gray-400 mb-4">This file type cannot be previewed</p><a href="${fileUrl}" download class="text-blue-600 dark:text-blue-400 hover:underline">Click here to download</a></div></div>`;
+        const container = document.createElement('div');
+        container.className = 'flex-1 flex flex-col items-center justify-center text-center';
+        container.innerHTML = '<i class="fas fa-file text-4xl text-gray-400 dark:text-gray-500 mb-3"></i><p class="text-gray-600 dark:text-gray-400 mb-4">This file type cannot be previewed</p>';
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = true;
+        link.textContent = 'Click here to download';
+        link.className = 'text-blue-600 dark:text-blue-400 hover:underline';
+        container.appendChild(link);
+        content.appendChild(container);
     }
 
     function escapeHtml(text) {

@@ -24,10 +24,43 @@ class ObligationFileController extends Controller
             $file = $request->file('file');
             $originalName = $file->getClientOriginalName();
             $fileSize = $file->getSize();
+            
+            // Get MIME type from file extension and finfo
+            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
             $fileType = $file->getMimeType();
             
-            // Generate unique filename
-            $fileName = time() . '_' . str_replace(' ', '_', $originalName);
+            // Build MIME type map for common extensions
+            $mimeTypes = [
+                'pdf' => 'application/pdf',
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'gif' => 'image/gif',
+                'bmp' => 'image/bmp',
+                'webp' => 'image/webp',
+                'svg' => 'image/svg+xml',
+                'mp4' => 'video/mp4',
+                'webm' => 'video/webm',
+                'mp3' => 'audio/mpeg',
+                'wav' => 'audio/wav',
+                'txt' => 'text/plain',
+                'csv' => 'text/csv',
+                'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'xls' => 'application/vnd.ms-excel',
+                'doc' => 'application/msword',
+                'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ];
+            
+            // Override MIME type if we have a known mapping for this extension
+            if (isset($mimeTypes[$extension])) {
+                $fileType = $mimeTypes[$extension];
+            }
+            
+            // Generate unique filename preserving extension
+            $fileName = time() . '_' . str_replace(' ', '_', pathinfo($originalName, PATHINFO_FILENAME));
+            if ($extension) {
+                $fileName .= '.' . $extension;
+            }
             
             // Store file in the obligation_files directory
             $filePath = $file->storeAs(
@@ -35,6 +68,20 @@ class ObligationFileController extends Controller
                 $fileName,
                 'private'
             );
+            
+            // Verify file was stored correctly
+            if (!Storage::disk('private')->exists($filePath)) {
+                throw new \Exception('File storage verification failed');
+            }
+            
+            // Verify file size matches
+            $storedSize = Storage::disk('private')->size($filePath);
+            if ($storedSize !== $fileSize) {
+                \Log::warning('File size mismatch detected', [
+                    'original_size' => $fileSize,
+                    'stored_size' => $storedSize,
+                ]);
+            }
 
             // Create database record
             $obligationFile = ObligationFile::create([
@@ -69,9 +116,36 @@ class ObligationFileController extends Controller
             abort(404, 'File not found');
         }
 
-        return Storage::disk('private')->download(
-            $obligationFile->file_path,
-            $obligationFile->original_file_name
+        $fullPath = Storage::disk('private')->path($obligationFile->file_path);
+        
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found on disk');
+        }
+
+        // Clear any output buffering to prevent file corruption
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        \Log::info('Downloading file', [
+            'file_id' => $obligationFile->id,
+            'file_name' => $obligationFile->original_file_name,
+            'file_type' => $obligationFile->file_type,
+            'file_size' => filesize($fullPath),
+        ]);
+
+        // Use response()->download() for better control over headers
+        return response()->download(
+            $fullPath,
+            $obligationFile->original_file_name,
+            [
+                'Content-Type' => $obligationFile->file_type,
+                'Content-Length' => filesize($fullPath),
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ],
+            'attachment'
         );
     }
 
@@ -196,11 +270,19 @@ class ObligationFileController extends Controller
                 'file_size' => filesize($fullPath),
             ]);
 
+            // Clear output buffer to prevent file corruption
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            $fileSize = filesize($fullPath);
+            
+            // Serve file with correct headers
             return response()->file($fullPath, [
                 'Content-Type' => $obligationFile->file_type,
-                'Content-Disposition' => 'inline; filename="' . $obligationFile->original_file_name . '"',
+                'Content-Length' => $fileSize,
                 'Cache-Control' => 'public, max-age=3600',
-                'Pragma' => 'public',
+                'Accept-Ranges' => 'bytes',
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             \Log::error('ObligationFile not found', ['obligationFile_id' => $obligationFile->id]);

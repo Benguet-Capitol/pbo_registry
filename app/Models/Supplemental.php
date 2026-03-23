@@ -34,4 +34,9 @@ class Supplemental extends Model
     {
         return $this->belongsTo(Appropriation::class, 'appropriations_id');
     }
+
+    public function files()
+    {
+        return SupplementalFile::where('supplemental_no', $this->supplemental_no)->orderBy('created_at', 'desc');
+    }
 }

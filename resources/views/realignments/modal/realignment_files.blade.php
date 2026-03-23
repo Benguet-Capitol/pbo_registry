@@ -1,22 +1,16 @@
-<!-- Obligation Files Modal -->
-<div id="obligationFilesModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50"
-    @role('Disbursement')
-    data-user-role="Disbursement"
-    @else
-    data-user-role="other"
-    @endrole
->
+<!-- Realignment Files Modal -->
+<div id="realignmentFilesModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
     <div class="relative w-full max-w-2xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900 dark:to-cyan-900 dark:border-gray-600">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <i class="fas fa-file-upload text-blue-600 dark:text-blue-400"></i>
                 <div class="flex flex-col">
-                    <span>Obligation Files</span>
-                    <span id="modalObrNo" class="text-xs font-normal text-gray-600 dark:text-gray-300">OBR No: -</span>
+                    <span>Realignment Files</span>
+                    <span id="modalRealignmentNo" class="text-xs font-normal text-gray-600 dark:text-gray-300">Realignment No: -</span>
                 </div>
             </h3>
-            <button type="button" onclick="closeObligationFilesModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <button type="button" onclick="closeRealignmentFilesModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -24,22 +18,22 @@
         <!-- Modal body -->
         <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 200px);">
             <!-- File Upload Section -->
-             @role ('Administrator|Developer|Obligation')
+             @role ('Administrator|Developer|Realignment')
             <div class="mb-6">
                 <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Upload Files</h4>
                 <div class="border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-lg p-6 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                    id="fileDropZone"
-                    onclick="document.getElementById('fileInput').click()">
+                    id="realignmentFileDropZone"
+                    onclick="document.getElementById('realignmentFileInput').click()">
                     <i class="fas fa-cloud-upload-alt text-3xl text-blue-500 mb-2"></i>
                     <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">Drag and drop files here or click to select</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Max 200 MB per file. Multiple files supported.</p>
                 </div>
-                <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileSelect(event)">
-                <div id="uploadProgress" class="mt-3" style="display: none;">
+                <input type="file" id="realignmentFileInput" multiple style="display: none;" onchange="handleRealignmentFileSelect(event)">
+                <div id="realignmentUploadProgress" class="mt-3" style="display: none;">
                     <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                        <div id="progressBar" class="bg-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
+                        <div id="realignmentProgressBar" class="bg-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
                     </div>
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1"><span id="progressText">0</span>%</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1"><span id="realignmentProgressText">0</span>%</p>
                 </div>
             </div>
             @endrole
@@ -47,7 +41,7 @@
             <!-- Files List Section -->
             <div>
                 <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Uploaded Files</h4>
-                <div id="filesList" class="space-y-2">
+                <div id="realignmentFilesList" class="space-y-2">
                     <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No files uploaded yet</p>
                 </div>
             </div>
@@ -55,7 +49,7 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeObligationFilesModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closeRealignmentFilesModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Close
             </button>
@@ -64,22 +58,22 @@
 </div>
 
 <!-- File View Modal -->
-<div id="viewFileModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
+<div id="realignmentViewFileModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
     <div class="relative w-full max-w-7xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp flex flex-col" style="animation: scaleInUp 0.3s ease-out; height: 90vh; max-height: 90vh;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900 dark:to-blue-900 dark:border-gray-600 flex-shrink-0">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <i class="fas fa-eye text-cyan-600 dark:text-cyan-400"></i>
-                <span id="viewFileName">View File</span>
+                <span id="realignmentViewFileName">View File</span>
             </h3>
-            <button type="button" onclick="closeViewFileModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <button type="button" onclick="closeRealignmentViewFileModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
         <!-- Modal body -->
         <div class="flex-1 overflow-auto">
-            <div id="fileViewContent" class="h-full bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600 flex flex-col">
+            <div id="realignmentFileViewContent" class="h-full bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600 flex flex-col">
                 <div class="text-center py-8">
                     <i class="fas fa-spinner fa-spin text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
                     <p class="text-gray-600 dark:text-gray-400">Loading file...</p>
@@ -89,7 +83,7 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeViewFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closeRealignmentViewFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Close
             </button>
@@ -98,7 +92,7 @@
 </div>
 
 <!-- File Edit Modal -->
-<div id="editFileModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
+<div id="realignmentEditFileModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
     <div class="relative w-full max-w-md mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900 dark:to-yellow-900 dark:border-gray-600">
@@ -106,7 +100,7 @@
                 <i class="fas fa-edit text-amber-600 dark:text-amber-400"></i>
                 Rename File
             </h3>
-            <button type="button" onclick="closeEditFileModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <button type="button" onclick="closeRealignmentEditFileModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -114,16 +108,16 @@
         <!-- Modal body -->
         <div class="px-6 py-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">New File Name</label>
-            <input type="text" id="editFileName" class="w-full px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Enter new file name">
+            <input type="text" id="realignmentEditFileName" class="w-full px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Enter new file name">
         </div>
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeEditFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closeRealignmentEditFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Cancel
             </button>
-            <button type="button" onclick="submitEditFileName()" class="text-white inline-flex leading-4 tracking-wider bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="submitRealignmentEditFileName()" class="text-white inline-flex leading-4 tracking-wider bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-save mr-2"></i>
                 Save
             </button>
@@ -132,7 +126,7 @@
 </div>
 
 <!-- File Delete Modal -->
-<div id="deleteFileModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
+<div id="realignmentDeleteFileModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
     <div class="relative w-full max-w-md mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900 dark:to-pink-900 dark:border-gray-600">
@@ -140,7 +134,7 @@
                 <i class="fas fa-trash text-red-600 dark:text-red-400"></i>
                 Delete File
             </h3>
-            <button type="button" onclick="closeDeleteFileModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <button type="button" onclick="closeRealignmentDeleteFileModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -151,17 +145,17 @@
                 Are you sure you want to delete this file? This action cannot be undone.
             </p>
             <p class="text-gray-600 dark:text-gray-400 text-xs mt-2 italic">
-                <span id="deleteFileName">File</span>
+                <span id="realignmentDeleteFileName">File</span>
             </p>
         </div>
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeDeleteFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closeRealignmentDeleteFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Cancel
             </button>
-            <button type="button" onclick="submitDeleteFile()" class="text-white inline-flex leading-4 tracking-wider bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="submitRealignmentDeleteFile()" class="text-white inline-flex leading-4 tracking-wider bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-trash mr-2"></i>
                 Delete
             </button>
@@ -181,12 +175,12 @@
         }
     }
 
-    #fileDropZone.drag-over {
+    #realignmentFileDropZone.drag-over {
         background-color: #eff6ff;
         border-color: #0284c7;
     }
 
-    .dark #fileDropZone.drag-over {
+    .dark #realignmentFileDropZone.drag-over {
         background-color: rgba(30, 58, 138, 0.3);
         border-color: #0284c7;
     }
@@ -289,58 +283,58 @@
     // Set up PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    let currentObligationId = null;
-    let currentViewFileId = null;
+    let currentRealignmentNo = null;
+    let currentRealignmentViewFileId = null;
 
     /**
-     * Open the obligation files modal
+     * Open the realignment files modal
      */
-    function openObligationFilesModal(obligationId, obrNo) {
-        currentObligationId = obligationId;
-        const modal = document.getElementById('obligationFilesModal');
+    function openRealignmentFilesModal(realignmentNo) {
+        currentRealignmentNo = realignmentNo;
+        const modal = document.getElementById('realignmentFilesModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
         
-        // Update modal header with OBR No
-        const obrNoElement = document.getElementById('modalObrNo');
-        if (obrNoElement && obrNo) {
-            obrNoElement.textContent = `OBR No: ${obrNo}`;
+        // Update modal header with Realignment No
+        const realignmentNoElement = document.getElementById('modalRealignmentNo');
+        if (realignmentNoElement && realignmentNo) {
+            realignmentNoElement.textContent = `Realignment No: ${realignmentNo}`;
         }
         
-        // Load files for this obligation
-        loadObligationFiles(obligationId);
+        // Load files for this realignment
+        loadRealignmentFiles(realignmentNo);
         
         // Setup drag and drop
-        setupDragAndDrop();
+        setupRealignmentDragAndDrop();
     }
 
     /**
-     * Close the obligation files modal
+     * Close the realignment files modal
      */
-    function closeObligationFilesModal() {
-        const modal = document.getElementById('obligationFilesModal');
+    function closeRealignmentFilesModal() {
+        const modal = document.getElementById('realignmentFilesModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
-        currentObligationId = null;
+        currentRealignmentNo = null;
     }
 
     /**
-     * Handle file selection
+     * Handle file selection for realignments
      */
-    function handleFileSelect(event) {
+    function handleRealignmentFileSelect(event) {
         const files = event.target.files;
         if (files.length > 0) {
-            uploadFiles(files);
+            uploadRealignmentFiles(files);
         }
     }
 
     /**
-     * Upload files to the server with real-time progress tracking
+     * Upload files to the server for realignment
      */
-    function uploadFiles(files) {
-        const uploadProgress = document.getElementById('uploadProgress');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
+    function uploadRealignmentFiles(files) {
+        const uploadProgress = document.getElementById('realignmentUploadProgress');
+        const progressBar = document.getElementById('realignmentProgressBar');
+        const progressText = document.getElementById('realignmentProgressText');
         
         uploadProgress.style.display = 'block';
         let loadedCount = 0;
@@ -349,7 +343,7 @@
         Array.from(files).forEach(file => {
             // Validate file size (200 MB = 209715200 bytes)
             if (file.size > 200 * 1024 * 1024) {
-                showToast(`File "${file.name}" exceeds 200 MB limit`, 'error');
+                showRealignmentToast(`File "${file.name}" exceeds 200 MB limit`, 'error');
                 loadedCount++;
                 if (loadedCount === totalFiles) resetProgress();
                 return;
@@ -357,6 +351,7 @@
 
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('realignment_no', currentRealignmentNo);
 
             const xhr = new XMLHttpRequest();
             
@@ -374,13 +369,13 @@
                 try {
                     const data = JSON.parse(xhr.responseText);
                     if (xhr.status === 200 && data.success) {
-                        showToast(`File "${file.name}" uploaded successfully`, 'create');
-                        loadObligationFiles(currentObligationId);
+                        showRealignmentToast(`File "${file.name}" uploaded successfully`, 'create');
+                        loadRealignmentFiles(currentRealignmentNo);
                     } else {
-                        showToast(`Error uploading "${file.name}": ${data.message || 'Unknown error'}`, 'error');
+                        showRealignmentToast(`Error uploading "${file.name}": ${data.message || 'Unknown error'}`, 'error');
                     }
                 } catch (e) {
-                    showToast(`Error uploading "${file.name}": Invalid response`, 'error');
+                    showRealignmentToast(`Error uploading "${file.name}": Invalid response`, 'error');
                 }
                 
                 if (loadedCount === totalFiles) resetProgress();
@@ -388,17 +383,17 @@
 
             xhr.addEventListener('error', () => {
                 loadedCount++;
-                showToast(`Error uploading "${file.name}": Network error`, 'error');
+                showRealignmentToast(`Error uploading "${file.name}": Network error`, 'error');
                 if (loadedCount === totalFiles) resetProgress();
             });
 
             xhr.addEventListener('abort', () => {
                 loadedCount++;
-                showToast(`Upload cancelled for "${file.name}"`, 'error');
+                showRealignmentToast(`Upload cancelled for "${file.name}"`, 'error');
                 if (loadedCount === totalFiles) resetProgress();
             });
 
-            xhr.open('POST', `/obligations/${currentObligationId}/files`);
+            xhr.open('POST', '/realignment-files/upload');
             xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
             xhr.send(formData);
         });
@@ -407,14 +402,14 @@
             progressBar.style.width = '0%';
             progressText.textContent = '0';
             uploadProgress.style.display = 'none';
-            document.getElementById('fileInput').value = '';
+            document.getElementById('realignmentFileInput').value = '';
         }
     }
 
     /**
      * Check if a file type is viewable in browser
      */
-    function isFileViewable(fileType) {
+    function isRealignmentFileViewable(fileType) {
         const viewableTypes = [
             // Images - Common formats
             /^image\/jpeg/,
@@ -443,20 +438,17 @@
     }
 
     /**
-     * Load files for an obligation
+     * Load files for a realignment by realignment_no
      */
-    function loadObligationFiles(obligationId) {
-        fetch(`/obligations/${obligationId}/files`)
+    function loadRealignmentFiles(realignmentNo) {
+        fetch(`/realignment-files/get?realignment_no=${encodeURIComponent(realignmentNo)}`)
             .then(response => response.json())
             .then(data => {
-                const filesList = document.getElementById('filesList');
-                const modal = document.getElementById('obligationFilesModal');
-                const userRole = modal.getAttribute('data-user-role');
-                const isDisbursement = userRole === 'Disbursement';
+                const filesList = document.getElementById('realignmentFilesList');
                 
                 if (data.success && data.files.length > 0) {
                     filesList.innerHTML = data.files.map(file => {
-                        const isViewable = isFileViewable(file.file_type);
+                        const isViewable = isRealignmentFileViewable(file.file_type);
                         return `
                         <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
                             <div class="flex items-center gap-3 flex-1">
@@ -469,18 +461,18 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                ${isViewable ? `<button onclick="openViewFileModal(${file.id}, '${file.original_file_name}')" title="View file preview" aria-label="View file preview" class="text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 transition-colors">
+                                ${isViewable ? `<button onclick="openRealignmentViewFileModal(${file.id}, '${file.original_file_name}')" title="View file preview" aria-label="View file preview" class="text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 transition-colors">
                                     <i class="fas fa-eye"></i>
                                 </button>` : ''}
-                                <a href="/obligation-files/${file.id}/download" title="Download file" aria-label="Download file" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+                                <a href="/realignment-files/${file.id}/download" title="Download file" aria-label="Download file" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
                                     <i class="fas fa-download"></i>
                                 </a>
-                                ${!isDisbursement ? `<button onclick="openEditFileModal(${file.id}, '${file.original_file_name}')" title="Rename file" aria-label="Rename file" class="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors">
+                                <button onclick="openRealignmentEditFileModal(${file.id}, '${file.original_file_name}')" title="Rename file" aria-label="Rename file" class="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors">
                                     <i class="fas fa-edit"></i>
-                                </button>` : ''}
-                                ${!isDisbursement ? `<button onclick="openDeleteFileModal(${file.id}, '${file.original_file_name}')" title="Delete file" aria-label="Delete file" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
+                                </button>
+                                <button onclick="openRealignmentDeleteFileModal(${file.id}, '${file.original_file_name}')" title="Delete file" aria-label="Delete file" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
                                     <i class="fas fa-trash"></i>
-                                </button>` : ''}
+                                </button>
                             </div>
                         </div>
                     `;
@@ -491,37 +483,37 @@
             })
             .catch(error => {
                 console.error('Error loading files:', error);
-                showToast('Error loading files', 'error');
+                showRealignmentToast('Error loading files', 'error');
             });
     }
 
     /**
      * Edit file name
      */
-    function openEditFileModal(fileId, currentName) {
-        window.currentEditFileId = fileId;
-        document.getElementById('editFileName').value = currentName;
-        const modal = document.getElementById('editFileModal');
+    function openRealignmentEditFileModal(fileId, currentName) {
+        window.currentRealignmentEditFileId = fileId;
+        document.getElementById('realignmentEditFileName').value = currentName;
+        const modal = document.getElementById('realignmentEditFileModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
-        document.getElementById('editFileName').focus();
+        document.getElementById('realignmentEditFileName').focus();
     }
 
-    function closeEditFileModal() {
-        const modal = document.getElementById('editFileModal');
+    function closeRealignmentEditFileModal() {
+        const modal = document.getElementById('realignmentEditFileModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
-        window.currentEditFileId = null;
+        window.currentRealignmentEditFileId = null;
     }
 
-    function submitEditFileName() {
-        const newName = document.getElementById('editFileName').value.trim();
+    function submitRealignmentEditFileName() {
+        const newName = document.getElementById('realignmentEditFileName').value.trim();
         if (!newName) {
-            showToast('Please enter a file name', 'error');
+            showRealignmentToast('Please enter a file name', 'error');
             return;
         }
 
-        fetch(`/obligation-files/${window.currentEditFileId}`, {
+        fetch(`/realignment-files/${window.currentRealignmentEditFileId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -532,38 +524,38 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast('File name updated successfully', 'edit');
-                loadObligationFiles(currentObligationId);
-                closeEditFileModal();
+                showRealignmentToast('File name updated successfully', 'edit');
+                loadRealignmentFiles(currentRealignmentNo);
+                closeRealignmentEditFileModal();
             } else {
-                showToast(`Error: ${data.message}`, 'error');
+                showRealignmentToast(`Error: ${data.message}`, 'error');
             }
         })
         .catch(error => {
-            showToast(`Error: ${error.message}`, 'error');
+            showRealignmentToast(`Error: ${error.message}`, 'error');
         });
     }
 
     /**
      * Delete file
      */
-    function openDeleteFileModal(fileId, fileName) {
-        window.currentDeleteFileId = fileId;
-        document.getElementById('deleteFileName').textContent = fileName;
-        const modal = document.getElementById('deleteFileModal');
+    function openRealignmentDeleteFileModal(fileId, fileName) {
+        window.currentRealignmentDeleteFileId = fileId;
+        document.getElementById('realignmentDeleteFileName').textContent = fileName;
+        const modal = document.getElementById('realignmentDeleteFileModal');
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
     }
 
-    function closeDeleteFileModal() {
-        const modal = document.getElementById('deleteFileModal');
+    function closeRealignmentDeleteFileModal() {
+        const modal = document.getElementById('realignmentDeleteFileModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
-        window.currentDeleteFileId = null;
+        window.currentRealignmentDeleteFileId = null;
     }
 
-    function submitDeleteFile() {
-        fetch(`/obligation-files/${window.currentDeleteFileId}`, {
+    function submitRealignmentDeleteFile() {
+        fetch(`/realignment-files/${window.currentRealignmentDeleteFileId}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -572,37 +564,37 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast('File deleted successfully', 'delete');
-                loadObligationFiles(currentObligationId);
-                closeDeleteFileModal();
+                showRealignmentToast('File deleted successfully', 'delete');
+                loadRealignmentFiles(currentRealignmentNo);
+                closeRealignmentDeleteFileModal();
             } else {
-                showToast(`Error: ${data.message}`, 'error');
+                showRealignmentToast(`Error: ${data.message}`, 'error');
             }
         })
         .catch(error => {
-            showToast(`Error: ${error.message}`, 'error');
+            showRealignmentToast(`Error: ${error.message}`, 'error');
         });
     }
 
     /**
      * View file
      */
-    function openViewFileModal(fileId, fileName) {
-        window.currentViewFileId = fileId;
-        const modal = document.getElementById('viewFileModal');
-        const content = document.getElementById('fileViewContent');
-        document.getElementById('viewFileName').textContent = fileName;
+    function openRealignmentViewFileModal(fileId, fileName) {
+        window.currentRealignmentViewFileId = fileId;
+        const modal = document.getElementById('realignmentViewFileModal');
+        const content = document.getElementById('realignmentFileViewContent');
+        document.getElementById('realignmentViewFileName').textContent = fileName;
         
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
 
         // Load file content
-        fetch(`/obligation-files/${fileId}/preview`)
+        fetch(`/realignment-files/${fileId}/preview`)
             .then(response => response.json())
             .then(data => {
                 console.log('Preview data received:', data);
                 if (data.success) {
-                    renderFilePreview(data.file_type, data.file_url, data.file_path);
+                    renderRealignmentFilePreview(data.file_type, data.file_url, data.file_path);
                 } else {
                     content.innerHTML = `<div class="text-center py-8"><i class="fas fa-exclamation-circle text-2xl text-red-500 mb-3"></i><p class="text-red-600 dark:text-red-400">Unable to preview this file type</p></div>`;
                 }
@@ -610,19 +602,19 @@
             .catch(error => {
                 console.error('Error fetching preview:', error);
                 // Fallback: provide download link
-                content.innerHTML = `<div class="text-center py-8"><i class="fas fa-file text-4xl text-gray-400 dark:text-gray-500 mb-3"></i><p class="text-gray-600 dark:text-gray-400 mb-4">This file cannot be previewed</p><a href="/obligation-files/${fileId}/download" class="text-blue-600 dark:text-blue-400 hover:underline">Click here to download</a></div>`;
+                content.innerHTML = `<div class="text-center py-8"><i class="fas fa-file text-4xl text-gray-400 dark:text-gray-500 mb-3"></i><p class="text-gray-600 dark:text-gray-400 mb-4">This file cannot be previewed</p><a href="/realignment-files/${fileId}/download" class="text-blue-600 dark:text-blue-400 hover:underline">Click here to download</a></div>`;
             });
     }
 
-    function closeViewFileModal() {
-        const modal = document.getElementById('viewFileModal');
+    function closeRealignmentViewFileModal() {
+        const modal = document.getElementById('realignmentViewFileModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
     }
 
-    function renderFilePreview(fileType, fileUrl, filePath) {
-        const content = document.getElementById('fileViewContent');
-        const fileId = window.currentViewFileId;
+    function renderRealignmentFilePreview(fileType, fileUrl, filePath) {
+        const content = document.getElementById('realignmentFileViewContent');
+        const fileId = window.currentRealignmentViewFileId;
         
         console.log('Rendering preview for:', { fileType, fileUrl, fileId });
         
@@ -662,7 +654,7 @@
 
         // PDF - Check if it's image-based or regular PDF
         if (fileType === 'application/pdf') {
-            renderPdfPreview(fileUrl);
+            renderRealignmentPdfPreview(fileUrl);
             return;
         }
 
@@ -672,7 +664,7 @@
                 .then(response => response.text())
                 .then(text => {
                     const lines = text.split('\n').slice(0, 100).join('\n');
-                    content.innerHTML = `<pre class="flex-1 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto text-xs line-numbers"><code>${escapeHtml(lines)}${text.split('\n').length > 100 ? '\n\n... (file truncated)' : ''}</code></pre>`;
+                    content.innerHTML = `<pre class="flex-1 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto text-xs line-numbers"><code>${escapeRealignmentHtml(lines)}${text.split('\n').length > 100 ? '\n\n... (file truncated)' : ''}</code></pre>`;
                 })
                 .catch(() => {
                     content.innerHTML = '';
@@ -746,7 +738,7 @@
         content.appendChild(container);
     }
 
-    function escapeHtml(text) {
+    function escapeRealignmentHtml(text) {
         const map = {
             '&': '&amp;',
             '<': '&lt;',
@@ -758,10 +750,10 @@
     }
 
     /**
-     * Render PDF preview - detects if image-based PDF or regular PDF
+     * Render PDF preview - detects if image-based or regular PDF
      */
-    async function renderPdfPreview(fileUrl) {
-        const content = document.getElementById('fileViewContent');
+    async function renderRealignmentPdfPreview(fileUrl) {
+        const content = document.getElementById('realignmentFileViewContent');
         
         try {
             // Load the PDF
@@ -779,7 +771,7 @@
 
             if (!hasText && pdf.numPages <= 5) {
                 // It's likely an image-based PDF (scanned document), render as image
-                await renderPdfAsImage(fileUrl, page);
+                await renderRealignmentPdfAsImage(fileUrl, page);
             } else {
                 // Regular PDF with text, use iframe
                 content.innerHTML = `<iframe src="${fileUrl}" class="w-full flex-1 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
@@ -794,8 +786,8 @@
     /**
      * Render image-based PDF as image
      */
-    async function renderPdfAsImage(fileUrl, firstPage) {
-        const content = document.getElementById('fileViewContent');
+    async function renderRealignmentPdfAsImage(fileUrl, firstPage) {
+        const content = document.getElementById('realignmentFileViewContent');
         
         try {
             const viewport = firstPage.getViewport({ scale: 2 });
@@ -823,10 +815,10 @@
     }
 
     /**
-     * Setup drag and drop
+     * Setup drag and drop for realignments
      */
-    function setupDragAndDrop() {
-        const dropZone = document.getElementById('fileDropZone');
+    function setupRealignmentDragAndDrop() {
+        const dropZone = document.getElementById('realignmentFileDropZone');
         
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -842,67 +834,51 @@
             dropZone.classList.remove('drag-over');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                uploadFiles(files);
+                uploadRealignmentFiles(files);
             }
         });
     }
 
     /**
-     * Show toast notification
+     * Show toast notification for realignments (same style as obligations)
      */
-    function showToast(message, type = 'success') {
+    function showRealignmentToast(message, type = 'success') {
         const toastId = 'toast_' + Date.now();
         const toastContainer = document.getElementById('toastContainer') || createToastContainer();
         
-        const toast = document.createElement('div');
-        toast.id = toastId;
-        
         // Determine color and icon based on type
-        let backgroundColor = '#3b82f6'; // Default: blue
+        let bgColor = 'bg-blue-500'; // Default: blue
         let iconClass = 'check-circle';
         
         if (type === 'create' || type === 'success') {
-            backgroundColor = '#10b981'; // Green for success/create
+            bgColor = 'bg-green-500'; // Green for success/create
             iconClass = 'check-circle';
         } else if (type === 'edit') {
-            backgroundColor = '#3b82f6'; // Blue for edit
+            bgColor = 'bg-blue-500'; // Blue for edit
             iconClass = 'edit';
         } else if (type === 'delete') {
-            backgroundColor = '#ef4444'; // Red for delete
+            bgColor = 'bg-red-500'; // Red for delete
             iconClass = 'trash';
         } else if (type === 'error') {
-            backgroundColor = '#ef4444'; // Red for error
+            bgColor = 'bg-red-500'; // Red for error
             iconClass = 'exclamation-circle';
         }
         
-        // Create inner div with inline styles
-        const innerDiv = document.createElement('div');
-        innerDiv.style.backgroundColor = backgroundColor + ' !important';
-        innerDiv.style.color = 'white !important';
-        innerDiv.style.padding = '12px 24px !important';
-        innerDiv.style.borderRadius = '8px !important';
-        innerDiv.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1) !important';
-        innerDiv.style.display = 'flex !important';
-        innerDiv.style.alignItems = 'center !important';
-        innerDiv.style.gap = '12px !important';
-        innerDiv.style.animation = 'slideInRight 0.3s ease-out !important';
-        
-        innerDiv.innerHTML = `
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slideInRight`;
+        toast.innerHTML = `
             <i class="fas fa-${iconClass}"></i>
             <span>${message}</span>
         `;
         
-        toast.appendChild(innerDiv);
         toastContainer.appendChild(toast);
         
         // Auto remove after 4 seconds
         setTimeout(() => {
             const element = document.getElementById(toastId);
             if (element) {
-                const toastDiv = element.querySelector('div');
-                if (toastDiv) {
-                    toastDiv.style.animation = 'slideOutRight 0.3s ease-in !important';
-                }
+                element.classList.add('animate-slideOutRight');
                 setTimeout(() => element.remove(), 300);
             }
         }, 4000);
@@ -922,14 +898,14 @@
     // Close modal on Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            closeObligationFilesModal();
-            closeViewFileModal();
-            closeEditFileModal();
-            closeDeleteFileModal();
+            closeRealignmentFilesModal();
+            closeRealignmentViewFileModal();
+            closeRealignmentEditFileModal();
+            closeRealignmentDeleteFileModal();
         }
         // Save on Enter in edit modal
-        if (e.key === 'Enter' && document.getElementById('editFileModal').style.display === 'flex') {
-            submitEditFileName();
+        if (e.key === 'Enter' && document.getElementById('realignmentEditFileModal').style.display === 'flex') {
+            submitRealignmentEditFileName();
         }
     });
 </script>

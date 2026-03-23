@@ -639,8 +639,8 @@
         </button>
         @endhasanyrole
         <button id="contextFiles"
-                class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
-            <i class="fas fa-file-upload mr-2 text-blue-600"></i>Upload Files
+                class="w-full text-left block px-4 py-2 text-xs text-green-900 hover:bg-green-200 dark:text-green-100 dark:hover:bg-green-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
+            <i class="fas fa-file-upload mr-2 text-green-600"></i>Files
         </button>
         <button id="contextHistory"
                 class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">

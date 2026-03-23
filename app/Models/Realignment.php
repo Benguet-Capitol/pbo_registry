@@ -28,4 +28,9 @@ class Realignment extends Model
     {
         return $this->belongsTo(Appropriation::class, 'appropriations_id');
     }
+
+    public function files()
+    {
+        return RealignmentFile::where('realignment_no', $this->realignment_no)->orderBy('created_at', 'desc');
+    }
 }

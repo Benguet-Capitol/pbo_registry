@@ -424,7 +424,7 @@ window.validateCreateObligationAdjustmentForm = function() {
     
     if (isValid) {
         window.isSubmittingObligationAdjustment = true;
-        document.getElementById('createAdjustmentForm')?.submit();
+        document.getElementById('createObligationAdjustmentForm')?.submit();
     }
 };
 

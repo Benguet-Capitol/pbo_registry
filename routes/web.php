@@ -14,6 +14,8 @@ use App\Http\Controllers\ObligationAdjustmentController;
 use App\Http\Controllers\OfficeAllotmentClassController;
 use App\Http\Controllers\ObligationController;
 use App\Http\Controllers\ObligationFileController;
+use App\Http\Controllers\RealignmentFileController;
+use App\Http\Controllers\SupplementalFileController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\AllotmentClassController;
 use App\Http\Controllers\FundController;
@@ -169,6 +171,24 @@ Route::middleware('auth')->group(function () {
     Route::resource('realignments', RealignmentController::class);
     // Check realignment deletion date
     Route::post('/api/realignments/check-deletion-date', [RealignmentController::class, 'checkRealignmentDeletionDate'])->name('realignments.checkDeletionDate');
+
+    // Realignment Files Routes
+    Route::post('/realignment-files/upload', [RealignmentFileController::class, 'store'])->name('realignment_files.store');
+    Route::get('/realignment-files/get', [RealignmentFileController::class, 'getFiles'])->name('realignment_files.get');
+    Route::get('/realignment-files/{realignmentFile}/view', [RealignmentFileController::class, 'view'])->name('realignment_files.view');
+    Route::get('/realignment-files/{realignmentFile}/download', [RealignmentFileController::class, 'download'])->name('realignment_files.download');
+    Route::get('/realignment-files/{realignmentFile}/preview', [RealignmentFileController::class, 'preview'])->name('realignment_files.preview');
+    Route::put('/realignment-files/{realignmentFile}', [RealignmentFileController::class, 'update'])->name('realignment_files.update');
+    Route::delete('/realignment-files/{realignmentFile}', [RealignmentFileController::class, 'destroy'])->name('realignment_files.destroy');
+
+    // Supplemental Files Routes
+    Route::post('/supplemental-files/upload', [SupplementalFileController::class, 'store'])->name('supplemental_files.store');
+    Route::get('/supplemental-files/get', [SupplementalFileController::class, 'getFiles'])->name('supplemental_files.get');
+    Route::get('/supplemental-files/{supplementalFile}/view', [SupplementalFileController::class, 'view'])->name('supplemental_files.view');
+    Route::get('/supplemental-files/{supplementalFile}/download', [SupplementalFileController::class, 'download'])->name('supplemental_files.download');
+    Route::get('/supplemental-files/{supplementalFile}/preview', [SupplementalFileController::class, 'preview'])->name('supplemental_files.preview');
+    Route::put('/supplemental-files/{supplementalFile}', [SupplementalFileController::class, 'update'])->name('supplemental_files.update');
+    Route::delete('/supplemental-files/{supplementalFile}', [SupplementalFileController::class, 'destroy'])->name('supplemental_files.destroy');
 
     // Supplemental Routes
     Route::resource('supplementals', SupplementalController::class);

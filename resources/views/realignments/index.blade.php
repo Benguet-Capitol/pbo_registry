@@ -252,6 +252,9 @@
                                 @endif
                             </a>
                         </th>
+                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                            Files
+                        </th>
                         <!-- th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th> -->
                     </tr>
                 </thead>
@@ -306,6 +309,22 @@
                                 @else 
                                     <span class="text-gray-600 dark:text-gray-300 ">{{ number_format($realignment->amount, 2) }}</span>
                                 @endif
+                            </td>
+                            <td class="px-1 py-2 text-center">
+                                @php
+                                    $fileCount = \App\Models\RealignmentFile::where('realignment_no', $realignment->realignment_no)->count();
+                                @endphp
+                                <button onclick="openRealignmentFilesModal('{{ $realignment->realignment_no }}')"
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
+                                    @if($fileCount > 0)
+                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
+                                    @else
+                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
+                                    @endif"
+                                    title="View files">
+                                    <i class="fas fa-file"></i>
+                                    <span>{{ $fileCount }}</span>
+                                </button>
                             </td>
                             <!-- <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                                 <div class="relative inline-block text-left">
@@ -372,9 +391,13 @@
     <div id="realignmentContextMenu" 
         class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
+        <button id="contextFiles"
+                class="w-full text-left block px-4 py-2 text-xs text-green-900 hover:bg-green-200 dark:text-green-100 dark:hover:bg-green-700 transition-colors duration-150">
+            <i class="fas fa-file-upload mr-2 text-green-600"></i>Files
+        </button>
         @can('edit realignments')
         <button id="contextEdit"
-                class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 transition-colors duration-150">
+                class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
             <i class="fas fa-edit mr-2 text-blue-600"></i>Edit
         </button>
         @endcan
@@ -393,6 +416,7 @@
     @include('realignments.modal.create')
     @include('realignments.modal.edit')
     @include('realignments.modal.delete')
+    @include('realignments.modal.realignment_files')
 
 <script>
     (function() {
@@ -471,6 +495,15 @@
         // Get realignment data
         const realignment = row.dataset.realignment ? JSON.parse(row.dataset.realignment) : null;
         if (realignment) {
+            // Files button
+            const filesBtn = menu.querySelector('#contextFiles');
+            if (filesBtn && realignment.realignment_no) {
+                filesBtn.onclick = () => {
+                    hideRealignmentContextMenu();
+                    openRealignmentFilesModal(realignment.realignment_no);
+                };
+            }
+
             // Edit button
             const editBtn = menu.querySelector('#contextEdit');
             if (editBtn) {

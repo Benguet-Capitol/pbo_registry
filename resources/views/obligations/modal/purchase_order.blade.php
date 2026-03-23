@@ -49,6 +49,15 @@
             <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-7 py-3 text-xs">
                 <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
+                            <input type="hidden" name="search" value="{{ request('search') ?? '' }}">
+                            <input type="hidden" name="search_column" value="{{ request('search_column') ?? '' }}">
+                            <input type="hidden" name="sort_by" value="{{ request('sort_by') ?? '' }}">
+                            <input type="hidden" name="sort_order" value="{{ request('sort_order') ?? '' }}">
+                            <input type="hidden" name="per_page" value="{{ request('per_page') ?? '' }}">
+                            <input type="hidden" name="year1" value="{{ request('year1') ?? '' }}">
+                            <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') ?? '' }}">
+                            <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') ?? '' }}">
+                            <input type="hidden" name="fund_filter" value="{{ request('fund_filter') ?? '' }}">
                             <!-- PO Date -->
                             <div class="sm:col-span-3">
                                 <x-form.label for="po_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PO Date')" />

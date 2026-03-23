@@ -18,7 +18,7 @@
         <!-- Modal body -->
         <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 200px);">
             <!-- File Upload Section -->
-             @role ('Administrator|Developer|Realignment')
+             @role ('Administrator|Developer|Obligation')
             <div class="mb-6">
                 <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Upload Files</h4>
                 <div class="border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-lg p-6 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"

@@ -75,19 +75,19 @@ class DashboardController extends Controller
 
         // Apply office filter for guests automatically
         if ($isGuest && $userOfficeId) {
-            $officeAllotmentClassesQuery->where('office', $userOfficeId);
+            $officeAllotmentClassesQuery->where('office_allotment_classes.office', $userOfficeId);
         }
         if ($groupFilter) {
             $officeIds = $offices->where('branch', $groupFilter)->pluck('id');
-            $officeAllotmentClassesQuery->whereIn('office', $officeIds);
+            $officeAllotmentClassesQuery->whereIn('office_allotment_classes.office', $officeIds);
         }
         if ($fundTypeFilter) {
             $fundSourceCategory = FundSource::where('category', $fundTypeFilter)->pluck('source');
-            $officeAllotmentClassesQuery->whereIn('fund_source', $fundSourceCategory);
+            $officeAllotmentClassesQuery->whereIn('office_allotment_classes.fund_source', $fundSourceCategory);
         }
         if ($fundFilter) {
             $fundType = Fund::where('fund_type', $fundFilter)->pluck('fund');
-            $officeAllotmentClassesQuery->whereIn('fund', $fundType);
+            $officeAllotmentClassesQuery->whereIn('office_allotment_classes.fund', $fundType);
         }
         
         // Check if selected office is a SEF office, if so get all SEF offices
@@ -97,23 +97,23 @@ class DashboardController extends Controller
             if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
                 // Get all SEF offices
                 $officeIds = Office::where('fund', 'Special Education Fund')->pluck('id');
-                $officeAllotmentClassesQuery->whereIn('office', $officeIds);
+                $officeAllotmentClassesQuery->whereIn('office_allotment_classes.office', $officeIds);
                 $isSEFConsolidated = true;
             } else {
-                $officeAllotmentClassesQuery->where('office', $officeFilter);
+                $officeAllotmentClassesQuery->where('office_allotment_classes.office', $officeFilter);
             }
         }
         
         if ($allotmentClassFilter) {
-            $officeAllotmentClassesQuery->where('class', $allotmentClassFilter);
+            $officeAllotmentClassesQuery->where('office_allotment_classes.class', $allotmentClassFilter);
         }
         if ($search) {
             $officeAllotmentClassesQuery->where(function ($q) use ($search) {
-                $q->where('fpp_code', 'like', "%$search%")
-                    ->orWhere('responsibility_code', 'like', "%$search%")
-                    ->orWhere('class', 'like', "%$search%")
-                    ->orWhere('fund', 'like', "%$search%")
-                    ->orWhere('fund_source', 'like', "%$search%")
+                $q->where('office_allotment_classes.fpp_code', 'like', "%$search%")
+                    ->orWhere('office_allotment_classes.responsibility_code', 'like', "%$search%")
+                    ->orWhere('office_allotment_classes.class', 'like', "%$search%")
+                    ->orWhere('office_allotment_classes.fund', 'like', "%$search%")
+                    ->orWhere('office_allotment_classes.fund_source', 'like', "%$search%")
                     ->orWhereHas('offices', function ($query) use ($search) {
                         $query->where('office_abbreviation', 'like', "%$search%")
                               ->orWhere('office_name', 'like', "%$search%");
@@ -125,8 +125,8 @@ class DashboardController extends Controller
         $query = $officeAllotmentClassesQuery;
         $selectedYear = $currentYear; // for appends
         $officeAllotmentClasses = $perPage == 'all'
-            ? $query->orderBy('office')->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')->orderBy('allotment_classes.id')->select('office_allotment_classes.*')->get()
-            : $query->orderBy('office')->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')->orderBy('allotment_classes.id')->select('office_allotment_classes.*')->paginate($perPage)->appends([
+            ? $query->orderBy('office_allotment_classes.office')->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')->orderBy('allotment_classes.id')->select('office_allotment_classes.*')->get()
+            : $query->orderBy('office_allotment_classes.office')->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')->orderBy('allotment_classes.id')->select('office_allotment_classes.*')->paginate($perPage)->appends([
                 'search' => $search,
                 'sort_by' => $sortBy,
                 'sort_order' => $sortOrder,

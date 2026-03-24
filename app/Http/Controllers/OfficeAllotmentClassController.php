@@ -37,13 +37,13 @@ class OfficeAllotmentClassController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('year', 'like', "%{$search}%")
-                    ->orWhere('office', 'like', "%{$search}%")
-                    ->orWhere('fund', 'like', "%{$search}%")
-                    ->orWhere('fund_source', 'like', "%{$search}%")
-                    ->orWhere('class', 'like', "%{$search}%")
-                    ->orWhere('fpp_code', 'like', "%{$search}%")
-                    ->orWhere('responsibility_code', 'like', "%{$search}%");
+                $q->where('office_allotment_classes.year', 'like', "%{$search}%")
+                    ->orWhere('office_allotment_classes.office', 'like', "%{$search}%")
+                    ->orWhere('office_allotment_classes.fund', 'like', "%{$search}%")
+                    ->orWhere('office_allotment_classes.fund_source', 'like', "%{$search}%")
+                    ->orWhere('office_allotment_classes.class', 'like', "%{$search}%")
+                    ->orWhere('office_allotment_classes.fpp_code', 'like', "%{$search}%")
+                    ->orWhere('office_allotment_classes.responsibility_code', 'like', "%{$search}%");
             });
         }
 
@@ -53,13 +53,13 @@ class OfficeAllotmentClassController extends Controller
         $fundSourceFilter = $request->input('fund_source_filter');
 
         if ($officeFilter) {
-            $query->where('office', $officeFilter);
+            $query->where('office_allotment_classes.office', $officeFilter);
         }
         if ($allotmentClassFilter) {
-            $query->where('class', $allotmentClassFilter);
+            $query->where('office_allotment_classes.class', $allotmentClassFilter);
         }
         if ($fundSourceFilter) {
-            $query->where('fund_source', $fundSourceFilter);
+            $query->where('office_allotment_classes.fund_source', $fundSourceFilter);
         }
 
         // Apply sorting
@@ -92,7 +92,7 @@ class OfficeAllotmentClassController extends Controller
         } else {
             // Apply database-level sorting for other fields, including the default 'id'
             // First sort by office, then by allotment_classes.id
-            $query->orderBy('office', 'asc')
+            $query->orderBy('office_allotment_classes.office', 'asc')
                   ->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')
                   ->orderBy('allotment_classes.id', 'asc')
                   ->select('office_allotment_classes.*');
@@ -120,23 +120,23 @@ class OfficeAllotmentClassController extends Controller
         $totalRecords = OfficeAllotmentClass::where('year', $selectedYear)->with('allotmentClass')
             ->when($search, function ($q) use ($search) {
                 return $q->where(function ($subQ) use ($search) {
-                    $subQ->where('year', 'like', "%{$search}%")
-                        ->orWhere('office', 'like', "%{$search}%")
-                        ->orWhere('fund', 'like', "%{$search}%")
-                        ->orWhere('fund_source', 'like', "%{$search}%")
-                        ->orWhere('class', 'like', "%{$search}%")
-                        ->orWhere('fpp_code', 'like', "%{$search}%")
-                        ->orWhere('responsibility_code', 'like', "%{$search}%");
+                    $subQ->where('office_allotment_classes.year', 'like', "%{$search}%")
+                        ->orWhere('office_allotment_classes.office', 'like', "%{$search}%")
+                        ->orWhere('office_allotment_classes.fund', 'like', "%{$search}%")
+                        ->orWhere('office_allotment_classes.fund_source', 'like', "%{$search}%")
+                        ->orWhere('office_allotment_classes.class', 'like', "%{$search}%")
+                        ->orWhere('office_allotment_classes.fpp_code', 'like', "%{$search}%")
+                        ->orWhere('office_allotment_classes.responsibility_code', 'like', "%{$search}%");
                 });
             })
             ->when($officeFilter, function ($q) use ($officeFilter) {
-                return $q->where('office', $officeFilter);
+                return $q->where('office_allotment_classes.office', $officeFilter);
             })
             ->when($allotmentClassFilter, function ($q) use ($allotmentClassFilter) {
-                return $q->where('class', $allotmentClassFilter);
+                return $q->where('office_allotment_classes.class', $allotmentClassFilter);
             })
             ->when($fundSourceFilter, function ($q) use ($fundSourceFilter) {
-                return $q->where('fund_source', $fundSourceFilter);
+                return $q->where('office_allotment_classes.fund_source', $fundSourceFilter);
             })
             ->count();
 

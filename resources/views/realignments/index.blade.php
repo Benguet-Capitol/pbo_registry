@@ -310,7 +310,7 @@
                                     <span class="text-gray-600 dark:text-gray-300 ">{{ number_format($realignment->amount, 2) }}</span>
                                 @endif
                             </td>
-                            <td class="px-1 py-2 text-center">
+                            <td class="px-1 py-2 border-b border-gray-300 text-center">
                                 @php
                                     $fileCount = \App\Models\RealignmentFile::where('realignment_no', $realignment->realignment_no)->count();
                                 @endphp

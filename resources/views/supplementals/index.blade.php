@@ -305,7 +305,7 @@
                             <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter2 }}</td>
                             <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter3 }}</td>
                             <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 text-right">{{ $supplemental->quarter4 }}</td>
-                            <td class="px-1 py-2 text-center">
+                            <td class="px-1 py-2 border-b border-gray-300 text-center">
                                 @php
                                     $fileCount = \App\Models\SupplementalFile::where('supplemental_no', $supplemental->supplemental_no)->count();
                                 @endphp

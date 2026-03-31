@@ -792,11 +792,44 @@ class ObligationController extends Controller
                 throw $e;
             }
 
-            // Delete existing ObligationAmount records for this obligation
-            ObligationAmount::where('obligation_id', $obligation->id)->delete();
-
-            // Save updated ObligationAmount records
-            foreach ($validated['edit_account_code'] as $index => $accountCode) {
+            // Handle ObligationAmount records - update existing, create new, delete only if no related records
+            $existingAmounts = ObligationAmount::where('obligation_id', $obligation->id)->get();
+            $newAccountCodes = $validated['edit_account_code'];
+            $newAmounts = $validated['edit_amount_of_obligation'];
+            
+            // Create a map of new account codes with their amounts
+            $newDataMap = [];
+            foreach ($newAccountCodes as $index => $accountCode) {
+                $newDataMap[$accountCode] = $newAmounts[$index];
+            }
+            
+            // Update or delete existing amounts
+            foreach ($existingAmounts as $existingAmount) {
+                if (isset($newDataMap[$existingAmount->account_code])) {
+                    // Account code still exists, update the amount if it changed
+                    if ($existingAmount->obr_amount != $newDataMap[$existingAmount->account_code]) {
+                        $existingAmount->update([
+                            'obr_amount' => $newDataMap[$existingAmount->account_code],
+                        ]);
+                    }
+                    // Remove from map since we've processed it
+                    unset($newDataMap[$existingAmount->account_code]);
+                } else {
+                    // Account code no longer exists in the update, check if it has related records
+                    $hasRelatedRecords = Disbursement::where('obligation_amounts_id', $existingAmount->id)->exists() ||
+                                       PurchaseOrder::where('obligation_amounts_id', $existingAmount->id)->exists() ||
+                                       ObligationAdjustment::where('obligation_amounts_id', $existingAmount->id)->exists();
+                    
+                    if (!$hasRelatedRecords) {
+                        // Safe to delete if no related records
+                        $existingAmount->delete();
+                    }
+                    // If it has related records, keep it to maintain referential integrity
+                }
+            }
+            
+            // Create new obligation amounts for new account codes
+            foreach ($newDataMap as $accountCode => $amount) {
                 // Fetch the appropriation ID based on the account code and office_allotment_class_id
                 $appropriation = Appropriation::where('account_code', $accountCode)
                     ->where('office_allotment_class_id', $validated['edit_office_allotment_class_id'])
@@ -807,7 +840,7 @@ class ObligationController extends Controller
                         'appropriation_id' => $appropriation->id,
                         'obligation_id' => $obligation->id,
                         'account_code' => $accountCode,
-                        'obr_amount' => $validated['edit_amount_of_obligation'][$index],
+                        'obr_amount' => $amount,
                     ]);
                 }
             }

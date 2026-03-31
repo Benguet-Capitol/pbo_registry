@@ -49,6 +49,7 @@
             <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-7 py-3 text-xs">
                 <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
+                            <input type="hidden" name="po_source" value="">
                             <input type="hidden" name="search" value="{{ request('search') ?? '' }}">
                             <input type="hidden" name="search_column" value="{{ request('search_column') ?? '' }}">
                             <input type="hidden" name="sort_by" value="{{ request('sort_by') ?? '' }}">
@@ -353,7 +354,19 @@ function validateFormCreatePO() {
     
     if (isValid) {
         isSubmittingPurchaseOrder = true;
-        document.getElementById('CreatePurchaseOrderForm')?.submit();
+        
+        // Detect source (dashboard or accounts) and set hidden input
+        const form = document.getElementById('CreatePurchaseOrderForm');
+        const pathname = window.location.pathname;
+        const sourceInput = form.querySelector('input[name="po_source"]');
+        
+        if (pathname.includes('dashboard/accounts')) {
+            if (sourceInput) sourceInput.value = 'accounts';
+        } else if (pathname.includes('dashboard')) {
+            if (sourceInput) sourceInput.value = 'dashboard';
+        }
+        
+        form?.submit();
     }
 }
 </script>

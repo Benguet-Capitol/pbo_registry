@@ -4463,4 +4463,68 @@
 
     <!-- Obligation Details Modal -->
     @include('obligations.modal.obligation_details')
+
+    <script>
+        // Auto-reopen obligation and purchase order modals after creating PO from dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('reopen_obligation_id') && session('reopen_po_modal'))
+                const obligationId = {{ session('reopen_obligation_id') }};
+                
+                // Delay slightly to ensure page is fully loaded
+                setTimeout(function() {
+                    // Fetch and open the obligation modal first
+                    fetch(`/obligations/${obligationId}/obligation-modal`)
+                        .then(response => response.text())
+                        .then(html => {
+                            const existingModal = document.getElementById('editObligationModal');
+                            if (existingModal && existingModal.parentNode) {
+                                const temp = document.createElement('div');
+                                temp.innerHTML = html;
+                                const newModal = temp.querySelector('#editObligationModal');
+                                if (newModal) {
+                                    existingModal.replaceWith(newModal);
+                                    // Show the obligation modal
+                                    setTimeout(() => {
+                                        const modal = document.getElementById('editObligationModal');
+                                        if (modal) {
+                                            modal.offsetHeight;
+                                            modal.style.display = 'flex';
+                                            modal.setAttribute('aria-hidden', 'false');
+                                        }
+                                    }, 50);
+                                }
+                            }
+                        })
+                        .catch(err => console.error('Error loading obligation modal:', err));
+                    
+                    // Then fetch and open the purchase order modal
+                    setTimeout(function() {
+                        fetch(`/obligations/${obligationId}/purchase-order-modal`)
+                            .then(response => response.text())
+                            .then(html => {
+                                const existingForm = document.getElementById('CreatePurchaseOrderForm');
+                                if (existingForm && existingForm.parentNode) {
+                                    const temp = document.createElement('div');
+                                    temp.innerHTML = html;
+                                    const newForm = temp.querySelector('form');
+                                    if (newForm) {
+                                        existingForm.replaceWith(newForm);
+                                        // Show the PO modal
+                                        setTimeout(() => {
+                                            const modal = document.getElementById('createPOModal');
+                                            if (modal) {
+                                                modal.offsetHeight;
+                                                modal.style.display = 'flex';
+                                                modal.setAttribute('aria-hidden', 'false');
+                                            }
+                                        }, 50);
+                                    }
+                                }
+                            })
+                            .catch(err => console.error('Error loading PO modal:', err));
+                    }, 100);
+                }, 300);
+            @endif
+        });
+    </script>
 </x-app-layout>

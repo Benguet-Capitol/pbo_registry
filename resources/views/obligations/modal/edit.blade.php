@@ -192,7 +192,7 @@
                                                         <x-form.input
                                                             type="text"
                                                             name="edit_balance_from_allotment[]"
-                                                            value="{{ number_format($amount['obr_amount'] ?? 0, 2) }}"
+                                                            value="{{ number_format($amount['balance_from_allotment'] ?? 0, 2) }}"
                                                             placeholder="{{ __('Balance') }}"
                                                             autocomplete="off"
                                                             class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"

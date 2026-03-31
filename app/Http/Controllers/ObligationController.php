@@ -229,7 +229,8 @@ class ObligationController extends Controller
                 
                 // Calculate adjustments for this specific obligation amount
                 $adjustmentSum = $amount->obligationAdjustments->sum('adjustment_amount');
-                $totalObrAmount = $amount->obr_amount + $adjustmentSum;
+                $originalObrAmount = $amount->obr_amount; // Original amount without adjustments
+                $totalObrAmount = $originalObrAmount + $adjustmentSum; // Adjusted total
 
                 // Return as stdClass for proper JSON serialization
                 return (object)[
@@ -237,8 +238,9 @@ class ObligationController extends Controller
                     'appropriation_id' => $amount->appropriation_id,
                     'obligation_id' => $amount->obligation_id,
                     'account_code' => $amount->account_code ?? '',
-                    'obr_amount' => $totalObrAmount,
-                    'balance_from_allotment' => $balance + $totalObrAmount,
+                    'obr_amount' => $originalObrAmount, // Original amount for edit modal
+                    'amount' => $originalObrAmount, // Also set 'amount' field for edit modal
+                    'balance_from_allotment' => $balance + $originalObrAmount, // Balance before original obligation was added
                     'description' => $amount->appropriation->description ?? '',
                     'program' => $amount->appropriation->programs ?? '',
                     'appropriation' => (object)[
@@ -688,12 +690,39 @@ class ObligationController extends Controller
 
         // Prepare obligation_amounts for the modal table
         $obligation_amounts = $obligation->obligationAmounts->map(function ($amount) {
+            $obrAmount = $amount->obr_amount ?? 0;
+            $appropriation = $amount->appropriation;
+            
+            // Calculate balance from allotment (same as show() method)
+            $totalAppropriation = collect([
+                $appropriation->quarter1 ?? 0,
+                $appropriation->quarter2 ?? 0,
+                $appropriation->quarter3 ?? 0,
+                $appropriation->quarter4 ?? 0,
+            ])->sum();
+            
+            $realignmentTotal = ($appropriation->realignments ?? collect())->sum(function ($r) {
+                return $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0);
+            });
+            
+            $supplementalTotal = ($appropriation->supplementals ?? collect())->sum(function ($s) {
+                return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
+            });
+            
+            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
+                return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+            });
+            
+            $balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+            $balanceFromAllotment = $balance + $obrAmount;
+            
             return [
                 'account_code' => $amount->account_code,
                 'description' => $amount->appropriation->description ?? '',
                 'program' => $amount->appropriation->programs ?? '',
-                'obr_amount' => $amount->obr_amount,
-                'amount' => $amount->obr_amount, // If you have a separate 'amount' field, use it
+                'obr_amount' => $obrAmount,
+                'amount' => $obrAmount, // Original amount without adjustments
+                'balance_from_allotment' => $balanceFromAllotment,
             ];
         });
 
@@ -1235,6 +1264,7 @@ class ObligationController extends Controller
             'delivery_period' => 'nullable|string|max:255',
             'po_amount' => 'required|array',
             'po_amount.*' => 'nullable|numeric|min:0',
+            'po_source' => 'nullable|string|in:dashboard,accounts',
         ]);
 
         $savedPOs = 0;
@@ -1322,6 +1352,34 @@ class ObligationController extends Controller
                     'saved_count' => $savedPOs
                 ]
             ]);
+        }
+
+        // Determine redirect destination based on source
+        $poSource = $validated['po_source'] ?? 'obligations';
+        
+        if ($poSource === 'dashboard') {
+            return redirect()->route('dashboard', $request->only([
+                'year1', 'group_filter', 'fund_type_filter', 'fund_filter', 
+                'office_filter', 'allotment_class_filter', 'sort_by', 'sort_order', 'per_page', 'search'
+            ]))
+            ->with('status', [
+                'type' => 'default',
+                'message' => "Purchase Order No: <strong>{$validated['po_number']}</strong> with Date: <strong>{$validated['po_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"
+            ])
+            ->with('reopen_obligation_id', $validated['obligation_id'])
+            ->with('reopen_po_modal', true);
+        } elseif ($poSource === 'accounts') {
+            // Get the office_allotment_class_id from the obligation
+            $obligation = Obligation::find($validated['obligation_id']);
+            $accountsClassId = $obligation ? $obligation->office_allotment_class_id : '';
+            
+            return redirect()->route('dashboard.accounts', ['id' => $accountsClassId])
+                ->with('status', [
+                    'type' => 'default',
+                    'message' => "Purchase Order No: <strong>{$validated['po_number']}</strong> with Date: <strong>{$validated['po_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"
+                ])
+                ->with('reopen_obligation_id', $validated['obligation_id'])
+                ->with('reopen_po_modal', true);
         }
 
         return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))

@@ -8,6 +8,8 @@
                 if (request('fund_filter')) {
                 if (request('fund_filter') === 'others') {
                 $selectedFund = 'BeGHEE and SEF';
+                } else if (request('fund_filter') === 'shf') {
+                $selectedFund = 'Special Health Fund';
                 } else {
                 $selectedFund = request('fund_filter'); // e.g., 'General Fund'
                 }
@@ -108,6 +110,11 @@
                     <option value="others"
                         data-fund-name="Benguet General Hospital Economic Enterprise and Special Education Fund" {{ request('fund_filter') == 'others' ? 'selected' : '' }}>
                         BeGHEE and SEF
+                    </option>
+
+                    <option value="shf"
+                        data-fund-name="Special Health Fund" {{ request('fund_filter') == 'shf' ? 'selected' : '' }}>
+                        Special Health Fund
                     </option>
                 </x-form.select>
             </div>

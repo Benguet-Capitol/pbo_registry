@@ -45,6 +45,8 @@ class SAAOBFundSectorController extends Controller
                 'Benguet General Hospital Economic Enterprise',
                 'Special Education Fund'
             ]);
+        } elseif ($selectedFund === 'shf') {
+            $fundsQuery->where('fund_type', 'Special Health Fund');
         } elseif ($selectedFund) {
             $fundsQuery->where('fund_type', $selectedFund);
         }

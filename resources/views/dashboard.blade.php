@@ -21,6 +21,11 @@
                 if (!empty($selectedGroup)) $filters[] = $selectedGroup;
                 if (!empty($selectedFundType)) $filters[] = $selectedFundType;
                 if (!empty($selectedFund)) $filters[] = $selectedFund;
+                if (request('from_date') || request('to_date')) {
+                    $fromDate = request('from_date') ? date('M d, Y', strtotime(request('from_date'))) : 'Start';
+                    $toDate = request('to_date') ? date('M d, Y', strtotime(request('to_date'))) : 'End';
+                    $filters[] = "$fromDate - $toDate";
+                }
                 @endphp
 
                 @if (count($filters) > 0)
@@ -174,23 +179,26 @@
 
                 </x-form.select>
             </div>
-           
-            <!-- Per Page Dropdown -->
-            <!-- <div class="flex items-center space-x-2">
-                <x-form.select
-                    name="per_page"
-                    id="perPage"
-                    class="filter-select text-gray-400 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    data-default="all"
-                    onchange="this.form.submit()"
-                >
-                    <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
-                    <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
-                    <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
-                    <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
-                    <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>Show All</option>
-                </x-form.select>
-            </div> -->
+
+            <!-- Date Range Filter Row -->
+            <!-- From Date Filter -->
+            <div class="flex items-center space-x-2">
+                <label for="fromDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">From Date</label>
+                <x-form.input type="date" name="from_date" id="fromDate" value="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
+            </div>
+
+            <!-- To Date Filter -->
+            <div class="flex items-center space-x-2">
+                <label for="toDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">To Date</label>
+                <x-form.input type="date" name="to_date" id="toDate" value="{{ request('to_date') }}" min="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
+            </div>
+
+            <!-- Apply Filter Button -->
+            <div class="flex items-end">
+                <button type="submit" class="w-full text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                    <i class="fas fa-filter mr-2"></i>Apply Date Filter
+                </button>
+            </div>
         </div>
     </form>
     <!-- Search Input - Always Visible -->
@@ -1241,6 +1249,24 @@
     </style>
 
     <script>
+        // Date Range Validation: Set minimum to date based on from date
+        const dashboardFromDateInput = document.getElementById('fromDate');
+        const dashboardToDateInput = document.getElementById('toDate');
+
+        if (dashboardFromDateInput && dashboardToDateInput) {
+            dashboardFromDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    dashboardToDateInput.min = this.value;
+                    // If the current to_date is before the new from_date, clear it
+                    if (dashboardToDateInput.value && dashboardToDateInput.value < this.value) {
+                        dashboardToDateInput.value = '';
+                    }
+                } else {
+                    dashboardToDateInput.min = '';
+                }
+            });
+        }
+
         // Store all card information for dynamic updates
         const cardConfig = {
             'approved_appropriations': { column: 'data-appropriations' },

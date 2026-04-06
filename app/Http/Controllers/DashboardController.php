@@ -38,6 +38,8 @@ class DashboardController extends Controller
         $fundFilter = $request->input('fund_filter');
         $officeFilter = $request->input('office_filter');
         $allotmentClassFilter = $request->input('allotment_class_filter');
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
 
         // Check if user is a Guest and automatically filter by their office
         $isGuest = auth()->user()->hasRole('Guest');
@@ -70,8 +72,34 @@ class DashboardController extends Controller
             ->values();
 
         // Filter by selected year and other filters
-        $officeAllotmentClassesQuery = OfficeAllotmentClass::with(['appropriations', 'obligationAmounts', 'fundSourceRelation', 'allotmentClass', 'offices', 'realignments'])
-            ->where('year', $currentYear);
+        $officeAllotmentClassesQuery = OfficeAllotmentClass::with([
+            'appropriations',
+            'obligationAmounts' => function ($query) use ($fromDate, $toDate) {
+                // Filter obligation amounts by obligation date
+                if ($fromDate) {
+                    $query->whereHas('obligation', function ($q) use ($fromDate) {
+                        $q->where('obr_date', '>=', $fromDate);
+                    });
+                }
+                if ($toDate) {
+                    $query->whereHas('obligation', function ($q) use ($toDate) {
+                        $q->where('obr_date', '<=', $toDate);
+                    });
+                }
+            },
+            'fundSourceRelation',
+            'allotmentClass',
+            'offices',
+            'realignments' => function ($query) use ($fromDate, $toDate) {
+                // Filter realignments by realignment_date
+                if ($fromDate) {
+                    $query->where('realignment_date', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('realignment_date', '<=', $toDate);
+                }
+            }
+        ])->where('year', $currentYear);
 
         // Apply office filter for guests automatically
         if ($isGuest && $userOfficeId) {
@@ -148,13 +176,26 @@ class DashboardController extends Controller
             // Approved Appropriations
             $class->appropriations_sum = $class->appropriations->sum('appropriation');
             // Supplementals
-            $class->supplemental_sum = Supplemental::where('type', 'Supplemental')
-                ->where('office_allotment_classes_id', $class->id)
-                ->sum('amount');
+            $supplementalQuery = Supplemental::where('type', 'Supplemental')
+                ->where('office_allotment_classes_id', $class->id);
+            if ($fromDate) {
+                $supplementalQuery->where('supplemental_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $supplementalQuery->where('supplemental_date', '<=', $toDate);
+            }
+            $class->supplemental_sum = $supplementalQuery->sum('amount');
+            
             // Reversions
-            $class->reversion_sum = Supplemental::where('type', 'Reversion')
-                ->where('office_allotment_classes_id', $class->id)
-                ->sum('amount');
+            $reversionQuery = Supplemental::where('type', 'Reversion')
+                ->where('office_allotment_classes_id', $class->id);
+            if ($fromDate) {
+                $reversionQuery->where('supplemental_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $reversionQuery->where('supplemental_date', '<=', $toDate);
+            }
+            $class->reversion_sum = $reversionQuery->sum('amount');
             $class->realignments_sum = $class->realignments->sum(
                 fn($realignment) => $realignment->type === 'Source'
                     ? -$realignment->amount
@@ -172,9 +213,15 @@ class DashboardController extends Controller
             // Get the sum of obligation amounts
             $obrSum = $class->obligationAmounts->sum('obr_amount') ?? 0;
             // Get the sum of adjustments for the obligation amounts
-            $adjustmentSum =
-                $obligationAmountIds->isNotEmpty()
-                ? ObligationAdjustment::whereIn('obligation_amounts_id', $obligationAmountIds)->sum('adjustment_amount')
+            $adjustmentQuery = ObligationAdjustment::whereIn('obligation_amounts_id', $obligationAmountIds);
+            if ($fromDate) {
+                $adjustmentQuery->where('adjustment_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $adjustmentQuery->where('adjustment_date', '<=', $toDate);
+            }
+            $adjustmentSum = $obligationAmountIds->isNotEmpty()
+                ? $adjustmentQuery->sum('adjustment_amount')
                 : 0;
             // Obligations
             $class->obligations_sum = $obrSum + $adjustmentSum;
@@ -205,10 +252,15 @@ class DashboardController extends Controller
             $class->balance_appropriations = $class->authorized_appropriations - $class->obligations_sum;
 
             // Disbursements
-            $class->disbursements_sum =
-                $obligationAmountIds->isNotEmpty()
-                ? Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds)
-                ->sum('disbursement_amount') : 0;
+            $disbursementQuery = Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds);
+            if ($fromDate) {
+                $disbursementQuery->where('disbursement_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $disbursementQuery->where('disbursement_date', '<=', $toDate);
+            }
+            $class->disbursements_sum = $obligationAmountIds->isNotEmpty()
+                ? $disbursementQuery->sum('disbursement_amount') : 0;
 
             // Disbursements / Obligation
             $class->disbursements_to_obligations = $class->obligations_sum > 0
@@ -233,15 +285,34 @@ class DashboardController extends Controller
         $totalAppropriations = Appropriation::whereIn('id', $appropriationIds)->sum('appropriation');
 
         // Calculate total Supplementals and Reversions for the card (filtered)
-        $totalSupplementals = Supplemental::where('type', 'Supplemental')
-            ->whereIn('office_allotment_classes_id', $officeAllotmentClasses->pluck('id'))
-            ->sum('amount');
-        $totalReversions = Supplemental::where('type', 'Reversion')
-            ->whereIn('office_allotment_classes_id', $officeAllotmentClasses->pluck('id'))
-            ->sum('amount');
+        $totalSupplementalsQuery = Supplemental::where('type', 'Supplemental')
+            ->whereIn('office_allotment_classes_id', $officeAllotmentClasses->pluck('id'));
+        if ($fromDate) {
+            $totalSupplementalsQuery->where('supplemental_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $totalSupplementalsQuery->where('supplemental_date', '<=', $toDate);
+        }
+        $totalSupplementals = $totalSupplementalsQuery->sum('amount');
+        
+        $totalReversionsQuery = Supplemental::where('type', 'Reversion')
+            ->whereIn('office_allotment_classes_id', $officeAllotmentClasses->pluck('id'));
+        if ($fromDate) {
+            $totalReversionsQuery->where('supplemental_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $totalReversionsQuery->where('supplemental_date', '<=', $toDate);
+        }
+        $totalReversions = $totalReversionsQuery->sum('amount');
 
-        $totalRealignments = Realignment::whereIn('appropriations_id', $appropriationIds)
-            ->get()
+        $totalRealignmentsQuery = Realignment::whereIn('appropriations_id', $appropriationIds);
+        if ($fromDate) {
+            $totalRealignmentsQuery->where('realignment_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $totalRealignmentsQuery->where('realignment_date', '<=', $toDate);
+        }
+        $totalRealignments = $totalRealignmentsQuery->get()
             ->sum(function ($realignment) {
                 return $realignment->type === 'Source' ? -$realignment->amount : $realignment->amount;
             });
@@ -256,11 +327,29 @@ class DashboardController extends Controller
         $totalAllotments -= $totalReversions;
 
         // Get all obligation amounts for appropriations in the filtered set, including adjustments
-        $totalObligations = ObligationAmount::whereIn('appropriation_id', $appropriationIds)->sum('obr_amount');
-        $totalAdjustments = ObligationAdjustment::whereIn(
-            'obligation_amounts_id',
-            ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-        )->sum('adjustment_amount');
+        $obligationAmountsIds = ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id');
+        
+        $totalObligationsQuery = ObligationAmount::whereIn('appropriation_id', $appropriationIds);
+        if ($fromDate) {
+            $totalObligationsQuery->whereHas('obligation', function ($q) use ($fromDate) {
+                $q->where('obr_date', '>=', $fromDate);
+            });
+        }
+        if ($toDate) {
+            $totalObligationsQuery->whereHas('obligation', function ($q) use ($toDate) {
+                $q->where('obr_date', '<=', $toDate);
+            });
+        }
+        $totalObligations = $totalObligationsQuery->sum('obr_amount');
+        
+        $totalAdjustmentsQuery = ObligationAdjustment::whereIn('obligation_amounts_id', $obligationAmountsIds);
+        if ($fromDate) {
+            $totalAdjustmentsQuery->where('adjustment_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $totalAdjustmentsQuery->where('adjustment_date', '<=', $toDate);
+        }
+        $totalAdjustments = $totalAdjustmentsQuery->sum('adjustment_amount');
         $totalObligations += $totalAdjustments;
 
         // Total For Later Release (all classes)
@@ -325,10 +414,17 @@ class DashboardController extends Controller
             : 0;
 
         // Calculate Disbursement
-        $totalDisbursements = Disbursement::whereIn(
+        $totalDisbursementsQuery = Disbursement::whereIn(
             'obligation_amounts_id',
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-        )->sum('disbursement_amount');
+        );
+        if ($fromDate) {
+            $totalDisbursementsQuery->where('disbursement_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $totalDisbursementsQuery->where('disbursement_date', '<=', $toDate);
+        }
+        $totalDisbursements = $totalDisbursementsQuery->sum('disbursement_amount');
 
         // Calculate Disbursements / Obligations
         $totalDisbursementsToObligations = $totalObligations > 0 ? ($totalDisbursements / $totalObligations) * 100 : 0;
@@ -385,23 +481,51 @@ class DashboardController extends Controller
 
         // Volume Metrics Calculations
         // Total Number of Obligations Created (unique obr_no from appropriations)
-        $totalObligationCount = Obligation::whereIn('id', 
+        $obligationQuery = Obligation::whereIn('id', 
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
-        )->distinct('obr_no')->count('obr_no');
+        );
+        if ($fromDate) {
+            $obligationQuery->where('obr_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $obligationQuery->where('obr_date', '<=', $toDate);
+        }
+        $totalObligationCount = $obligationQuery->distinct('obr_no')->count('obr_no');
         
         // Total Number of unique Purchase Orders (by po_number)
-        $totalPurchaseOrderCount = \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
+        $poQuery = \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-        )->distinct('po_number')->count('po_number');
+        );
+        if ($fromDate) {
+            $poQuery->where('po_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $poQuery->where('po_date', '<=', $toDate);
+        }
+        $totalPurchaseOrderCount = $poQuery->distinct('po_number')->count('po_number');
 
         // Total Number of unique Disbursements (by dv_no)
-        $totalDisbursementCount = \App\Models\Disbursement::whereIn('obligation_amounts_id',
+        $disburseQueryMetric = \App\Models\Disbursement::whereIn('obligation_amounts_id',
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-        )->distinct('dv_no')->count('dv_no');
+        );
+        if ($fromDate) {
+            $disburseQueryMetric->where('disbursement_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $disburseQueryMetric->where('disbursement_date', '<=', $toDate);
+        }
+        $totalDisbursementCount = $disburseQueryMetric->distinct('dv_no')->count('dv_no');
 
-        // Calculate days elapsed in the current year
-        $startOfYear = Carbon::createFromDate($currentYear, 1, 1);
-        $daysElapsed = $startOfYear->diffInDays(now()) + 1; // +1 to include the current day
+        // Calculate days elapsed based on date range
+        if ($fromDate && $toDate) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $fromDate);
+            $endDate = Carbon::createFromFormat('Y-m-d', $toDate);
+            $daysElapsed = $startDate->diffInDays($endDate) + 1; // +1 to include the start date
+        } else {
+            // Use the current year as fallback
+            $startOfYear = Carbon::createFromDate($currentYear, 1, 1);
+            $daysElapsed = $startOfYear->diffInDays(now()) + 1; // +1 to include the current day
+        }
         
         // Calculate Average Obligation Count per Day
         $averageObligationCountPerDay = $daysElapsed > 0 ? round($totalObligationCount / $daysElapsed, 2) : 0;
@@ -410,9 +534,16 @@ class DashboardController extends Controller
         $averageDisbursementCountPerDay = $daysElapsed > 0 ? round($totalDisbursementCount / $daysElapsed, 2) : 0;
         
         // Get all obligations with unique obr_no and their amounts
-        $obligations = Obligation::whereIn('id', 
+        $obligationsMetricQuery = Obligation::whereIn('id', 
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
-        )->get();
+        );
+        if ($fromDate) {
+            $obligationsMetricQuery->where('obr_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $obligationsMetricQuery->where('obr_date', '<=', $toDate);
+        }
+        $obligations = $obligationsMetricQuery->get();
         
         $obligationAmounts = [];
         foreach ($obligations as $obligation) {
@@ -447,11 +578,18 @@ class DashboardController extends Controller
             $quarterStart = Carbon::createFromDate($currentYear, ($q - 1) * 3 + 1, 1);
             $quarterEnd = Carbon::createFromDate($currentYear, ($q - 1) * 3 + 3, 1)->endOfMonth();
             
-            $count = Obligation::whereIn('id',
+            $quarterQuery = Obligation::whereIn('id',
                 ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
-            )->whereBetween('created_at', [$quarterStart, $quarterEnd])
-                ->distinct('obr_no')
-                ->count('obr_no');
+            )->whereBetween('created_at', [$quarterStart, $quarterEnd]);
+            
+            if ($fromDate) {
+                $quarterQuery->where('obr_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $quarterQuery->where('obr_date', '<=', $toDate);
+            }
+            
+            $count = $quarterQuery->distinct('obr_no')->count('obr_no');
             
             $obligationsByQuarter[] = [
                 'quarter' => 'Q' . $q,
@@ -508,6 +646,9 @@ class DashboardController extends Controller
     public function accounts($id, Request $request)
     {
         $search = $request->input('search');
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+        
         $officeAllotmentClasses = OfficeAllotmentClass::with([
             'offices',
             'allotmentClass',
@@ -521,8 +662,37 @@ class DashboardController extends Controller
                     });
                 }
             },
-            'supplementals',
-            'realignments',
+            'supplementals' => function ($query) use ($fromDate, $toDate) {
+                // Filter supplementals by supplemental_date
+                if ($fromDate) {
+                    $query->where('supplemental_date', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('supplemental_date', '<=', $toDate);
+                }
+            },
+            'realignments' => function ($query) use ($fromDate, $toDate) {
+                // Filter realignments by realignment_date
+                if ($fromDate) {
+                    $query->where('realignment_date', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('realignment_date', '<=', $toDate);
+                }
+            },
+            'obligationAmounts' => function ($query) use ($fromDate, $toDate) {
+                // Filter obligation amounts by obligation date
+                if ($fromDate) {
+                    $query->whereHas('obligation', function ($q) use ($fromDate) {
+                        $q->where('obr_date', '>=', $fromDate);
+                    });
+                }
+                if ($toDate) {
+                    $query->whereHas('obligation', function ($q) use ($toDate) {
+                        $q->where('obr_date', '<=', $toDate);
+                    });
+                }
+            },
         ])->findOrFail($id);
 
         // Custom sorting: Accounts without program first, then by program
@@ -555,18 +725,36 @@ class DashboardController extends Controller
         $officeAllotmentClasses->appropriations_sum = $officeAllotmentClasses->appropriations->sum('appropriation');
 
         // Supplementals
-        $officeAllotmentClasses->supplemental_sum = Supplemental::where('type', 'Supplemental')
-            ->where('office_allotment_classes_id', $officeAllotmentClasses->id)
-            ->sum('amount');
+        $supplementalQuery = Supplemental::where('type', 'Supplemental')
+            ->where('office_allotment_classes_id', $officeAllotmentClasses->id);
+        if ($fromDate) {
+            $supplementalQuery->where('supplemental_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $supplementalQuery->where('supplemental_date', '<=', $toDate);
+        }
+        $officeAllotmentClasses->supplemental_sum = $supplementalQuery->sum('amount');
 
         // Reversions
-        $officeAllotmentClasses->reversion_sum = Supplemental::where('type', 'Reversion')
-            ->where('office_allotment_classes_id', $officeAllotmentClasses->id)
-            ->sum('amount');
+        $reversionQuery = Supplemental::where('type', 'Reversion')
+            ->where('office_allotment_classes_id', $officeAllotmentClasses->id);
+        if ($fromDate) {
+            $reversionQuery->where('supplemental_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $reversionQuery->where('supplemental_date', '<=', $toDate);
+        }
+        $officeAllotmentClasses->reversion_sum = $reversionQuery->sum('amount');
 
         // Realignments (positive for Recipient, negative for Source)
-        $officeAllotmentClasses->realignments_sum = Realignment::where('office_allotment_classes_id', $officeAllotmentClasses->id)
-            ->get()
+        $realignmentsQuery = Realignment::where('office_allotment_classes_id', $officeAllotmentClasses->id);
+        if ($fromDate) {
+            $realignmentsQuery->where('realignment_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $realignmentsQuery->where('realignment_date', '<=', $toDate);
+        }
+        $officeAllotmentClasses->realignments_sum = $realignmentsQuery->get()
             ->sum(function ($realignment) {
                 return $realignment->type === 'Source' ? -$realignment->amount : $realignment->amount;
             });
@@ -608,9 +796,15 @@ class DashboardController extends Controller
         // Get the sum of obligation amounts
         $obrSum = $officeAllotmentClasses->obligationAmounts->sum('obr_amount') ?? 0;
         // Get the sum of adjustments for the obligation amounts
-        $adjustmentSum =
-            $obligationAmountIds->isNotEmpty()
-            ? ObligationAdjustment::whereIn('obligation_amounts_id', $obligationAmountIds)->sum('adjustment_amount')
+        $adjustmentQuery = ObligationAdjustment::whereIn('obligation_amounts_id', $obligationAmountIds);
+        if ($fromDate) {
+            $adjustmentQuery->where('adjustment_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $adjustmentQuery->where('adjustment_date', '<=', $toDate);
+        }
+        $adjustmentSum = $obligationAmountIds->isNotEmpty()
+            ? $adjustmentQuery->sum('adjustment_amount')
             : 0;
         // Obligations
         $obrSum += $adjustmentSum;
@@ -626,9 +820,15 @@ class DashboardController extends Controller
         // Calculate Allotment Accomplishment
         $officeAllotmentClasses->allotment_accomplishment =$officeAllotmentClasses->allotments_sum > 0 ? ($obrSum / $officeAllotmentClasses->allotments_sum) * 100 : 0;
         // Calculate Disbursements
-        $officeAllotmentClasses->disbursements_sum =
-            $obligationAmountIds->isNotEmpty()
-            ? Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds)->sum('disbursement_amount')
+        $disbursementsQuery = Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds);
+        if ($fromDate) {
+            $disbursementsQuery->where('disbursement_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $disbursementsQuery->where('disbursement_date', '<=', $toDate);
+        }
+        $officeAllotmentClasses->disbursements_sum = $obligationAmountIds->isNotEmpty()
+            ? $disbursementsQuery->sum('disbursement_amount')
             : 0;
         // Calculate Disbursements / Obligations
         $officeAllotmentClasses->disbursements_to_obligations = $officeAllotmentClasses->obligations_sum > 0 ? ($officeAllotmentClasses->disbursements_sum / $officeAllotmentClasses->obligations_sum) * 100 : 0;
@@ -644,18 +844,36 @@ class DashboardController extends Controller
             $appropriation->appropriation_sum = $appropriation->appropriation;
 
             // Supplementals
-            $appropriation->supplemental_sum = Supplemental::where('type', 'Supplemental')
-                ->where('appropriations_id', $appropriation->id)
-                ->sum('amount');
+            $supplementalQueryApp = Supplemental::where('type', 'Supplemental')
+                ->where('appropriations_id', $appropriation->id);
+            if ($fromDate) {
+                $supplementalQueryApp->where('supplemental_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $supplementalQueryApp->where('supplemental_date', '<=', $toDate);
+            }
+            $appropriation->supplemental_sum = $supplementalQueryApp->sum('amount');
 
             // Reversions
-            $appropriation->reversion_sum = Supplemental::where('type', 'Reversion')
-                ->where('appropriations_id', $appropriation->id)
-                ->sum('amount');
+            $reversionQueryApp = Supplemental::where('type', 'Reversion')
+                ->where('appropriations_id', $appropriation->id);
+            if ($fromDate) {
+                $reversionQueryApp->where('supplemental_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $reversionQueryApp->where('supplemental_date', '<=', $toDate);
+            }
+            $appropriation->reversion_sum = $reversionQueryApp->sum('amount');
 
             // Realignments (positive for Recipient, negative for Source)
-            $appropriation->realignments_sum = Realignment::where('appropriations_id', $appropriation->id)
-                ->get()
+            $realignmentsQueryApp = Realignment::where('appropriations_id', $appropriation->id);
+            if ($fromDate) {
+                $realignmentsQueryApp->where('realignment_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $realignmentsQueryApp->where('realignment_date', '<=', $toDate);
+            }
+            $appropriation->realignments_sum = $realignmentsQueryApp->get()
                 ->sum(function ($realignment) {
                     return $realignment->type === 'Source' ? -$realignment->amount : $realignment->amount;
                 });
@@ -681,8 +899,15 @@ class DashboardController extends Controller
             // Obligations & Adjustments
             $obligationAmountIds = $appropriation->obligationAmounts->pluck('id');
             $obrSum = $appropriation->obligationAmounts->sum('obr_amount') ?? 0;
+            $adjustmentQueryApp = ObligationAdjustment::whereIn('obligation_amounts_id', $obligationAmountIds);
+            if ($fromDate) {
+                $adjustmentQueryApp->where('adjustment_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $adjustmentQueryApp->where('adjustment_date', '<=', $toDate);
+            }
             $adjustmentSum = $obligationAmountIds->isNotEmpty()
-                ? ObligationAdjustment::whereIn('obligation_amounts_id', $obligationAmountIds)->sum('adjustment_amount')
+                ? $adjustmentQueryApp->sum('adjustment_amount')
                 : 0;
             $appropriation->obligations_sum = $obrSum + $adjustmentSum;
 
@@ -705,8 +930,15 @@ class DashboardController extends Controller
             $appropriation->balance_appropriations = $appropriation->authorized_appropriations - $appropriation->obligations_sum;
 
             // Disbursements
+            $disburseQuery = Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds);
+            if ($fromDate) {
+                $disburseQuery->where('disbursement_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $disburseQuery->where('disbursement_date', '<=', $toDate);
+            }
             $appropriation->disbursements = $obligationAmountIds->isNotEmpty()
-                ? Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds)->sum('disbursement_amount') : 0;
+                ? $disburseQuery->sum('disbursement_amount') : 0;
 
             // Disbursement / Obligations
             $appropriation->disbursements_to_obligations = $appropriation->obligations_sum > 0
@@ -767,23 +999,51 @@ class DashboardController extends Controller
 
         // Volume Metrics for Accounts Page
         // Total Number of Obligations Created (unique obr_no from appropriations)
-        $totalObligationCount = Obligation::whereIn('id', 
+        $oblQueryAccounts = Obligation::whereIn('id', 
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
-        )->distinct('obr_no')->count('obr_no');
+        );
+        if ($fromDate) {
+            $oblQueryAccounts->where('obr_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $oblQueryAccounts->where('obr_date', '<=', $toDate);
+        }
+        $totalObligationCount = $oblQueryAccounts->distinct('obr_no')->count('obr_no');
         
         // Total Number of unique Purchase Orders (by po_number)
-        $totalPurchaseOrderCount = \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
+        $poQueryAccounts = \App\Models\PurchaseOrder::whereIn('obligation_amounts_id', 
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-        )->distinct('po_number')->count('po_number');
+        );
+        if ($fromDate) {
+            $poQueryAccounts->where('po_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $poQueryAccounts->where('po_date', '<=', $toDate);
+        }
+        $totalPurchaseOrderCount = $poQueryAccounts->distinct('po_number')->count('po_number');
         
         // Total Number of unique Disbursements (by dv_no)
-        $totalDisbursementCount = \App\Models\Disbursement::whereIn('obligation_amounts_id',
+        $disbQueryAccounts = \App\Models\Disbursement::whereIn('obligation_amounts_id',
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id')
-        )->distinct('dv_no')->count('dv_no');
+        );
+        if ($fromDate) {
+            $disbQueryAccounts->where('disbursement_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $disbQueryAccounts->where('disbursement_date', '<=', $toDate);
+        }
+        $totalDisbursementCount = $disbQueryAccounts->distinct('dv_no')->count('dv_no');
 
-        // Calculate days elapsed in the current year
-        $startOfYear = Carbon::createFromDate($selectedYear, 1, 1);
-        $daysElapsed = $startOfYear->diffInDays(now()) + 1; // +1 to include the current day
+        // Calculate days elapsed based on date range
+        if ($fromDate && $toDate) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $fromDate);
+            $endDate = Carbon::createFromFormat('Y-m-d', $toDate);
+            $daysElapsed = $startDate->diffInDays($endDate) + 1; // +1 to include the start date
+        } else {
+            // Use the current year as fallback
+            $startOfYear = Carbon::createFromDate($selectedYear, 1, 1);
+            $daysElapsed = $startOfYear->diffInDays(now()) + 1; // +1 to include the current day
+        }
         
         // Calculate Average Obligation Count per Day
         $averageObligationCountPerDay = $daysElapsed > 0 ? round($totalObligationCount / $daysElapsed, 2) : 0;
@@ -792,9 +1052,16 @@ class DashboardController extends Controller
         $averageDisbursementCountPerDay = $daysElapsed > 0 ? round($totalDisbursementCount / $daysElapsed, 2) : 0;
         
         // Get all obligations with unique obr_no and their amounts
-        $obligations = Obligation::whereIn('id', 
+        $obligationsAccountsQuery = Obligation::whereIn('id', 
             ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
-        )->get();
+        );
+        if ($fromDate) {
+            $obligationsAccountsQuery->where('obr_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $obligationsAccountsQuery->where('obr_date', '<=', $toDate);
+        }
+        $obligations = $obligationsAccountsQuery->get();
         
         $obligationAmountsData = [];
         foreach ($obligations as $obligation) {
@@ -823,26 +1090,29 @@ class DashboardController extends Controller
             }
         }
         
-        // Obligations by Quarter (unique obr_no)
-        $obligationsByQuarter = [];
-        for ($q = 1; $q <= 4; $q++) {
         // Obligations by Quarter (unique obr_no) - based on when obligations were created
         $obligationsByQuarter = [];
         for ($q = 1; $q <= 4; $q++) {
             $quarterStart = Carbon::createFromDate($selectedYear, ($q - 1) * 3 + 1, 1);
             $quarterEnd = Carbon::createFromDate($selectedYear, ($q - 1) * 3 + 3, 1)->endOfMonth();
             
-            $count = Obligation::whereIn('id',
+            $quarterQueryAccounts = Obligation::whereIn('id',
                 ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('obligation_id')
-            )->whereBetween('created_at', [$quarterStart, $quarterEnd])
-                ->distinct('obr_no')
-                ->count('obr_no');
+            )->whereBetween('created_at', [$quarterStart, $quarterEnd]);
+            
+            if ($fromDate) {
+                $quarterQueryAccounts->where('obr_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $quarterQueryAccounts->where('obr_date', '<=', $toDate);
+            }
+            
+            $count = $quarterQueryAccounts->distinct('obr_no')->count('obr_no');
             
             $obligationsByQuarter[] = [
                 'quarter' => 'Q' . $q,
                 'count' => $count
             ];
-        }
         }
         
         return view('dashboard.accounts', compact(

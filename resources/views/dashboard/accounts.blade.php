@@ -3,12 +3,23 @@
 
     <x-slot name="header">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            @php
+            $filters = [];
+            if (request('from_date') || request('to_date')) {
+                $fromDate = request('from_date') ? date('M d, Y', strtotime(request('from_date'))) : 'Start';
+                $toDate = request('to_date') ? date('M d, Y', strtotime(request('to_date'))) : 'End';
+                $filters[] = "$fromDate - $toDate";
+            }
+            @endphp
             <h2 class="text-xl font-semibold leading-tight">
                 {{ __('Current Balances > Accounts') }} |
                 <span class="text-blue-800 dark:text-blue-400">
                     {{ $officeAllotmentClasses->offices->office_name ?? 'Office N/A' }} -
-                    {{ $officeAllotmentClasses->class ?? 'Class N/A' }} (CY
-                    {{ $officeAllotmentClasses->year ?? 'Year N/A' }})
+                    {{ $officeAllotmentClasses->class ?? 'Class N/A' }}
+                    @if(count($filters) > 0)
+                    / {{ implode(' / ', $filters) }}
+                    @endif
+                    (CY {{ $officeAllotmentClasses->year ?? 'Year N/A' }})
                 </span>
             </h2>
 
@@ -54,13 +65,39 @@
     </div>
     @endif
 
+    <!-- Filter and Search Section -->
     <div class="bg-white p-4 rounded-lg shadow-md mb-2 dark:bg-gray-800">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
-            <!-- Search Input -->
+        <form method="GET" action="" id="filterForm">
+            <!-- Date Range Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-end mb-3">
+                <!-- From Date Filter -->
+                <div class="flex flex-col md:col-span-1">
+                    <label for="fromDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">From Date</label>
+                    <x-form.input type="date" name="from_date" id="fromDate" value="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
+                </div>
+
+                <!-- To Date Filter -->
+                <div class="flex flex-col md:col-span-1">
+                    <label for="toDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">To Date</label>
+                    <x-form.input type="date" name="to_date" id="toDate" value="{{ request('to_date') }}" min="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
+                </div>
+
+                <!-- Apply Date Filter Button -->
+                <div class="flex">
+                    <button type="submit" class="w-full text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <i class="fas fa-filter mr-2"></i>Apply Date Filter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
+                <!-- Search Input -->
                 <div class="flex items-center space-x-2 lg:col-span-3">
                     <x-form.input type="text" name="search" id="searchInput" value="{{ session('search') ?? request('search') }}" autocomplete="off" placeholder="Search" class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                 </div>
-        </div>
+            </div>
+        </form>
     </div>
 
     {{-- Analytics & Insights Panel (for Accounts) --}}
@@ -4141,5 +4178,30 @@ if (typeof originalFilterTable === 'function') {
                 }, 300);
             @endif
         });
+
+        // Date range validation - ensure To Date >= From Date
+        const fromDateInput = document.getElementById('fromDate');
+        const toDateInput = document.getElementById('toDate');
+
+        if (fromDateInput) {
+            fromDateInput.addEventListener('change', function() {
+                if (toDateInput && this.value) {
+                    toDateInput.setAttribute('min', this.value);
+                    // If toDate is less than fromDate, clear it
+                    if (toDateInput.value && toDateInput.value < this.value) {
+                        toDateInput.value = '';
+                    }
+                }
+            });
+        }
+
+        if (toDateInput) {
+            toDateInput.addEventListener('change', function() {
+                if (fromDateInput && fromDateInput.value && this.value && this.value < fromDateInput.value) {
+                    alert('To Date must be greater than or equal to From Date');
+                    this.value = '';
+                }
+            });
+        }
     </script>
 </x-app-layout>

@@ -23,6 +23,11 @@
                 if (request('obr_type_filter')) {
                     $filters[] = request('obr_type_filter');
                 }
+                if (request('from_date') || request('to_date')) {
+                    $fromDate = request('from_date') ? date('M d, Y', strtotime(request('from_date'))) : 'Start';
+                    $toDate = request('to_date') ? date('M d, Y', strtotime(request('to_date'))) : 'End';
+                    $filters[] = "$fromDate - $toDate";
+                }
                 @endphp
 
                 @if (count($filters) > 0)
@@ -172,6 +177,28 @@
                     </x-form.select>
                 </div>
             </div>
+
+            <!-- Date Range Filter Row -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-2">
+                <!-- From Date Filter -->
+                <div class="flex flex-col space-x-2">
+                    <label for="fromDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">From Date</label>
+                    <x-form.input type="date" name="from_date" id="fromDate" value="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
+                </div>
+
+                <!-- To Date Filter -->
+                <div class="flex flex-col space-x-2">
+                    <label for="toDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">To Date</label>
+                    <x-form.input type="date" name="to_date" id="toDate" value="{{ request('to_date') }}" min="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
+                </div>
+
+                <!-- Apply Filter Button -->
+                <div class="flex items-end space-x-2">
+                    <button type="submit" class="w-full text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <i class="fas fa-filter mr-2"></i>Apply Date Filter
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
     
@@ -207,6 +234,8 @@
                         <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
                         <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
                         <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
+                        <input type="hidden" name="from_date" value="{{ request('from_date') }}">
+                        <input type="hidden" name="to_date" value="{{ request('to_date') }}">
                         <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
                         <input type="hidden" name="sort_by" value="{{ $sortBy }}">
                         <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
@@ -727,6 +756,24 @@
     </div>
 
 <script>
+
+    // Date Range Validation: Set minimum to date based on from date
+    const fromDateInput = document.getElementById('fromDate');
+    const toDateInput = document.getElementById('toDate');
+
+    if (fromDateInput && toDateInput) {
+        fromDateInput.addEventListener('change', function() {
+            if (this.value) {
+                toDateInput.min = this.value;
+                // If the current to_date is before the new from_date, clear it
+                if (toDateInput.value && toDateInput.value < this.value) {
+                    toDateInput.value = '';
+                }
+            } else {
+                toDateInput.min = '';
+            }
+        });
+    }
 
     const menu = document.getElementById('obligationContextMenu');
     let scrollTimeout;

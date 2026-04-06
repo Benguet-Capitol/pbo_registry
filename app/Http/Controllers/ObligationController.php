@@ -60,6 +60,13 @@ class ObligationController extends Controller
         if ($request->filled('obr_type_filter')) {
             $query->where('obr_type', $request->obr_type_filter);
         }
+        // Date Range Filter
+        if ($request->filled('from_date')) {
+            $query->where('obr_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->where('obr_date', '<=', $request->to_date);
+        }
         if ($search) {
             if ($searchColumn) {
                 // Search in specific column
@@ -160,6 +167,8 @@ class ObligationController extends Controller
                 'office_allotment_class_filter' => $request->office_allotment_class_filter,
                 'fund_filter' => $request->fund_filter,
                 'obr_type_filter' => $request->obr_type_filter,
+                'from_date' => $request->from_date,
+                'to_date' => $request->to_date,
                 'per_page' => $perPage,
             ]);
 
@@ -288,6 +297,12 @@ class ObligationController extends Controller
         })
         ->when($request->filled('obr_type_filter'), function ($q) use ($request) {
             return $q->where('obr_type', $request->obr_type_filter);
+        })
+        ->when($request->filled('from_date'), function ($q) use ($request) {
+            return $q->where('obr_date', '>=', $request->from_date);
+        })
+        ->when($request->filled('to_date'), function ($q) use ($request) {
+            return $q->where('obr_date', '<=', $request->to_date);
         })
         ->when($search, function ($q) use ($search, $searchColumn) {
             if ($searchColumn) {

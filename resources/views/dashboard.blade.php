@@ -1443,11 +1443,6 @@
             // Update card values after filtering
             updateCardValues();
             
-            // Animate table values after filtering
-            setTimeout(() => {
-                animateTableValues();
-            }, 50);
-            
             // Update graph after filtering
             updateGraph();
         }
@@ -3208,40 +3203,7 @@
     /**
      * Animate numeric values in dashboardTable cells
      */
-    function animateTableValues() {
-        const table = document.getElementById('dashboardTable');
-        if (!table) return;
-        
-        const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
-        if (rows.length === 0) return;
-        
-        // Get numeric cell columns (skip first few columns which are text-based)
-        const headerCells = Array.from(table.querySelectorAll('thead th')).slice(5); // Skip: View Details, Office, Class, Fund Type, FPP Code
-        
-        rows.forEach((row, rowIndex) => {
-            const cells = Array.from(row.querySelectorAll('td')).slice(5);
-            
-            cells.forEach((cell, cellIndex) => {
-                const text = cell.textContent.trim();
-                
-                // Skip empty cells, cells with multiple elements, or progress bar cells
-                if (!text || cell.querySelector('div') || cell.querySelector('svg')) return;
-                
-                // Check if it's a percentage or regular number
-                const isPercentage = text.includes('%');
-                const endValue = parseFormattedNumber(text);
-                
-                if (endValue === 0) return; // Skip zero values
-                
-                // Stagger animations
-                const delay = (rowIndex * 30) + (cellIndex * 10);
-                
-                setTimeout(() => {
-                    animateCounter(cell, 0, endValue, 800, isPercentage);
-                }, delay);
-            });
-        });
-    }
+
 
     // ============================================
     // HEATMAP TABLE ENHANCEMENT
@@ -3598,7 +3560,6 @@
         // Initial animation
         setTimeout(() => {
             animateAllCards();
-            animateTableValues(); // Animate table cell values
             if (heatmapEnabled) {
                 applyHeatmap();
             }

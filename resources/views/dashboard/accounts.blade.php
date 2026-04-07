@@ -1458,11 +1458,6 @@
 
             updateCardValues();
             
-            // Animate table values after filtering
-            setTimeout(() => {
-                animateTableValues();
-            }, 50);
-            
             updateGraph();
         }
 
@@ -1584,40 +1579,7 @@ function animateCircularProgress(element, targetPercentage, duration = 1200) {
 /**
  * Animate numeric values in accountsTable cells
  */
-function animateTableValues() {
-    const table = document.getElementById('accountsTable');
-    if (!table) return;
-    
-    const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
-    if (rows.length === 0) return;
-    
-    // Get numeric cell columns (skip first few columns which are text-based)
-    const headerCells = Array.from(table.querySelectorAll('thead th')).slice(4); // Skip: Programs, Account Code, Description, FPP Code
-    
-    rows.forEach((row, rowIndex) => {
-        const cells = Array.from(row.querySelectorAll('td')).slice(4);
-        
-        cells.forEach((cell, cellIndex) => {
-            const text = cell.textContent.trim();
-            
-            // Skip empty cells, cells with multiple elements, or progress bar cells
-            if (!text || cell.querySelector('div') || cell.querySelector('svg')) return;
-            
-            // Check if it's a percentage or regular number
-            const isPercentage = text.includes('%');
-            const endValue = parseFormattedNumber(text);
-            
-            if (endValue === 0) return; // Skip zero values
-            
-            // Stagger animations
-            const delay = (rowIndex * 30) + (cellIndex * 10);
-            
-            setTimeout(() => {
-                animateCounter(cell, 0, endValue, 800, isPercentage);
-            }, delay);
-        });
-    });
-}
+
 
 // ============================================
 // HEATMAP TABLE ENHANCEMENT FOR ACCOUNTS
@@ -2135,7 +2097,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial animations on page load
     setTimeout(() => {
         animateAllCards();
-        animateTableValues(); // Animate table cell values
         animateGraphOnLoad(); // Use the specific graph animation function
         if (heatmapEnabled) {
             applyHeatmap();

@@ -199,6 +199,7 @@
                                 'po_amount' => 'Purchase Order',
                                 'disbursement' => 'Disbursement',
                                 'remarks' => 'Remarks',
+                                'files' => 'Files',
                             ];
                             $sortable = ['po_date', 'po_number', 'pr_no', 'supplier', 'delivery_period', 'po_amount', 'remarks'];
                         @endphp
@@ -274,14 +275,30 @@
                                 @endif
                             </td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->po_remarks ?? '-' }}</td>
+                            <td class="px-1 py-2 border-b border-gray-300 text-center">
+                                @php
+                                    $fileCount = \App\Models\PurchaseOrderFile::where('po_number', $purchaseOrder->po_number)->count();
+                                @endphp
+                                <button onclick="openPurchaseOrderFilesModal('{{ $purchaseOrder->po_number }}')"
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
+                                    @if($fileCount > 0)
+                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
+                                    @else
+                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
+                                    @endif"
+                                    title="View files">
+                                    <i class="fas fa-file"></i>
+                                    <span>{{ $fileCount }}</span>
+                                </button>
+                            </td>
                             <!-- @canany(['edit purchase orders', 'delete purchase orders'])
                                 <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
                                 </td>
                             @endcanany -->
                         </tr>
                     @empty
-                        <tr>5
-                            <td colspan="14" class="py-4 text-center text-gray-500">No purchase orders found.</td>
+                        <tr>
+                            <td colspan="15" class="py-4 text-center text-gray-500">No purchase orders found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -290,7 +307,7 @@
                         <td colspan="8" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
 
                         </td>
-                        <td colspan="4" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                        <td colspan="5" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
                             Total Purchase Order Amount:
                             <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">
                                 0.00
@@ -313,6 +330,12 @@
     <div id="purchaseOrderContextMenu" 
         class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
+        @role('Developer|Administrator|Obligation|Disbursement')
+        <button id="contextFiles"
+                class="w-full text-left block px-4 py-2 text-xs text-green-900 hover:bg-green-200 dark:text-green-100 dark:hover:bg-green-700 border-t border-green-300 dark:border-green-600 transition-colors duration-150">
+            <i class="fas fa-file-upload mr-2 text-green-600"></i>Files
+        </button>
+        @endrole
         @role('Developer|Administrator|Obligation|Disbursement')
         <button id="contextViewObligation"
                 class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 border-t border-blue-300 dark:border-blue-600 transition-colors duration-150">
@@ -337,6 +360,7 @@
         @endrole
     </div>
     
+    @include('purchase_orders.modal.purchase_order_files')
 
     <script>
         // Prevent multiple submissions
@@ -484,6 +508,15 @@
             // Get purchase order data and set up menu items
             const purchaseOrder = row.dataset.po ? JSON.parse(row.dataset.po) : null;
             if (purchaseOrder) {
+                // Files button
+                const filesBtn = poMenu.querySelector('#contextFiles');
+                if (filesBtn && purchaseOrder.po_number) {
+                    filesBtn.onclick = () => {
+                        hidePurchaseOrderContextMenu();
+                        openPurchaseOrderFilesModal(purchaseOrder.po_number);
+                    };
+                }
+
                 // Add Disbursement button
                 const addDisbursementBtn = poMenu.querySelector('#contextAddDisbursement');
                 if (addDisbursementBtn && purchaseOrder.id) {

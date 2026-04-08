@@ -17,6 +17,7 @@ use App\Http\Controllers\ObligationFileController;
 use App\Http\Controllers\RealignmentFileController;
 use App\Http\Controllers\SupplementalFileController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseOrderFileController;
 use App\Http\Controllers\AllotmentClassController;
 use App\Http\Controllers\FundController;
 use App\Http\Controllers\FundSourceController;
@@ -157,6 +158,15 @@ Route::middleware('auth')->group(function () {
     Route::get('purchase-orders/all', [PurchaseOrderController::class, 'all'])->name('purchase_orders.all');
     // API endpoint to get purchase orders by po_number
     Route::get('/api/purchase-orders/by-number/{poNumber}', [PurchaseOrderController::class, 'getByPoNumber'])->name('purchase_orders.api.byNumber');
+
+    // Purchase Order Files Routes
+    Route::post('/purchase-order-files/upload', [PurchaseOrderFileController::class, 'store'])->name('purchase_order_files.store');
+    Route::get('/purchase-order-files/get', [PurchaseOrderFileController::class, 'getFiles'])->name('purchase_order_files.get');
+    Route::get('/purchase-order-files/{purchaseOrderFile}/view', [PurchaseOrderFileController::class, 'view'])->name('purchase_order_files.view');
+    Route::get('/purchase-order-files/{purchaseOrderFile}/download', [PurchaseOrderFileController::class, 'download'])->name('purchase_order_files.download');
+    Route::get('/purchase-order-files/{purchaseOrderFile}/preview', [PurchaseOrderFileController::class, 'preview'])->name('purchase_order_files.preview');
+    Route::put('/purchase-order-files/{purchaseOrderFile}', [PurchaseOrderFileController::class, 'update'])->name('purchase_order_files.update');
+    Route::delete('/purchase-order-files/{purchaseOrderFile}', [PurchaseOrderFileController::class, 'destroy'])->name('purchase_order_files.destroy');
 
     // Disbursement Routes
     Route::resource('disbursements', DisbursementController::class);

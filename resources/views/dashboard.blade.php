@@ -1167,6 +1167,119 @@
     </div>
     @endrole
 
+    <!-- Obligation History Modal -->
+    <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
+        <div class="flex flex-col max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+            <!-- Modal header -->
+            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
+                    <div>
+                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-gray-100">
+                            Obligation Status/History
+                        </h3>
+                        <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
+                    </div>
+                </div>
+                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 hover:text-white hover:bg-gray-600 dark:hover:bg-gray-700 rounded-full p-2 transition-colors duration-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <!-- Modal body (scrollable) -->
+            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-6 space-y-3">
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancellation Modal for Dashboard -->
+    <form id="dashboardCancelObligationForm" method="POST">
+        <div id="dashboardCancellationModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10004] flex items-center justify-center bg-black bg-opacity-50">
+            <div class="flex flex-col max-h-[90vh] w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+                <!-- Modal header -->
+                <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900 dark:to-violet-900 border-b-2 border-purple-200 dark:border-purple-700 rounded-t-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-ban text-purple-600 dark:text-purple-300 text-xl"></i>
+                        <h3 class="text-lg leading-6 font-semibold text-purple-900 dark:text-purple-100">
+                            Cancel Obligation
+                        </h3>
+                    </div>
+                    <button type="button" onclick="closeDashboardCancellationModal()" class="text-purple-600 dark:text-purple-300 hover:text-white hover:bg-purple-600 dark:hover:bg-purple-700 rounded-full p-2 transition-colors duration-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <!-- Modal body (scrollable) -->
+                <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] p-6">
+                    <input type="hidden" id="dashboardHiddenObligationId" name="obligation_id" value="">
+                    <p class="text-sm font-bold text-gray-700 dark:text-gray-300">
+                        Do you want to proceed with the cancellation of this Obligation? If cancelled, the obligation amount will be set to zero.
+                    </p>
+
+                    <div class="mt-4">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <tbody>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Date:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_date"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Office Abbreviation:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="office_abbreviation"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Allotment Class:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="allotment_class"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR No:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_no"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Type:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_type"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Particulars:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="particulars"></td>
+                                </tr>
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Obligation Amount:</td>
+                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_amount"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <label for="dashboardCancellationRemarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Remarks:</label>
+                        <textarea id="dashboardCancellationRemarks" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" rows="3" placeholder="Enter remarks..."></textarea>
+                    </div>
+                </div>
+                <!-- Modal footer -->
+                <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                    <button type="button" onclick="proceedDashboardCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                        <i class="fas fa-window-close mr-2"></i>
+                        Proceed
+                    </button>
+                    <button type="button" onclick="closeDashboardCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+    </div>
+
     <style>
     /* Circular progress animation */
     .circular-progress-bar {
@@ -4271,6 +4384,68 @@
             series: quarterSeries 
         }).render();
     }
+
+    // Auto-reopen obligation and purchase order modals after creating PO from dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('reopen_obligation_id') && session('reopen_po_modal'))
+                const obligationId = {{ session('reopen_obligation_id') }};
+                
+                // Delay slightly to ensure page is fully loaded
+                setTimeout(function() {
+                    // Fetch and open the obligation modal first
+                    fetch(`/obligations/${obligationId}/obligation-modal`)
+                        .then(response => response.text())
+                        .then(html => {
+                            const existingModal = document.getElementById('editObligationModal');
+                            if (existingModal && existingModal.parentNode) {
+                                const temp = document.createElement('div');
+                                temp.innerHTML = html;
+                                const newModal = temp.querySelector('#editObligationModal');
+                                if (newModal) {
+                                    existingModal.replaceWith(newModal);
+                                    // Show the obligation modal
+                                    setTimeout(() => {
+                                        const modal = document.getElementById('editObligationModal');
+                                        if (modal) {
+                                            modal.offsetHeight;
+                                            modal.style.display = 'flex';
+                                            modal.setAttribute('aria-hidden', 'false');
+                                        }
+                                    }, 50);
+                                }
+                            }
+                        })
+                        .catch(err => console.error('Error loading obligation modal:', err));
+                    
+                    // Then fetch and open the purchase order modal
+                    setTimeout(function() {
+                        fetch(`/obligations/${obligationId}/purchase-order-modal`)
+                            .then(response => response.text())
+                            .then(html => {
+                                const existingForm = document.getElementById('CreatePurchaseOrderForm');
+                                if (existingForm && existingForm.parentNode) {
+                                    const temp = document.createElement('div');
+                                    temp.innerHTML = html;
+                                    const newForm = temp.querySelector('form');
+                                    if (newForm) {
+                                        existingForm.replaceWith(newForm);
+                                        // Show the PO modal
+                                        setTimeout(() => {
+                                            const modal = document.getElementById('createPOModal');
+                                            if (modal) {
+                                                modal.offsetHeight;
+                                                modal.style.display = 'flex';
+                                                modal.setAttribute('aria-hidden', 'false');
+                                            }
+                                        }, 50);
+                                    }
+                                }
+                            })
+                            .catch(err => console.error('Error loading PO modal:', err));
+                    }, 100);
+                }, 300);
+            @endif
+        });
     
     </script>
 
@@ -4378,184 +4553,8 @@
     
     <!-- Include Purchase Order Modal -->
     @include('obligations.modal.purchase_order', ['obligation' => (object)['id' => null]])
-    
-    <!-- Obligation History Modal -->
-    <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
-        <div class="flex flex-col max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
-            <!-- Modal header -->
-            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
-                    <div>
-                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-gray-100">
-                            Obligation Status/History
-                        </h3>
-                        <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
-                    </div>
-                </div>
-                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 hover:text-white hover:bg-gray-600 dark:hover:bg-gray-700 rounded-full p-2 transition-colors duration-200">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <!-- Modal body (scrollable) -->
-            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-6 space-y-3">
-                <div class="flex justify-center items-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
-                </div>
-            </div>
-            <!-- Modal footer -->
-            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                    <i class="fas fa-times mr-2"></i>
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cancellation Modal for Dashboard -->
-    <form id="dashboardCancelObligationForm" method="POST">
-        <div id="dashboardCancellationModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10004] flex items-center justify-center bg-black bg-opacity-50">
-            <div class="flex flex-col max-h-[90vh] w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
-                <!-- Modal header -->
-                <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900 dark:to-violet-900 border-b-2 border-purple-200 dark:border-purple-700 rounded-t-lg">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-ban text-purple-600 dark:text-purple-300 text-xl"></i>
-                        <h3 class="text-lg leading-6 font-semibold text-purple-900 dark:text-purple-100">
-                            Cancel Obligation
-                        </h3>
-                    </div>
-                    <button type="button" onclick="closeDashboardCancellationModal()" class="text-purple-600 dark:text-purple-300 hover:text-white hover:bg-purple-600 dark:hover:bg-purple-700 rounded-full p-2 transition-colors duration-200">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                <!-- Modal body (scrollable) -->
-                <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] p-6">
-                    <input type="hidden" id="dashboardHiddenObligationId" name="obligation_id" value="">
-                    <p class="text-sm font-bold text-gray-700 dark:text-gray-300">
-                        Do you want to proceed with the cancellation of this Obligation? If cancelled, the obligation amount will be set to zero.
-                    </p>
-
-                    <div class="mt-4">
-                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <tbody>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Date:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_date"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Office Abbreviation:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="office_abbreviation"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Allotment Class:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="allotment_class"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR No:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_no"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">OBR Type:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_type"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Particulars:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="particulars"></td>
-                                </tr>
-                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-4 py-2 font-semibold bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300">Obligation Amount:</td>
-                                    <td class="px-4 py-2 text-gray-700 dark:text-gray-400" data-field="obr_amount"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-4">
-                        <label for="dashboardCancellationRemarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Remarks:</label>
-                        <textarea id="dashboardCancellationRemarks" class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" rows="3" placeholder="Enter remarks..."></textarea>
-                    </div>
-                </div>
-                <!-- Modal footer -->
-                <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                    <button type="button" onclick="proceedDashboardCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                        <i class="fas fa-window-close mr-2"></i>
-                        Proceed
-                    </button>
-                    <button type="button" onclick="closeDashboardCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                        <i class="fas fa-times mr-2"></i>
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    </form>
-    </div>
 
     <!-- Obligation Details Modal -->
     @include('obligations.modal.obligation_details')
 
-    <script>
-        // Auto-reopen obligation and purchase order modals after creating PO from dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            @if(session('reopen_obligation_id') && session('reopen_po_modal'))
-                const obligationId = {{ session('reopen_obligation_id') }};
-                
-                // Delay slightly to ensure page is fully loaded
-                setTimeout(function() {
-                    // Fetch and open the obligation modal first
-                    fetch(`/obligations/${obligationId}/obligation-modal`)
-                        .then(response => response.text())
-                        .then(html => {
-                            const existingModal = document.getElementById('editObligationModal');
-                            if (existingModal && existingModal.parentNode) {
-                                const temp = document.createElement('div');
-                                temp.innerHTML = html;
-                                const newModal = temp.querySelector('#editObligationModal');
-                                if (newModal) {
-                                    existingModal.replaceWith(newModal);
-                                    // Show the obligation modal
-                                    setTimeout(() => {
-                                        const modal = document.getElementById('editObligationModal');
-                                        if (modal) {
-                                            modal.offsetHeight;
-                                            modal.style.display = 'flex';
-                                            modal.setAttribute('aria-hidden', 'false');
-                                        }
-                                    }, 50);
-                                }
-                            }
-                        })
-                        .catch(err => console.error('Error loading obligation modal:', err));
-                    
-                    // Then fetch and open the purchase order modal
-                    setTimeout(function() {
-                        fetch(`/obligations/${obligationId}/purchase-order-modal`)
-                            .then(response => response.text())
-                            .then(html => {
-                                const existingForm = document.getElementById('CreatePurchaseOrderForm');
-                                if (existingForm && existingForm.parentNode) {
-                                    const temp = document.createElement('div');
-                                    temp.innerHTML = html;
-                                    const newForm = temp.querySelector('form');
-                                    if (newForm) {
-                                        existingForm.replaceWith(newForm);
-                                        // Show the PO modal
-                                        setTimeout(() => {
-                                            const modal = document.getElementById('createPOModal');
-                                            if (modal) {
-                                                modal.offsetHeight;
-                                                modal.style.display = 'flex';
-                                                modal.setAttribute('aria-hidden', 'false');
-                                            }
-                                        }, 50);
-                                    }
-                                }
-                            })
-                            .catch(err => console.error('Error loading PO modal:', err));
-                    }, 100);
-                }, 300);
-            @endif
-        });
-    </script>
 </x-app-layout>

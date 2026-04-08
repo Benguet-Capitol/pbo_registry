@@ -39,4 +39,12 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(Obligation::class, 'obligation_id');
     }
+
+    /**
+     * Get files for this purchase order
+     */
+    public function files()
+    {
+        return PurchaseOrderFile::where('po_number', $this->po_number)->orderBy('created_at', 'desc');
+    }
 }

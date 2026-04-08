@@ -238,6 +238,7 @@
     @include('purchase_orders.modal.edit')
     @include('purchase_orders.modal.delete')
     @include('purchase_orders.modal.update_payment')
+    @include('purchase_orders.modal.purchase_order_files')
 
 <script>
 

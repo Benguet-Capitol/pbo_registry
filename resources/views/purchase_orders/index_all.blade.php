@@ -275,7 +275,7 @@
                                 @endif
                             </td>
                             <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->po_remarks ?? '-' }}</td>
-                            <td class="px-1 py-2 border-b border-gray-300 text-center">
+                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 text-center">
                                 @php
                                     $fileCount = \App\Models\PurchaseOrderFile::where('po_number', $purchaseOrder->po_number)->count();
                                 @endphp

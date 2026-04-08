@@ -1344,6 +1344,10 @@ function openCreateObligationAdjustmentModal(obligationId) {
     closeAllDropdowns();
     isSubmittingObligationAdjustment = false;
     
+    // Reset origin flags since we're opening from obligations page
+    window.isFromDashboard = false;
+    window.isFromAccounts = false;
+    
     // Get current query parameters from the URL
     const currentParams = new URLSearchParams(window.location.search);
     fetch(`/obligations/${obligationId}/obligation-adjustment-modal?${currentParams.toString()}`)

@@ -248,7 +248,14 @@
         // If obligationId is provided, fetch the modal HTML with pre-populated data
         if (obligationId) {
             // Called from dashboard/accounts - fetch the complete modal HTML
-            fetch(`/obligations/${obligationId}/obligation-adjustment-modal`)
+            // Determine the origin (dashboard or accounts) based on context
+            let fromParam = 'obligations';
+            if (window.isFromDashboard) {
+                fromParam = 'dashboard';
+            } else if (window.isFromAccounts) {
+                fromParam = 'accounts';
+            }
+            fetch(`/obligations/${obligationId}/obligation-adjustment-modal?from=${fromParam}`)
                 .then(response => response.text())
                 .then(html => {
                     // Find the existing form and replace it entirely with the new HTML

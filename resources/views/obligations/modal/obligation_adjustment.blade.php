@@ -20,6 +20,7 @@
 <!-- Adjust Obligations Modal -->
 <form id="createObligationAdjustmentForm" method="POST" action="{{ route('obligations.storeObligationAdjustment', ['obligation' => $obligation->id]) }}">
     @csrf
+    <input type="hidden" name="from" value="{{ $from ?? 'obligations' }}">
     <div id="createObligationAdjustmentModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
         <div class="flex flex-col max-h-[90vh] w-full max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
             <!-- Modal header -->

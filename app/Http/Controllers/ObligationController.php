@@ -1118,10 +1118,15 @@ class ObligationController extends Controller
             $account_code = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
             $class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
 
-            return redirect()->route('obligations.index', $request->only([
+            // Determine redirect based on origin
+            $from = $request->input('from');
+            $redirectRoute = ($from === 'dashboard' || $from === 'accounts') ? 'dashboard' : 'obligations.index';
+            $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $request->only([
                 'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1',
                 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
-            ]))->with('status', [
+            ]);
+
+            return redirect()->route($redirectRoute, $queryParams)->with('status', [
                 'type' => 'delete',
                 'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> has been cancelled successfully!"
             ]);
@@ -1135,10 +1140,15 @@ class ObligationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->route('obligations.index', $request->only([
+            // Determine redirect based on origin
+            $from = $request->input('from');
+            $redirectRoute = ($from === 'dashboard' || $from === 'accounts') ? 'dashboard' : 'obligations.index';
+            $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $request->only([
                 'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 
                 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
-            ]))->with('error', 'Failed to cancel obligation. Please try again.');
+            ]);
+
+            return redirect()->route($redirectRoute, $queryParams)->with('error', 'Failed to cancel obligation. Please try again.');
         }
     }
 
@@ -1429,10 +1439,14 @@ class ObligationController extends Controller
             return $amount;
         });
 
+        // Get the from parameter (dashboard or accounts)
+        $from = $request->query('from', 'obligations');
+
         return view('obligations.modal.obligation_adjustment', compact(
             'obligation',
             'obligationAmounts',
-            'isDisbursementComplete'
+            'isDisbursementComplete',
+            'from'
         ));
     }
 
@@ -1506,8 +1520,14 @@ class ObligationController extends Controller
         // Get the OBR number for the success message
         $obr = Obligation::find($validated['obligation_id']);
         $obrNo = $obr ? $obr->obr_no : '';
-        // Redirect back to the index page with a success message
-        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
+        
+        // Determine redirect based on origin
+        $from = $request->input('from', 'obligations');
+        $redirectRoute = ($from === 'dashboard' || $from === 'accounts') ? 'dashboard' : 'obligations.index';
+        $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']);
+        
+        // Redirect back to the appropriate page with a success message
+        return redirect()->route($redirectRoute, $queryParams)
             ->with('status', [
                 'type' => 'default',
                 'message' => "<strong>$adjustmentsSaved Obligation Adjustments</strong> for OBR No.: <strong>{$obrNo}</strong> has been created successfully. <strong>Details: Adjustment Date:</strong> {$validated['adjustment_date']} with <strong>Account Code(s):</strong> {$accountCodesMessage}"

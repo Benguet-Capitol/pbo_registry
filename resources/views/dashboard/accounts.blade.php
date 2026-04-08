@@ -2816,6 +2816,9 @@ if (typeof originalUpdateCardValues === 'function') {
         if (obligationIdInput) {
             obligationIdInput.value = obligation.id;
         }
+        // Set flag to indicate adjustment is from accounts
+        window.isFromAccounts = true;
+        window.isFromDashboard = false;
         // Open the create adjustment modal with obligation ID
         if (typeof openCreateObligationAdjustmentModal === 'function') {
             openCreateObligationAdjustmentModal(obligation.id);
@@ -3061,6 +3064,7 @@ if (typeof originalUpdateCardValues === 'function') {
         form.innerHTML = `
             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
             <input type="hidden" name="remarks" value="${remarks}">
+            <input type="hidden" name="from" value="accounts">
         `;
 
         form.submit(); // Submit the form (will follow Laravel's redirect)

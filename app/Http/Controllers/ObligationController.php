@@ -808,6 +808,8 @@ class ObligationController extends Controller
                 'edit_obr_type' => 'required|string|max:255',
                 'edit_particulars' => 'required|string',
                 'edit_remarks' => 'nullable|string',
+                'edit_obligation_amounts_id' => 'nullable|array',
+                'edit_obligation_amounts_id.*' => 'nullable|string',
                 'edit_account_code' => 'required|array',
                 'edit_account_code.*' => 'required|string|exists:appropriations,account_code',
                 'edit_amount_of_obligation' => 'required|array',
@@ -840,26 +842,63 @@ class ObligationController extends Controller
             $existingAmounts = ObligationAmount::where('obligation_id', $obligation->id)->get();
             $newAccountCodes = $validated['edit_account_code'];
             $newAmounts = $validated['edit_amount_of_obligation'];
+            $newObligationAmountIds = $request->input('edit_obligation_amounts_id', []);
             
-            // Create a map of new account codes with their amounts
-            $newDataMap = [];
-            foreach ($newAccountCodes as $index => $accountCode) {
-                $newDataMap[$accountCode] = $newAmounts[$index];
-            }
+            // Track which existing amounts are still being used
+            $processedIds = [];
             
             // Update or delete existing amounts
-            foreach ($existingAmounts as $existingAmount) {
-                if (isset($newDataMap[$existingAmount->account_code])) {
-                    // Account code still exists, update the amount if it changed
-                    if ($existingAmount->obr_amount != $newDataMap[$existingAmount->account_code]) {
+            foreach ($newObligationAmountIds as $index => $id) {
+                if (empty($id)) {
+                    // This is a new row (no ID), skip for now
+                    continue;
+                }
+                
+                $existingAmount = $existingAmounts->firstWhere('id', $id);
+                if (!$existingAmount) {
+                    continue;
+                }
+                
+                $newAccountCode = $newAccountCodes[$index] ?? null;
+                $newAmount = $newAmounts[$index] ?? null;
+                
+                if (!$newAccountCode || !isset($newAmount)) {
+                    continue;
+                }
+                
+                $processedIds[] = $id;
+                
+                // Check if account code has changed
+                if ($existingAmount->account_code !== $newAccountCode) {
+                    // Find the new appropriation
+                    $newAppropriation = Appropriation::where('account_code', $newAccountCode)
+                        ->where('office_allotment_class_id', $validated['edit_office_allotment_class_id'])
+                        ->first();
+                    
+                    if ($newAppropriation) {
+                        // Update the obligation amount record with the new appropriation
+                        // Related records (disbursements, purchase orders, adjustments) will automatically
+                        // have the correct appropriation through the obligation_amounts relationship
                         $existingAmount->update([
-                            'obr_amount' => $newDataMap[$existingAmount->account_code],
+                            'appropriation_id' => $newAppropriation->id,
+                            'account_code' => $newAccountCode,
+                            'obr_amount' => $newAmount,
                         ]);
                     }
-                    // Remove from map since we've processed it
-                    unset($newDataMap[$existingAmount->account_code]);
                 } else {
-                    // Account code no longer exists in the update, check if it has related records
+                    // Account code hasn't changed, just update the amount if it changed
+                    if ($existingAmount->obr_amount != $newAmount) {
+                        $existingAmount->update([
+                            'obr_amount' => $newAmount,
+                        ]);
+                    }
+                }
+            }
+            
+            // Delete amounts that are no longer in the form (if they have no related records)
+            foreach ($existingAmounts as $existingAmount) {
+                if (!in_array($existingAmount->id, $processedIds)) {
+                    // This amount was removed from the form
                     $hasRelatedRecords = Disbursement::where('obligation_amounts_id', $existingAmount->id)->exists() ||
                                        PurchaseOrder::where('obligation_amounts_id', $existingAmount->id)->exists() ||
                                        ObligationAdjustment::where('obligation_amounts_id', $existingAmount->id)->exists();
@@ -868,14 +907,25 @@ class ObligationController extends Controller
                         // Safe to delete if no related records
                         $existingAmount->delete();
                     }
-                    // If it has related records, keep it to maintain referential integrity
                 }
             }
             
-            // Create new obligation amounts for new account codes
-            foreach ($newDataMap as $accountCode => $amount) {
+            // Create new obligation amounts for rows with empty IDs (new rows)
+            foreach ($newObligationAmountIds as $index => $id) {
+                if (!empty($id)) {
+                    // This is an existing record, already processed
+                    continue;
+                }
+                
+                $newAccountCode = $newAccountCodes[$index] ?? null;
+                $newAmount = $newAmounts[$index] ?? null;
+                
+                if (!$newAccountCode || !isset($newAmount)) {
+                    continue;
+                }
+                
                 // Fetch the appropriation ID based on the account code and office_allotment_class_id
-                $appropriation = Appropriation::where('account_code', $accountCode)
+                $appropriation = Appropriation::where('account_code', $newAccountCode)
                     ->where('office_allotment_class_id', $validated['edit_office_allotment_class_id'])
                     ->first();
 
@@ -883,8 +933,8 @@ class ObligationController extends Controller
                     ObligationAmount::create([
                         'appropriation_id' => $appropriation->id,
                         'obligation_id' => $obligation->id,
-                        'account_code' => $accountCode,
-                        'obr_amount' => $amount,
+                        'account_code' => $newAccountCode,
+                        'obr_amount' => $newAmount,
                     ]);
                 }
             }

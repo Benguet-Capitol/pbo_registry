@@ -475,6 +475,7 @@
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <input type="hidden" name="edit_obligation_amounts_id[]" value="${amount.id || ''}" />
                     <td class="px-1 py-2">
                         <x-form.input name="edit_account_code[]" id="edit_account_code[]" placeholder="Account Code" value="${amount.account_code || ''}" data-original-account-code="${amount.account_code || ''}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
                         <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
@@ -614,16 +615,6 @@
             option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer';
             option.textContent = `${item.name}`;
             option.onclick = function() {
-                // Validate if changing office_allotment_class when related records exist
-                if (hasRelatedRecords && item.id !== originalObligationClassId) {
-                    const errorEl = document.getElementById('edit_OfficeAllotmentClassError');
-                    if (errorEl) {
-                        errorEl.textContent = 'Cannot change Office and Allotment Class because this obligation has related Purchase Orders, Obligation Adjustments, or Disbursements';
-                    }
-                    dropdown.classList.add('hidden');
-                    return; // Don't allow the change
-                }
-                
                 // Clear any previous error messages
                 const errorEl = document.getElementById('edit_OfficeAllotmentClassError');
                 if (errorEl) {
@@ -738,25 +729,7 @@
 
     // Filter account codes and display suggstions with description and program
     function filterEditAccountCodes(inputElement) {
-        // Check if trying to change appropriation when obligation has related records
-        const originalAccountCode = inputElement.getAttribute('data-original-account-code') || '';
-        if (hasRelatedRecords && originalAccountCode && inputElement.value !== originalAccountCode && inputElement.value !== '') {
-            // User is trying to change the account code
-            const row = inputElement.closest('tr');
-            if (row) {
-                let errorMsg = row.querySelector('.account-code-error');
-                if (!errorMsg) {
-                    errorMsg = document.createElement('div');
-                    errorMsg.className = 'account-code-error text-red-500 text-xs mt-1';
-                    inputElement.parentElement.appendChild(errorMsg);
-                }
-                errorMsg.textContent = 'Cannot change Account because this obligation has related Purchase Orders, Adjustments, or Disbursements';
-                inputElement.value = originalAccountCode;
-                return;
-            }
-        }
-        
-        // Clear error message if changing back to original or if no related records
+        // Clear error message
         const row = inputElement.closest('tr');
         if (row) {
             const errorMsg = row.querySelector('.account-code-error');
@@ -789,23 +762,6 @@
                 <span class="text-gray-600 dark:text-gray-400">${item.description || 'No Description'}</span><br/>
                 <span class="text-blue-600 dark:text-blue-400">${item.program || 'No Program'}</span>`;
             option.onclick = function() {
-                // Validate if trying to change appropriation when related records exist
-                const originalAccountCode = inputElement.getAttribute('data-original-account-code') || '';
-                if (hasRelatedRecords && originalAccountCode && item.account_code !== originalAccountCode) {
-                    const row = inputElement.closest('tr');
-                    if (row) {
-                        let errorMsg = row.querySelector('.account-code-error');
-                        if (!errorMsg) {
-                            errorMsg = document.createElement('div');
-                            errorMsg.className = 'account-code-error text-red-500 text-xs mt-1';
-                            inputElement.parentElement.appendChild(errorMsg);
-                        }
-                        errorMsg.textContent = 'Cannot change Appropriation because this obligation has related Purchase Orders, Adjustments, or Disbursements';
-                    }
-                    dropdown.classList.add('hidden');
-                    return; // Don't allow the change
-                }
-                
                 inputElement.value = item.account_code;
                 populateEditFields(inputElement, item);
                 calculateEditBalance(inputElement, item);
@@ -884,6 +840,7 @@
         const tableBody = document.querySelector('#edit_programs_table tbody');
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
+            <input type="hidden" name="edit_obligation_amounts_id[]" value="" />
             <td class="px-1 py-2">
                 <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
                 <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>

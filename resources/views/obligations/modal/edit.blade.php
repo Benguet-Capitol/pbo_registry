@@ -161,6 +161,7 @@
                                            @if(isset($obligation_amounts) && count($obligation_amounts) > 0)
                                                 @foreach($obligation_amounts as $amount)
                                                 <tr>
+                                                    <input type="hidden" name="edit_obligation_amounts_id[]" value="{{ $amount['id'] ?? '' }}" />
                                                     <td class="px-1 py-2">
                                                         <x-form.input
                                                             name="edit_account_code[]"
@@ -218,6 +219,7 @@
                                                 @endforeach
                                             @else
                                                 <tr>
+                                                    <input type="hidden" name="edit_obligation_amounts_id[]" value="" />
                                                     <td class="px-1 py-2">
                                                         <x-form.input name="edit_account_code[]" id="edit_account_code[]" placeholder="{{ __('Account Code') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterAccountCodes(this)" autocomplete="off" />
                                                         <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">

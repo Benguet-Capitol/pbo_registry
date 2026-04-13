@@ -456,6 +456,7 @@ class ObligationController extends Controller
             $balanceFromAllotment = $balance + $obrAmount;
 
             return [
+                'id' => $amount->id,
                 'account_code' => $amount->account_code,
                 'description' => $appropriation->description ?? '',
                 'programs' => $appropriation->programs ?? '',

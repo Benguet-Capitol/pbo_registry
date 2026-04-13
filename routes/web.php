@@ -97,6 +97,9 @@ Route::middleware('auth')->group(function () {
     Route::get('appropriations/allotment-class-info', [AppropriationController::class, 'getAllotmentClassInfo'])
         ->name('appropriations.getAllotmentClassInfo');
     
+    Route::get('appropriations/by-office-allotment-class', [AppropriationController::class, 'getByOfficeAllotmentClass'])
+        ->name('appropriations.getByOfficeAllotmentClass');
+    
     Route::get('appropriations/last-year', [AppropriationController::class, 'getLastYearappropriations'])
         ->name('appropriations.getLastYear');
     

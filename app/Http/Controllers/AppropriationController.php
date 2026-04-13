@@ -565,4 +565,58 @@ class AppropriationController extends Controller
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+
+    public function getByOfficeAllotmentClass(Request $request)
+    {
+        try {
+            $officeAllotmentClassId = $request->query('office_allotment_class_id');
+            
+            if (!$officeAllotmentClassId) {
+                return response()->json(['error' => 'office_allotment_class_id is required'], 400);
+            }
+            
+            $appropriations = Appropriation::where('office_allotment_class_id', $officeAllotmentClassId)
+                ->with('obligationAmounts', 'realignments', 'supplementals')
+                ->get()
+                ->map(function ($appropriation) {
+                    // Calculate total appropriation from quarters
+                    $totalAppropriation = ($appropriation->quarter1 ?? 0) + 
+                                        ($appropriation->quarter2 ?? 0) + 
+                                        ($appropriation->quarter3 ?? 0) + 
+                                        ($appropriation->quarter4 ?? 0);
+                    
+                    // Calculate total realignments
+                    $realignmentTotal = ($appropriation->realignments ?? collect())->sum(function ($r) {
+                        return $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0);
+                    });
+                    
+                    // Calculate total supplementals
+                    $supplementalTotal = ($appropriation->supplementals ?? collect())->sum(function ($s) {
+                        return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
+                    });
+                    
+                    // Calculate total obligation amount (actual obligations)
+                    $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
+                        return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+                    });
+                    
+                    // Calculate balance
+                    $balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+                    
+                    return [
+                        'id' => $appropriation->id,
+                        'account_code' => $appropriation->account_code,
+                        'description' => $appropriation->description,
+                        'program' => $appropriation->programs,
+                        'office_allotment_class_id' => $appropriation->office_allotment_class_id,
+                        'balance' => number_format($balance, 2)
+                    ];
+                });
+            
+            return response()->json(['data' => $appropriations]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching appropriations by office_allotment_class', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
 }

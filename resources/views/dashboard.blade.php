@@ -1886,7 +1886,7 @@
                                                 <col style="width: 120px;">
                                                 <col style="width: 100px;">
                                                 <col style="width: 100px;">
-                                                <col style="width: auto;">
+                                                <col style="width: 300px;">
                                                 <col style="width: 150px;">
                                                 <col style="width: 130px;">
                                                 <col style="width: 130px;">
@@ -2242,32 +2242,25 @@
                     });
                     
                     // Update the footer with new totals
-                    const tableContainer = content.querySelector('div.overflow-x-auto');
-                    if (tableContainer) {
-                        const table = tableContainer.querySelector('table');
-                        if (table) {
-                            const footer = table.querySelector('tfoot');
-                            if (footer) {
-                                const footerCells = footer.querySelectorAll('td');
-                                if (footerCells.length >= 5) {
-                                    // Update Total Records (first cell)
-                                    footerCells[0].textContent = `Total Records: ${visibleCount} ${visibleCount === 1 ? 'record' : 'records'}`;
-                                    
-                                    // Update Amount total (3rd cell, index 2)
-                                    if (!isNaN(totalAmount)) {
-                                        footerCells[2].textContent = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                    }
-                                    
-                                    // Update PO total (4th cell, index 3)
-                                    if (!isNaN(totalPurchaseOrder)) {
-                                        footerCells[3].textContent = totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
-                                    }
-                                    
-                                    // Update Disbursement total (5th cell, index 4)
-                                    if (footerCells.length >= 6 && !isNaN(totalDisbursement)) {
-                                        footerCells[4].textContent = totalDisbursement > 0 ? totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
-                                    }
-                                }
+                    const footerRow = content.querySelector('tfoot tr');
+                    if (footerRow) {
+                        const footerCells = footerRow.querySelectorAll('td');
+                        if (footerCells.length >= 4) {
+                            // FooterRow structure: [0: "Total:" with colspan=6, 1: Amount, 2: PO, 3: Disbursement]
+                            
+                            // Update Amount total (preserve the original td element with its classes)
+                            if (footerCells[1]) {
+                                footerCells[1].textContent = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            
+                            // Update PO total (preserve the original td element with its classes)
+                            if (footerCells[2]) {
+                                footerCells[2].textContent = totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                            }
+                            
+                            // Update Disbursement total (preserve the original td element with its classes)
+                            if (footerCells[3]) {
+                                footerCells[3].textContent = totalDisbursement > 0 ? totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
                             }
                         }
                     }

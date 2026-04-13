@@ -617,6 +617,8 @@
                     const obrTypeSelect = document.getElementById("edit_obr_type");
                     obrTypeSelect.value = 'Regular';
                 }
+                // Fetch new appropriations for the selected office_allotment_class
+                fetchEditAppropriations(item.id);
                 dropdown.classList.add('hidden');
                 
             };
@@ -624,6 +626,25 @@
         });
         dropdown.classList.remove('hidden');
     }
+
+    // Fetch appropriations for the selected office_allotment_class
+    function fetchEditAppropriations(officeAllotmentClassId) {
+        fetch(`/appropriations/by-office-allotment-class?office_allotment_class_id=${officeAllotmentClassId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.data) {
+                    // Update the editAppropriations array with new data
+                    window.editAppropriations = data.data;
+                    console.log('Updated editAppropriations:', window.editAppropriations);
+                } else {
+                    console.error('No data returned from appropriations endpoint');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching appropriations:', error);
+            });
+    }
+
     document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('editOfficeAllotmentClassDropdown');
         const input = document.getElementById('edit_office_allotment_class');
@@ -670,7 +691,7 @@
     // Call the function to set the initial value
     document.addEventListener('DOMContentLoaded', generateObrNumberEdit);
 
-    const editAppropriations = [
+    let editAppropriations = [
         @foreach($appropriations as $i => $appropriation) 
         {
             id: "{{ $appropriation->id }}",
@@ -682,6 +703,9 @@
         }@if(!$loop->last),@endif
         @endforeach
     ];
+    
+    // Make it globally accessible for updates
+    window.editAppropriations = editAppropriations;
 
     // Filter account codes and display suggstions with description and program
     function filterEditAccountCodes(inputElement) {
@@ -693,7 +717,7 @@
             dropdown.classList.add('hidden');
             return;
         }
-        const filteredCodes = editAppropriations.filter(item =>
+        const filteredCodes = window.editAppropriations.filter(item =>
             String(item.office_allotment_class_id) === String(officeAllotmentClassId) &&
             item.account_code.toLowerCase().includes(filter)
         );

@@ -2374,7 +2374,7 @@ if (typeof originalUpdateCardValues === 'function') {
                                     <col style="width: 120px;">
                                     <col style="width: 100px;">
                                     <col style="width: 100px;">
-                                    <col style="width: auto;">
+                                    <col style="width: 300px;">
                                     <col style="width: 150px;">
                                     <col style="width: 130px;">
                                     <col style="width: 130px;">
@@ -3925,19 +3925,16 @@ if (typeof originalFilterTable === 'function') {
                 visibleCount++;
                 
                 // Calculate totals for visible rows
-                if (cells.length >= 6) {
-                    // Dashboard: Amount in index 4, PO in index 5
-                    // Accounts: Amount in index 5, PO in index 6
-                    let amountIndex = 4;
-                    let poIndex = 5;
-                    
-                    if (source === 'accounts' && cells.length >= 7) {
-                        amountIndex = 5;
-                        poIndex = 6;
-                    }
+                if (cells.length >= 8) {
+                    // Column indices (same for both dashboard and accounts):
+                    // 0: expand icon, 1: OBR No, 2: Date, 3: OBR Type, 4: Payee, 5: Remarks
+                    // 6: Obligation Amount, 7: Purchase Order, 8: Disbursement
+                    const amountIndex = 6;
+                    const poIndex = 7;
+                    const disbursementIndex = 8;
                     
                     // Extract and clean amount values
-                    const amountText = (cells[amountIndex]?.textContent || '0').replace(/,/g, '').trim();
+                    const amountText = (cells[amountIndex]?.textContent || '0').replace(/,/g, '').replace(/Cancelled/g, '0').trim();
                     const amountValue = parseFloat(amountText);
                     if (!isNaN(amountValue)) {
                         totalAmount += amountValue;
@@ -3948,6 +3945,12 @@ if (typeof originalFilterTable === 'function') {
                     if (!isNaN(poValue)) {
                         totalPurchaseOrder += poValue;
                     }
+                    
+                    const disbursementText = (cells[disbursementIndex]?.textContent || '0').replace(/,/g, '').trim();
+                    const disbursementValue = parseFloat(disbursementText);
+                    if (!isNaN(disbursementValue)) {
+                        totalDisbursement += disbursementValue;
+                    }
                 }
             } else {
                 row.style.display = 'none';
@@ -3955,33 +3958,32 @@ if (typeof originalFilterTable === 'function') {
         });
         
         // Update the footer with new totals
-        const tableContainer = content.querySelector('div.overflow-x-auto');
-        if (tableContainer) {
-            const table = tableContainer.querySelector('table');
-            if (table) {
-                const footer = table.querySelector('tfoot');
-                if (footer) {
-                    const footerCells = footer.querySelectorAll('td');
-                    if (footerCells.length >= 4) {
-                        // Update Total Records (first cell)
-                        footerCells[0].textContent = `Total Records: ${visibleCount} ${visibleCount === 1 ? 'record' : 'records'}`;
-                        
-                        // Update Amount total (3rd cell, index 2)
-                        if (!isNaN(totalAmount)) {
-                            footerCells[2].textContent = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        }
-                        
-                        // Update PO total (4th cell, index 3)
-                        if (!isNaN(totalPurchaseOrder)) {
-                            footerCells[3].textContent = totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
-                        }
-                    }
+        const footerRow = content.querySelector('tfoot tr');
+        if (footerRow) {
+            const footerCells = footerRow.querySelectorAll('td');
+            if (footerCells.length >= 4) {
+                // FooterRow structure: [0: "Total:" with colspan=6, 1: Amount, 2: PO, 3: Disbursement]
+                
+                // Update Amount total (preserve the original td element with its classes)
+                if (footerCells[1]) {
+                    footerCells[1].textContent = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                
+                // Update PO total (preserve the original td element with its classes)
+                if (footerCells[2]) {
+                    footerCells[2].textContent = totalPurchaseOrder > 0 ? totalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                }
+                
+                // Update Disbursement total (preserve the original td element with its classes)
+                if (footerCells[3]) {
+                    footerCells[3].textContent = totalDisbursement > 0 ? totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
                 }
             }
         }
         
         // Show "no results" message if nothing found
         let noResultsDiv = content.querySelector('.no-search-results');
+        const tableContainer = content.querySelector('div.overflow-x-auto');
         
         if (visibleCount === 0 && searchValue && tableContainer) {
             if (!noResultsDiv) {

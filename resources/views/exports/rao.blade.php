@@ -60,10 +60,40 @@
             <th colspan="{{ $totalColumns }}"> </th>
         </tr>
         <tr>
-            <th style="padding: 4px; width: 70px; text-align: center; border: 1px solid #000;" rowspan="2">Date</th>
-            <th style="padding: 4px; width: 100px; text-align: center; border: 1px solid #000;" rowspan="2">OBR No.</th>
-            <th style="padding: 4px; width: 270px; text-align: center; border: 1px solid #000;" rowspan="2">Particulars</th>
-            <th style="padding: 4px; width: 100px; text-align: center; border: 1px solid #000;" rowspan="2">Total</th>
+            <th style="padding: 4px; width: 70px; text-align: center; border: 1px solid #000;" rowspan="3">Date</th>
+            <th style="padding: 4px; width: 100px; text-align: center; border: 1px solid #000;" rowspan="3">OBR No.</th>
+            <th style="padding: 4px; width: 270px; text-align: center; border: 1px solid #000;" rowspan="3">Particulars</th>
+            <th style="padding: 4px; width: 100px; text-align: center; border: 1px solid #000;" rowspan="3">Total</th>
+            @if($selectedOfficeAllotmentClass && isset($appropriations) && $appropriations->count() > 0)
+                @php
+                    // Group consecutive appropriations by program
+                    $programGroups = [];
+                    $currentProgram = null;
+                    $count = 0;
+                    
+                    foreach($appropriations as $appropriation) {
+                        $program = $appropriation->programs ?? '-';
+                        if ($program !== $currentProgram) {
+                            if ($count > 0) {
+                                $programGroups[] = ['program' => $currentProgram, 'colspan' => $count];
+                            }
+                            $currentProgram = $program;
+                            $count = 1;
+                        } else {
+                            $count++;
+                        }
+                    }
+                    // Add the last group
+                    if ($count > 0) {
+                        $programGroups[] = ['program' => $currentProgram, 'colspan' => $count];
+                    }
+                @endphp
+                @foreach($programGroups as $group)
+                <th style="padding: 4px; width: {{ $group['colspan'] * 100 }}px; text-align: center; border: 1px solid #000;" colspan="{{ $group['colspan'] }}">{{ $group['program'] }}</th>
+                @endforeach
+            @endif
+        </tr>
+        <tr>
             @if($selectedOfficeAllotmentClass && isset($appropriations) && $appropriations->count() > 0)
                 @foreach($appropriations as $appropriation)
                 <th style="padding: 4px; width: 100px; text-align: center; border: 1px solid #000;">{{ $appropriation->description }}</th>

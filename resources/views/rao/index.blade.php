@@ -168,13 +168,43 @@
                 <table id="dashboardTable" class="min-w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900 border border-gray-300 dark:border-gray-600">
                         <tr>
-                            <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">Date</th>
-                            <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">OBR No.</th>
-                            <th class="px-1 py-1 min-w-[300px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">Particulars</th>
-                            <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600" rowspan="2">Total</th>
+                            <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600" rowspan="3">Date</th>
+                            <th class="px-1 py-1 min-w-[100px] text-center border border-gray-300 dark:border-gray-600" rowspan="3">OBR No.</th>
+                            <th class="px-1 py-1 min-w-[300px] text-center border border-gray-300 dark:border-gray-600" rowspan="3">Particulars</th>
+                            <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600" rowspan="3">Total</th>
+                            @if(request('office_allotment_class_filter') && isset($appropriations) && $appropriations->count() > 0)
+                                @php
+                                    // Group consecutive appropriations by program
+                                    $programGroups = [];
+                                    $currentProgram = null;
+                                    $count = 0;
+                                    
+                                    foreach($appropriations as $appropriation) {
+                                        $program = $appropriation->programs ?? '-';
+                                        if ($program !== $currentProgram) {
+                                            if ($count > 0) {
+                                                $programGroups[] = ['program' => $currentProgram, 'colspan' => $count];
+                                            }
+                                            $currentProgram = $program;
+                                            $count = 1;
+                                        } else {
+                                            $count++;
+                                        }
+                                    }
+                                    // Add the last group
+                                    if ($count > 0) {
+                                        $programGroups[] = ['program' => $currentProgram, 'colspan' => $count];
+                                    }
+                                @endphp
+                                @foreach($programGroups as $group)
+                                <th class="px-1 py-1 text-center border border-gray-300 dark:border-gray-600" colspan="{{ $group['colspan'] }}">{{ $group['program'] }}</th>
+                                @endforeach
+                            @endif
+                        </tr>
+                        <tr>
                             @if(request('office_allotment_class_filter') && isset($appropriations) && $appropriations->count() > 0)
                                 @foreach($appropriations as $appropriation)
-                                <th class="px-1 py-1 min-w-[150px] text-center border border-gray-300 dark:border-gray-600">{{ $appropriation->description }}</th>
+                                <th class="px-1 py-1 text-center border border-gray-300 dark:border-gray-600">{{ $appropriation->description }}</th>
                                 @endforeach
                             @endif
                         </tr>

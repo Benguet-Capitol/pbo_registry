@@ -14,10 +14,11 @@ use App\Models\Obligation;
 use App\Models\ObligationAdjustment;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Traits\LogsActivity;
+use App\Traits\SortsAppropriations;
 
 class RAOController extends Controller
 {
-    use LogsActivity;
+    use LogsActivity, SortsAppropriations;
     public function index(Request $request)
     {
         $selectedYear = request('year1', date('Y'));
@@ -78,9 +79,10 @@ class RAOController extends Controller
         
         if ($selectedOfficeAllotmentClass) {
             $appropriations = Appropriation::where('office_allotment_class_id', $selectedOfficeAllotmentClass)
-                ->orderBy('account_code')
-                ->orderBy('description')
                 ->get();
+            
+            // Apply custom sorting logic: accounts without programs first, then by program alphabetically, then by account code
+            $appropriations = $this->sortAppropriations($appropriations);
 
             // Calculate all appropriation-related data
             $totalAppropriations = $appropriations->sum('appropriation');

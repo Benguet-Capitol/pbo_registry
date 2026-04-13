@@ -2420,6 +2420,11 @@ if (typeof originalUpdateCardValues === 'function') {
                                 showAccountObligationContextMenu(e, this, data.data[this.dataset.obligationIndex]);
                             });
                         });
+                        
+                        // Apply any existing date range filters and search filters to the newly loaded data
+                        const searchInput = document.getElementById('accountObligationsSearchInput');
+                        const searchValue = searchInput ? searchInput.value : '';
+                        filterObligationsTable(searchValue, 'accounts');
                     }
                 } else if (data.success && content) {
                     content.innerHTML = '<div class="text-center py-8 text-gray-500 italic dark:text-gray-400">No Obligations found for this Account.</div>';
@@ -2440,10 +2445,18 @@ if (typeof originalUpdateCardValues === 'function') {
         const modal = document.getElementById('accountObligationsModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
-        // Clear search input
+        // Clear search input and date filters
         const searchInput = document.getElementById('accountObligationsSearchInput');
         if (searchInput) {
             searchInput.value = '';
+        }
+        const dateFrom = document.getElementById('accountObligationsDateFrom');
+        const dateTo = document.getElementById('accountObligationsDateTo');
+        if (dateFrom) {
+            dateFrom.value = '';
+        }
+        if (dateTo) {
+            dateTo.value = '';
         }
     }
 

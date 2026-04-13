@@ -476,7 +476,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="px-1 py-2">
-                        <x-form.input name="edit_account_code[]" id="edit_account_code[]" placeholder="Account Code" value="${amount.account_code || ''}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
+                        <x-form.input name="edit_account_code[]" id="edit_account_code[]" placeholder="Account Code" value="${amount.account_code || ''}" data-original-account-code="${amount.account_code || ''}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
                         <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
                     </td>
                     <td class="px-1 py-2">
@@ -738,6 +738,33 @@
 
     // Filter account codes and display suggstions with description and program
     function filterEditAccountCodes(inputElement) {
+        // Check if trying to change appropriation when obligation has related records
+        const originalAccountCode = inputElement.getAttribute('data-original-account-code') || '';
+        if (hasRelatedRecords && originalAccountCode && inputElement.value !== originalAccountCode && inputElement.value !== '') {
+            // User is trying to change the account code
+            const row = inputElement.closest('tr');
+            if (row) {
+                let errorMsg = row.querySelector('.account-code-error');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('div');
+                    errorMsg.className = 'account-code-error text-red-500 text-xs mt-1';
+                    inputElement.parentElement.appendChild(errorMsg);
+                }
+                errorMsg.textContent = 'Cannot change Account because this obligation has related Purchase Orders, Adjustments, or Disbursements';
+                inputElement.value = originalAccountCode;
+                return;
+            }
+        }
+        
+        // Clear error message if changing back to original or if no related records
+        const row = inputElement.closest('tr');
+        if (row) {
+            const errorMsg = row.querySelector('.account-code-error');
+            if (errorMsg) {
+                errorMsg.textContent = '';
+            }
+        }
+        
         const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id').value;
         const dropdown = inputElement.nextElementSibling; // Assuming the dropdown is the next sibling
         const filter = inputElement.value.toLowerCase();
@@ -762,6 +789,23 @@
                 <span class="text-gray-600 dark:text-gray-400">${item.description || 'No Description'}</span><br/>
                 <span class="text-blue-600 dark:text-blue-400">${item.program || 'No Program'}</span>`;
             option.onclick = function() {
+                // Validate if trying to change appropriation when related records exist
+                const originalAccountCode = inputElement.getAttribute('data-original-account-code') || '';
+                if (hasRelatedRecords && originalAccountCode && item.account_code !== originalAccountCode) {
+                    const row = inputElement.closest('tr');
+                    if (row) {
+                        let errorMsg = row.querySelector('.account-code-error');
+                        if (!errorMsg) {
+                            errorMsg = document.createElement('div');
+                            errorMsg.className = 'account-code-error text-red-500 text-xs mt-1';
+                            inputElement.parentElement.appendChild(errorMsg);
+                        }
+                        errorMsg.textContent = 'Cannot change Appropriation because this obligation has related Purchase Orders, Adjustments, or Disbursements';
+                    }
+                    dropdown.classList.add('hidden');
+                    return; // Don't allow the change
+                }
+                
                 inputElement.value = item.account_code;
                 populateEditFields(inputElement, item);
                 calculateEditBalance(inputElement, item);

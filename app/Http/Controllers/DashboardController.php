@@ -652,7 +652,7 @@ class DashboardController extends Controller
         $officeAllotmentClasses = OfficeAllotmentClass::with([
             'offices',
             'allotmentClass',
-            'appropriations' => function ($query) use ($search) {
+            'appropriations' => function ($query) use ($search, $fromDate, $toDate) {
                 if (!empty($search)) {
                     $query->where(function ($q) use ($search) {
                         $q->where('programs', 'like', "%{$search}%")
@@ -661,6 +661,19 @@ class DashboardController extends Controller
                             ->orWhere('fpp_code', 'like', "%{$search}%");
                     });
                 }
+                // Load nested obligation amounts with date filtering
+                $query->with(['obligationAmounts' => function ($q) use ($fromDate, $toDate) {
+                    if ($fromDate) {
+                        $q->whereHas('obligation', function ($subQ) use ($fromDate) {
+                            $subQ->where('obr_date', '>=', $fromDate);
+                        });
+                    }
+                    if ($toDate) {
+                        $q->whereHas('obligation', function ($subQ) use ($toDate) {
+                            $subQ->where('obr_date', '<=', $toDate);
+                        });
+                    }
+                }]);
             },
             'supplementals' => function ($query) use ($fromDate, $toDate) {
                 // Filter supplementals by supplemental_date

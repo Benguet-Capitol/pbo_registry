@@ -3889,6 +3889,7 @@ if (typeof originalFilterTable === 'function') {
         let visibleCount = 0;
         let totalAmount = 0;
         let totalPurchaseOrder = 0;
+        let totalDisbursement = 0;
         
         rows.forEach(row => {
             const rowText = row.textContent.toLowerCase();
@@ -3981,6 +3982,14 @@ if (typeof originalFilterTable === 'function') {
             }
         }
         
+        // Update header Total Records count
+        const headerCountElement = source === 'dashboard' ? 
+            document.getElementById('obligationsTotalRecordsCount') : 
+            document.getElementById('accountObligationsTotalRecordsCount');
+        if (headerCountElement) {
+            headerCountElement.textContent = visibleCount;
+        }
+
         // Show "no results" message if nothing found
         let noResultsDiv = content.querySelector('.no-search-results');
         const tableContainer = content.querySelector('div.overflow-x-auto');

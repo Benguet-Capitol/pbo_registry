@@ -321,6 +321,10 @@
 
 <script>
     //Open Edit Modal
+    // Store original obligation info for validation
+    let originalObligationClassId = null;
+    let hasRelatedRecords = false;
+
     function openEditObligationsModal(obligation) {
         if (typeof closeAllDropdowns === 'function') {
             closeAllDropdowns();
@@ -328,6 +332,12 @@
 
         document.getElementById('editObligationsForm').action = `/obligations/${obligation.id}`;
         console.log('Loaded obligation:', obligation);
+        
+        // Check if obligation has related records
+        hasRelatedRecords = (obligation.purchase_orders && obligation.purchase_orders.length > 0) ||
+                           (obligation.obligation_adjustments && obligation.obligation_adjustments.length > 0) ||
+                           (obligation.disbursements && obligation.disbursements.length > 0);
+        console.log('Has related records:', hasRelatedRecords);
         
         // Reset from_dashboard and from_accounts first
         const fromDashboardField = document.querySelector('#editObligationsForm input[name="from_dashboard"]');
@@ -397,6 +407,9 @@
         if (mainOfficeAllotmentClassIdField) {
             mainOfficeAllotmentClassIdField.value = officeAllotmentClassId;
         }
+        
+        // Store original office_allotment_class_id for validation
+        originalObligationClassId = officeAllotmentClassId;
 
         // Fields to populate
         const fields = {
@@ -601,6 +614,22 @@
             option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer';
             option.textContent = `${item.name}`;
             option.onclick = function() {
+                // Validate if changing office_allotment_class when related records exist
+                if (hasRelatedRecords && item.id !== originalObligationClassId) {
+                    const errorEl = document.getElementById('edit_OfficeAllotmentClassError');
+                    if (errorEl) {
+                        errorEl.textContent = 'Cannot change Office and Allotment Class because this obligation has related Purchase Orders, Obligation Adjustments, or Disbursements';
+                    }
+                    dropdown.classList.add('hidden');
+                    return; // Don't allow the change
+                }
+                
+                // Clear any previous error messages
+                const errorEl = document.getElementById('edit_OfficeAllotmentClassError');
+                if (errorEl) {
+                    errorEl.textContent = '';
+                }
+                
                 input.value = `${item.name}`;
                 document.getElementById('edit_office_allotment_class_id').value = item.id; // Set the hidden input value
                 // Reset all account code fields when OfficeAllotmentClass is selected

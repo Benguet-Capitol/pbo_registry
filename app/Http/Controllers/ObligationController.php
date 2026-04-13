@@ -1424,11 +1424,6 @@ class ObligationController extends Controller
             'disbursements',
         ])->findOrFail($obligation_id);
 
-        // Check if total disbursements equal the adjusted obligation amount
-        $totalAdjustedAmount = $obligation->getTotalAmount();
-        $totalDisbursementAmount = $obligation->disbursements()->sum('disbursement_amount');
-        $isDisbursementComplete = ($totalDisbursementAmount >= $totalAdjustedAmount && $totalAdjustedAmount > 0);
-
         // Prepare obligationAmounts with adjustedObrAmount
         $obligationAmounts = $obligation->obligationAmounts->map(function ($amount) {
             $adjustedObrAmount = $amount->obr_amount;
@@ -1445,7 +1440,6 @@ class ObligationController extends Controller
         return view('obligations.modal.obligation_adjustment', compact(
             'obligation',
             'obligationAmounts',
-            'isDisbursementComplete',
             'from'
         ));
     }

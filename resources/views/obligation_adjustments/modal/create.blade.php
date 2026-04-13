@@ -16,25 +16,7 @@
             <!-- Modal body -->
             <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 200px);">
 
-                    @if(isset($isDisbursementComplete) && $isDisbursementComplete)
-                    <div class="mb-4 p-4 bg-red-50 dark:bg-red-900 border-l-4 border-red-500 rounded">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-lg mt-0.5"></i>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
-                                    {{ __('Cannot Adjust Obligation') }}
-                                </h3>
-                                <p class="mt-2 text-sm text-red-700 dark:text-red-300">
-                                    {{ __('This obligation has been fully disbursed. No additional adjustments can be made on obligations that have been completely paid.') }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    <div class="grid gap-3" @if(isset($isDisbursementComplete) && $isDisbursementComplete) style="pointer-events: none; opacity: 0.5;" @endif>
+                    <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
@@ -220,7 +202,7 @@
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="try { if(!window.isSubmittingCreateObligationAdjustment) validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" @if(isset($isDisbursementComplete) && $isDisbursementComplete) disabled @endif class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 @if(isset($isDisbursementComplete) && $isDisbursementComplete) opacity-50 cursor-not-allowed !hover:bg-transparent @endif">
+                    <button type="button" onclick="try { if(!window.isSubmittingCreateObligationAdjustment) validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>

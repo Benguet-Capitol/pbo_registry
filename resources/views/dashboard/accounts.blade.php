@@ -3465,6 +3465,13 @@ if (typeof originalUpdateCardValues === 'function') {
             searchInput.addEventListener('input', function() {
                 filterTable(this.value);
             });
+            
+            // Prevent form submission when Enter is pressed in searchInput
+            searchInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                }
+            });
         }
     });
 

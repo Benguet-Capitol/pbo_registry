@@ -37,7 +37,8 @@ class AccountsSummaryController extends Controller
         'all' => 'All Funds',
         'General Fund' => 'General Fund',
         'Benguet General Hospital Economic Enterprise' => 'Benguet General Hospital Economic Enterprise',
-        'Special Education Fund' => 'Special Education Fund'
+        'Special Education Fund' => 'Special Education Fund',
+        'Special Health Fund' => 'Special Health Fund'
     ];
 
     // Get current quarter based on as_of_date

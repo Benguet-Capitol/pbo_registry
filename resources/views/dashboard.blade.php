@@ -1076,17 +1076,17 @@
                         type="date" 
                         id="obligationsDateFrom" 
                         class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
-                        onchange="filterObligationsTable(document.getElementById('obligationsSearchInput').value, 'dashboard')"
+                        onchange="refreshObligationsModal()"
                     >
                     <span class="text-gray-600 dark:text-gray-400 text-xs">to</span>
                     <input 
                         type="date" 
                         id="obligationsDateTo" 
                         class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
-                        onchange="filterObligationsTable(document.getElementById('obligationsSearchInput').value, 'dashboard')"
+                        onchange="refreshObligationsModal()"
                     >
                     <button 
-                        onclick="document.getElementById('obligationsDateFrom').value = ''; document.getElementById('obligationsDateTo').value = ''; filterObligationsTable(document.getElementById('obligationsSearchInput').value, 'dashboard')"
+                        onclick="document.getElementById('obligationsDateFrom').value = ''; document.getElementById('obligationsDateTo').value = ''; refreshObligationsModal()"
                         class="px-2 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
                         title="Clear date range"
                     >
@@ -1655,6 +1655,16 @@
                 }
 
                 /**
+                 * Refresh obligations modal with updated data (used when date filters change)
+                 */
+                function refreshObligationsModal() {
+                    const modal = document.getElementById('obligationsModal');
+                    if (modal && modal.style.display !== 'none') {
+                        showObligationsModal();
+                    }
+                }
+
+                /**
                  * Show obligations modal and fetch data
                  */
                 function showObligationsModal(event) {
@@ -1703,8 +1713,19 @@
                         loadingElement.style.display = 'flex';
                     }
 
+                    // Build API URL with date parameters
+                    let apiUrl = `{{ route('obligations.api.byOfficeAllotmentClass', ':classId') }}`.replace(':classId', classId);
+                    const dateFrom = document.getElementById('obligationsDateFrom')?.value;
+                    const dateTo = document.getElementById('obligationsDateTo')?.value;
+                    const params = new URLSearchParams();
+                    if (dateFrom) params.append('from_date', dateFrom);
+                    if (dateTo) params.append('to_date', dateTo);
+                    if (params.toString()) {
+                        apiUrl += '?' + params.toString();
+                    }
+
                     // Fetch obligations
-                    fetch(`{{ route('obligations.api.byOfficeAllotmentClass', ':classId') }}`.replace(':classId', classId))
+                    fetch(apiUrl)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`);

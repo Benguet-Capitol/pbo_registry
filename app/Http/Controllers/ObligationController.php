@@ -1768,10 +1768,15 @@ class ObligationController extends Controller
 
     /**
      * Get obligations by office allotment class ID (API endpoint)
+     * Supports date filtering for adjustments via from_date and to_date query parameters
      */
-    public function getByOfficeAllotmentClass($classId): JsonResponse
+    public function getByOfficeAllotmentClass(Request $request, $classId): JsonResponse
     {
         try {
+            // Get date range parameters
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
+            
             // Fetch office allotment class with relationships
             $officeAllotmentClass = OfficeAllotmentClass::with([
                 'offices',
@@ -1792,12 +1797,23 @@ class ObligationController extends Controller
                 ->get();
 
             // Transform obligations data
-            $obligationsData = $obligations->map(function ($obligation) {
+            $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate) {
                 // Calculate total amount from obligation_amounts
                 $obligationAmountsTotal = $obligation->obligationAmounts->sum('obr_amount') ?? 0;
                 
-                // Calculate total adjustments from obligation_adjustments
-                $adjustmentsTotal = $obligation->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                // Calculate total adjustments from obligation_adjustments with date filtering
+                $adjustmentsQuery = $obligation->obligationAdjustments;
+                if ($fromDate) {
+                    $adjustmentsQuery = $adjustmentsQuery->filter(function($adj) use ($fromDate) {
+                        return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') >= $fromDate;
+                    });
+                }
+                if ($toDate) {
+                    $adjustmentsQuery = $adjustmentsQuery->filter(function($adj) use ($toDate) {
+                        return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') <= $toDate;
+                    });
+                }
+                $adjustmentsTotal = $adjustmentsQuery->sum('adjustment_amount') ?? 0;
                 
                 // Total amount is obligation amounts + adjustments
                 $totalAmount = $obligationAmountsTotal + $adjustmentsTotal;
@@ -1813,9 +1829,20 @@ class ObligationController extends Controller
                 }
                 
                 // Get appropriations from obligation_amounts with related adjustments and purchase orders
-                $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) {
-                    // Get adjustment amount for this obligation_amount
-                    $adjustmentAmount = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) use ($fromDate, $toDate) {
+                    // Get adjustment amount for this obligation_amount with date filtering
+                    $adjQuery = $obrAmount->obligationAdjustments;
+                    if ($fromDate) {
+                        $adjQuery = $adjQuery->filter(function($adj) use ($fromDate) {
+                            return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') >= $fromDate;
+                        });
+                    }
+                    if ($toDate) {
+                        $adjQuery = $adjQuery->filter(function($adj) use ($toDate) {
+                            return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') <= $toDate;
+                        });
+                    }
+                    $adjustmentAmount = $adjQuery->sum('adjustment_amount') ?? 0;
                     $originalAmount = $obrAmount->obr_amount ?? 0;
                     $adjustedAmount = $originalAmount + $adjustmentAmount;
                     
@@ -1874,10 +1901,15 @@ class ObligationController extends Controller
 
     /**
      * Get obligations by appropriation ID (API endpoint)
+     * Supports date filtering for adjustments via from_date and to_date query parameters
      */
-    public function getByAppropriation($appropriationId): JsonResponse
+    public function getByAppropriation(Request $request, $appropriationId): JsonResponse
     {
         try {
+            // Get date range parameters
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
+            
             $appropriation = Appropriation::with('officeAllotmentClass.offices', 'officeAllotmentClass.allotmentClass')
                 ->findOrFail($appropriationId);
 
@@ -1893,12 +1925,23 @@ class ObligationController extends Controller
             ])->orderBy('obr_date', 'asc')->get();
 
             // Transform obligations data
-            $obligationsData = $obligations->map(function ($obligation) {
+            $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate) {
                 // Calculate total amount from obligation_amounts
                 $obligationAmountsTotal = $obligation->obligationAmounts->sum('obr_amount') ?? 0;
                 
-                // Calculate total adjustments from obligation_adjustments
-                $adjustmentsTotal = $obligation->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                // Calculate total adjustments from obligation_adjustments with date filtering
+                $adjustmentsQuery = $obligation->obligationAdjustments;
+                if ($fromDate) {
+                    $adjustmentsQuery = $adjustmentsQuery->filter(function($adj) use ($fromDate) {
+                        return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') >= $fromDate;
+                    });
+                }
+                if ($toDate) {
+                    $adjustmentsQuery = $adjustmentsQuery->filter(function($adj) use ($toDate) {
+                        return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') <= $toDate;
+                    });
+                }
+                $adjustmentsTotal = $adjustmentsQuery->sum('adjustment_amount') ?? 0;
                 
                 // Total amount is obligation amounts + adjustments
                 $totalAmount = $obligationAmountsTotal + $adjustmentsTotal;
@@ -1915,9 +1958,20 @@ class ObligationController extends Controller
                 $disbursement = $disbursementAmount > 0 ? number_format($disbursementAmount, 2) : '-';
                 
                 // Get appropriations from obligation_amounts with related adjustments and purchase orders
-                $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) {
-                    // Get adjustment amount for this obligation_amount
-                    $adjustmentAmount = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) use ($fromDate, $toDate) {
+                    // Get adjustment amount for this obligation_amount with date filtering
+                    $adjQuery = $obrAmount->obligationAdjustments;
+                    if ($fromDate) {
+                        $adjQuery = $adjQuery->filter(function($adj) use ($fromDate) {
+                            return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') >= $fromDate;
+                        });
+                    }
+                    if ($toDate) {
+                        $adjQuery = $adjQuery->filter(function($adj) use ($toDate) {
+                            return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') <= $toDate;
+                        });
+                    }
+                    $adjustmentAmount = $adjQuery->sum('adjustment_amount') ?? 0;
                     $originalAmount = $obrAmount->obr_amount ?? 0;
                     $adjustedAmount = $originalAmount + $adjustmentAmount;
                     

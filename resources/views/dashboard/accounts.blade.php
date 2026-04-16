@@ -929,17 +929,17 @@
                         type="date" 
                         id="accountObligationsDateFrom" 
                         class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
-                        onchange="filterObligationsTable(document.getElementById('accountObligationsSearchInput').value, 'accounts')"
+                        onchange="refreshAccountObligationsModal()"
                     >
                     <span class="text-gray-600 dark:text-gray-400 text-xs">to</span>
                     <input 
                         type="date" 
                         id="accountObligationsDateTo" 
                         class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
-                        onchange="filterObligationsTable(document.getElementById('accountObligationsSearchInput').value, 'accounts')"
+                        onchange="refreshAccountObligationsModal()"
                     >
                     <button 
-                        onclick="document.getElementById('accountObligationsDateFrom').value = ''; document.getElementById('accountObligationsDateTo').value = ''; filterObligationsTable(document.getElementById('accountObligationsSearchInput').value, 'accounts')"
+                        onclick="document.getElementById('accountObligationsDateFrom').value = ''; document.getElementById('accountObligationsDateTo').value = ''; refreshAccountObligationsModal()"
                         class="px-2 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
                         title="Clear date range"
                     >
@@ -2185,6 +2185,16 @@ if (typeof originalUpdateCardValues === 'function') {
         }
     }
 
+    /**
+     * Refresh account obligations modal with updated data (used when date filters change)
+     */
+    function refreshAccountObligationsModal() {
+        const modal = document.getElementById('accountObligationsModal');
+        if (modal && modal.style.display !== 'none') {
+            showAccountObligationsModal();
+        }
+    }
+
     function showAccountObligationsModal() {
         if (!currentAccountAppropriation || !currentAccountAppropriation.appropriationId) {
             alert('Could not retrieve appropriation information');
@@ -2204,8 +2214,19 @@ if (typeof originalUpdateCardValues === 'function') {
         headerInfo.textContent = ' | ' + (currentAccountAppropriation.accountCode || 'N/A') + ' - ' + (currentAccountAppropriation.description || 'N/A');
         if (loading) loading.style.display = 'flex';
 
+        // Build API URL with date parameters
+        let apiUrl = `/api/obligations/by-appropriation/${currentAccountAppropriation.appropriationId}`;
+        const dateFrom = document.getElementById('accountObligationsDateFrom')?.value;
+        const dateTo = document.getElementById('accountObligationsDateTo')?.value;
+        const params = new URLSearchParams();
+        if (dateFrom) params.append('from_date', dateFrom);
+        if (dateTo) params.append('to_date', dateTo);
+        if (params.toString()) {
+            apiUrl += '?' + params.toString();
+        }
+
         // Fetch obligations for this appropriation
-        fetch(`/api/obligations/by-appropriation/${currentAccountAppropriation.appropriationId}`)
+        fetch(apiUrl)
             .then(response => response.json())
             .then(data => {
                 if (loading) loading.style.display = 'none';

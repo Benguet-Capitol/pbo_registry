@@ -1925,12 +1925,21 @@ class ObligationController extends Controller
             ])->orderBy('obr_date', 'asc')->get();
 
             // Transform obligations data
-            $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate) {
-                // Calculate total amount from obligation_amounts
-                $obligationAmountsTotal = $obligation->obligationAmounts->sum('obr_amount') ?? 0;
+            $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate, $appropriationId) {
+                // Calculate total amount from obligation_amounts for the SELECTED appropriation only
+                $obligationAmountsTotal = $obligation->obligationAmounts
+                    ->where('appropriation_id', $appropriationId)
+                    ->sum('obr_amount') ?? 0;
                 
                 // Calculate total adjustments from obligation_adjustments with date filtering
-                $adjustmentsQuery = $obligation->obligationAdjustments;
+                // Only for the selected appropriation
+                $adjustmentsForThisAppropriation = $obligation->obligationAdjustments->filter(function($adj) use ($appropriationId, $obligation) {
+                    // Check if this adjustment belongs to the selected appropriation
+                    $obligationAmount = $obligation->obligationAmounts->firstWhere('id', $adj->obligation_amounts_id);
+                    return $obligationAmount && $obligationAmount->appropriation_id == $appropriationId;
+                });
+                
+                $adjustmentsQuery = $adjustmentsForThisAppropriation;
                 if ($fromDate) {
                     $adjustmentsQuery = $adjustmentsQuery->filter(function($adj) use ($fromDate) {
                         return \Carbon\Carbon::parse($adj->adjustment_date)->format('Y-m-d') >= $fromDate;
@@ -1943,7 +1952,7 @@ class ObligationController extends Controller
                 }
                 $adjustmentsTotal = $adjustmentsQuery->sum('adjustment_amount') ?? 0;
                 
-                // Total amount is obligation amounts + adjustments
+                // Total amount is obligation amounts + adjustments for the selected appropriation
                 $totalAmount = $obligationAmountsTotal + $adjustmentsTotal;
                 
                 // Get total PO amount if obr_type is "Purchase Request"
@@ -1957,7 +1966,7 @@ class ObligationController extends Controller
                 $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
                 $disbursement = $disbursementAmount > 0 ? number_format($disbursementAmount, 2) : '-';
                 
-                // Get appropriations from obligation_amounts with related adjustments and purchase orders
+                // Get ALL appropriations from obligation_amounts in detail row (not filtered)
                 $appropriations = $obligation->obligationAmounts->map(function ($obrAmount) use ($fromDate, $toDate) {
                     // Get adjustment amount for this obligation_amount with date filtering
                     $adjQuery = $obrAmount->obligationAdjustments;

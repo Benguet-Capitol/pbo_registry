@@ -144,7 +144,7 @@
                                                 <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
                                                     {{ __('Description') }}
                                                 </th>
-                                                <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
+                                                <th scope="col" id="editProgramColumnHeader" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
                                                     {{ __('Program') }}
                                                 </th>
                                                 <th scope="col" class="px-2 py-2 text-center text-xs font-medium text-gray-900 dark:text-gray-200">
@@ -175,19 +175,27 @@
                                                             <!-- Suggestions will appear here -->
                                                         </div>
                                                     </td>
-                                                    <td class="px-1 py-2">
+                                                    <td class="px-1 py-2 relative">
                                                         <x-form.textarea
                                                             name="edit_description[]"
                                                             placeholder="{{ __('Description') }}"
                                                             class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
+                                                            oninput="filterEditDescriptions(this)"
                                                             autocomplete="off">{{ $amount['description'] ?? '' }}</x-form.textarea>
+                                                        <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                                            <!-- Filtered descriptions will appear here -->
+                                                        </div>
                                                     </td>
-                                                    <td class="px-1 py-2">
+                                                    <td class="px-1 py-2 relative">
                                                         <x-form.textarea
                                                             name="edit_programs[]"
                                                             placeholder="{{ __('Program') }}"
                                                             class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
+                                                            oninput="filterEditPrograms(this)"
                                                             autocomplete="off">{{ $amount['program'] ?? '' }}</x-form.textarea>
+                                                        <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                                            <!-- Filtered programs will appear here -->
+                                                        </div>
                                                     </td>
                                                     <td class="px-1 py-2">
                                                         <x-form.input
@@ -226,11 +234,17 @@
                                                             <!-- Suggestions will appear here -->
                                                         </div>
                                                     </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.textarea name="edit_description[]" placeholder="{{ __('Description') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                                                    <td class="px-1 py-2 relative">
+                                                        <x-form.textarea name="edit_description[]" placeholder="{{ __('Description') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditDescriptions(this)" autocomplete="off"></x-form.textarea>
+                                                        <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                                            <!-- Filtered descriptions will appear here -->
+                                                        </div>
                                                     </td>
-                                                    <td class="px-1 py-2">
-                                                        <x-form.textarea name="edit_programs[]" placeholder="{{ __('Program') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                                                    <td class="px-1 py-2 relative">
+                                                        <x-form.textarea name="edit_programs[]" placeholder="{{ __('Program') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditPrograms(this)" autocomplete="off"></x-form.textarea>
+                                                        <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                                            <!-- Filtered programs will appear here -->
+                                                        </div>
                                                     </td>
                                                     <td class="px-1 py-2">
                                                         <x-form.input type="text" name="edit_balance_from_allotment[]" placeholder="{{ __('Balance') }}" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
@@ -412,6 +426,12 @@
         
         // Store original office_allotment_class_id for validation
         originalObligationClassId = officeAllotmentClassId;
+        
+        // Set selectedEditOfficeAllotmentClass for filtering and header updates
+        selectedEditOfficeAllotmentClass = editOfficeAllotmentClasses.find(oac => oac.id == officeAllotmentClassId);
+        
+        // Update program column header based on office type
+        updateEditProgramColumnHeader();
 
         // Fields to populate
         const fields = {
@@ -453,7 +473,10 @@
                 
                 // Get values with proper error handling
                 const description = amount.description || amount.appropriation?.description || '';
-                const program = amount.program || amount.appropriation?.programs || '';
+                const isPDF = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.fund === 'Provincial Development Fund';
+                const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
+                const showProjectNo = isPDF || isPEOCO;
+                const program = showProjectNo ? (amount.project_no || amount.program || amount.appropriation?.project_no || '') : (amount.program || amount.appropriation?.programs || '');
                 const balanceFromAllotment = parseFloat(amount.balance_from_allotment || 0);
                 const obrAmount = parseFloat(amount.obr_amount || 0);
                 
@@ -486,7 +509,7 @@
                         <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${description}</x-form.textarea>
                     </td>
                     <td class="px-1 py-2">
-                        <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${program}</x-form.textarea>
+                        <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off">${program || ''}</x-form.textarea>
                     </td>
                     <td class="px-1 py-2">
                         <x-form.input type="text" name="edit_balance_from_allotment[]" value="${balanceFromAllotment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
@@ -503,32 +526,37 @@
                 tableBody.appendChild(tr);
             });
         } else {
-            // If no amounts, add a blank row
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-1 py-2">
-                    <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
-                    <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.input type="text" name="edit_balance_from_allotment[]" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                </td>
-                <td class="px-1 py-2 text-center">
-                    <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            tableBody.appendChild(tr);
+            // If no amounts, check if PS class to auto-display all appropriations
+            if (selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.class === 'PS') {
+                populateEditAppropriationsTable(officeAllotmentClassId);
+            } else {
+                // For non-PS classes, add a blank row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-1 py-2">
+                        <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
+                        <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.input type="text" name="edit_balance_from_allotment[]" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                    </td>
+                    <td class="px-1 py-2">
+                        <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                    </td>
+                    <td class="px-1 py-2 text-center">
+                        <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            }
         }
         } catch (error) {
             console.error('Error populating edit table:', error);
@@ -580,6 +608,7 @@
             {
                 id: "{{ $office_allotment_class->id }}",
                 name: "{{ $office_allotment_class->office_abbreviation }} - {{ $office_allotment_class->allotmentClass->class }}",
+                office: "{{ $office_allotment_class->office_abbreviation }}",
                 class: "{{ $office_allotment_class->class }}",
                 fund: "{{ $office_allotment_class->fund ?? 'General Fund' }}"
             }@if(!$loop->last),@endif
@@ -639,8 +668,21 @@
                     const obrTypeSelect = document.getElementById("edit_obr_type");
                     obrTypeSelect.value = 'Regular';
                 }
+                // Set selectedEditOfficeAllotmentClass for filtering
+                selectedEditOfficeAllotmentClass = item;
+                // Update program column header based on office type
+                updateEditProgramColumnHeader();
                 // Fetch new appropriations for the selected office_allotment_class
                 fetchEditAppropriations(item.id);
+                
+                // For PS classes, display all appropriations; for others, setup filtering
+                if (item.class === 'PS') {
+                    // After fetch completes, populate with all appropriations
+                    setTimeout(() => {
+                        populateEditAppropriationsTable(item.id);
+                    }, 100);
+                }
+                
                 dropdown.classList.add('hidden');
                 
             };
@@ -665,6 +707,73 @@
             .catch(error => {
                 console.error('Error fetching appropriations:', error);
             });
+    }
+
+    // Populate all appropriations in the edit table for PS classes
+    function populateEditAppropriationsTable(officeAllotmentClassId) {
+        const tableBody = document.querySelector('#edit_programs_table tbody');
+        tableBody.innerHTML = ''; // Clear existing rows
+
+        if (!officeAllotmentClassId) {
+            return;
+        }
+
+        // Hide Add Row button for PS classes
+        const addRowBtn = document.querySelector('button[onclick="addRowEdit()"]');
+        if (addRowBtn) addRowBtn.style.display = 'none';
+
+        // Get all appropriations for the selected office allotment class
+        const appropriationsForClass = window.editAppropriations.filter(item =>
+            String(item.office_allotment_class_id) === String(officeAllotmentClassId)
+        );
+
+        if (appropriationsForClass.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td colspan="6" class="px-4 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                    {{ __('No appropriations found for this office and allotment class') }}
+                </td>
+            `;
+            tableBody.appendChild(row);
+            return;
+        }
+
+        // Check if this is PDF or PEO-CO to determine column display
+        const isPDF = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.fund === 'Provincial Development Fund';
+        const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
+        const showProjectNo = isPDF || isPEOCO;
+
+        // Create a row for each appropriation (without delete button initially)
+        appropriationsForClass.forEach((item) => {
+            const row = document.createElement('tr');
+            const programValue = showProjectNo ? (item.project_no || '') : (item.program || '');
+            const balanceFromAllotment = parseFloat(item.balance || 0);
+            
+            row.innerHTML = `
+                <input type="hidden" name="edit_obligation_amounts_id[]" value="" />
+                <td class="px-1 py-2">
+                    <x-form.input name="edit_account_code[]" placeholder="Account Code" value="${item.account_code}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs bg-gray-100 dark:bg-gray-700" readonly />
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs bg-gray-100 dark:bg-gray-700" readonly>${item.description || ''}</x-form.textarea>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs bg-gray-100 dark:bg-gray-700" readonly>${programValue}</x-form.textarea>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.input type="text" name="edit_balance_from_allotment[]" value="${balanceFromAllotment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                </td>
+                <td class="px-1 py-2 text-center">
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Reset total obligation
+        calculateTotalObligationEdit();
     }
 
     document.addEventListener('click', function(event) {
@@ -720,6 +829,7 @@
             account_code: "{{ $appropriation->account_code }}",
             description: `{{ $appropriation->description }}`,
             program: `{{ $appropriation->programs }}`,
+            project_no: "{{ $appropriation->project_no }}",
             office_allotment_class_id: "{{ $appropriation->office_allotment_class_id }}",
             balance: "{{ number_format($appropriation->balance, 2) }}"
         }@if(!$loop->last),@endif
@@ -728,6 +838,9 @@
     
     // Make it globally accessible for updates
     window.editAppropriations = editAppropriations;
+    
+    // Track selected office allotment class for filtering
+    let selectedEditOfficeAllotmentClass = null;
 
     // Filter account codes and display suggstions with description and program
     function filterEditAccountCodes(inputElement) {
@@ -741,28 +854,41 @@
         }
         
         const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id').value;
-        const dropdown = inputElement.nextElementSibling; // Assuming the dropdown is the next sibling
+        const dropdown = inputElement.nextElementSibling;
         const filter = inputElement.value.toLowerCase();
-        dropdown.innerHTML = ''; // Clear previous suggestions
+        dropdown.innerHTML = '';
         if (!filter || !officeAllotmentClassId) {
             dropdown.classList.add('hidden');
             return;
         }
+        
+        const isPDF = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.fund === 'Provincial Development Fund';
+        const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
+        const showProjectNo = isPDF || isPEOCO;
+        
+        // Determine which field to search for program/project_no
+        const fieldToSearch = showProjectNo ? 'project_no' : 'program';
+        
+        // Filter by account_code, description, AND program/project_no
         const filteredCodes = window.editAppropriations.filter(item =>
             String(item.office_allotment_class_id) === String(officeAllotmentClassId) &&
-            item.account_code.toLowerCase().includes(filter)
+            (item.account_code.toLowerCase().includes(filter) ||
+             item.description.toLowerCase().includes(filter) ||
+             item[fieldToSearch].toLowerCase().includes(filter))
         );
         if (filteredCodes.length === 0) {
             dropdown.classList.add('hidden');
             return;
         }
+        
         filteredCodes.forEach(item => {
             const option = document.createElement('div');
             option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+            const programValue = showProjectNo ? (item.project_no || 'No project no') : (item.program || 'No program');
             option.innerHTML = `
                 <strong>${item.account_code}</strong><br/>
                 <span class="text-gray-600 dark:text-gray-400">${item.description || 'No Description'}</span><br/>
-                <span class="text-blue-600 dark:text-blue-400">${item.program || 'No Program'}</span>`;
+                <span class="text-blue-600 dark:text-blue-400">${programValue}</span>`;
             option.onclick = function() {
                 inputElement.value = item.account_code;
                 populateEditFields(inputElement, item);
@@ -771,6 +897,119 @@
             };
             dropdown.appendChild(option);
         });
+        dropdown.classList.remove('hidden');
+    }
+    
+    // Filter Descriptions for Edit Modal
+    function filterEditDescriptions(inputElement) {
+        const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id').value;
+        const dropdown = inputElement.nextElementSibling;
+        const filter = inputElement.value.toLowerCase();
+
+        dropdown.innerHTML = '';
+
+        if (!filter || !officeAllotmentClassId) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        const filteredDescriptions = window.editAppropriations.filter(item =>
+            String(item.office_allotment_class_id) === String(officeAllotmentClassId) &&
+            item.description.toLowerCase().includes(filter)
+        );
+
+        if (filteredDescriptions.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        const isPDF = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.fund === 'Provincial Development Fund';
+        const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
+        const showProjectNo = isPDF || isPEOCO;
+
+        filteredDescriptions.forEach(item => {
+            const option = document.createElement('div');
+            option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+            const programValue = showProjectNo ? (item.project_no || 'No project no') : (item.program || 'No program');
+            option.innerHTML = `
+                <strong>${item.description}</strong><br>
+                <span class="text-gray-600 dark:text-gray-400">${item.account_code}</span><br>
+                <span class="text-gray-600 dark:text-gray-400">${programValue}</span>
+            `;
+            option.onclick = function() {
+                const accountCodeField = inputElement.closest('tr').querySelector('[name="edit_account_code[]"]');
+                accountCodeField.value = item.account_code;
+                inputElement.value = item.description;
+                const programField = inputElement.closest('tr').querySelector('[name="edit_programs[]"]');
+                if (programField) programField.value = programValue;
+                const balanceField = inputElement.closest('tr').querySelector('[name="edit_balance_from_allotment[]"]');
+                if (balanceField) {
+                    const balance = parseFloat(item.balance || 0);
+                    balanceField.value = balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+                dropdown.classList.add('hidden');
+            };
+            dropdown.appendChild(option);
+        });
+
+        dropdown.classList.remove('hidden');
+    }
+    
+    // Filter Programs/Project No for Edit Modal
+    function filterEditPrograms(inputElement) {
+        const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id').value;
+        const dropdown = inputElement.nextElementSibling;
+        const filter = inputElement.value.toLowerCase();
+
+        dropdown.innerHTML = '';
+
+        if (!filter || !officeAllotmentClassId) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        const isPDF = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.fund === 'Provincial Development Fund';
+        const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
+        const showProjectNo = isPDF || isPEOCO;
+
+        // Filter by project_no if PDF/PEO-CO, otherwise by program
+        const fieldToFilter = showProjectNo ? 'project_no' : 'program';
+
+        const filteredPrograms = window.editAppropriations.filter(item =>
+            String(item.office_allotment_class_id) === String(officeAllotmentClassId) &&
+            item[fieldToFilter].toLowerCase().includes(filter)
+        );
+
+        if (filteredPrograms.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        filteredPrograms.forEach(item => {
+            const option = document.createElement('div');
+            option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+            const displayValue = showProjectNo ? item.project_no : item.program;
+            option.innerHTML = `
+                <strong>${displayValue || 'N/A'}</strong><br>
+                <span class="text-gray-600 dark:text-gray-400">${item.account_code}</span><br>
+                <span class="text-gray-600 dark:text-gray-400">${item.description || 'No description'}</span>
+            `;
+            option.onclick = function() {
+                inputElement.value = displayValue;
+                const accountCodeField = inputElement.closest('tr').querySelector('[name="edit_account_code[]"]');
+                const descriptionField = inputElement.closest('tr').querySelector('[name="edit_description[]"]');
+                accountCodeField.value = item.account_code;
+                descriptionField.value = item.description;
+                const balanceField = inputElement.closest('tr').querySelector('[name="edit_balance_from_allotment[]"]');
+                if (balanceField) {
+                    const balance = parseFloat(item.balance || 0);
+                    balanceField.value = balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+                dropdown.classList.add('hidden');
+            };
+            dropdown.appendChild(option);
+        });
+
         dropdown.classList.remove('hidden');
     }
 
@@ -795,12 +1034,27 @@
 
     // Hide dropdown when clicking outside (edit modal)
     document.addEventListener('click', function(event) {
-        const dropdowns = document.querySelectorAll('#AccountCodeDropdown, #editOfficeAllotmentClassDropdown');
+        const dropdowns = document.querySelectorAll('#editOfficeAllotmentClassDropdown');
         dropdowns.forEach(dropdown => {
-            if (!event.target.closest('.absolute') && !event.target.closest('input[name="edit_account_code[]"]')) {
+            if (!event.target.closest('#editOfficeAllotmentClassDropdown') && !event.target.closest('input[name="edit_office_allotment_class"]')) {
                 dropdown.classList.add('hidden');
             }
         });
+
+        // Hide all filter dropdowns in the table if clicking outside filter fields
+        const tableBody = document.querySelector('#edit_programs_table tbody');
+        if (tableBody) {
+            const isClickingOnFilterField = event.target.closest('input[name="edit_account_code[]"]') || 
+                                          event.target.closest('textarea[name="edit_description[]"]') || 
+                                          event.target.closest('textarea[name="edit_programs[]"]');
+            
+            if (!isClickingOnFilterField) {
+                const allDropdowns = tableBody.querySelectorAll('td > .absolute');
+                allDropdowns.forEach(d => {
+                    d.classList.add('hidden');
+                });
+            }
+        }
     });
 
     // Attach filterEditAccountCode to edit_account_code inputs (edit modal)
@@ -838,20 +1092,33 @@
         document.getElementById('totalObligationEdit').textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     
+    // Update Program column header based on office type (edit modal)
+    function updateEditProgramColumnHeader() {
+        const isPDF = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.fund === 'Provincial Development Fund';
+        const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
+        const showProjectNo = isPDF || isPEOCO;
+        const columnHeader = document.getElementById('editProgramColumnHeader');
+        if (columnHeader) {
+            columnHeader.textContent = showProjectNo ? 'Project No' : 'Program';
+        }
+    }
+    
     function addRowEdit() {
         const tableBody = document.querySelector('#edit_programs_table tbody');
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
             <input type="hidden" name="edit_obligation_amounts_id[]" value="" />
-            <td class="px-1 py-2">
+            <td class="px-1 py-2 relative">
                 <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
-                <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>
+                <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
             </td>
-            <td class="px-1 py-2">
-                <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+            <td class="px-1 py-2 relative">
+                <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off" oninput="filterEditDescriptions(this)"></x-form.textarea>
+                <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
             </td>
-            <td class="px-1 py-2">
-                <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+            <td class="px-1 py-2 relative">
+                <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off" oninput="filterEditPrograms(this)"></x-form.textarea>
+                <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50"></div>
             </td>
             <td class="px-1 py-2">
                 <x-form.input type="text" name="edit_balance_from_allotment[]" oninput="formatCurrency(this)" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
@@ -869,6 +1136,12 @@
         // Re-attach event listeners to the new input fields
         newRow.querySelector('input[name="edit_account_code[]"]').addEventListener('input', function() {
             filterEditAccountCodes(this);
+        });
+        newRow.querySelector('textarea[name="edit_description[]"]').addEventListener('input', function() {
+            filterEditDescriptions(this);
+        });
+        newRow.querySelector('textarea[name="edit_programs[]"]').addEventListener('input', function() {
+            filterEditPrograms(this);
         });
         calculateTotalObligationEdit();
     }

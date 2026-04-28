@@ -356,12 +356,14 @@ function openCreateModal(officeAllotmentClassId = null, appropriationId = null, 
                 // Generate OBR number
                 generateObrNumber();
                 
-                // Populate table or setup filtering based on class type
-                if (selectedClass.class === 'PS' || selectedClass.fund === 'Provincial Development Fund') {
-                    populateAppropriationsTable(selectedClass.id);
-                } else if (!appropriationId) {
+                // Setup filtering for all class types
+                if (!appropriationId) {
                     // Only setup account code filtering if we don't have a pre-populated appropriation
-                    setupAccountCodeFiltering(selectedClass.id);
+                    if (selectedClass.class === 'PS') {
+                        populateAppropriationsTable(selectedClass.id);
+                    } else {
+                        setupAccountCodeFiltering(selectedClass.id);
+                    }
                 }
             }
         }
@@ -484,8 +486,8 @@ function filterOfficeAllotmentClasses() {
             updateObligationTypes(item.class);
             generateObrNumber();
             
-            // Populate table or setup filtering based on class type
-            if (item.class === 'PS' || item.fund === 'Provincial Development Fund') {
+            // For PS classes, display all appropriations; for others, show filtering
+            if (item.class === 'PS') {
                 populateAppropriationsTable(item.id);
             } else {
                 setupAccountCodeFiltering(item.id);
@@ -654,7 +656,9 @@ const appropriations = [
 // 8. CREATE FILTERING ROW (used for adding new rows in hybrid mode)
 function createFilteringRow() {
     const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
-    const programLabel = isPDF ? "{{ __('Project No') }}" : "{{ __('Program') }}";
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
+    const programLabel = showProjectNo ? "{{ __('Project No') }}" : "{{ __('Program') }}";
     const row = document.createElement('tr');
     row.innerHTML = `
         <td class="px-1 py-2 relative">
@@ -670,19 +674,27 @@ function createFilteringRow() {
                 <!-- Filtered suggestions will appear here -->
             </div>
         </td>
-        <td class="px-1 py-2">
+        <td class="px-1 py-2 relative">
             <textarea 
                 name="description[]" 
                 placeholder="{{ __('Description') }}"
                 class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                oninput="filterDescriptions(this)"
                 autocomplete="off"></textarea>
+            <div class="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-[10004]" style="width: auto; min-width: 200px;">
+                <!-- Filtered descriptions will appear here -->
+            </div>
         </td>
-        <td class="px-1 py-2">
+        <td class="px-1 py-2 relative">
             <textarea 
                 name="programs[]" 
                 placeholder="${programLabel}"
                 class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs border border-gray-300 dark:border-gray-700 px-2 py-1 rounded"
+                oninput="filterPrograms(this)"
                 autocomplete="off"></textarea>
+            <div class="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-[10004]" style="width: auto; min-width: 200px;">
+                <!-- Filtered programs will appear here -->
+            </div>
         </td>
         <td class="px-1 py-2">
             <input 
@@ -723,7 +735,9 @@ function createPrePopulatedRow(appropriation) {
     });
     
     const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
-    const programValue = isPDF ? (appropriation.project_no || '') : (appropriation.program || '');
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
+    const programValue = showProjectNo ? (appropriation.project_no || '') : (appropriation.program || '');
     
     row.innerHTML = `
         <td class="px-1 py-2">
@@ -783,6 +797,9 @@ function setupAccountCodeFiltering(officeAllotmentClassId) {
         return;
     }
 
+    // Update column header based on office and class type
+    updateProgramColumnHeader();
+
     // Show Add Row button
     const addRowBtn = document.querySelector('button[onclick="addRow()"]');
     if (addRowBtn) addRowBtn.style.display = 'inline-flex';
@@ -808,9 +825,18 @@ function filterAccountCodes(inputElement) {
         return;
     }
 
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
+
+    // Determine which field to search for program/project_no
+    const fieldToSearch = showProjectNo ? 'project_no' : 'program';
+
     const filteredCodes = appropriations.filter(item =>
         item.office_allotment_class_id === officeAllotmentClassId &&
-        item.account_code.toLowerCase().includes(filter)
+        (item.account_code.toLowerCase().includes(filter) ||
+         item.description.toLowerCase().includes(filter) ||
+         item[fieldToSearch].toLowerCase().includes(filter))
     );
 
     if (filteredCodes.length === 0) {
@@ -818,12 +844,10 @@ function filterAccountCodes(inputElement) {
         return;
     }
 
-    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
-
     filteredCodes.forEach(item => {
         const option = document.createElement('div');
         option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
-        const programValue = isPDF ? (item.project_no || 'No project no') : (item.program || 'No program');
+        const programValue = showProjectNo ? (item.project_no || 'No project no') : (item.program || 'No program');
         option.innerHTML = `
             <strong>${item.account_code}</strong><br>
             <span class="text-gray-700 dark:text-gray-400">${item.description || 'No description'}</span><br>
@@ -831,6 +855,121 @@ function filterAccountCodes(inputElement) {
         `;
         option.onclick = function() {
             inputElement.value = item.account_code;
+            populateFields(inputElement, item);
+            calculateBalance(inputElement, item);
+            dropdown.classList.add('hidden');
+        };
+        dropdown.appendChild(option);
+    });
+
+    // Position dropdown below the input field
+    dropdown.classList.remove('hidden');
+    const rect = inputElement.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+}
+
+// 9b. FILTER DESCRIPTIONS (for non-PS classes)
+function filterDescriptions(inputElement) {
+    const officeAllotmentClassId = document.getElementById('office_allotment_class_id').value;
+    const dropdown = inputElement.nextElementSibling;
+    const filter = inputElement.value.toLowerCase();
+
+    dropdown.innerHTML = '';
+
+    if (!filter || !officeAllotmentClassId) {
+        dropdown.classList.add('hidden');
+        return;
+    }
+
+    const filteredDescriptions = appropriations.filter(item =>
+        item.office_allotment_class_id === officeAllotmentClassId &&
+        item.description.toLowerCase().includes(filter)
+    );
+
+    if (filteredDescriptions.length === 0) {
+        dropdown.classList.add('hidden');
+        return;
+    }
+
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
+
+    filteredDescriptions.forEach(item => {
+        const option = document.createElement('div');
+        option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+        const programValue = showProjectNo ? (item.project_no || 'No project no') : (item.program || 'No program');
+        option.innerHTML = `
+            <strong>${item.description}</strong><br>
+            <span class="text-gray-700 dark:text-gray-400">${item.account_code}</span><br>
+            <span class="text-gray-700 dark:text-gray-400">${programValue}</span>
+        `;
+        option.onclick = function() {
+            const accountCodeField = inputElement.closest('tr').querySelector('[name="account_code[]"]');
+            accountCodeField.value = item.account_code;
+            inputElement.value = item.description;
+            populateFields(inputElement, item);
+            calculateBalance(inputElement, item);
+            dropdown.classList.add('hidden');
+        };
+        dropdown.appendChild(option);
+    });
+
+    // Position dropdown below the input field
+    dropdown.classList.remove('hidden');
+    const rect = inputElement.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+}
+
+// 9c. FILTER PROGRAMS/PROJECT NO (for non-PS classes)
+function filterPrograms(inputElement) {
+    const officeAllotmentClassId = document.getElementById('office_allotment_class_id').value;
+    const dropdown = inputElement.nextElementSibling;
+    const filter = inputElement.value.toLowerCase();
+
+    dropdown.innerHTML = '';
+
+    if (!filter || !officeAllotmentClassId) {
+        dropdown.classList.add('hidden');
+        return;
+    }
+
+    const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
+
+    // Filter by project_no if PDF/PEO-CO, otherwise by program
+    const fieldToFilter = showProjectNo ? 'project_no' : 'program';
+
+    const filteredPrograms = appropriations.filter(item =>
+        item.office_allotment_class_id === officeAllotmentClassId &&
+        item[fieldToFilter].toLowerCase().includes(filter)
+    );
+
+    if (filteredPrograms.length === 0) {
+        dropdown.classList.add('hidden');
+        return;
+    }
+
+    filteredPrograms.forEach(item => {
+        const option = document.createElement('div');
+        option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';
+        const displayValue = showProjectNo ? item.project_no : item.program;
+        option.innerHTML = `
+            <strong>${displayValue || 'N/A'}</strong><br>
+            <span class="text-gray-700 dark:text-gray-400">${item.account_code}</span><br>
+            <span class="text-gray-700 dark:text-gray-400">${item.description || 'No description'}</span>
+        `;
+        option.onclick = function() {
+            inputElement.value = displayValue;
+            const accountCodeField = inputElement.closest('tr').querySelector('[name="account_code[]"]');
+            const descriptionField = inputElement.closest('tr').querySelector('[name="description[]"]');
+            accountCodeField.value = item.account_code;
+            descriptionField.value = item.description;
             populateFields(inputElement, item);
             calculateBalance(inputElement, item);
             dropdown.classList.add('hidden');
@@ -879,13 +1018,15 @@ function populateAppropriationsTable(officeAllotmentClassId) {
         return;
     }
 
-    // Check if this is Provincial Development Fund
+    // Check if this is Provincial Development Fund or PEO - CO
     const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
 
     // Create a row for each appropriation (without delete button)
     appropriationsForClass.forEach((item, index) => {
         const row = document.createElement('tr');
-        const programValue = isPDF ? (item.project_no || '') : (item.program || '');
+        const programValue = showProjectNo ? (item.project_no || '') : (item.program || '');
         
         row.innerHTML = `
             <td class="px-1 py-2">
@@ -939,9 +1080,11 @@ function populateAppropriationsTable(officeAllotmentClassId) {
 // 10b. UPDATE PROGRAM COLUMN HEADER
 function updateProgramColumnHeader() {
     const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
     const columnHeader = document.getElementById('programColumnHeader');
     if (columnHeader) {
-        columnHeader.textContent = isPDF ? "{{ __('Project No') }}" : "{{ __('Program') }}";
+        columnHeader.textContent = showProjectNo ? "{{ __('Project No') }}" : "{{ __('Program') }}";
     }
 }
 
@@ -952,7 +1095,9 @@ function populateFields(inputElement, item) {
     const descriptionField = row.querySelector('[name="description[]"]');
 
     const isPDF = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.fund === 'Provincial Development Fund';
-    const programValue = isPDF ? (item.project_no || '') : (item.program || '');
+    const isPEOCO = selectedOfficeAllotmentClass && selectedOfficeAllotmentClass.office === 'PEO' && selectedOfficeAllotmentClass.class === 'CO';
+    const showProjectNo = isPDF || isPEOCO;
+    const programValue = showProjectNo ? (item.project_no || '') : (item.program || '');
     
     if (programField) programField.value = programValue ? programValue.trim() : '';
     if (descriptionField) descriptionField.value = item.description ? item.description.trim() : '';
@@ -1254,6 +1399,15 @@ document.addEventListener('click', function(event) {
             dropdown.classList.add('hidden');
         }
     });
+
+    // Hide all positioned dropdowns (dynamically created) in the table if clicking outside
+    const tableBody = document.querySelector('#programs_table tbody');
+    if (tableBody && !event.target.closest('input[name="account_code[]"]') && !event.target.closest('textarea[name="description[]"]')) {
+        const allPositionedDropdowns = tableBody.querySelectorAll('div[style*="position"][style*="fixed"]');
+        allPositionedDropdowns.forEach(dropdown => {
+            dropdown.classList.add('hidden');
+        });
+    }
 });
 
 // Function to update date field based on selected year

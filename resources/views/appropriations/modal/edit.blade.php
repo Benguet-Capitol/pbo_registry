@@ -327,6 +327,11 @@
             projectNoField.style.display = "block";
             ccoYearField.style.display = "block";
         }
+
+        // Show projectNoField if allotment class is CO and MOOE
+        if (allotmentClassDescription === "Capital Outlay" || allotmentClassDescription === "Maintenance and Other Operating Expenditures") {
+            projectNoField.style.display = "block";
+        }
     });
     //Format the value of the numbers with comma and decimal
     function formatCurrency(input) {

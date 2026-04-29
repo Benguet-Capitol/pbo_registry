@@ -107,11 +107,11 @@
 
                         <!-- Form Header -->
                         <div class="mb-8 animate-fade-in-up">
-                            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                                {{ __('Welcome Back') }}
+                            <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                                {{ __('Sign In') }}
                             </h1>
                             <p class="text-gray-600 dark:text-gray-400">
-                                {{ __('Please sign in to your account') }}
+                                {{ __('Enter your credentials to continue') }}
                             </p>
                         </div>
 
@@ -137,7 +137,7 @@
                                             type="text"
                                             name="username"
                                             :value="old('username')"
-                                            placeholder="{{ __('Username') }}"
+                                            placeholder="{{ __('Enter your username') }}"
                                             autocomplete="off"
                                             autofocus />
                                     </x-form.input-with-icon-wrapper>
@@ -161,7 +161,7 @@
                                             type="password"
                                             name="password"
                                             autocomplete="current-password"
-                                            placeholder="{{ __('Password') }}" />
+                                            placeholder="{{ __('Enter your password') }}" />
                                         <button type="button" onclick="togglePassword()" tabindex="-1" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition duration-200" style="background: none; border: none;">
                                             <i id="showIcon" class="fa fa-eye fa-lg" style="display: inline;"></i>
                                             <i id="hideIcon" class="fa fa-eye-slash fa-lg" style="display: none;"></i>
@@ -171,16 +171,16 @@
 
                                 <!-- Login Button -->
                                 <div class="animate-fade-in-up" style="animation-delay: 0.5s;">
-                                    <x-button class="justify-center mt-6 gap-2 w-full py-3 text-base font-semibold transition duration-300 transform hover:scale-105 active:scale-95">
+                                    <x-button class="justify-center mt-4 gap-2 w-full py-3 text-base font-semibold transition duration-300 transform hover:scale-105 active:scale-95">
                                         <i class="fas fa-sign-in-alt fa-lg"></i>
-                                        <span>{{ __('Log in') }}</span>
+                                        <span>{{ __('Sign In') }}</span>
                                     </x-button>
                                 </div>
 
                                 <!-- Register Info -->
                                 @if (Route::has('register'))
                                 <p class="text-sm text-gray-600 dark:text-gray-400 text-center animate-fade-in-up" style="animation-delay: 0.6s;">
-                                    {{ __('Don\'t have an account?') }}<br>
+                                    {{ __('For your account assistance,') }}<br>
                                     <span class="text-blue-600 dark:text-blue-400 font-medium">
                                         {{ __('Contact your administrator') }}
                                     </span>

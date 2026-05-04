@@ -7,6 +7,7 @@ use App\Models\Office;
 use Illuminate\Contracts\View\View;
 use Carbon\Carbon;
 use App\Models\ObligationAdjustment;
+use App\Models\Disbursement;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -532,15 +533,15 @@ class SAAODBGFExport implements FromView, WithStyles, WithEvents
                 $obligation = $obligationBase + $obligationAdjustments;
 
                 // --- Disbursements ---
-                $disbursement = $oacGroup
+                // Get all obligation_amounts_ids for this allotment class group
+                $obligationAmountIds = $oacGroup
                     ->flatMap->appropriations
                     ->flatMap->obligationAmounts
-                    ->flatmap(fn($oa) =>
-                        $oa->obligation
-                            ? $oa->obligation->disbursements
-                                ->where('disbursement_date', '<=', $asOfDate)
-                            : collect()
-                    )
+                    ->pluck('id')
+                    ->toArray();
+
+                $disbursement = Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds)
+                    ->where('disbursement_date', '<=', $asOfDate)
                     ->sum('disbursement_amount');
 
                 // --- Balances and percentages ---

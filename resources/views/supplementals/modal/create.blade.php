@@ -427,9 +427,12 @@
         }
 
         // Filter account codes based on the input and matching office_allotment_class_id
+        // Search by account_code, description, OR program
         const filteredCodes = appropriations.filter(item =>
             item.office_allotment_class_id === officeAllotmentClassId && // Match office_allotment_class_id
-            item.account_code.toLowerCase().includes(filter) // Match account code
+            (item.account_code.toLowerCase().includes(filter) || // Match account code
+             item.description.toLowerCase().includes(filter) || // Match description
+             item.program.toLowerCase().includes(filter)) // Match program
         );
 
         console.log('Filtered Account Codes:', filteredCodes);

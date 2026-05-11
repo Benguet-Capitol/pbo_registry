@@ -601,7 +601,9 @@
             return;
         }
         let matches = appropriations.filter(app =>
-            (app.account_code || '').toLowerCase().includes(val)
+            (app.account_code || '').toLowerCase().includes(val) ||
+            (app.description || '').toLowerCase().includes(val) ||
+            (app.program || '').toLowerCase().includes(val)
         );
         if (matches.length === 0) {
             dropdown.classList.add('hidden');

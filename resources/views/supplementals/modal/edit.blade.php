@@ -506,7 +506,9 @@ function filterEditAccountCodes(inputElement) {
     }
     const filteredCodes = editAppropriations.filter(item =>
         item.office_allotment_class_id === officeAllotmentClassId &&
-        item.account_code.toLowerCase().includes(filter)
+        (item.account_code.toLowerCase().includes(filter) ||
+         item.description.toLowerCase().includes(filter) ||
+         item.program.toLowerCase().includes(filter))
     );
     if (filteredCodes.length === 0) {
         dropdown.classList.add('hidden');

@@ -135,14 +135,14 @@
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 ">
                                             <tr>
-                                                <td class="px-1 py-2">
+                                                <td class="px-1 py-2 relative">
                                                     <x-form.input
                                                         name="edit_account_code"
                                                         placeholder="{{ __('Account Code') }}"
                                                         class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
                                                         oninput="filterAccountCodes(this)"
                                                         autocomplete="off" />
-                                                    <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="AccountCodeDropdown">
+                                                    <div class="absolute left-0 top-full w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50 mt-1" id="AccountCodeDropdown">
                                                         <!-- Suggestions will appear here -->
                                                     </div>
                                                 </td>

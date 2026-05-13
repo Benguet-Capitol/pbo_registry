@@ -1730,7 +1730,7 @@ class ObligationController extends Controller
 
         // Check if this is from purchase_orders.all
         if ($request->input('from') === 'purchase_order') {
-            return redirect()->route('purchase_orders.all', $request->only(['year1', 'office_allotment_class_filter', 'per_page']))
+            return redirect()->route('purchase_orders.all', $request->only(['year1', 'office_allotment_class_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order']))
                 ->with('status', [
                     'type' => 'default',
                     'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> for OBR No. <strong>{$obrNo}</strong> with DV / Check Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"

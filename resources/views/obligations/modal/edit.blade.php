@@ -477,8 +477,9 @@
                 const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
                 const showProjectNo = isPDF || isPEOCO;
                 const program = showProjectNo ? (amount.project_no || amount.program || amount.appropriation?.project_no || '') : (amount.program || amount.appropriation?.programs || '');
-                const balanceFromAllotment = parseFloat(amount.balance_from_allotment || 0);
-                const obrAmount = parseFloat(amount.obr_amount || 0);
+                // Remove commas from formatted numbers before parsing
+                const balanceFromAllotment = parseFloat((amount.balance_from_allotment || '0').toString().replace(/,/g, '')) || 0;
+                const obrAmount = parseFloat((amount.obr_amount || '0').toString().replace(/,/g, '')) || 0;
                 
                 console.log(`Debug - Processed values for row ${index}:`, {
                     description,
@@ -747,7 +748,8 @@
         appropriationsForClass.forEach((item) => {
             const row = document.createElement('tr');
             const programValue = showProjectNo ? (item.project_no || '') : (item.program || '');
-            const balanceFromAllotment = parseFloat(item.balance || 0);
+            // Remove commas from formatted numbers before parsing
+            const balanceFromAllotment = parseFloat((item.balance || '0').toString().replace(/,/g, '')) || 0;
             
             row.innerHTML = `
                 <input type="hidden" name="edit_obligation_amounts_id[]" value="" />

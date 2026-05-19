@@ -637,10 +637,10 @@
         const filteredCodes = appropriations.filter(item => {
             // Only show account codes for the selected office_allotment_class_id
             if (String(item.office_allotment_class_id) !== String(officeAllotmentClassId)) return false;
-            // Search by account_code, description, OR program
-            if (!(item.account_code.toLowerCase().includes(filter) ||
-                  item.description.toLowerCase().includes(filter) ||
-                  item.program.toLowerCase().includes(filter))) return false;
+            // Search by account_code, description, OR program (convert to string to avoid errors on null/numbers)
+            if (!((item.account_code || '').toString().toLowerCase().includes(filter) ||
+                  (item.description || '').toString().toLowerCase().includes(filter) ||
+                  (item.program || '').toString().toLowerCase().includes(filter))) return false;
             // For recipient, exclude if this (office_allotment_class_id, account_code) is in source
             if (type === 'recipient' && excludePairs.includes(String(item.office_allotment_class_id) + '|' + item.account_code)) return false;
             return true;

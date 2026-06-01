@@ -194,7 +194,7 @@ class ObligationController extends Controller
         $currentQuarter = ceil($currentMonth / 3);
 
         // Precompute balances for appropriations (no per-loop queries)
-        $appropriations->each(function ($appropriation) use ($currentQuarter) {
+        $appropriations->each(function ($appropriation) use ($currentQuarter, $request) {
             $totalAppropriation = collect([
                 $appropriation->quarter1,
                 $appropriation->quarter2,
@@ -202,8 +202,22 @@ class ObligationController extends Controller
                 $appropriation->quarter4
             ])->take($currentQuarter)->sum();
 
-            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
-                return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+            // Get the to_date for filtering adjustments
+            $toDate = $request->filled('to_date') ? $request->to_date : null;
+
+            // Calculate total obligation amount considering date range for adjustments
+            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) use ($toDate) {
+                $adjustmentSum = 0;
+                if ($toDate) {
+                    $adjustmentSum = $oa->obligationAdjustments
+                        ->filter(function ($adj) use ($toDate) {
+                            return $adj->adjustment_date <= $toDate;
+                        })
+                        ->sum('adjustment_amount');
+                } else {
+                    $adjustmentSum = $oa->obligationAdjustments->sum('adjustment_amount');
+                }
+                return $oa->obr_amount + $adjustmentSum;
             });
 
             $realignmentTotal = $appropriation->realignments->sum(function ($r) {
@@ -221,10 +235,23 @@ class ObligationController extends Controller
         $appropriationMap = $appropriations->keyBy('id');
 
         // --- Compute obligation values (single pass, in-memory) ---
-        $obligations->each(function ($obligation) use ($appropriationMap) {
+        $obligations->each(function ($obligation) use ($appropriationMap, $request) {
+            // Get the to_date for filtering adjustments
+            $toDate = $request->filled('to_date') ? $request->to_date : null;
+            
+            // Only include adjustments that occurred on or before the to_date
+            if ($toDate) {
+                $adjustmentAmount = $obligation->obligationAdjustments
+                    ->filter(function ($adj) use ($toDate) {
+                        return $adj->adjustment_date <= $toDate;
+                    })
+                    ->sum('adjustment_amount');
+            } else {
+                $adjustmentAmount = $obligation->obligationAdjustments->sum('adjustment_amount');
+            }
+            
             // Calculate total obligation amount with adjustments
             $obrAmount = $obligation->obligationAmounts->sum('obr_amount');
-            $adjustmentAmount = $obligation->obligationAdjustments->sum('adjustment_amount');
             $obligation->obr_amount = $obrAmount + $adjustmentAmount;
 
             // Add these fields directly to the obligation object
@@ -232,12 +259,21 @@ class ObligationController extends Controller
             $obligation->allotment_class = $obligation->officeAllotmentClass->allotmentClass->class ?? 'N/A';
 
             // Transform obligation_amounts in a single pass with precomputed data
-            $transformedAmounts = $obligation->obligationAmounts->map(function ($amount) use ($appropriationMap) {
+            $transformedAmounts = $obligation->obligationAmounts->map(function ($amount) use ($appropriationMap, $toDate) {
                 $relatedAppropriation = $appropriationMap->get($amount->appropriation_id);
                 $balance = $relatedAppropriation ? $relatedAppropriation->balance : 0;
                 
-                // Calculate adjustments for this specific obligation amount
-                $adjustmentSum = $amount->obligationAdjustments->sum('adjustment_amount');
+                // Calculate adjustments for this specific obligation amount (filtered by date if applicable)
+                if ($toDate) {
+                    $adjustmentSum = $amount->obligationAdjustments
+                        ->filter(function ($adj) use ($toDate) {
+                            return $adj->adjustment_date <= $toDate;
+                        })
+                        ->sum('adjustment_amount');
+                } else {
+                    $adjustmentSum = $amount->obligationAdjustments->sum('adjustment_amount');
+                }
+                
                 $originalObrAmount = $amount->obr_amount; // Original amount without adjustments
                 $totalObrAmount = $originalObrAmount + $adjustmentSum; // Adjusted total
 
@@ -405,7 +441,7 @@ class ObligationController extends Controller
         ));
     }
 
-    public function show(Obligation $obligation)
+    public function show(Obligation $obligation, Request $request)
     {
         // Eager load related models in a single query
         $obligation->load([
@@ -418,11 +454,25 @@ class ObligationController extends Controller
             'officeAllotmentClass.allotmentClass',
             'obligationAdjustments.obligationAmount.appropriation',
         ]);
+
+        // Get the to_date for filtering adjustments
+        $toDate = $request->filled('to_date') ? $request->to_date : null;
         
         // Prepare obligation amounts with summarized data
-        $obligationAmounts = $obligation->obligationAmounts->map(function ($amount) {
+        $obligationAmounts = $obligation->obligationAmounts->map(function ($amount) use ($toDate) {
             $obrAmount = $amount->obr_amount ?? 0;
-            $adjustments = $amount->obligationAdjustments->sum('adjustment_amount');
+            
+            // Filter adjustments by date if to_date is provided
+            if ($toDate) {
+                $adjustments = $amount->obligationAdjustments
+                    ->filter(function ($adj) use ($toDate) {
+                        return $adj->adjustment_date <= $toDate;
+                    })
+                    ->sum('adjustment_amount');
+            } else {
+                $adjustments = $amount->obligationAdjustments->sum('adjustment_amount');
+            }
+            
             $poTotal = $amount->purchaseOrders->sum('po_amount');
             $disbursementTotal = $amount->disbursements->sum('disbursement_amount');
             $appropriation = $amount->appropriation;
@@ -444,9 +494,18 @@ class ObligationController extends Controller
                 return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
             });
             
-            // Get total obligation amount for this appropriation
-            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) {
-                return $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount');
+            // Get total obligation amount for this appropriation (filtered by date if applicable)
+            $totalObrAmount = $appropriation->obligationAmounts->sum(function ($oa) use ($toDate) {
+                if ($toDate) {
+                    $adjustmentSum = $oa->obligationAdjustments
+                        ->filter(function ($adj) use ($toDate) {
+                            return $adj->adjustment_date <= $toDate;
+                        })
+                        ->sum('adjustment_amount');
+                } else {
+                    $adjustmentSum = $oa->obligationAdjustments->sum('adjustment_amount');
+                }
+                return $oa->obr_amount + $adjustmentSum;
             });
             
             // Calculate current balance
@@ -469,20 +528,43 @@ class ObligationController extends Controller
             ];
         });
 
-        // Prepare obligation adjustment records
-        $obligationAdjustments = $obligation->obligationAdjustments->map(function ($adjustment) {
-            $appropriation = optional($adjustment->obligationAmount->appropriation);
+        // Prepare obligation adjustment records (filtered by date if applicable)
+        $obligationAdjustments = collect();
+        if ($toDate) {
+            $obligationAdjustments = $obligation->obligationAdjustments
+                ->filter(function ($adj) use ($toDate) {
+                    return $adj->adjustment_date <= $toDate;
+                })
+                ->map(function ($adjustment) {
+                    $appropriation = optional($adjustment->obligationAmount->appropriation);
 
-            return [
-                'adjustment_date' => $adjustment->adjustment_date,
-                'programs' => $appropriation->programs ?? '',
-                'account_code' => $appropriation->account_code ?? '',
-                'description' => $appropriation->description ?? '',
-                'adjustment_amount' => $adjustment->adjustment_amount,
-                'remarks' => $adjustment->adjustment_remarks,
-                'adjusted_by' => $adjustment->adjusted_by,
-            ];
-        })->sortBy([
+                    return [
+                        'adjustment_date' => $adjustment->adjustment_date,
+                        'programs' => $appropriation->programs ?? '',
+                        'account_code' => $appropriation->account_code ?? '',
+                        'description' => $appropriation->description ?? '',
+                        'adjustment_amount' => $adjustment->adjustment_amount,
+                        'remarks' => $adjustment->adjustment_remarks,
+                        'adjusted_by' => $adjustment->adjusted_by,
+                    ];
+                });
+        } else {
+            $obligationAdjustments = $obligation->obligationAdjustments->map(function ($adjustment) {
+                $appropriation = optional($adjustment->obligationAmount->appropriation);
+
+                return [
+                    'adjustment_date' => $adjustment->adjustment_date,
+                    'programs' => $appropriation->programs ?? '',
+                    'account_code' => $appropriation->account_code ?? '',
+                    'description' => $appropriation->description ?? '',
+                    'adjustment_amount' => $adjustment->adjustment_amount,
+                    'remarks' => $adjustment->adjustment_remarks,
+                    'adjusted_by' => $adjustment->adjusted_by,
+                ];
+            });
+        }
+
+        $obligationAdjustments = $obligationAdjustments->sortBy([
             ['account_code', 'asc'],
             ['adjustment_date', 'asc'],
         ])->values(); // reset keys after sorting
@@ -2039,7 +2121,7 @@ class ObligationController extends Controller
     /**
      * Get obligation details with amounts, adjustments, PO, and disbursements for the details panel
      */
-    public function getObligationDetails($obligationId): JsonResponse
+    public function getObligationDetails($obligationId, Request $request): JsonResponse
     {
         try {
             $obligation = Obligation::with([
@@ -2052,10 +2134,24 @@ class ObligationController extends Controller
                 'disbursements'
             ])->findOrFail($obligationId);
 
+            // Get the to_date for filtering adjustments
+            $toDate = $request->filled('to_date') ? $request->to_date : null;
+
             // Map obligation amounts with related data
-            $amounts = $obligation->obligationAmounts->map(function ($obrAmount) {
+            $amounts = $obligation->obligationAmounts->map(function ($obrAmount) use ($toDate) {
                 $originalObligation = $obrAmount->obr_amount ?? 0;
-                $adjustment = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                
+                // Filter adjustments by date if to_date is provided
+                if ($toDate) {
+                    $adjustment = $obrAmount->obligationAdjustments
+                        ->filter(function ($adj) use ($toDate) {
+                            return $adj->adjustment_date <= $toDate;
+                        })
+                        ->sum('adjustment_amount') ?? 0;
+                } else {
+                    $adjustment = $obrAmount->obligationAdjustments->sum('adjustment_amount') ?? 0;
+                }
+                
                 $adjustedObligation = $originalObligation + $adjustment;
                 $poAmount = $obrAmount->purchaseOrders->sum('po_amount') ?? 0;
                 $disbursementAmount = $obrAmount->disbursements->sum('disbursement_amount') ?? 0;

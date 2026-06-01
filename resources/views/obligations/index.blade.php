@@ -2076,8 +2076,23 @@ function openCreatePOModal(obligationId) {
             currentRow.classList.add('obligation-row-highlighted');
         }
 
+        // Build URL with date range parameters if they exist
+        const params = new URLSearchParams(window.location.search);
+        let url = `/api/obligations/${obligationId}/details`;
+        
+        if (params.has('from_date') || params.has('to_date')) {
+            const queryParams = new URLSearchParams();
+            if (params.has('from_date')) {
+                queryParams.append('from_date', params.get('from_date'));
+            }
+            if (params.has('to_date')) {
+                queryParams.append('to_date', params.get('to_date'));
+            }
+            url += `?${queryParams.toString()}`;
+        }
+
         // Fetch obligation details with amounts
-        fetch(`/api/obligations/${obligationId}/details`)
+        fetch(url)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch obligation details');
@@ -2103,7 +2118,7 @@ function openCreatePOModal(obligationId) {
                         
                         const originalObligation = parseFloat(amount.amount || 0);
                         const adjustment = parseFloat(amount.adjustment || 0);
-                        const adjustedObligation = originalObligation + adjustment;
+                        const adjustedObligation = parseFloat(amount.adjusted_obligation || 0);
                         const poAmount = parseFloat(amount.po_amount || 0);
                         const disbursementAmount = parseFloat(amount.disbursement_amount || 0);
                         

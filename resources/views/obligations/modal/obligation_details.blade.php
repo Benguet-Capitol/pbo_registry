@@ -79,8 +79,23 @@
             currentRow.classList.add('obligation-row-highlighted');
         }
 
+        // Build URL with date range parameters if they exist
+        const params = new URLSearchParams(window.location.search);
+        let url = `/obligations/${obligationId}`;
+        
+        if (params.has('from_date') || params.has('to_date')) {
+            const queryParams = new URLSearchParams();
+            if (params.has('from_date')) {
+                queryParams.append('from_date', params.get('from_date'));
+            }
+            if (params.has('to_date')) {
+                queryParams.append('to_date', params.get('to_date'));
+            }
+            url += `?${queryParams.toString()}`;
+        }
+
         // Request obligation data from the server
-        fetch(`/obligations/${obligationId}`)
+        fetch(url)
             .then(res => res.json())
             .then(data => {
                 // Destructure fetched data for easier access

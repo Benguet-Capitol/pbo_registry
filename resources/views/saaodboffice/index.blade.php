@@ -689,7 +689,7 @@
                         $isLastCOE = optional($lastCOEOac)->id === $oac->id;
                         $isLastCO = optional($lastCOOac)->id === $oac->id;
                         @endphp
-                        @if ($isLastCOE)
+                        @if ($isLastCOE && !($isSEFConsolidated ?? false))
                         <tr class="bg-blue-200 dark:bg-blue-800 font-bold border-t-2 border-b-2 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right">Total Current Operating Expenditure (COE):</td>
                             @foreach ($office->officeCOETotals as $key => $val)
@@ -727,7 +727,7 @@
                         </tr>
                         @endif
 
-                        @if ($isLastCO)
+                        @if ($isLastCO && !($isSEFConsolidated ?? false))
                         <tr class="bg-green-200 dark:bg-green-800 font-bold border-t-2 border-b-2 text-[10px]">
                             <td colspan="2" class="px-2 py-2 text-right">Total COE and CO:</td>
                             @foreach ($office->officeCOECoTotals as $key => $val)

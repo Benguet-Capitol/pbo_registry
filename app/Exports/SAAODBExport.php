@@ -246,74 +246,76 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                     }
                 }
 
-                // === ADD TOTAL COE & TOTAL COE + CO ROWS ===
-                $totalsMap = [];
-                for ($row = 13; $row <= $lastDataRow; $row++) {
-                    $label = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
-                    if (str_starts_with($label, 'TOTAL')) {
-                        $totalsMap[$label] = $row;
-                    }
-                }
-
-                // Collect COE components (PS + MOOE + FE)
-                $coeComponents = [];
-                foreach ($totalsMap as $label => $rowNum) {
-                    if (
-                        str_contains($label, 'PERSONAL SERVICES') ||
-                        str_contains($label, 'MAINTENANCE AND OTHER OPERATING EXPENDITURES') ||
-                        str_contains($label, 'FINANCIAL EXPENSES')
-                    ) {
-                        $coeComponents[] = $rowNum;
-                    }
-                }
-
-                $totalCOERow = null;
-                if (!empty($coeComponents)) {
-                    $lastCOERow = max($coeComponents);
-                    $insertRow = $lastCOERow + 1;
-
-                    // Insert TOTAL COE row
-                    $sheet->insertNewRowBefore($insertRow, 1);
-                    $sheet->setCellValue("A{$insertRow}", 'Total Current Operating Expenditure (COE):');
-                    $sheet->mergeCells("A{$insertRow}:B{$insertRow}");
-
-                    foreach (range('D', 'S') as $col) {
-                        $refs = implode(',', array_map(fn($r) => "{$col}{$r}", $coeComponents));
-                        $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
+                // === ADD TOTAL COE & TOTAL COE + CO ROWS (skip for SEF offices) ===
+                if (!$this->isSEFConsolidated) {
+                    $totalsMap = [];
+                    for ($row = 13; $row <= $lastDataRow; $row++) {
+                        $label = strtoupper(trim((string) $sheet->getCell("A{$row}")->getValue()));
+                        if (str_starts_with($label, 'TOTAL')) {
+                            $totalsMap[$label] = $row;
+                        }
                     }
 
-                    applyPercentageFormulas($sheet, $insertRow);
-
-                    $totalCOERow = $insertRow;
-                }
-
-                // === Find the TOTAL CAPITAL OUTLAY (CO) row (excluding CONTINUING) ===
-                $totalCORow = null;
-                foreach ($totalsMap as $label => $rowNum) {
-                    $cleanLabel = strtoupper(trim($label, " :"));
-
-                    if ($cleanLabel === 'TOTAL CAPITAL OUTLAY (CO)' && !str_contains($cleanLabel, 'CONTINUING')) {
-                        $totalCORow = $rowNum;
-                        break;
-                    }
-                }
-
-                // === Insert TOTAL COE + CO row right after Total Capital Outlay ===
-                if ($totalCOERow && $totalCORow) {
-                    $insertRow = $totalCORow + 2;
-
-                    $sheet->insertNewRowBefore($insertRow, 1);
-                    $sheet->setCellValue("A{$insertRow}", 'Total COE and CO:');
-                    $sheet->mergeCells("A{$insertRow}:B{$insertRow}");
-
-                    $totalCOValuesRow = $totalCORow + 1;
-
-                    foreach (range('D', 'S') as $col) {
-                        $refs = "{$col}{$totalCOERow},{$col}{$totalCOValuesRow}";
-                        $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
+                    // Collect COE components (PS + MOOE + FE)
+                    $coeComponents = [];
+                    foreach ($totalsMap as $label => $rowNum) {
+                        if (
+                            str_contains($label, 'PERSONAL SERVICES') ||
+                            str_contains($label, 'MAINTENANCE AND OTHER OPERATING EXPENDITURES') ||
+                            str_contains($label, 'FINANCIAL EXPENSES')
+                        ) {
+                            $coeComponents[] = $rowNum;
+                        }
                     }
 
-                    applyPercentageFormulas($sheet, $insertRow);
+                    $totalCOERow = null;
+                    if (!empty($coeComponents)) {
+                        $lastCOERow = max($coeComponents);
+                        $insertRow = $lastCOERow + 1;
+
+                        // Insert TOTAL COE row
+                        $sheet->insertNewRowBefore($insertRow, 1);
+                        $sheet->setCellValue("A{$insertRow}", 'Total Current Operating Expenditure (COE):');
+                        $sheet->mergeCells("A{$insertRow}:B{$insertRow}");
+
+                        foreach (range('D', 'S') as $col) {
+                            $refs = implode(',', array_map(fn($r) => "{$col}{$r}", $coeComponents));
+                            $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
+                        }
+
+                        applyPercentageFormulas($sheet, $insertRow);
+
+                        $totalCOERow = $insertRow;
+                    }
+
+                    // === Find the TOTAL CAPITAL OUTLAY (CO) row (excluding CONTINUING) ===
+                    $totalCORow = null;
+                    foreach ($totalsMap as $label => $rowNum) {
+                        $cleanLabel = strtoupper(trim($label, " :"));
+
+                        if ($cleanLabel === 'TOTAL CAPITAL OUTLAY (CO)' && !str_contains($cleanLabel, 'CONTINUING')) {
+                            $totalCORow = $rowNum;
+                            break;
+                        }
+                    }
+
+                    // === Insert TOTAL COE + CO row right after Total Capital Outlay ===
+                    if ($totalCOERow && $totalCORow) {
+                        $insertRow = $totalCORow + 2;
+
+                        $sheet->insertNewRowBefore($insertRow, 1);
+                        $sheet->setCellValue("A{$insertRow}", 'Total COE and CO:');
+                        $sheet->mergeCells("A{$insertRow}:B{$insertRow}");
+
+                        $totalCOValuesRow = $totalCORow + 1;
+
+                        foreach (range('D', 'S') as $col) {
+                            $refs = "{$col}{$totalCOERow},{$col}{$totalCOValuesRow}";
+                            $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
+                        }
+
+                        applyPercentageFormulas($sheet, $insertRow);
+                    }
                 }
 
                 // === RE-FIND OVERALL TOTAL ROW AND GRAND TOTAL ROWS AFTER ROW INSERTIONS ===

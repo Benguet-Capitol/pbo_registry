@@ -262,7 +262,16 @@ function openCreateModal(officeAllotmentClassId = null, appropriationId = null, 
     if (fromDashboardField && window.isFromDashboard) {
         fromDashboardField.value = '1';
     }
+
+    createModal.style.display = 'flex';
+    createModal.setAttribute('aria-hidden', 'false');
     
+    
+    // Update date field based on current year
+    if (typeof updateDateFieldBasedOnYear === 'function') {
+        updateDateFieldBasedOnYear();
+    }
+
     // Ensure existing OBR numbers are fetched/populated BEFORE displaying modal
     const loadPromise = (typeof loadExistingObrNumbers === 'function') 
         ? loadExistingObrNumbers() 
@@ -270,14 +279,6 @@ function openCreateModal(officeAllotmentClassId = null, appropriationId = null, 
     
     loadPromise.then(() => {
         // Now proceed with opening modal after data is loaded
-    
-    createModal.style.display = 'flex';
-    createModal.setAttribute('aria-hidden', 'false');
-    
-    // Update date field based on current year
-    if (typeof updateDateFieldBasedOnYear === 'function') {
-        updateDateFieldBasedOnYear();
-    }
     
     // Clear form fields when reopening modal (except preselected fields)
     // This applies when we have a preselectedClassId but should reset for new entry
@@ -521,8 +522,6 @@ function updateObligationTypes(classType) {
         obrTypeSelect.value = 'Regular';
         updateTextColor(obrTypeSelect);
     }
-
-    console.log(`Updated obligation types for ${classType}:`, allowedTypes);
 }
 
 // 5. GENERATE OBR NUMBER
@@ -563,8 +562,6 @@ function generateObrNumber() {
     obrNoField.classList.remove('border-red-500');
     obrNoField.classList.add('border-gray-300', 'dark:border-gray-700');
     updateTextColor(obrNoField);
-    
-    console.log('Generated OBR Number:', obrNumber);
 }
 
 // 5b. LOAD EXISTING OBR NUMBERS (dynamically from server)
@@ -586,7 +583,6 @@ function loadExistingObrNumbers() {
             // Update the global existingObrNumbers array
             if (data && Array.isArray(data)) {
                 window.existingObrNumbers = data.map(item => item.obr_no);
-                console.log('Loaded OBR numbers:', window.existingObrNumbers);
             }
             return data;
         })
@@ -1466,7 +1462,6 @@ function handleSaveObligation() {
             // Update the global existingObrNumbers array
             if (data && Array.isArray(data)) {
                 window.existingObrNumbers = data.map(item => item.obr_no);
-                console.log('Reloaded OBR numbers:', window.existingObrNumbers);
             }
             
             // Now validate and submit

@@ -1481,10 +1481,8 @@ function validateCreateObligationAdjustmentForm() {
     }
 
     if (isValid) {
-        console.log('Form validation passed, submitting...');
         const form = document.getElementById('createObligationAdjustmentForm');
         if (form) {
-            console.log('Form found, setting flag and submitting...');
             // Set flag to allow submission
             isSubmittingObligationAdjustment = true;
             // Submit the form
@@ -1493,7 +1491,7 @@ function validateCreateObligationAdjustmentForm() {
             console.error('Form not found for submission!');
         }
     } else {
-        console.log('Form validation failed');
+        console.error('Form validation failed');
     }
 }
 

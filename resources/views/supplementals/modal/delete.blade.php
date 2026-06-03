@@ -110,8 +110,6 @@
         per_page: urlParams.get('per_page') || '',
         search: urlParams.get('search') || ''
     };
-    
-    console.log('Query params loaded:', queryParams);
 
     function openDeleteSupplementalModal(supplementalId, supplementalNo, supplementalType, supplementalAmount, appropriationsId) {
         closeAllDropdowns();
@@ -164,11 +162,6 @@
                 document.getElementById('type_filter_single').value = queryParams.supplemental_type_filter;
                 document.getElementById('per_page_single').value = queryParams.per_page;
                 document.getElementById('search_single').value = queryParams.search;
-                
-                console.log('Single delete form configured:', {
-                    action: deleteForm.action,
-                    method: deleteForm.method
-                });
             }
 
             let contentHtml = `
@@ -352,12 +345,6 @@
             document.getElementById('type_filter_bulk').value = queryParams.supplemental_type_filter;
             document.getElementById('per_page_bulk').value = queryParams.per_page;
             document.getElementById('search_bulk').value = queryParams.search;
-            
-            console.log('Bulk delete form configured:', {
-                action: bulkForm.action,
-                method: bulkForm.method,
-                bulk_delete: '1'
-            });
         }
         
         document.getElementById('bulkDeleteSupplementalModal').classList.remove('hidden');

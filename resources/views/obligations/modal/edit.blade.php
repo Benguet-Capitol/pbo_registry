@@ -347,13 +347,11 @@
         }
 
         document.getElementById('editObligationsForm').action = `/obligations/${obligation.id}`;
-        console.log('Loaded obligation:', obligation);
         
         // Check if obligation has related records
         hasRelatedRecords = (obligation.purchase_orders && obligation.purchase_orders.length > 0) ||
                            (obligation.obligation_adjustments && obligation.obligation_adjustments.length > 0) ||
                            (obligation.disbursements && obligation.disbursements.length > 0);
-        console.log('Has related records:', hasRelatedRecords);
         
         // Reset from_dashboard and from_accounts first
         const fromDashboardField = document.querySelector('#editObligationsForm input[name="from_dashboard"]');
@@ -370,14 +368,9 @@
         const isFromDashboard = window.isFromDashboard || (window.currentClassId !== undefined);
         const isFromAccounts = window.isFromAccounts || false;
         
-        console.log('Is from dashboard:', isFromDashboard, 'window.isFromDashboard:', window.isFromDashboard, 'window.currentClassId:', window.currentClassId);
-        console.log('Is from accounts:', isFromAccounts, 'window.isFromAccounts:', window.isFromAccounts);
-        
         if (isFromDashboard) {
-            console.log('Setting from_dashboard to 1');
             if (fromDashboardField) {
                 fromDashboardField.value = '1';
-                console.log('from_dashboard field value set to:', fromDashboardField.value);
             }
             if (window.currentClassId) {
                 const dashboardClassIdField = document.querySelector('#editObligationsForm input[name="dashboard_class_id"]');
@@ -386,10 +379,8 @@
                 }
             }
         } else if (isFromAccounts) {
-            console.log('Setting from_accounts to 1');
             if (fromAccountsField) {
                 fromAccountsField.value = '1';
-                console.log('from_accounts field value set to:', fromAccountsField.value);
             }
             if (window.accountsClassId) {
                 const accountsClassIdField = document.querySelector('#editObligationsForm input[name="accounts_class_id"]');
@@ -401,22 +392,17 @@
 
         // Get office_allotment_class_id from obligation, or fallback to currentClassId or URL parameter
         let officeAllotmentClassId = obligation.office_allotment_class_id;
-        console.log('openEditObligationsModal - Initial officeAllotmentClassId:', officeAllotmentClassId);
-        console.log('openEditObligationsModal - window.currentClassId:', window.currentClassId);
         
         if (!officeAllotmentClassId && window.currentClassId) {
             officeAllotmentClassId = window.currentClassId;
-            console.log('Using window.currentClassId:', officeAllotmentClassId);
         }
         if (!officeAllotmentClassId) {
             const urlParams = new URLSearchParams(window.location.search);
             officeAllotmentClassId = urlParams.get('office_allotment_class_id') || '';
             if (officeAllotmentClassId) {
-                console.log('Using URL parameter office_allotment_class_id:', officeAllotmentClassId);
+                console.error('Using URL parameter office_allotment_class_id:', officeAllotmentClassId);
             }
         }
-
-        console.log('Final officeAllotmentClassId to use:', officeAllotmentClassId);
 
         // Update the main form's hidden office_allotment_class_id field
         const mainOfficeAllotmentClassIdField = document.querySelector('#editObligationsForm input[name="office_allotment_class_id"]');
@@ -467,9 +453,7 @@
             const tableBody = document.querySelector('#edit_programs_table tbody');
         tableBody.innerHTML = '';
         if (Array.isArray(obligation.obligation_amounts) && obligation.obligation_amounts.length > 0) {
-            console.log('Debug - Full obligation:', obligation);
             obligation.obligation_amounts.forEach((amount, index) => {
-                console.log(`Debug - Processing amount ${index}:`, amount);
                 
                 // Get values with proper error handling
                 const description = amount.description || amount.appropriation?.description || '';
@@ -480,24 +464,6 @@
                 // Remove commas from formatted numbers before parsing
                 const balanceFromAllotment = parseFloat((amount.balance_from_allotment || '0').toString().replace(/,/g, '')) || 0;
                 const obrAmount = parseFloat((amount.obr_amount || '0').toString().replace(/,/g, '')) || 0;
-                
-                console.log(`Debug - Processed values for row ${index}:`, {
-                    description,
-                    program,
-                    raw_balance: amount.balance_from_allotment,
-                    processed_balance: balanceFromAllotment,
-                    raw_amount: amount.obr_amount,
-                    processed_amount: obrAmount
-                });
-                
-                console.log('Full amount object:', amount);
-            console.log(`Row ${index} values:`, {
-                description,
-                program,
-                balanceFromAllotment: amount.balance_from_allotment,
-                obrAmount,
-                appropriation: amount.appropriation
-            });
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -700,7 +666,7 @@
                 if (data.data) {
                     // Update the editAppropriations array with new data
                     window.editAppropriations = data.data;
-                    console.log('Updated editAppropriations:', window.editAppropriations);
+                    console.error('Updated editAppropriations:', window.editAppropriations);
                 } else {
                     console.error('No data returned from appropriations endpoint');
                 }
@@ -1246,8 +1212,8 @@
         
        // Log the current state BEFORE any modifications
         const fromDashboardField = document.querySelector('#editObligationsForm input[name="from_dashboard"]');
-        console.log('validateEditObligationsForm - from_dashboard value:', fromDashboardField ? fromDashboardField.value : 'NOT FOUND');
-        console.log('validateEditObligationsForm - window.isFromDashboard:', window.isFromDashboard);
+        console.error('validateEditObligationsForm - from_dashboard value:', fromDashboardField ? fromDashboardField.value : 'NOT FOUND');
+        console.error('validateEditObligationsForm - window.isFromDashboard:', window.isFromDashboard);
         
         
         let isValid = true;
@@ -1337,7 +1303,7 @@
         // If the form is valid, submit it
         if (isValid) {
             // Final check before submission
-            console.log('Submitting form - from_dashboard final value:', fromDashboardField ? fromDashboardField.value : 'NOT FOUND');
+            console.error('Submitting form - from_dashboard final value:', fromDashboardField ? fromDashboardField.value : 'NOT FOUND');
             form.submit();
         }
     }

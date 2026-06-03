@@ -592,7 +592,6 @@
         fetch(`/realignment-files/${fileId}/preview`)
             .then(response => response.json())
             .then(data => {
-                console.log('Preview data received:', data);
                 if (data.success) {
                     renderRealignmentFilePreview(data.file_type, data.file_url, data.file_path);
                 } else {
@@ -615,8 +614,6 @@
     function renderRealignmentFilePreview(fileType, fileUrl, filePath) {
         const content = document.getElementById('realignmentFileViewContent');
         const fileId = window.currentRealignmentViewFileId;
-        
-        console.log('Rendering preview for:', { fileType, fileUrl, fileId });
         
         // Clear previous content
         content.innerHTML = '';

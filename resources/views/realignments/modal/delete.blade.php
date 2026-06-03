@@ -141,7 +141,6 @@
             const deleteForm = document.getElementById('deleteRealignmentForm');
             if (deleteForm) {
                 deleteForm.action = `/realignments/${realignmentId}`; // Direct path
-                console.log('Form action set to:', deleteForm.action);
             }
 
             let contentHtml = `
@@ -311,7 +310,6 @@
     const bulkForm = document.getElementById('bulkDeleteRealignmentForm');
     if (bulkForm) {
         bulkForm.action = `/realignments/${currentRealignmentId}`; // Direct path
-        console.log('Bulk form action set to:', bulkForm.action);
     }
         const modal = document.getElementById('bulkDeleteRealignmentModal');
         modal.style.display = 'flex';

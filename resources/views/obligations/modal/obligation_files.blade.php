@@ -600,7 +600,6 @@
         fetch(`/obligation-files/${fileId}/preview`)
             .then(response => response.json())
             .then(data => {
-                console.log('Preview data received:', data);
                 if (data.success) {
                     renderFilePreview(data.file_type, data.file_url, data.file_path);
                 } else {
@@ -623,8 +622,6 @@
     function renderFilePreview(fileType, fileUrl, filePath) {
         const content = document.getElementById('fileViewContent');
         const fileId = window.currentViewFileId;
-        
-        console.log('Rendering preview for:', { fileType, fileUrl, fileId });
         
         // Clear previous content
         content.innerHTML = '';

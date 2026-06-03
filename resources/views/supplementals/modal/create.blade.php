@@ -414,8 +414,6 @@
     // Filter account codes and display suggestions with description and program
     function filterAccountCodes(inputElement) {
         const officeAllotmentClassId = document.getElementById('office_allotment_class_id').value; // Get the selected office_allotment_class_id
-        console.log('Appropriations Data:', appropriations);
-        console.log('Selected Office Allotment Class ID:', officeAllotmentClassId);
         const dropdown = inputElement.nextElementSibling; // Get the dropdown element
         const filter = inputElement.value.toLowerCase();
 
@@ -434,8 +432,6 @@
              item.description.toLowerCase().includes(filter) || // Match description
              item.program.toLowerCase().includes(filter)) // Match program
         );
-
-        console.log('Filtered Account Codes:', filteredCodes);
 
         if (filteredCodes.length === 0) {
             dropdown.classList.add('hidden');
@@ -779,7 +775,6 @@
             document.getElementById('typeError').textContent = 'Type is required.';
             isValid = false;
         }
-        console.log("Type Selected:", type.value);
 
         // Validate Supplemental Number
         const supplementalNo = document.getElementById('supplemental_no');

@@ -11,7 +11,7 @@
         <div class="relative w-full max-w-5xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
-                <h3 id="editSupplementalLabel" class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 id="editSupplementalLabel" class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <i class="fas fa-edit text-amber-600 dark:text-amber-400"></i>
                     {{ __('Edit Supplemental Appropriation | Reversion') }}
                 </h3>
@@ -27,7 +27,7 @@
 
                             <!-- Office and Allotment Class -->
                             <div class="sm:col-span-3 relative">
-                                <x-form.label for="edit_office_allotment_class" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
+                                <x-form.label for="edit_office_allotment_class" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -39,88 +39,88 @@
                                             name="edit_office_allotment_class"
                                             id="edit_office_allotment_class"
                                             placeholder="{{ __('Office and Allotment Class') }}"
-                                            class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
+                                            class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
                                             oninput="filterOfficeAllotmentClasses()"
                                             autocomplete="off" />
                                     </x-form.input-with-icon-wrapper>
                                     <!-- Hidden input to store the selected ID -->
                                     <input type="hidden" name="edit_office_allotment_class_id" id="edit_office_allotment_class_id" />
-                                    <div id="editOfficeAllotmentClassDropdown" class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                    <div id="editOfficeAllotmentClassDropdown" class="absolute w-full bg-white text-xs dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                         <!-- Suggestions appear here -->
                                     </div>
-                                    <span id="edit_OfficeAllotmentClassError" class="text-red-500 text-sm"></span>
+                                    <span id="edit_OfficeAllotmentClassError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Type -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_type" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Type')" />
+                                <x-form.label for="edit_type" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Type')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-arrow-up-right-dots"></i>
                                         </x-slot>
-                                        <x-form.select withicon id="edit_type" class="block w-full" type="text" name="edit_type" placeholder="{{ __('Type') }}">
+                                        <x-form.select withicon id="edit_type" class="block w-full text-xs" type="text" name="edit_type" placeholder="{{ __('Type') }}">
                                             <option value="Supplemental">{{ __('Supplemental') }}</option>
                                             <option value="Reversion">{{ __('Reversion') }}</option>
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="edit_typeError" class="text-red-500 text-sm"></span>
+                                    <span id="edit_typeError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_supplemental_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
+                                <x-form.label for="edit_supplemental_date" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="edit_supplemental_date" autocomplete="off" id="edit_supplemental_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='date' name="edit_supplemental_date" autocomplete="off" id="edit_supplemental_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_supplemental_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Number')" />
+                                <x-form.label for="edit_supplemental_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Number')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-list-ol"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='text' name="edit_supplemental_no" autocomplete="off" id="edit_supplemental_no" placeholder="{{ __('Number') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='text' name="edit_supplemental_no" autocomplete="off" id="edit_supplemental_no" placeholder="{{ __('Number') }}" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- SB No. -->
                             <div class="sm:col-span-3" id="editSbNoField" style="display:none;">
-                                <x-form.label for="edit_basis_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('SB No.')" />
+                                <x-form.label for="edit_basis_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('SB No.')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-align-justify"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="edit_basis_no" autocomplete="off" id="edit_basis_no" placeholder="{{ __('SB No.') }}" :value="old('basis_no')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="edit_basis_no" autocomplete="off" id="edit_basis_no" placeholder="{{ __('SB No.') }}" :value="old('basis_no')" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="edit_basis_noError" class="text-red-500 text-sm"></span>
+                                    <span id="edit_basis_noError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Basis / Remarks -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="edit_basis" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Basis / Remarks')" />
+                                <x-form.label for="edit_basis" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Basis / Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-circle-info"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="edit_basis" autocomplete="off" id="edit_basis" placeholder="{{ __('Basis / Remarks') }}" :value="old('basis')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="edit_basis" autocomplete="off" id="edit_basis" placeholder="{{ __('Basis / Remarks') }}" :value="old('basis')" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="edit_basisError" class="text-red-500 text-sm"></span>
+                                    <span id="edit_basisError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Programs Table -->
                             <div class="sm:col-span-6">
                                 <!-- Message Placeholder -->
-                                <div id="tableMessage" class="text-red-500 text-sm hidden mb-2"></div>
+                                <div id="tableMessage" class="text-red-500 text-xs hidden mb-2"></div>
                                 <div class="mt-2 overflow-x-auto">
                                     <table id="programs_table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
                                         <thead class="bg-gray-50 dark:bg-gray-800">
@@ -206,13 +206,13 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateEditSupplementalForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="validateEditSupplementalForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Update') }}
                     </button>
-                    <button type="button" onclick="closeEditSupplementalModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="closeEditSupplementalModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Cancel') }}
                     </button>
@@ -230,10 +230,10 @@
             Are you sure you want to delete this row? This action cannot be undone.
         </p>
         <div class="flex justify-end gap-2">
-            <button id="confirmDeleteBtn" class="mr-1 text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+            <button id="confirmDeleteBtn" class="mr-1 text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-6 py-2 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
                 <i class="fas fa-trash mr-1 -ml-1"></i> Delete
             </button>
-            <button id="cancelDeleteBtn" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-1.5 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
+            <button id="cancelDeleteBtn" class="text-gray-600 inline-flex items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900">
                 <i class="fas fa-times mr-1 -ml-1"></i> Cancel
             </button>
         </div>

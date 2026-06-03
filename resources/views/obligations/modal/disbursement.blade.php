@@ -15,7 +15,7 @@
                 <div class="flex items-center gap-3">
                     <i class="fas fa-plus-circle text-blue-600 dark:text-blue-300 text-xl"></i>
                     <div>
-                        <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
+                        <h3 class="text-base leading-6 font-semibold text-blue-900 dark:text-blue-100">
                             {{ __('Add Disbursement') }}
                         </h3>
                         <span class="text-lg text-blue-700 dark:text-blue-300 font-semibold">
@@ -29,7 +29,7 @@
             </div>
 
             <!-- Modal body -->
-            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-7 py-3 text-xs">
+            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-6 py-4 text-xs">
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
@@ -48,55 +48,55 @@
                             <input type="hidden" name="fund_filter" value="{{ request('fund_filter') ?? '' }}">
                             <!-- DV Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="disbursement_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Date')" />
+                                <x-form.label for="disbursement_date" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="disbursement_date" autocomplete="off" id="disbursement_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='date' name="disbursement_date" autocomplete="off" id="disbursement_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- DV Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="dv_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Number')" />
+                                <x-form.label for="dv_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Number')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-hashtag"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="dv_no" autocomplete="off" id="dv_no" placeholder="{{ __('DV / Check Number') }}" :value="old('dv_no')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="dv_no" autocomplete="off" id="dv_no" placeholder="{{ __('DV / Check Number') }}" :value="old('dv_no')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="dv_noError" class="text-red-500 text-sm"></span>
+                                    <span id="dv_noError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Status -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="status" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Status')" />
+                                <x-form.label for="status" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Status')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-check-circle"></i>
                                         </x-slot>
-                                        <x-form.select withicon name="status" id="status" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200">
+                                        <x-form.select withicon name="status" id="status" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200">
                                             <option value="">-- Select Status --</option>
                                             <option value="Partial Payment" {{ old('status') == 'Partial Payment' ? 'selected' : '' }}>Partial Payment</option>
                                             <option value="Full Payment" {{ old('status') == 'Full Payment' ? 'selected' : '' }}>Full Payment</option>
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="statusError" class="text-red-500 text-sm"></span>
+                                    <span id="statusError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Remarks -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="po_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
+                                <x-form.label for="po_remarks" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-circle-info"></i>
                                         </x-slot>
-                                        <x-form.textarea withicon name="remarks" autocomplete="off" id="emarks" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="remarks" autocomplete="off" id="emarks" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
@@ -283,13 +283,13 @@
             </div>
 
             <!-- Modal footer -->
-            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
+            <div class="flex justify-end gap-3 p-4 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
                 <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                <button type="button" onclick="if(!isSubmittingDisbursement) { validateFormCreateDisbursement(); return false; } return false;" id="submitDisbursementBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="if(!isSubmittingDisbursement) { validateFormCreateDisbursement(); return false; } return false;" id="submitDisbursementBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Save') }}
                 </button>
-                <button type="button" onclick="closeCreateDisbursementModal()" class="text-gray-600 dark:text-gray-400 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="closeCreateDisbursementModal()" class="text-gray-600 dark:text-gray-400 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Cancel') }}
                 </button>

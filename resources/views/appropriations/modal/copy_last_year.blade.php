@@ -2,8 +2,8 @@
 <div id="copyLastYearModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-[120rem] w-full max-h-[90vh] flex flex-col transform transition-all duration-300 ease-out hidden animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Header -->
-        <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
-            <h2 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+        <div class="flex justify-between items-center px-6 py-4 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+            <h2 class="text-base leading-6 font-bold text-gray-900 dark:text-white flex items-center">
                 <i class="fas fa-copy text-purple-600 dark:text-purple-400 mr-3 text-xl"></i>
                 Accounts from Last Year
             </h2>
@@ -13,7 +13,7 @@
         </div>
 
         <!-- Body -->
-        <div class="overflow-y-auto flex-1 p-6">
+        <div class="overflow-y-auto flex-1 px-6 py-4">
             <div id="loadingIndicator" class="text-center py-8 hidden">
                 <i class="fas fa-spinner fa-spin text-3xl text-blue-600 dark:text-blue-400"></i>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">Loading accounts from last year...</p>
@@ -101,14 +101,14 @@
 
         <!-- Footer -->
         <div class="flex justify-between items-center p-6 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0 gap-3">
-            <button type="button" onclick="addNewRow()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+            <button type="button" onclick="addNewRow()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                 <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>Add Row
             </button>
             <div class="flex gap-3">
-                <button type="button" onclick="if(!isSubmittingCopyLastYear) submitCopyLastYearForm(); else return false;" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="if(!isSubmittingCopyLastYear) submitCopyLastYearForm(); else return false;" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>Save All
                 </button>
-                <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>Cancel
                 </button>
             </div>

@@ -6,8 +6,8 @@
             <!-- Modal content -->
             <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                <div class="flex justify-between items-center px-6 py-4 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+                    <h3 class="text-base leading-6 font-bold text-gray-900 dark:text-white flex items-center">
                         <i class="fas fa-plus-circle text-blue-600 dark:text-blue-400 mr-3 text-xl"></i>
                         {{ __('Create Allotment Class per Office') }}
                     </h3>
@@ -16,26 +16,26 @@
                     </button>
                 </div>
                 <!-- Modal body -->
-                <div class="overflow-y-auto flex-1 px-7 py-3">
+                <div class="overflow-y-auto flex-1 px-6 py-4">
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <!-- Year -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="year" class="block text-xs/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Year')" />
+                                <x-form.label for="year" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Year')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar-check"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="number" name="year" id="year" min="" required placeholder="{{ __('Year') }}" :value="old('year')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="number" name="year" id="year" min="" required placeholder="{{ __('Year') }}" :value="old('year')" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="yearError" class="text-red-500 text-sm"></span>
+                                    <span id="yearError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Fund Source -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="fund_source" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Fund Source')" />
+                                <x-form.label for="fund_source" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Fund Source')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -48,7 +48,7 @@
                                             id="fund_source"
                                             :value="old('fund_source')"
                                             placeholder="{{ __('Fund Source') }}"
-                                            class="block w-full dark:bg-gray-800 dark:text-gray-200"
+                                            class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                             onchange="fetchAllotmentClasses(this.value)">
                                             <option value="">{{ __('Select Fund Source') }}</option>
                                             @foreach($fund_sources as $fund_source)
@@ -56,12 +56,12 @@
                                             @endforeach
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="fundSourceError" class="text-red-500 text-sm"></span>
+                                    <span id="fundSourceError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Office -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="office" class="block font-medium text-gray-900 dark:text-gray-200" :value="__('Office')" />
+                                <x-form.label for="office" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -74,7 +74,7 @@
                                             id="office"
                                             :value="old('office')"
                                             placeholder="{{ __('Office') }}"
-                                            class="block w-full dark:bg-gray-800 dark:text-gray-200"
+                                            class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                             onchange="fetchFund(this.value)">
                                             <option value="">{{ __('Select Office') }}</option>
                                             @foreach($offices as $office)
@@ -82,70 +82,70 @@
                                             @endforeach
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="officeError" class="text-red-500 text-sm"></span>
+                                    <span id="officeError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Office Abbreviation -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="office_abbreviation" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office Abbreviation')" />
+                                <x-form.label for="office_abbreviation" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office Abbreviation')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-file-fragment"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="office_abbreviation" id="office_abbreviation" placeholder="{{ __('Office Abbreviation') }}" class="block w-full bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
+                                        <x-form.input withicon type="text" name="office_abbreviation" id="office_abbreviation" placeholder="{{ __('Office Abbreviation') }}" class="block w-full text-xs bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
                                         <input type="hidden" name="office_abbreviation" id="office_abbreviation_hidden">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Sub Office -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="sub_office" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Sub Office')" />
+                                <x-form.label for="sub_office" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Sub Office')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-window-restore"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="sub_office" id="sub_office" placeholder="{{ __('Sub Office') }}" class="block w-full bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
+                                        <x-form.input withicon type="text" name="sub_office" id="sub_office" placeholder="{{ __('Sub Office') }}" class="block w-full text-xs bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
                                         <input type="hidden" name="sub_office" id="sub_office_hidden">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Fund -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="fund" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Fund')" />
+                                <x-form.label for="fund" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Fund')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-money-bill"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="fund" id="fund" placeholder="{{ __('Fund') }}" class="block w-full bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
+                                        <x-form.input withicon type="text" name="fund" id="fund" placeholder="{{ __('Fund') }}" class="block w-full text-xs bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
                                         <input type="hidden" name="fund" id="fund_hidden">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- FPP Code -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="fpp_code" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('FPP Code')" />
+                                <x-form.label for="fpp_code" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('FPP Code')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-file-invoice"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="fpp_code" id="fpp_code" placeholder="{{ __('FPP Code') }}" autocomplete="off" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="fpp_code" id="fpp_code" placeholder="{{ __('FPP Code') }}" autocomplete="off" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                         <input type="hidden" name="fpp_code" id="fpp_code_hidden">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Responsibility Code -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="responsibility_code" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Responsibility Code')" />
+                                <x-form.label for="responsibility_code" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Responsibility Code')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-file-lines"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="responsibility_code" id="responsibility_code" placeholder="{{ __('Responsibility Code') }}" class="block w-full bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
+                                        <x-form.input withicon type="text" name="responsibility_code" id="responsibility_code" placeholder="{{ __('Responsibility Code') }}" class="block w-full text-xs bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-200" disabled />
                                         <input type="hidden" name="responsibility_code" id="responsibility_code_hidden">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
@@ -153,7 +153,7 @@
 
                             <!-- Allotment Class -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="allotment_class" class="block font-medium text-gray-900 dark:text-gray-200" :value="__('Allotment Class')" />
+                                <x-form.label for="allotment_class" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Allotment Class')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -166,14 +166,14 @@
                                             id="allotment_class"
                                             :value="old('allotment_class')"
                                             placeholder="{{ __('Allotment Class') }}"
-                                            class="block w-full dark:bg-gray-800 dark:text-gray-200">
+                                            class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200">
                                             <option value="">{{ __('Select Allotment Class') }}</option>
                                             @foreach($allotment_classes as $allotment_class)
                                             <option value="{{ $allotment_class->class }}">{{ $allotment_class->description }}</option>
                                             @endforeach
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="allotmentClassError" class="text-red-500 text-sm"></span>
+                                    <span id="allotmentClassError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
@@ -183,13 +183,13 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center mt-4 p-4 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="if(!isSubmittingOfficeAllotmentClass) validateCreateOfficeAllotmentClassForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingOfficeAllotmentClass) validateCreateOfficeAllotmentClassForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
-                    <button type="button" onclick="closeCreateOfficeAllotmentClassModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="closeCreateOfficeAllotmentClassModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Cancel') }}
                     </button>

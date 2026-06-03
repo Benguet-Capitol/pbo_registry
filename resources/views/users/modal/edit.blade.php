@@ -7,8 +7,8 @@
             <!-- Modal content -->
             <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                <div class="flex justify-between items-center px-6 py-4 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+                    <h3 class="text-base leading-6 font-bold text-gray-900 dark:text-white flex items-center">
                         <i class="fas fa-user-edit text-amber-600 dark:text-amber-400 mr-3 text-xl"></i>
                         {{ __('Edit User') }}
                     </h3>
@@ -24,13 +24,13 @@
                             <!-- Name -->
                             <div class="sm:col-span-3">
                                 <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
-                                <x-form.label for="edit_name" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Name')" />
+                                <x-form.label for="edit_name" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Name')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-user"></i>
                                         </x-slot>
-                                        <x-form.select withicon id="edit_name" class="block w-full dark:bg-gray-800 dark:text-gray-200" name="edit_name" autocomplete="off">
+                                        <x-form.select withicon id="edit_name" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" name="edit_name" autocomplete="off">
                                             @foreach($employees as $employee)
                                             <option value="{{ $employee->name }}" {{ old('name', $user->name) == $employee->name ? 'selected' : '' }}>
                                                 {{ $employee->name }}
@@ -38,52 +38,52 @@
                                             @endforeach
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="nameError" class="text-red-500 text-sm"></span>
+                                    <span id="nameError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
                             <!-- Username -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_username" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Username')" />
+                                <x-form.label for="edit_username" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Username')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-envelope"></i>
                                         </x-slot>
-                                        <x-form.input withicon id="edit_username" class="block w-full dark:bg-gray-800 dark:text-gray-200" type="text" name="edit_username" autocomplete="off" placeholder="{{ __('Username') }}" :value="old('username', $user->username)" />
+                                        <x-form.input withicon id="edit_username" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" type="text" name="edit_username" autocomplete="off" placeholder="{{ __('Username') }}" :value="old('username', $user->username)" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="username_Error" class="text-red-500 text-sm error-message"></span>
+                                    <span id="username_Error" class="text-red-500 text-xs error-message"></span>
                                 </div>
                             </div>
 
                             <!-- User Type / Role -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_usertype" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Role')" />
+                                <x-form.label for="edit_usertype" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Role')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-users"></i>
                                         </x-slot>
-                                        <x-form.select withicon id="edit_usertype" class="block w-full dark:bg-gray-800 dark:text-gray-200" name="edit_usertype" autocomplete="off">
+                                        <x-form.select withicon id="edit_usertype" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" name="edit_usertype" autocomplete="off">
                                             <option value="">{{ __('Select Role') }}</option>
                                             @foreach($roles as $role)
                                                 <option value="{{ $role->name }}" {{ old('usertype', $user->usertype) == $role->name ? 'selected' : '' }}>{{ $role->name }}</option>
                                             @endforeach
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="usertypeError" class="text-red-500 text-sm"></span>
+                                    <span id="usertypeError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
                             <!-- Office -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_office" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office')" />
+                                <x-form.label for="edit_office" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-building"></i>
                                         </x-slot>
-                                        <x-form.select withicon id="edit_office" class="block w-full dark:bg-gray-800 dark:text-gray-200" name="edit_office" placeholder="{{ __('Office') }}">
+                                        <x-form.select withicon id="edit_office" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" name="edit_office" placeholder="{{ __('Office') }}">
                                             <option value="">{{ __('Select Office') }}</option>
                                             @foreach($offices as $office)
                                                 <option value="{{ $office->id }}">
@@ -92,7 +92,7 @@
                                             @endforeach
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="editOfficeError" class="text-red-500 text-sm"></span>
+                                    <span id="editOfficeError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
@@ -102,13 +102,13 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center mt-4 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateEditUserForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="validateEditUserForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Update') }}
                     </button>
-                    <button type="button" onclick="closeEditUserModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="closeEditUserModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Cancel') }}
                     </button>

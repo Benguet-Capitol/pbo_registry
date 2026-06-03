@@ -15,7 +15,7 @@
             <p id="deleteDisbursementModalContent">{{ __('Are you sure you want to delete this Disbursement? This action cannot be undone.') }}</p>
         </div>
         <!-- Modal footer -->
-        <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+        <div class="justify-center items-center p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
             <form id="deleteDisbursementForm" method="POST" action="">
                 @csrf
                 @method('DELETE')
@@ -51,7 +51,7 @@
 
     document.getElementById('deleteDisbursementForm').action = '{{ route("disbursements.destroy", ":id") }}'.replace(':id', disbursementId);
     const formattedAmount = Number(disbursementAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    document.getElementById('deleteDisbursementModalContent').innerHTML = `Are you sure you want to delete this DV / Check No: <strong>${disbursementNo}</strong> dated <strong>${disbursementDate}</strong> under Account Code: <strong>${accountCode}</strong> and with DV / Check Amount: <strong>${formattedAmount}</strong>? This action cannot be undone.`;
+    document.getElementById('deleteDisbursementModalContent').innerHTML = `Are you sure you want to delete this DV / Check No: <strong>${disbursementNo}</strong> dated <strong>${disbursementDate}</strong> under Account Code: <strong>${accountCode}</strong> and with DV / Check Amount: <strong>${formattedAmount}</strong>? </br></br> This action cannot be undone.`;
     const modal = document.getElementById('deleteDisbursementModal');
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');

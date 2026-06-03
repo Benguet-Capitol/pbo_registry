@@ -28,55 +28,55 @@
                             <input type="hidden" name="disbursement_id" id="disbursement_id">
                             <!-- DV Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_disbursement_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Date')" />
+                                <x-form.label for="edit_disbursement_date" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="edit_disbursement_date" autocomplete="off" id="edit_disbursement_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='date' name="edit_disbursement_date" autocomplete="off" id="edit_disbursement_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- DV Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_dv_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Number')" />
+                                <x-form.label for="edit_dv_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('DV / Check Number')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-hashtag"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="edit_dv_no" autocomplete="off" id="edit_dv_no" placeholder="{{ __('DV / Check Number') }}" :value="old('dv_no')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="edit_dv_no" autocomplete="off" id="edit_dv_no" placeholder="{{ __('DV / Check Number') }}" :value="old('dv_no')" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="edit_dv_noError" class="text-red-500 text-sm"></span>
+                                    <span id="edit_dv_noError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Status -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_status" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Status')" />
+                                <x-form.label for="edit_status" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Status')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-check-circle"></i>
                                         </x-slot>
-                                        <x-form.select withicon name="edit_status" id="edit_status" class="block w-full dark:bg-gray-800 dark:text-gray-200">
+                                        <x-form.select withicon name="edit_status" id="edit_status" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200">
                                             <option value="">-- Select Status --</option>
                                             <option value="Partial Payment" {{ old('status') == 'Partial Payment' ? 'selected' : '' }}>Partial Payment</option>
                                             <option value="Full Payment" {{ old('status') == 'Full Payment' ? 'selected' : '' }}>Full Payment</option>
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="edit_statusError" class="text-red-500 text-sm"></span>
+                                    <span id="edit_statusError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Remarks -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
+                                <x-form.label for="edit_remarks" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-circle-info"></i>
                                         </x-slot>
-                                        <x-form.textarea withicon name="edit_remarks" autocomplete="off" id="edit_remarks" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="edit_remarks" autocomplete="off" id="edit_remarks" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
@@ -84,7 +84,7 @@
                             <div class="sm:col-span-6">
                                 <x-form.label for="programs_table" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Accounts')" />
                                 <!-- Message Placeholder -->
-                                <div id="tableMessage" class="text-red-500 text-sm hidden mb-2"></div>
+                                <div id="tableMessage" class="text-red-500 text-xs hidden mb-2"></div>
                                 <div class="mt-2 overflow-x-auto">
                                     <!-- Display Obligation Amounts and Appropriations in Programs Table -->
                                     @if(isset($obligationAmounts) && $obligationAmounts->isNotEmpty())
@@ -154,7 +154,7 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center mt-6 p-4 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
                     <button type="button" onclick="validateFormEdit()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>

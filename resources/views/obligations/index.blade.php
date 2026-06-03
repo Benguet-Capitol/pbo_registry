@@ -207,7 +207,7 @@
             <div class="flex justify-between items-center mb-4">
                 <!-- Left: Action Button -->
                 @can('create obligations')
-                <button onclick="openCreateModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                <button onclick="openCreateModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Create Obligation') }}
                 </button>
@@ -217,7 +217,7 @@
                 <!-- Right: Total Records and Search Input -->
                 <div class="flex items-center space-x-4">
                     <!-- Export Button -->
-                    <button type="button" onclick="exportObligationsToExcel()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900" title="Export filtered data to Excel">
+                    <button type="button" onclick="exportObligationsToExcel()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900" title="Export filtered data to Excel">
                         <i class="fas fa-download text-lg mr-2 -ml-1 w-4 h-4"></i>
                         Export to Excel
                     </button>
@@ -725,11 +725,11 @@
     <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
         <div class="flex flex-col max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
             <!-- Modal header -->
-            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
+            <div class="flex justify-between items-center px-4 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
                     <div>
-                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 class="text-base leading-6 font-semibold text-gray-900 dark:text-gray-100">
                             Obligation Status/History
                         </h3>
                         <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
@@ -740,13 +740,13 @@
                 </button>
             </div>
             <!-- Modal body (scrollable) -->
-            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-6 space-y-3">
+            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-4 space-y-3">
                 <div class="flex justify-center items-center py-8">
                     <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
                 </div>
             </div>
             <!-- Modal footer -->
-            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+            <div class="flex justify-end gap-3 p-4 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
                 <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     Close

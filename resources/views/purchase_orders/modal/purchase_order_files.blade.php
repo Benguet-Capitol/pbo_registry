@@ -3,7 +3,7 @@
     <div class="relative w-full max-w-2xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 dark:border-gray-600">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <i class="fas fa-file-upload text-green-600 dark:text-green-400"></i>
                 <div class="flex flex-col">
                     <span>Purchase Order Files</span>
@@ -49,7 +49,7 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closePurchaseOrderFilesModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closePurchaseOrderFilesModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Close
             </button>
@@ -62,7 +62,7 @@
     <div class="relative w-full max-w-7xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp flex flex-col" style="animation: scaleInUp 0.3s ease-out; height: 90vh; max-height: 90vh;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900 dark:to-blue-900 dark:border-gray-600 flex-shrink-0">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <i class="fas fa-eye text-cyan-600 dark:text-cyan-400"></i>
                 <span id="purchaseOrderViewFileName">View File</span>
             </h3>
@@ -83,7 +83,7 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closePurchaseOrderViewFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closePurchaseOrderViewFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Close
             </button>
@@ -96,7 +96,7 @@
     <div class="relative w-full max-w-md mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900 dark:to-yellow-900 dark:border-gray-600">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <i class="fas fa-edit text-amber-600 dark:text-amber-400"></i>
                 Rename File
             </h3>
@@ -113,13 +113,13 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closePurchaseOrderEditFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                <i class="fas fa-times mr-2"></i>
-                Cancel
-            </button>
-            <button type="button" onclick="submitPurchaseOrderEditFileName()" class="text-white inline-flex leading-4 tracking-wider bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="submitPurchaseOrderEditFileName()" class="text-white inline-flex leading-4 tracking-wider bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-save mr-2"></i>
                 Save
+            </button>
+            <button type="button" onclick="closePurchaseOrderEditFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-times mr-2"></i>
+                Cancel
             </button>
         </div>
     </div>
@@ -130,7 +130,7 @@
     <div class="relative w-full max-w-md mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
         <!-- Modal header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900 dark:to-pink-900 dark:border-gray-600">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <i class="fas fa-trash text-red-600 dark:text-red-400"></i>
                 Delete File
             </h3>
@@ -151,13 +151,13 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closePurchaseOrderDeleteFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                <i class="fas fa-times mr-2"></i>
-                Cancel
-            </button>
-            <button type="button" onclick="submitPurchaseOrderDeleteFile()" class="text-white inline-flex leading-4 tracking-wider bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="submitPurchaseOrderDeleteFile()" class="text-white inline-flex leading-4 tracking-wider bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-trash mr-2"></i>
                 Delete
+            </button>
+            <button type="button" onclick="closePurchaseOrderDeleteFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-times mr-2"></i>
+                Cancel
             </button>
         </div>
     </div>

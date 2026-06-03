@@ -24,7 +24,7 @@
         <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
             <div class="flex items-center gap-3">
                 <i class="fas fa-comment-dots text-blue-600 dark:text-blue-300 text-xl"></i>
-                <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
+                <h3 class="text-base leading-6 font-semibold text-blue-900 dark:text-blue-100">
                     Payment Remarks
                 </h3>
             </div>
@@ -58,27 +58,27 @@
                         name="payment_remarks" 
                         rows="4" 
                         maxlength="1000"
-                        class="w-full px-3 py-2 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
+                        class="w-full px-3 py-2 text-xs text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                         placeholder="Enter payment remarks"></x-form.textarea>
                 </div>
             </form>
         </div>
 
         <!-- Modal footer -->
-        <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+        <div class="flex justify-end gap-3 p-4 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
             <button 
                 type="submit" 
                 form="paymentRemarksForm"
                 onclick="if(isSubmittingPaymentRemarks) return false; isSubmittingPaymentRemarks = true;" 
                 id="submitPaymentRemarksBtn"
-                class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-save mr-2"></i>
                 Save
             </button>
             <button 
                 type="button" 
                 onclick="closePaymentRemarksModal()" 
-                class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Cancel
             </button>

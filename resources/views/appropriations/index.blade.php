@@ -111,8 +111,8 @@
                     </label>
                     <div class="flex items-center space-x-2">
                         <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
-                        <input type="file" name="file" id="file-upload" accept=".xlsx,.xls,.csv" required class="form-control border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
-                        <button type="submit" onclick="if(!isSubmittingImportAppropriations) { isSubmittingImportAppropriations = true; } else { return false; }" class="text-blue-600 inline-flex items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <input type="file" name="file" id="file-upload" accept=".xlsx,.xls,.csv" required class="form-control border border-gray-300 rounded-lg px-6 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                        <button type="submit" onclick="if(!isSubmittingImportAppropriations) { isSubmittingImportAppropriations = true; } else { return false; }" class="text-blue-600 inline-flex items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                             {{ __('Import') }}
                         </button>
                     </div>
@@ -132,14 +132,14 @@
             <div class="flex justify-between items-center mb-4 gap-4">
                 <div class="flex gap-3">
                     @can('create appropriations')
-                    <button onclick="openCreateAppropriationsModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button onclick="openCreateAppropriationsModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Create Account') }}
                     </button>
                     @endcan
 
                     @can('create appropriations')
-                    <button onclick="openCopyLastYearModal()" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button onclick="openCopyLastYearModal()" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-copy text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Accounts from Last Year') }}
                     </button>

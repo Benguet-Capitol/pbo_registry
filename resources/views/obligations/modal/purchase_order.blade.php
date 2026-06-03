@@ -46,7 +46,7 @@
                 </button>
             </div>
             <!-- Modal body (scrollable) -->
-            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-7 py-3 text-xs">
+            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-6 py-3 text-xs">
                 <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
                             <input type="hidden" name="po_source" value="">
@@ -61,78 +61,78 @@
                             <input type="hidden" name="fund_filter" value="{{ request('fund_filter') ?? '' }}">
                             <!-- PO Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="po_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PO Date')" />
+                                <x-form.label for="po_date" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('PO Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="po_date" autocomplete="off" id="po_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='date' name="po_date" autocomplete="off" id="po_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                     <span class="poDateError text-red-500 text-xs hidden"></span>
                                 </div>
                             </div>
                             <!-- PO Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="po_number" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PO Number')" />
+                                <x-form.label for="po_number" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('PO Number')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-hashtag"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="po_number" autocomplete="off" id="po_number" placeholder="{{ __('PO Number') }}" :value="old('po_number')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="po_number" autocomplete="off" id="po_number" placeholder="{{ __('PO Number') }}" :value="old('po_number')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="po_numberError" class="text-red-500 text-sm"></span>
+                                    <span id="po_numberError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- PR Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="pr_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('PR Number')" />
+                                <x-form.label for="pr_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('PR Number')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-list-ol"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="pr_no" autocomplete="off" id="pr_no" placeholder="{{ __('PR Number') }}" :value="old('pr_no')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="pr_no" autocomplete="off" id="pr_no" placeholder="{{ __('PR Number') }}" :value="old('pr_no')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="pr_noError" class="text-red-500 text-sm"></span>
+                                    <span id="pr_noError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Delivery Period -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="delivery_period" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Delivery Period')" />
+                                <x-form.label for="delivery_period" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Delivery Period')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar-day"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="delivery_period" autocomplete="off" id="delivery_period" placeholder="{{ __('Delivery Period') }}" :value="old('delivery_period')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="delivery_period" autocomplete="off" id="delivery_period" placeholder="{{ __('Delivery Period') }}" :value="old('delivery_period')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="delivery_periodError" class="text-red-500 text-sm"></span>
+                                    <span id="delivery_periodError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Supplier -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="supplier" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Supplier')" />
+                                <x-form.label for="supplier" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Supplier')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-store"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="supplier" autocomplete="off" id="supplier" placeholder="{{ __('Supplier') }}" :value="old('supplier')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="supplier" autocomplete="off" id="supplier" placeholder="{{ __('Supplier') }}" :value="old('supplier')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="supplierError" class="text-red-500 text-sm"></span>
+                                    <span id="supplierError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Remarks -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="po_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
+                                <x-form.label for="po_remarks" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-circle-info"></i>
                                         </x-slot>
-                                        <x-form.textarea withicon name="po_remarks" autocomplete="off" id="po_remarks" placeholder="{{ __('Remarks') }}" :value="old('po_remarks')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="po_remarks" autocomplete="off" id="po_remarks" placeholder="{{ __('Remarks') }}" :value="old('po_remarks')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
@@ -263,13 +263,13 @@
                         </div>
             </div>
             <!-- Modal footer -->
-            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+            <div class="flex justify-end gap-3 p-4 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
                 <x-input-error :messages="$errors->get('message')" class="mr-auto" />
-                <button type="button" onclick="if(!isSubmittingPurchaseOrder) { validateFormCreatePO(); }" id="submitPOBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="if(!isSubmittingPurchaseOrder) { validateFormCreatePO(); }" id="submitPOBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-save mr-2"></i>
                     {{ __('Save') }}
                 </button>
-                <button type="button" onclick="closeCreatePOModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="closeCreatePOModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     {{ __('Cancel') }}
                 </button>

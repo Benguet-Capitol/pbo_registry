@@ -30,7 +30,7 @@
         <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900 dark:to-teal-900 border-b-2 border-green-200 dark:border-green-700 rounded-t-lg">
             <div class="flex items-center gap-3">
                 <i class="fas fa-eye text-green-600 dark:text-green-300 text-xl"></i>
-                <h3 class="text-lg leading-6 font-semibold text-green-900 dark:text-green-100">
+                <h3 class="text-base leading-6 font-semibold text-green-900 dark:text-green-100">
                     {{ __('Obligation Details') }}
                 </h3>
             </div>
@@ -43,12 +43,12 @@
             <!-- Content will be dynamically loaded here -->
         </div>
         <!-- Modal footer -->
-        <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-            <button type="button" onclick="printModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+        <div class="flex justify-end gap-3 p-4 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+            <button type="button" onclick="printModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-print mr-2"></i>
                 Print
             </button>
-            <button type="button" onclick="closeModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closeModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Close
             </button>

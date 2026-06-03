@@ -176,7 +176,7 @@
             <div class="flex justify-between items-center mb-4 gap-4">
                 <!-- Create Button -->
                 @can('create office allotment classes')
-                <button onclick="openCreateOfficeAllotmentClassModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                <button onclick="openCreateOfficeAllotmentClassModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Create Allotment Class per Office') }}
                 </button>

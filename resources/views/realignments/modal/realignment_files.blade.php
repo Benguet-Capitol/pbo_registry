@@ -49,7 +49,7 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeRealignmentFilesModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closeRealignmentFilesModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Close
             </button>
@@ -83,7 +83,7 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeRealignmentViewFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="closeRealignmentViewFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-times mr-2"></i>
                 Close
             </button>
@@ -113,13 +113,13 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeRealignmentEditFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                <i class="fas fa-times mr-2"></i>
-                Cancel
-            </button>
-            <button type="button" onclick="submitRealignmentEditFileName()" class="text-white inline-flex leading-4 tracking-wider bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="submitRealignmentEditFileName()" class="text-white inline-flex leading-4 tracking-wider bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-save mr-2"></i>
                 Save
+            </button>
+            <button type="button" onclick="closeRealignmentEditFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-times mr-2"></i>
+                Cancel
             </button>
         </div>
     </div>
@@ -151,13 +151,13 @@
 
         <!-- Modal footer -->
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 rounded-b-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 flex-shrink-0">
-            <button type="button" onclick="closeRealignmentDeleteFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                <i class="fas fa-times mr-2"></i>
-                Cancel
-            </button>
-            <button type="button" onclick="submitRealignmentDeleteFile()" class="text-white inline-flex leading-4 tracking-wider bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <button type="button" onclick="submitRealignmentDeleteFile()" class="text-white inline-flex leading-4 tracking-wider bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                 <i class="fas fa-trash mr-2"></i>
                 Delete
+            </button>
+            <button type="button" onclick="closeRealignmentDeleteFileModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <i class="fas fa-times mr-2"></i>
+                Cancel
             </button>
         </div>
     </div>

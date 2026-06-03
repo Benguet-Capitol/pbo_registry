@@ -10,7 +10,7 @@
         <div class="relative w-full max-w-5xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <i class="fas fa-arrows-alt text-blue-600 dark:text-blue-400"></i>
                     {{ __('Create Realignment | Augmentation') }}
                 </h3>
@@ -26,47 +26,47 @@
 
                             <!-- Realignment Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="realignment_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Realignment No.')" />
+                                <x-form.label for="realignment_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Realignment No.')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-list-ol"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='text' name="realignment_no" autocomplete="off" id="realignment_no" placeholder="{{ __('Realignment No.') }}" :value="now()->format('Y-m-')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='text' name="realignment_no" autocomplete="off" id="realignment_no" placeholder="{{ __('Realignment No.') }}" :value="now()->format('Y-m-')" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="realignment_noError" class="text-red-500 text-sm"></span>
+                                    <span id="realignment_noError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="realignment_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
+                                <x-form.label for="realignment_date" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="realignment_date" autocomplete="off" id="realignment_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='date' name="realignment_date" autocomplete="off" id="realignment_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Basis -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="basis" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Basis')" />
+                                <x-form.label for="basis" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Basis')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-copy"></i>
                                         </x-slot>
-                                        <x-form.textarea withicon name="basis" autocomplete="off" id="basis" placeholder="{{ __('Basis') }}" :value="old('basis')" class="block w-full dark:bg-gray-800 text-gray-900 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="basis" autocomplete="off" id="basis" placeholder="{{ __('Basis') }}" :value="old('basis')" class="block w-full text-xs dark:bg-gray-800 text-gray-900 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="basisError" class="text-red-500 text-sm"></span>
+                                    <span id="basisError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
                             <!-- Type Selection Dropdown -->
                             <div class="sm:col-span-6">
                                 <x-form.label for="section_select" 
-                                    class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" 
+                                    class="block text-xs font-medium text-gray-900 dark:text-gray-200" 
                                     :value="__('Type')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
@@ -74,13 +74,13 @@
                                             <i class="fas fa-code-branch"></i>
                                         </x-slot>
                                         <x-form.select withicon id="section_select" name="section_select" 
-                                            class="block w-full border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-200">
+                                            class="block w-full text-xs border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-200">
                                             <option value="both">Source & Recipient</option>
                                             <option value="source">Source Only</option>
                                             <option value="recipient">Recipient Only</option>
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="section_selectError" class="text-red-500 text-sm"></span>
+                                    <span id="section_selectError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
@@ -93,7 +93,7 @@
                                     </div>
                                     <!-- Source Office and Allotment Class -->
                                     <div class="sm:col-span-3 relative mb-4">
-                                        <x-form.label for="source_office_allotment_class" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
+                                        <x-form.label for="source_office_allotment_class" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
                                         <div class="mt-2">
                                             <x-form.input-with-icon-wrapper>
                                                 <x-slot name="icon">
@@ -105,20 +105,20 @@
                                                     name="source_office_allotment_class"
                                                     id="source_office_allotment_class"
                                                     placeholder="{{ __('Office and Allotment Class') }}"
-                                                    class="block w-full bg-white text-gray-400 dark:bg-gray-800 dark:text-gray-200"
+                                                    class="block w-full text-xs bg-white text-gray-400 dark:bg-gray-800 dark:text-gray-200"
                                                     oninput="filterOfficeAllotmentClasses('source')"
                                                     autocomplete="off" />
                                             </x-form.input-with-icon-wrapper>
                                             <input type="hidden" name="source_office_allotment_class_id" id="source_office_allotment_class_id" />
-                                            <div id="SourceOfficeAllotmentClassDropdown" class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                            <div id="SourceOfficeAllotmentClassDropdown" class="absolute w-full text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                                 <!-- Suggestions appear here -->
                                             </div>
-                                            <span id="SourceOfficeAllotmentClassError" class="text-red-500 text-sm"></span>
+                                            <span id="SourceOfficeAllotmentClassError" class="text-red-500 text-xs"></span>
                                         </div>
                                     </div>
                                     <!-- Source Programs Table -->
                                     <div class="sm:col-span-6">
-                                        <div id="sourceTableMessage" class="text-red-500 text-sm hidden mb-2"></div>
+                                        <div id="sourceTableMessage" class="text-red-500 text-xs hidden mb-2"></div>
                                         <div class="mt-2 overflow-x-auto">
                                             <table id="source_programs_table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
                                                 <thead class="bg-gray-50 dark:bg-gray-800">
@@ -211,7 +211,7 @@
                                             </table>
                                             <!-- Add Button for Dynamic Rows -->
                                             <div class="sm:col-span-6 mt-2 justify-end">
-                                                <button type="button" onclick="addSourceRow()" class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                                <button type="button" onclick="addSourceRow()" class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                                                     <i class="fas fa-plus text-sm mr-2"></i>
                                                     {{ __('Add Row') }}
                                                 </button>
@@ -236,7 +236,7 @@
                                     </div>
                                     <!-- Recipient Office and Allotment Class -->
                                     <div class="sm:col-span-3 relative mb-4">
-                                        <x-form.label for="recipient_office_allotment_class" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
+                                        <x-form.label for="recipient_office_allotment_class" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
                                         <div class="mt-2">
                                             <x-form.input-with-icon-wrapper>
                                                 <x-slot name="icon">
@@ -248,20 +248,20 @@
                                                     name="recipient_office_allotment_class"
                                                     id="recipient_office_allotment_class"
                                                     placeholder="{{ __('Office and Allotment Class') }}"
-                                                    class="block w-full bg-white text-gray-400 dark:bg-gray-800 dark:text-gray-200"
+                                                    class="block w-full text-xs bg-white text-gray-400 dark:bg-gray-800 dark:text-gray-200"
                                                     oninput="filterOfficeAllotmentClasses('recipient')"
                                                     autocomplete="off" />
                                             </x-form.input-with-icon-wrapper>
                                             <input type="hidden" name="recipient_office_allotment_class_id" id="recipient_office_allotment_class_id" />
-                                            <div id="RecipientOfficeAllotmentClassDropdown" class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                            <div id="RecipientOfficeAllotmentClassDropdown" class="absolute w-full text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                                 <!-- Suggestions appear here -->
                                             </div>
-                                            <span id="RecipientOfficeAllotmentClassError" class="text-red-500 text-sm"></span>
+                                            <span id="RecipientOfficeAllotmentClassError" class="text-red-500 text-xs"></span>
                                         </div>
                                     </div>
                                     <!-- Recipient Programs Table -->
                                     <div class="sm:col-span-6">
-                                        <div id="recipientTableMessage" class="text-red-500 text-sm hidden mb-2"></div>
+                                        <div id="recipientTableMessage" class="text-red-500 text-xs hidden mb-2"></div>
                                         <div class="mt-2 overflow-x-auto">
                                             <table id="recipient_programs_table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
                                                 <thead class="bg-gray-50 dark:bg-gray-800">
@@ -354,7 +354,7 @@
                                             </table>
                                             <!-- Add Button for Dynamic Rows -->
                                             <div class="sm:col-span-6 mt-2 justify-end">
-                                                <button type="button" onclick="addRecipientRow()" class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                                <button type="button" onclick="addRecipientRow()" class="text-blue-600 inline-flex items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                                                     <i class="fas fa-plus text-sm mr-2"></i>
                                                     {{ __('Add Row') }}
                                                 </button>
@@ -371,11 +371,11 @@
                 <!-- Modal footer -->
                 <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="if(!isSubmittingRealignment) validateCreateRealignmentForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingRealignment) validateCreateRealignmentForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
-                    <button type="button" onclick="closeCreateRealignmentModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="closeCreateRealignmentModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Cancel') }}
                     </button>

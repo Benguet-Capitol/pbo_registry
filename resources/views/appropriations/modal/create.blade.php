@@ -6,8 +6,8 @@
             <!-- Modal content -->
             <div class="relative bg-white rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                <div class="flex justify-between items-center px-6 py-4 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+                    <h3 class="text-base leading-6 font-bold text-gray-900 dark:text-white flex items-center">
                         <i class="fas fa-plus-circle text-blue-600 dark:text-blue-400 mr-3 text-xl"></i>
                         {{ __('Create Account') }}
                     </h3>
@@ -16,14 +16,14 @@
                     </button>
                 </div>
                 <!-- Modal body -->
-                <div class="overflow-y-auto flex-1 px-7 py-3" style="max-height: calc(90vh - 280px);">
+                <div class="overflow-y-auto flex-1 px-6 py-4" style="max-height: calc(90vh - 280px);">
                     <div class="grid gap-3">
 
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="office_allotment_class_id" id="office_allotment_class_id" value="{{ $officeAllotmentClassId }}">
                             <!-- Programs Dropdown -->
                             <div class="sm:col-span-6 relative">
-                                <x-form.label for="programs" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Programs / Projects / Activities')" />
+                                <x-form.label for="programs" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Programs / Projects / Activities')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -34,20 +34,20 @@
                                             name="programs"
                                             id="programs"
                                             placeholder="{{ __('Programs / Projects / Activities') }}"
-                                            class="block w-full dark:bg-gray-800 dark:text-gray-200 text-gray-500"
+                                            class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 text-gray-500"
                                             autocomplete="off"
                                             oninput="showProgramsDropdown()"
                                             :value="old('programs')"
                                         />
                                     </x-form.input-with-icon-wrapper>
-                                    <div id="programsDropdown" class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                    <div id="programsDropdown" class="absolute w-full bg-white text-xs dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                         <!-- Suggestions appear here -->
                                     </div>
                                 </div>
                             </div>
                             <!-- Account Code -->
                             <div class="sm:col-span-3 relative">
-                                <x-form.label for="account_code" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Account Code')" />
+                                <x-form.label for="account_code" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Account Code')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -59,20 +59,20 @@
                                             name="account_code"
                                             id="account_code"
                                             placeholder="{{ __('Account Code') }}"
-                                            class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
+                                            class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
                                             oninput="showAccountCodeDropdown()"
                                             autocomplete="off" />
                                     </x-form.input-with-icon-wrapper>
-                                    <div id="accountCodeDropdown" class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
+                                    <div id="accountCodeDropdown" class="absolute w-full bg-white text-xs dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                         <!-- Suggestions appear here -->
                                     </div>
-                                    <span id="accountCodeError" class="text-red-500 text-sm"></span>
+                                    <span id="accountCodeError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
                             <!-- Particulars -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="description" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Particulars')" />
+                                <x-form.label for="description" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Particulars')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -84,15 +84,15 @@
                                             name="description"
                                             id="description"
                                             placeholder="{{ __('Particulars') }}"
-                                            class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
+                                            class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
                                             autocomplete="off" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="descriptionError" class="text-red-500 text-sm"></span>
+                                    <span id="descriptionError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Account Code ID -->
                             <!-- <div class="sm:col-span-3">
-                                <x-form.label for="id2" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('ID (For repeatedly used Account Codes)')" />
+                                <x-form.label for="id2" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('ID (For repeatedly used Account Codes)')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -104,130 +104,130 @@
                             </div> -->
                             <!-- FPP Code -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="fpp_code" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('FPP Code')" />
+                                <x-form.label for="fpp_code" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('FPP Code')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-file-invoice"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="fpp_code" id="fpp_code" autocomplete="off" placeholder="{{ __('FPP Code') }}" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="fpp_code" id="fpp_code" autocomplete="off" placeholder="{{ __('FPP Code') }}" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="fpp_codeError" class="text-red-500 text-sm"></span>
+                                    <span id="fpp_codeError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Project No. -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="project_no" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Project No.')" />
+                                <x-form.label for="project_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Project No.')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-hashtag"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="project_no" id="project_no" autocomplete="off" placeholder="{{ __('Project No.') }}" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="project_no" id="project_no" autocomplete="off" placeholder="{{ __('Project No.') }}" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- CCO Year -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="cco_year" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('CCO Year')" />
+                                <x-form.label for="cco_year" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('CCO Year')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="cco_year" id="cco_year" autocomplete="off" placeholder="{{ __('CCO Year') }}" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="cco_year" id="cco_year" autocomplete="off" placeholder="{{ __('CCO Year') }}" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Project Location -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="project_location" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Project Location')" />
+                                <x-form.label for="project_location" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Project Location')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-location-dot"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="project_location" id="project_location" autocomplete="off" placeholder="{{ __('Project Location') }}" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="project_location" id="project_location" autocomplete="off" placeholder="{{ __('Project Location') }}" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Appropriation -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="appropriation" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Appropriation')" />
+                                <x-form.label for="appropriation" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Appropriation')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-money-check"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="appropriation_formatted" id="appropriation" value="{{ number_format(old('appropriation', 0.00), 2) }}" placeholder="{{ __('Appropriation') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="appropriation_formatted" id="appropriation" value="{{ number_format(old('appropriation', 0.00), 2) }}" placeholder="{{ __('Appropriation') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                         <input type="hidden" name="appropriation" id="appropriation_hidden" value="{{ old('appropriation', '0.00') }}">
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="appropriationError" class="text-red-500 text-sm"></span>
+                                    <span id="appropriationError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- 1st Quarter Allotment -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="quarter1" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('1st Quarter Allotment')" />
+                                <x-form.label for="quarter1" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('1st Quarter Allotment')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-1"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="quarter1_formatted" id="quarter1" value="{{ number_format(old('quarter1', 0.00), 2) }}" placeholder="{{ __('1st Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="quarter1_formatted" id="quarter1" value="{{ number_format(old('quarter1', 0.00), 2) }}" placeholder="{{ __('1st Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                         <input type="hidden" name="quarter1" id="quarter1_hidden" value="{{ old('quarter1', '0.00') }}">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- 2nd Quarter Allotment -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="quarter2" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('2nd Quarter Allotment')" />
+                                <x-form.label for="quarter2" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('2nd Quarter Allotment')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-2"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="quarter2_formatted" id="quarter2" value="{{ number_format(old('quarter2', 0.00), 2) }}" placeholder="{{ __('2nd Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="quarter2_formatted" id="quarter2" value="{{ number_format(old('quarter2', 0.00), 2) }}" placeholder="{{ __('2nd Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                         <input type="hidden" name="quarter2" id="quarter2_hidden" value="{{ old('quarter2', '0.00') }}">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- 3rd Quarter Allotment -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="quarter3" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('3rd Quarter Allotment')" />
+                                <x-form.label for="quarter3" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('3rd Quarter Allotment')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-3"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="quarter3_formatted" id="quarter3" value="{{ number_format(old('quarter3', 0.00), 2) }}" placeholder="{{ __('3rd Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="quarter3_formatted" id="quarter3" value="{{ number_format(old('quarter3', 0.00), 2) }}" placeholder="{{ __('3rd Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                         <input type="hidden" name="quarter3" id="quarter3_hidden" value="{{ old('quarter3', '0.00') }}">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- 4th Quarter Allotment -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="quarter4" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('4th Quarter Allotment')" />
+                                <x-form.label for="quarter4" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('4th Quarter Allotment')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-4"></i>
                                         </x-slot>
-                                        <x-form.input withicon type="text" name="quarter4_formatted" id="quarter4" value="{{ number_format(old('quarter4', 0.00), 2) }}" placeholder="{{ __('4th Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type="text" name="quarter4_formatted" id="quarter4" value="{{ number_format(old('quarter4', 0.00), 2) }}" placeholder="{{ __('4th Quarter Allotment') }}" oninput="formatCurrency(this)" autocomplete="off" class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200" />
                                         <input type="hidden" name="quarter4" id="quarter4_hidden" value="{{ old('quarter4', '0.00') }}">
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Remarks -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
+                                <x-form.label for="remarks" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-info-circle"></i>
                                         </x-slot>
-                                        <x-form.input withicon name="remarks" id="remarks" autocomplete="off" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon name="remarks" id="remarks" autocomplete="off" placeholder="{{ __('Remarks') }}" :value="old('remarks')" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="remarksError" class="text-red-500 text-sm"></span>
+                                    <span id="remarksError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
 
@@ -236,13 +236,13 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center mt-4 p-4 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="if(!isSubmittingAppropriations) validateCreateAppropriationsForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingAppropriations) validateCreateAppropriationsForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
-                    <button type="button" onclick="closeCreateAppropriationsModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="closeCreateAppropriationsModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-lg mr-2"></i>
                         {{ __('Cancel') }}
                     </button>

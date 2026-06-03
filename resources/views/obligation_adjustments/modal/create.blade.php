@@ -4,8 +4,8 @@
     <div id="createObligationAdjustmentModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black bg-opacity-50">
         <div class="relative w-full max-w-5xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <div class="flex items-center justify-between px-4 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <i class="fas fa-plus-circle text-blue-600 dark:text-blue-400"></i>
                     {{ __('Adjust Obligation') }}
                 </h3>
@@ -22,34 +22,34 @@
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
                             <!-- Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="adjustment_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
+                                <x-form.label for="adjustment_date" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="adjustment_date" autocomplete="off" id="adjustment_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='date' name="adjustment_date" autocomplete="off" id="adjustment_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Remarks -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="adjustment_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
+                                <x-form.label for="adjustment_remarks" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-circle-info"></i>
                                         </x-slot>
-                                        <x-form.textarea withicon name="adjustment_remarks" autocomplete="off" id="adjustment_remarks" placeholder="{{ __('Remarks') }}" :value="old('adjustment_remarks')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="adjustment_remarks" autocomplete="off" id="adjustment_remarks" placeholder="{{ __('Remarks') }}" :value="old('adjustment_remarks')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="remarksError" class="text-red-500 text-sm"></span>
+                                    <span id="remarksError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Programs Table -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="programs_table" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Accounts')" />
+                                <x-form.label for="programs_table" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Accounts')" />
                                 <!-- Message Placeholder -->
-                                <div id="tableMessage" class="text-red-500 text-sm hidden mb-2"></div>
+                                <div id="tableMessage" class="text-red-500 text-xs hidden mb-2"></div>
                                 <div class="mt-2 overflow-auto" style="max-height: 500px;">
                                     <!-- Display Obligation Amounts and Appropriations in Programs Table -->
                                     <table id="programs_table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
@@ -200,7 +200,7 @@
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center mt-6 p-4 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
                     <button type="button" onclick="try { if(!window.isSubmittingCreateObligationAdjustment) validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>

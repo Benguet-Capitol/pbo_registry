@@ -6,7 +6,7 @@
         <div class="relative w-full max-w-4xl mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 hidden animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 rounded-t-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-700 dark:to-gray-600 dark:border-gray-600">
-                <h3 id="editOfficeLabel" class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 id="editOfficeLabel" class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <i class="fas fa-building text-amber-600 dark:text-amber-400"></i>
                     {{ __('Edit Office') }}
                 </h3>
@@ -22,7 +22,7 @@
                             <input type="hidden" name="office_id" id="office_id" value="{{ $office->id }}">
                             <x-form.label
                                 for="office_name"
-                                :value="__('Office Name')" />
+                                :value="__('Office Name')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">
@@ -32,7 +32,7 @@
                                 <x-form.input
                                     withicon
                                     id="edit_office_name"
-                                    class="block w-full"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                     type="text"
                                     name="edit_office_name"
                                     :value="old('office_name')"
@@ -40,7 +40,7 @@
                                     autocomplete="off"
                                     placeholder="{{ __('Office Name') }}" />
                             </x-form.input-with-icon-wrapper>
-                            <span id="editofficeNameError" class="text-red-500 text-sm"></span>
+                            <span id="editofficeNameError" class="text-red-500 text-xs"></span>
                         </div>
 
                         <!-- Abbreviation and Sub Office -->
@@ -49,7 +49,7 @@
                             <div class="space-y-2">
                                 <x-form.label
                                     for="office_abbreviation"
-                                    :value="__('Abbreviation')" />
+                                    :value="__('Abbreviation')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                                 <x-form.input-with-icon-wrapper>
                                     <x-slot name="icon">
@@ -59,7 +59,7 @@
                                     <x-form.input
                                         withicon
                                         id="edit_office_abbreviation"
-                                        class="block w-full"
+                                        class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                         type="text"
                                         name="edit_office_abbreviation"
                                         :value="old('office_abbreviation')"
@@ -67,14 +67,14 @@
                                         autocomplete="off"
                                         placeholder="{{ __('Abbreviation') }}" />
                                 </x-form.input-with-icon-wrapper>
-                                <span id="editofficeAbbreviationError" class="text-red-500 text-sm"></span>
+                                <span id="editofficeAbbreviationError" class="text-red-500 text-xs"></span>
                             </div>
 
                             <!-- Sub Office -->
                             <div class="space-y-2">
                                 <x-form.label
                                     for="sub_office"
-                                    :value="__('Sub Office')" />
+                                    :value="__('Sub Office')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                                 <x-form.input-with-icon-wrapper>
                                     <x-slot name="icon">
@@ -84,7 +84,7 @@
                                     <x-form.input
                                         withicon
                                         id="edit_sub_office"
-                                        class="block w-full"
+                                        class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                         type="text"
                                         name="edit_sub_office"
                                         :value="old('sub_office')"
@@ -92,7 +92,7 @@
                                         autocomplete="off"
                                         placeholder="{{ __('Sub Office') }}" />
                                 </x-form.input-with-icon-wrapper>
-                                <span id="editsubOfficeError" class="text-red-500 text-sm"></span>
+                                <span id="editsubOfficeError" class="text-red-500 text-xs"></span>
                             </div>
                         </div>
 
@@ -100,7 +100,7 @@
                         <div class="space-y-2">
                             <x-form.label
                                 for="fund"
-                                :value="__('Fund')" />
+                                :value="__('Fund')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">
@@ -110,7 +110,7 @@
                                 <x-form.select
                                     withicon
                                     id="edit_fund"
-                                    class="block w-full"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                     type="text"
                                     name="edit_fund"
                                     :value="old('fund')"
@@ -122,7 +122,7 @@
                                     @endforeach
                                 </x-form.select>
                             </x-form.input-with-icon-wrapper>
-                            <span id="editfundError" class="text-red-500 text-sm"></span>
+                            <span id="editfundError" class="text-red-500 text-xs"></span>
                         </div>
 
                         <!-- FPP Code and Responsibility Code -->
@@ -131,7 +131,7 @@
                             <div class="space-y-2">
                                 <x-form.label
                                     for="fpp_code"
-                                    :value="__('FPP Code')" />
+                                    :value="__('FPP Code')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                                 <x-form.input-with-icon-wrapper>
                                     <x-slot name="icon">
@@ -141,7 +141,7 @@
                                     <x-form.input
                                         withicon
                                         id="edit_fpp_code"
-                                        class="block w-full"
+                                        class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                         type="text"
                                         name="edit_fpp_code"
                                         :value="old('fpp_code')"
@@ -149,14 +149,14 @@
                                         autocomplete="off"
                                         placeholder="{{ __('FPP Code') }}" />
                                 </x-form.input-with-icon-wrapper>
-                                <span id="editfppCodeError" class="text-red-500 text-sm"></span>
+                                <span id="editfppCodeError" class="text-red-500 text-xs"></span>
                             </div>
 
                             <!-- Responsibility Code -->
                             <div class="space-y-2">
                                 <x-form.label
                                     for="responsibility_code"
-                                    :value="__('Responsibility Code')" />
+                                    :value="__('Responsibility Code')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                                 <x-form.input-with-icon-wrapper>
                                     <x-slot name="icon">
@@ -166,7 +166,7 @@
                                     <x-form.input
                                         withicon
                                         id="edit_responsibility_code"
-                                        class="block w-full"
+                                        class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                         type="text"
                                         name="edit_responsibility_code"
                                         :value="old('responsibility_code')"
@@ -174,7 +174,7 @@
                                         autocomplete="off"
                                         placeholder="{{ __('Responsibility Code') }}" />
                                 </x-form.input-with-icon-wrapper>
-                                <span id="editresponsibilityCodeError" class="text-red-500 text-sm"></span>
+                                <span id="editresponsibilityCodeError" class="text-red-500 text-xs"></span>
                             </div>
                         </div>
 
@@ -182,7 +182,7 @@
                         <div class="space-y-2">
                             <x-form.label
                                 for="branch"
-                                :value="__('Branch')" />
+                                :value="__('Branch')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">
@@ -192,7 +192,7 @@
                                 <x-form.input
                                     withicon
                                     id="edit_branch"
-                                    class="block w-full"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
                                     type="text"
                                     name="edit_branch"
                                     :value="old('branch')"
@@ -200,20 +200,20 @@
                                     autocomplete="off"
                                     placeholder="{{ __('Branch') }}" />
                             </x-form.input-with-icon-wrapper>
-                            <span id="editbranchError" class="text-red-500 text-sm"></span>
+                            <span id="editbranchError" class="text-red-500 text-xs"></span>
                         </div>
 
                     </div>
 
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center mt-4 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="validateEditOfficeForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="validateEditOfficeForm()" class="text-amber-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-sync-alt text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Update') }}
                     </button>
-                    <button type="button" onclick="closeEditOfficeModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="closeEditOfficeModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Cancel') }}
                     </button>

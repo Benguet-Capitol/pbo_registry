@@ -28,7 +28,7 @@
                 <div class="flex items-center gap-3">
                     <i class="fas fa-plus-circle text-blue-600 dark:text-blue-300 text-xl"></i>
                     <div>
-                        <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
+                        <h3 class="text-base leading-6 font-semibold text-blue-900 dark:text-blue-100">
                             {{ __('Adjust Obligation') }}
                         </h3>
                         <span class="text-xs text-blue-700 dark:text-blue-300">
@@ -41,7 +41,7 @@
                 </button>
             </div>
             <!-- Modal body (scrollable) -->
-            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-7 py-3 text-xs">
+            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-6 py-4 text-xs">
 
                     <div class="grid gap-3">
 
@@ -59,27 +59,27 @@
                             <input type="hidden" name="fund_filter" value="{{ request('fund_filter') ?? '' }}">
                             <!-- Date -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="adjustment_date" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
+                                <x-form.label for="adjustment_date" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Date')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-calendar"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='date' name="adjustment_date" autocomplete="off" id="adjustment_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='date' name="adjustment_date" autocomplete="off" id="adjustment_date" placeholder="{{ __('Date') }}" :value="now()->format('Y-m-d')" max="{{ now()->format('Y-m-d') }}" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
                             <!-- Remarks -->
                             <div class="sm:col-span-6">
-                                <x-form.label for="adjustment_remarks" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
+                                <x-form.label for="adjustment_remarks" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Remarks')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-circle-info"></i>
                                         </x-slot>
-                                        <x-form.textarea withicon name="adjustment_remarks" autocomplete="off" id="adjustment_remarks" placeholder="{{ __('Remarks') }}" :value="old('adjustment_remarks')" class="block w-full text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.textarea withicon name="adjustment_remarks" autocomplete="off" id="adjustment_remarks" placeholder="{{ __('Remarks') }}" :value="old('adjustment_remarks')" class="block w-full text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
-                                    <span id="remarksError" class="text-red-500 text-sm"></span>
+                                    <span id="remarksError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
                             <!-- Current Obligation Adjustments Table -->
@@ -284,13 +284,13 @@
 
             </div>
             <!-- Modal footer -->
-            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+            <div class="flex justify-end gap-3 p-4 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
                 <x-input-error :messages="$errors->get('message')" class="mr-auto" />
-                <button type="button" onclick="try { if(!window.isSubmittingObligationAdjustment) window.validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" id="submitAdjustmentBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="try { if(!window.isSubmittingObligationAdjustment) window.validateCreateObligationAdjustmentForm(); } catch(e) { console.error('Validation error:', e); }" id="submitAdjustmentBtn" class="text-blue-600 dark:text-blue-400 inline-flex leading-4 tracking-wider hover:text-white border border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-save mr-2"></i>
                     {{ __('Save') }}
                 </button>
-                <button type="button" onclick="try { window.closeCreateObligationAdjustmentModal(); } catch(e) { console.error('Close error:', e); }" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="try { window.closeCreateObligationAdjustmentModal(); } catch(e) { console.error('Close error:', e); }" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     {{ __('Cancel') }}
                 </button>

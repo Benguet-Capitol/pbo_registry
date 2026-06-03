@@ -6,8 +6,8 @@
             <!-- Modal content -->
             <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:bg-gray-700 flex flex-col h-full">
                 <!-- Modal header -->
-                <div class="flex justify-between items-center p-4 md:p-6 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                <div class="flex justify-between items-center px-6 py-4 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 flex-shrink-0">
+                    <h3 class="text-base leading-6 font-bold text-gray-900 dark:text-white flex items-center">
                         <i class="fas fa-user-plus text-blue-600 dark:text-blue-400 mr-3 text-xl"></i>
                         {{ __('Add Employee') }}
                     </h3>
@@ -21,7 +21,8 @@
                         <div class="space-y-3">
                             <x-form.label
                                 for="employee_id"
-                                :value="__('Employee ID')" />
+                                :value="__('Employee ID')"
+                                class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">
@@ -31,7 +32,7 @@
                                 <x-form.input
                                     withicon
                                     id="employee_id"
-                                    class="block w-full"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600"
                                     type="text"
                                     name="employee_id"
                                     :value="old('employee_id')"
@@ -39,13 +40,14 @@
                                     placeholder="{{ __('Employee ID') }}"
                                     autocomplete="off" />
                             </x-form.input-with-icon-wrapper>
-                            <span id="employeeIdError" class="text-red-500 text-sm"></span>
+                            <span id="employeeIdError" class="text-red-500 text-xs"></span>
                         </div>
                         <!-- Name -->
                         <div class="space-y-2">
                             <x-form.label
                                 for="name"
-                                :value="__('Name')" />
+                                :value="__('Name')"
+                                class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">
@@ -55,7 +57,7 @@
                                 <x-form.input
                                     withicon
                                     id="name"
-                                    class="block w-full"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600"
                                     type="text"
                                     name="name"
                                     :value="old('name')"
@@ -63,14 +65,15 @@
                                     placeholder="{{ __('Name') }}"
                                     autocomplete="off" />
                             </x-form.input-with-icon-wrapper>
-                            <span id="nameError" class="text-red-500 text-sm"></span>
+                            <span id="nameError" class="text-red-500 text-xs"></span>
                         </div>
 
                         <!-- Designation -->
                         <div class="space-y-2">
                             <x-form.label
                                 for="designation"
-                                :value="__('Designation')" />
+                                :value="__('Designation')"
+                                class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
 
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">
@@ -80,7 +83,7 @@
                                 <x-form.input
                                     withicon
                                     id="designation"
-                                    class="block w-full"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600"
                                     type="text"
                                     name="designation"
                                     :value="old('designation')"
@@ -88,17 +91,17 @@
                                     placeholder="{{ __('Designation') }}"
                                     autocomplete="off" />
                             </x-form.input-with-icon-wrapper>
-                            <span id="designationError" class="text-red-500 text-sm"></span>
+                            <span id="designationError" class="text-red-500 text-xs"></span>
                         </div>
 
                         <!-- Office -->
                             <div class="space-y-2">
-                                <x-form.label for="office" :value="__('Office')" />
+                                <x-form.label for="office" :value="__('Office')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
                                 <x-form.input-with-icon-wrapper>
                                     <x-slot name="icon">
                                         <i class="fas fa-building"></i>
                                     </x-slot>
-                                    <x-form.select withicon id="office" class="block w-full" name="office" :value="old('office')" placeholder="{{ __('Office') }}">
+                                    <x-form.select withicon id="office" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600" name="office" :value="old('office')" placeholder="{{ __('Office') }}">
                                         <option value="">{{ __('Select Office') }}</option>
                                         @foreach($offices as $office)
                                             <option value="{{ $office->id }}" {{ old('office') == $office->id ? 'selected' : '' }}>
@@ -107,20 +110,20 @@
                                         @endforeach
                                     </x-form.select>
                                 </x-form.input-with-icon-wrapper>
-                                <span id="officeError" class="text-red-500 text-sm"></span>
+                                <span id="officeError" class="text-red-500 text-xs"></span>
                             </div>
 
                         </div>
                     </div>
                 </div>
                 <!-- Modal footer -->
-                <div class="justify-center items-center mt-6 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                <div class="justify-center items-center mt-4 p-6 flex items-center gap-3 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                     <x-input-error :messages="$errors->get('message')" class="mt-2" />
-                    <button type="button" onclick="if(!isSubmittingEmployee) validateCreateEmployeeForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="if(!isSubmittingEmployee) validateCreateEmployeeForm(); return false;" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Save') }}
                     </button>
-                    <button type="button" onclick="closeCreateEmployeeModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <button type="button" onclick="closeCreateEmployeeModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Cancel') }}
                     </button>

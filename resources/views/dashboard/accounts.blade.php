@@ -903,7 +903,7 @@
                 <div class="flex items-center gap-3">
                     <i class="fas fa-list-check text-blue-600 dark:text-blue-300 text-xl"></i>
                     <div>
-                        <h3 class="text-lg leading-6 font-semibold text-blue-900 dark:text-blue-100">
+                        <h3 class="text-base leading-6 font-semibold text-blue-900 dark:text-blue-100">
                             Obligations
                         </h3>
                         <span id="accountObligationsHeaderInfo" class="text-xs text-blue-700 dark:text-blue-300"></span>
@@ -968,11 +968,11 @@
 
             <!-- Modal Footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
-                <button onclick="printObligationsModal('accounts')" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button onclick="printObligationsModal('accounts')" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-print mr-2"></i>
                     Print
                 </button>
-                <button onclick="closeAccountObligationsModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button onclick="closeAccountObligationsModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     Close
                 </button>
@@ -4068,7 +4068,7 @@ if (typeof originalFilterTable === 'function') {
                 <div class="flex items-center gap-3">
                     <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
                     <div>
-                        <h3 class="text-lg leading-6 font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 class="text-base leading-6 font-semibold text-gray-900 dark:text-gray-100">
                             Obligation Status/History
                         </h3>
                         <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
@@ -4086,7 +4086,7 @@ if (typeof originalFilterTable === 'function') {
             </div>
             <!-- Modal footer -->
             <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     Close
                 </button>
@@ -4102,7 +4102,7 @@ if (typeof originalFilterTable === 'function') {
                 <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900 dark:to-violet-900 border-b-2 border-purple-200 dark:border-purple-700 rounded-t-lg">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-ban text-purple-600 dark:text-purple-300 text-xl"></i>
-                        <h3 class="text-lg leading-6 font-semibold text-purple-900 dark:text-purple-100">
+                        <h3 class="text-base leading-6 font-semibold text-purple-900 dark:text-purple-100">
                             Cancel Obligation
                         </h3>
                     </div>
@@ -4159,11 +4159,11 @@ if (typeof originalFilterTable === 'function') {
                 </div>
                 <!-- Modal footer -->
                 <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                    <button type="button" onclick="proceedAccountsCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <button type="button" onclick="proceedAccountsCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                         <i class="fas fa-window-close mr-2"></i>
                         Proceed
                     </button>
-                    <button type="button" onclick="closeAccountsCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <button type="button" onclick="closeAccountsCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                         <i class="fas fa-times mr-2"></i>
                         Cancel
                     </button>

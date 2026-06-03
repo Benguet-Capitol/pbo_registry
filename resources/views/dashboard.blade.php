@@ -29,7 +29,7 @@
                 @endphp
 
                 @if (count($filters) > 0)
-                | <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}
+                | <span class="text-blue-800 dark:text-blue-400">{{ implode(' / ', $filters) }}</span>
                     @endif
                     <span class="text-blue-800 dark:text-blue-400">
                         (CY {{ $selectedYear }})
@@ -510,7 +510,7 @@
                             @role('Disbursement|Administrator|Developer')
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements</th>
                             <th class="px-2 py-2 w-[100px] text-center">Obligations Balance</th>
-                            <th class="px-2 py-2 w-[100px] text-center">Disbursements / Oblgations</th>
+                            <th class="px-2 py-2 w-[100px] text-center">Disbursements / Obligations</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Approp.</th>
                             @endrole
                         </tr>
@@ -1738,8 +1738,6 @@
                                 loadingSpinner.style.display = 'none';
                             }
                             
-                            console.log('API Response:', data);
-                            
                             // Update header with office and allotment class info and year
                             if (data.success && headerInfo) {
                                 const year = data.cy_year || window.currentYear || '';
@@ -2325,8 +2323,6 @@
                         return;
                     }
 
-                    console.log('Showing context menu at', event.clientX, event.clientY);
-
                     // Position the menu at the cursor
                     menu.style.position = 'fixed';
                     menu.style.top = `${event.clientY}px`;
@@ -2342,8 +2338,6 @@
                         hideDashboardObligationContextMenu();
                         return;
                     }
-
-                    console.log('Obligation data:', obligation);
 
                     // View Details button
                     const detailsBtn = menu.querySelector('#contextObligationDetails');
@@ -2373,13 +2367,10 @@
                                 return response.json();
                             })
                             .then(data => {
-                                console.log('Full obligation data from API:', data);
                                 
                                 // Get office and allotment class details
                                 const officeAbbr = obligation.office || data.obligation.office || '';
                                 const classDesc = obligation.class || data.obligation.allotment_class || '';
-                                
-                                console.log('window.currentClassId in edit handler:', window.currentClassId);
                                 
                                 // Build complete obligation object with all required fields
                                 const fullObligation = {
@@ -2400,7 +2391,6 @@
                                     obligation_amounts: data.obligation_amounts || []
                                 };
                                 
-                                console.log('Complete obligation for edit modal:', fullObligation);
                                 // Set flag to indicate this is from dashboard
                                 window.isFromDashboard = true;
                                 // Open the edit modal with the complete obligation data
@@ -2523,7 +2513,6 @@
                                                 modal.offsetHeight;
                                                 modal.style.display = 'flex';
                                                 modal.setAttribute('aria-hidden', 'false');
-                                                console.log('Purchase Order modal opened with pre-populated data');
                                             }
                                         }, 10);
                                     }
@@ -4035,7 +4024,7 @@
             'allotment_accomplishment': 'Allotments Utilization',
             'disbursements': 'Disbursements',
             'disbursement_balance': 'Obligations Balance',
-            'disbursements_to_obligations': 'Disbursements / Oblgations',
+            'disbursements_to_obligations': 'Disbursements / Obligations',
             'disbursements_to_appropriations': 'Disbursements / Approp.'
         };
 

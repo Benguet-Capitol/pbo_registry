@@ -198,12 +198,6 @@
         }
     </style>
 
-    {{--
-        This div is the $slot inside the guest layout's flex column.
-        flex-1 makes it grow to fill all space between the top of the page
-        and the <x-footer /> component, so the footer is always visible
-        without any scrolling.
-    --}}
     <div id="pageRoot" class="login-page-root">
 
         {{-- Logos + Title --}}

@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
     // User Routes (restricted to Developer and Administrator)
     Route::resource('users', UserController::class);
     //Employee Routes
+    Route::get('/employees/check-unique', [EmployeeController::class, 'checkUnique']);
     Route::resource('employees', EmployeeController::class);
     //Account Code Routes
     Route::resource('account_codes', AccountCodeController::class);
@@ -256,6 +257,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/ndd', [NDDController::class, 'index'])->name('ndd.index');
     // NDD Excel Export
     Route::get('ndd/export-excel', [NDDController::class, 'exportExcel'])->name('ndd.exportExcel');
+
 });
 
 // useless routes

@@ -93,6 +93,7 @@ class SAAOBFundSourceController extends Controller
                                 $obligations = 0;
                                 $allotment = 0;
                                 $forLaterRelease = 0;
+                                $authorized_appropriation = 0;
 
                             foreach ($oacs as $oac) {
                                 foreach ($oac->appropriations as $app) {
@@ -131,14 +132,15 @@ class SAAOBFundSourceController extends Controller
                                     ->sum('adjustment_amount');
                                     
                                     $obligations += $obligationBase + $obligationAdjustments;
-                                    $authorized_appropriation = $approved_appropriations + $sb_appropriations + $reversions + $realignments;
                                     if ($currentQuarter < 2) $forLaterRelease += $app->quarter2 ?? 0;
                                     if ($currentQuarter < 3) $forLaterRelease += $app->quarter3 ?? 0;
                                     if ($currentQuarter < 4) $forLaterRelease += $app->quarter4 ?? 0;
-                                    $allotment = $authorized_appropriation - $forLaterRelease;
                                     
                                 }
                             }
+
+                            $authorized_appropriation = $approved_appropriations + $sb_appropriations + $reversions + $realignments;
+                            $allotment = $authorized_appropriation - $forLaterRelease;
 
                             return [
                                 'fund' => $fund->fund,

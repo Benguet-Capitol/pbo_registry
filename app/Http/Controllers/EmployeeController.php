@@ -12,6 +12,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
 
 class EmployeeController extends Controller
 {
@@ -181,5 +182,19 @@ class EmployeeController extends Controller
             return redirect()->route('employees.index', array_filter($request->only(['per_page', 'search'])))
                 ->with('error', 'An error occurred while deleting the employee: ' . $e->getMessage());
         }
+    }
+
+    public function checkUnique(Request $request): JsonResponse
+    {
+        $query = Employee::where('employee_id', $request->employee_id);
+
+        // When editing, exclude the current record from the check
+        if ($request->filled('exclude_id')) {
+            $query->where('id', '!=', $request->exclude_id);
+        }
+
+        return response()->json([
+            'is_unique' => !$query->exists(),
+        ]);
     }
 }

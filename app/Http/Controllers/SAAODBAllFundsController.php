@@ -54,6 +54,7 @@ class SAAODBAllFundsController extends Controller
                         'appropriations.supplementals',
                         'appropriations.realignments',
                         'appropriations.obligationAmounts.obligation.obligationAdjustments',
+                        'appropriations.obligationAmounts.obligation.disbursements',
                     ]);
             }
         ])->get();
@@ -189,12 +190,13 @@ class SAAODBAllFundsController extends Controller
                 $disbursement = $oacGroup
                     ->flatMap->appropriations
                     ->flatMap->obligationAmounts
-                    ->flatmap(fn($oa) =>
+                    ->flatMap(fn($oa) =>
                         $oa->obligation
                             ? $oa->obligation->disbursements
                                 ->where('disbursement_date', '<=', $asOfDate)
                             : collect()
                     )
+                    ->unique('id') // Ensure unique disbursements
                     ->sum('disbursement_amount');
 
                 // --- Balances and percentages ---

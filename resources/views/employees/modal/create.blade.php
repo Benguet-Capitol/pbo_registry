@@ -364,26 +364,22 @@
     }
 
     function checkEmployeeIdUnique(employeeId, excludeId, callback) {
-    const params = new URLSearchParams({ employee_id: employeeId });
-    if (excludeId) params.append('exclude_id', excludeId);
+        const params = new URLSearchParams({ employee_id: employeeId });
+        if (excludeId) params.append('exclude_id', excludeId);
 
-    console.log('Checking uniqueness for:', employeeId); // <-- add this
-    console.log('URL:', `/employees/check-unique?${params.toString()}`); // <-- add this
-
-    fetch(`/employees/check-unique?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log('Response:', data); // <-- add this
-        callback(data.is_unique)
-    })
-    .catch(() => callback(true));
-}
+        fetch(`/employees/check-unique?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            callback(data.is_unique)
+        })
+        .catch(() => callback(true));
+    }
 </script>
 
 <style>

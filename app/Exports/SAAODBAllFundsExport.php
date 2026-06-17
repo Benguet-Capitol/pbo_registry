@@ -542,6 +542,7 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                                 ->where('disbursement_date', '<=', $asOfDate)
                             : collect()
                     )
+                    ->unique('id') // Ensure unique disbursements
                     ->sum('disbursement_amount');
 
                 // --- Balances and percentages ---

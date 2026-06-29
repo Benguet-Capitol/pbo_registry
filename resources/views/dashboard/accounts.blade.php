@@ -393,7 +393,7 @@
                             <th class="px-2 py-2 w-[100px] text-center">Appropriations Utilization</th>
                             <th class="px-2 py-2 w-[100px] text-center">Allotments Balance</th>
                             <th class="px-2 py-2 w-[100px] text-center">Allotments Utilization</th>
-                            @role('Disbursement|Administrator|Developer')
+                            @role('Disbursement|Administrator|Developer|Guest')
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements</th>
                             <th class="px-2 py-2 w-[100px] text-center">Obligations Balance</th>
                             <th class="px-2 py-2 w-[100px] text-center">Disbursements / Oblgations</th>
@@ -488,7 +488,7 @@
                                     </div>
                                 </div>
                             </td>
-                            @role('Disbursement|Administrator|Developer')
+                            @role('Disbursement|Administrator|Developer|Guest')
                             <td class="px-1 py-2 text-right">{{ number_format($appropriation->disbursements, 2) }}</td>
                             <td class="px-1 py-2 text-right">{{ number_format($appropriation->disbursement_balance, 2) }}</td>
                             <!-- For Disbursements / Obligations column -->
@@ -770,7 +770,7 @@
                     <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
                 </div>
             </div>
-            @role('Disbursement|Administrator|Developer')
+            @role('Disbursement|Administrator|Developer|Guest')
             <div data-card="disbursements" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-5 md:p-6 flex items-center transition-all duration-200 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                 <div class="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900 rounded-full p-2 sm:p-3">
                     <i class="fas fa-tasks text-emerald-600 dark:text-emerald-300 text-lg sm:text-xl md:text-2xl"></i>

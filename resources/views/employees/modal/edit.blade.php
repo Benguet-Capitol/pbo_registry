@@ -251,10 +251,11 @@
         const fname = (emp.fname ?? '').trim();
         const mname = (emp.mname ?? '').trim();
         const lname = (emp.lname ?? '').trim();
+        const suffix = (emp.suffix ?? emp.name_suffix ?? '').trim();
 
         const middleInitial = mname ? mname.charAt(0).toUpperCase() + '.' : '';
 
-        return [fname, middleInitial, lname].filter(Boolean).join(' ');
+        return [fname, middleInitial, lname, suffix].filter(Boolean).join(' ');
     }
 
     function matchEditOfficeSelect(officeDesc) {

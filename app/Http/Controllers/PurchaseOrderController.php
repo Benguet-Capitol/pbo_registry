@@ -9,6 +9,7 @@ use App\Models\ObligationAdjustment;
 use App\Models\ObligationAmount;
 use App\Models\OfficeAllotmentClass;
 use App\Models\PurchaseOrder;
+use App\Models\AllotmentClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -92,6 +93,8 @@ class PurchaseOrderController extends Controller
         $currentYear = date('Y');
         $selectedYear = $request->input('year1', $currentYear);
 
+        $allotmentClasses = AllotmentClass::orderBy('class', 'desc')->get();
+
         $query = PurchaseOrder::with([
                 'obligation.obligationAmounts.appropriation',
                 'obligation.officeAllotmentClass.offices',
@@ -105,6 +108,13 @@ class PurchaseOrderController extends Controller
         if ($request->filled('office_allotment_class_filter')) {
             $query->whereHas('obligation.officeAllotmentClass', function ($q) use ($request) {
                 $q->where('id', $request->input('office_allotment_class_filter'));
+            });
+        }
+
+        // Apply filter for allotment_class_filter
+        if ($request->filled('allotment_class_filter')) {
+            $query->whereHas('obligation.officeAllotmentClass.allotmentClass', function ($q) use ($request) {
+                $q->where('id', $request->input('allotment_class_filter'));
             });
         }
 
@@ -331,7 +341,7 @@ class PurchaseOrderController extends Controller
 
         $totalRecords = $totalRecordsQuery->distinct('po_number')->count('po_number');
 
-        return view('purchase_orders.index_all', compact('purchaseOrders', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'totalRecords'));
+        return view('purchase_orders.index_all', compact('purchaseOrders', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'totalRecords', 'allotmentClasses'));
     }
 
     /**

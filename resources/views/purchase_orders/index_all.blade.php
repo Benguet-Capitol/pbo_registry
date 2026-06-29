@@ -89,7 +89,7 @@
         </h4>
 
         <form id="filterForm" method="GET" action="{{ route('purchase_orders.all') }}">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
 
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
@@ -109,6 +109,22 @@
                         @foreach($officeAllotmentClasses as $officeAllotmentClass)
                         <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_filter') == $officeAllotmentClass->id ? 'selected' : '' }}>
                             {{ $officeAllotmentClass->offices->office_abbreviation }} - {{ $officeAllotmentClass->allotmentClass->class }}
+                        </option>
+                        @endforeach
+                    </x-form.select>
+                </div>
+
+                <!-- Allotment Class Filter -->
+                <div class="flex items-center space-x-2">
+                    <label for="allotmentClassFilter" class="sr-only">Allotment Class</label>
+                    <x-form.select name="allotment_class_filter" id="allotmentClassFilter"
+                        class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                        onchange="this.form.submit()">
+                        <option value="">All Allotment Classes</option>
+                        @foreach($allotmentClasses as $class)
+                        <option value="{{ $class->id }}"
+                            {{ request('allotment_class_filter') == $class->id ? 'selected' : '' }}>
+                            {{ $class->description }}
                         </option>
                         @endforeach
                     </x-form.select>
@@ -160,6 +176,7 @@
                         <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
                         <input type="hidden" name="sort_by" value="{{ $sortBy }}">
                         <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
+                        <input type="hidden" name="allotment_class_filter" value="{{ request('allotment_class_filter') }}">
                         
                         <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">All Columns</option>

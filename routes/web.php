@@ -40,6 +40,7 @@ use App\Http\Controllers\SAAODBOfficeController;
 use App\Http\Controllers\SAAODBAllFundsController;
 use App\Http\Controllers\SAAODBGFController;
 use App\Http\Controllers\NDDController;
+use App\Http\Controllers\DocumentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -258,6 +259,12 @@ Route::middleware('auth')->group(function () {
     // NDD Excel Export
     Route::get('ndd/export-excel', [NDDController::class, 'exportExcel'])->name('ndd.exportExcel');
 
+    // Document Routes (SPA with modals)
+    Route::get('documents/search/api', [DocumentController::class, 'search'])->name('documents.search');
+    Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+    Route::get('documents/{document}/files/{file}/download', [DocumentController::class, 'downloadFile'])->name('documents.downloadFile');
+    Route::get('documents/{document}/files/{file}', [DocumentController::class, 'viewFile'])->name('documents.viewFile');
+    Route::resource('documents', DocumentController::class, ['except' => ['create', 'edit']]);
 });
 
 // useless routes

@@ -68,6 +68,15 @@
         </x-slot>
     </x-sidebar.link>
 
+    <x-sidebar.link
+        title="Archives"
+        href="{{ route('documents.index') }}"
+        :isActive="request()->routeIs('documents.index')">
+        <x-slot name="icon">
+            <i class="fas fa-box-archive text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
+
     <x-sidebar.dropdown
         title="Auxiliary"
         :active="request()->routeIs('account_codes.index') || request()->routeIs('offices.index') || request()->routeIs('allotment_classes.index') || request()->routeIs('funds.index') || request()->routeIs('fund_sources.index') || request()->routeIs('sectors.index') || request()->routeIs('programs.index')">
@@ -342,6 +351,14 @@
         :isActive="request()->routeIs('purchase_orders.all')">
         <x-slot name="icon">
             <i class="fas fa-file-invoice text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
+    <x-sidebar.link
+        title="Archives"
+        href="{{ route('documents.index') }}"
+        :isActive="request()->routeIs('documents.index')">
+        <x-slot name="icon">
+            <i class="fas fa-box-archive text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
     

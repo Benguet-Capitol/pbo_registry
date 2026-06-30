@@ -17,22 +17,31 @@ class DocumentController extends Controller
     {
         $query = $request->input('q');
         $perPage = $request->input('per_page', 10);
-        
+        $sortBy = $request->input('sort_by', 'id');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        // Whitelist sortable columns
+        $allowedSorts = ['id', 'title', 'category', 'created_at'];
+        if (!in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'id';
+        }
+        $sortOrder = $sortOrder === 'asc' ? 'asc' : 'desc';
+
         // Handle 'all' option
         if ($perPage === 'all') {
             $perPage = PHP_INT_MAX;
         } else {
             $perPage = (int) $perPage;
         }
-        
+
         if ($query) {
             $documents = Document::search($query)
                 ->with('uploadedBy', 'files')
                 ->paginate($perPage)
-                ->appends(['q' => $query, 'per_page' => $request->input('per_page', 10)]);
+                ->appends(['q' => $query, 'per_page' => $request->input('per_page', 10), 'sort_by' => $sortBy, 'sort_order' => $sortOrder]);
         } else {
             $documents = Document::with('uploadedBy', 'files')
-                ->orderBy('created_at', 'desc')
+                ->orderBy($sortBy, $sortOrder)
                 ->paginate($perPage)
                 ->appends(request()->query());
         }
@@ -41,6 +50,8 @@ class DocumentController extends Controller
             'documents' => $documents,
             'query' => $query,
             'perPage' => $request->input('per_page', 10),
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
         ]);
     }
 
@@ -98,22 +109,20 @@ class DocumentController extends Controller
             'tags' => 'nullable|string',
             'description' => 'nullable|string',
             'files' => 'required|array|min:1',
-            'files.*' => 'required|file|max:102400', // 100MB max per file
+            'files.*' => 'required|file|max:102400',
         ], [
             'files.required' => 'At least one file is required',
             'files.min' => 'Please upload at least one file',
         ]);
 
         try {
-            // Get first file for document table reference
             $mainFile = $request->file('files')[0];
             $mainFilename = $mainFile->getClientOriginalName();
 
-            // Create document record with first file as reference
             $document = Document::create([
                 'title' => $validated['title'],
                 'filename' => $mainFilename,
-                'file_path' => 'documents/' . $mainFilename, // Placeholder, will be updated
+                'file_path' => 'documents/' . $mainFilename,
                 'category' => $validated['category'],
                 'tags' => $validated['tags'],
                 'description' => $validated['description'],
@@ -121,11 +130,10 @@ class DocumentController extends Controller
                 'pdf_content' => null,
             ]);
 
-            // Store ALL files in document_files table
             foreach ($request->file('files') as $file) {
                 $filePath = $file->store('documents');
                 $pdfContent = $this->extractPdfText($file);
-                
+
                 $document->files()->create([
                     'filename' => $file->getClientOriginalName(),
                     'file_path' => $filePath,
@@ -133,7 +141,6 @@ class DocumentController extends Controller
                 ]);
             }
 
-            // Log activity
             ActivityLog::create([
                 'user_id' => auth()->id(),
                 'description' => "Uploaded archive '{$validated['title']}' with " . count($request->file('files')) . " file(s)",
@@ -152,9 +159,11 @@ class DocumentController extends Controller
 
             return response()->json([
                 'status' => 'success',
+                'type' => 'create', // ✅ pass the type so JS can pick the right color
                 'message' => "Archive '<strong>{$validated['title']}</strong>' has been uploaded successfully!",
                 'redirect' => route('documents.index'),
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to upload archive: ' . $e->getMessage(),

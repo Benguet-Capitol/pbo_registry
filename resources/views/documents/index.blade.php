@@ -22,7 +22,7 @@
                     $alertType = 'bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200';
                 } elseif (str_contains($messageType, 'delete') || str_contains($messageText, 'deleted successfully')) {
                     $alertType = 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-700 dark:text-red-200';
-                } elseif (str_contains($messageType, 'success') || str_contains($messageText, 'created successfully')) {
+                } elseif (str_contains($messageType, 'success') || str_contains($messageText, 'created successfully') || str_contains($messageText, 'uploaded successfully')) {
                     $alertType = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-200';
                 }
             }
@@ -82,6 +82,8 @@
                             @if(request('q'))
                                 <input type="hidden" name="q" value="{{ request('q') }}">
                             @endif
+                            <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+                            <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
                             <select name="per_page" id="perPage" onchange="document.getElementById('perPageForm').submit()" class="border border-gray-300 rounded-lg px-3 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
                                 <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
@@ -96,15 +98,29 @@
             <table id="documentsTable" class="text-center w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-center border-t-2 border-b-2 border-gray-400 text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            {{ __('Title') }}
-                        </th>
-                        <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            {{ __('Category') }}
-                        </th>
-                        <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            {{ __('Date') }}
-                        </th>
+                        @php
+                            $sortableColumns = [
+                                'title' => 'Title',
+                                'category' => 'Category',
+                                'created_at' => 'Date',
+                            ];
+                        @endphp
+
+                        @foreach($sortableColumns as $column => $label)
+                            @php
+                                $isCurrent = $sortBy === $column;
+                                $nextOrder = $isCurrent && $sortOrder === 'asc' ? 'desc' : 'asc';
+                                $icon = $isCurrent ? ($sortOrder === 'asc' ? '▲' : '▼') : '';
+                                $sortQuery = array_merge(request()->except('page'), ['sort_by' => $column, 'sort_order' => $nextOrder]);
+                            @endphp
+                            <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                                <a href="?{{ http_build_query($sortQuery) }}" class="flex items-center justify-start gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+                                    {{ __($label) }}
+                                    <span class="text-[10px]">{!! $icon !!}</span>
+                                </a>
+                            </th>
+                        @endforeach
+
                         <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                             {{ __('Tags') }}
                         </th>
@@ -368,11 +384,20 @@
     // Check for success message from sessionStorage (from edit modal)
     window.addEventListener('DOMContentLoaded', function() {
         const successMessage = sessionStorage.getItem('successMessage');
+        const successType = sessionStorage.getItem('successType');
         if (successMessage) {
             sessionStorage.removeItem('successMessage');
-            // Create and display success alert
+            sessionStorage.removeItem('successType');
+
+            let alertClass = 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-200';
+            if (successType === 'update') {
+                alertClass = 'bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200';
+            } else if (successType === 'delete') {
+                alertClass = 'bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-700 dark:text-red-200';
+            }
+
             const alertDiv = document.createElement('div');
-            alertDiv.className = 'border-l-4 p-4 mb-4 bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200';
+            alertDiv.className = `border-l-4 p-4 mb-4 ${alertClass}`;
             alertDiv.setAttribute('role', 'alert');
             alertDiv.innerHTML = `
                 <div class="flex justify-between items-center">

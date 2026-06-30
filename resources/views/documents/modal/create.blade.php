@@ -153,89 +153,114 @@
             isValid = false;
         }
 
-        if (isValid) {
-            isSubmittingDocument = true;
-            
-            // Update button to show loading state
-            const uploadBtn = document.querySelector('button[onclick*="validateCreateDocumentForm"]');
-            const originalBtnHTML = uploadBtn.innerHTML;
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xl mr-1 -ml-1 w-5 h-5"></i>{{ __("Uploading...") }}';
-            
-            // Create FormData and add all fields manually
-            const formData = new FormData();
-            
-            // Add form fields
-            formData.append('_token', document.querySelector('input[name="_token"]').value);
-            formData.append('title', document.getElementById('title').value);
-            formData.append('category', document.getElementById('category').value);
-            formData.append('tags', document.getElementById('tags').value);
-            formData.append('description', document.getElementById('description').value);
-            
-            // Add selected files
-            selectedCreateFiles.forEach((file) => {
-                formData.append('files[]', file);
-            });
+        if (!isValid) return;
 
-            // Submit via fetch to handle FormData properly
-            fetch(document.getElementById('createDocumentForm').action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
-            })
-            .then(async response => {
-                const data = await response.json();
-                
-                // Check for validation errors (422)
-                if (response.status === 422) {
-                    uploadBtn.innerHTML = originalBtnHTML;
-                    uploadBtn.disabled = false;
-                    
-                    // Extract error messages
-                    let errorMsg = 'Validation error: ';
-                    if (data.errors) {
-                        errorMsg = Object.values(data.errors).flat().join('\n');
-                    } else if (data.message) {
-                        errorMsg = data.message;
+        isSubmittingDocument = true;
+
+        const uploadBtn = document.querySelector('button[onclick*="validateCreateDocumentForm"]');
+        const originalBtnHTML = uploadBtn.innerHTML;
+        uploadBtn.disabled = true;
+
+        // Build progress bar UI
+        showUploadProgress(0);
+
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('input[name="_token"]').value);
+        formData.append('title', document.getElementById('title').value);
+        formData.append('category', document.getElementById('category').value);
+        formData.append('tags', document.getElementById('tags').value);
+        formData.append('description', document.getElementById('description').value);
+        selectedCreateFiles.forEach((file) => formData.append('files[]', file));
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', document.getElementById('createDocumentForm').action, true);
+        xhr.setRequestHeader('Accept', 'text/html'); // ✅ no longer requesting JSON
+
+        xhr.upload.onprogress = function (e) {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                showUploadProgress(percent);
+            }
+        };
+
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.status === 'success') {
+                        showUploadProgress(100);
+                        sessionStorage.setItem('successMessage', data.message);
+                        sessionStorage.setItem('successType', data.type || 'create'); // ✅ store type
+                        setTimeout(() => {
+                            window.location.href = data.redirect || '{{ route("documents.index") }}';
+                        }, 300);
                     }
-                    
-                    console.error('Validation errors:', data);
-                    alert(errorMsg);
-                    isSubmittingDocument = false;
-                    return;
-                }
-                
-                if (data.status === 'success') {
-                    // Store message in sessionStorage to display after redirect
-                    sessionStorage.setItem('successMessage', data.message);
-                    
-                    // Show success message briefly before redirecting
-                    uploadBtn.innerHTML = '<i class="fas fa-check text-xl mr-1 -ml-1 w-5 h-5"></i>{{ __("Upload Successful!") }}';
-                    uploadBtn.classList.remove('text-blue-600', 'border-blue-600', 'hover:bg-blue-600', 'dark:border-blue-500', 'dark:text-blue-500', 'dark:hover:bg-blue-600');
-                    uploadBtn.classList.add('text-green-600', 'border-green-600', 'hover:bg-green-600', 'dark:border-green-500', 'dark:text-green-500', 'dark:hover:bg-green-600');
-                    
-                    // Redirect after 1 second
-                    setTimeout(() => {
-                        window.location.href = data.redirect || '/documents';
-                    }, 1000);
-                } else if (data.error) {
+                } catch (e) {
+                    hideUploadProgress();
                     uploadBtn.innerHTML = originalBtnHTML;
                     uploadBtn.disabled = false;
-                    alert(data.error);
                     isSubmittingDocument = false;
+                    alert('Unexpected response from server.');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+            } else if (xhr.status === 422) {
+                hideUploadProgress();
                 uploadBtn.innerHTML = originalBtnHTML;
                 uploadBtn.disabled = false;
-                alert('An error occurred while uploading. Please try again.');
                 isSubmittingDocument = false;
-            });
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    const errorMsg = data.errors ? Object.values(data.errors).flat().join('\n') : (data.message || 'Validation error');
+                    alert(errorMsg);
+                } catch (e) {
+                    alert('Validation error occurred.');
+                }
+            } else {
+                hideUploadProgress();
+                uploadBtn.innerHTML = originalBtnHTML;
+                uploadBtn.disabled = false;
+                isSubmittingDocument = false;
+                alert('An error occurred while uploading. Please try again.');
+            }
+        };
+
+        xhr.onerror = function () {
+            hideUploadProgress();
+            uploadBtn.innerHTML = originalBtnHTML;
+            uploadBtn.disabled = false;
+            isSubmittingDocument = false;
+            alert('A network error occurred. Please try again.');
+        };
+
+        xhr.send(formData);
+    }
+
+    function showUploadProgress(percent) {
+        let progressContainer = document.getElementById('uploadProgressContainer');
+        if (!progressContainer) {
+            progressContainer = document.createElement('div');
+            progressContainer.id = 'uploadProgressContainer';
+            progressContainer.className = 'mt-3';
+            progressContainer.innerHTML = `
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Uploading...</span>
+                    <span id="uploadProgressText" class="text-xs font-semibold text-blue-600 dark:text-blue-400">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div id="uploadProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-150" style="width: 0%"></div>
+                </div>
+            `;
+            document.getElementById('fileList').insertAdjacentElement('afterend', progressContainer);
         }
+
+        const bar = document.getElementById('uploadProgressBar');
+        const text = document.getElementById('uploadProgressText');
+        if (bar) bar.style.width = `${percent}%`;
+        if (text) text.textContent = `${percent}%`;
+    }
+
+    function hideUploadProgress() {
+        const progressContainer = document.getElementById('uploadProgressContainer');
+        if (progressContainer) progressContainer.remove();
     }
 
     function clearErrors() {

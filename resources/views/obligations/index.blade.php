@@ -472,10 +472,9 @@
                                 @hasanyrole('Disbursement|Administrator|Developer|Obligation')
                                 <td class="px-1 py-2 text-right dv-amount">
                                 @php
-                                    $disbursementAmount = $obligation->disbursements->sum('disbursement_amount');
+                                    $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
                                     $obligationAmount = $obligation->obr_amount ?? 0;
 
-                                    // Ensure both values are well-formed numeric strings for bccomp
                                     $disbursementAmountStr = is_numeric($disbursementAmount) ? (string) $disbursementAmount : '0';
                                     $obligationAmountStr = is_numeric($obligationAmount) ? (string) $obligationAmount : '0';
 

@@ -251,8 +251,13 @@ class ObligationController extends Controller
             }
             
             // Calculate total obligation amount with adjustments
-            $obrAmount = $obligation->obligationAmounts->sum('obr_amount');
-            $obligation->obr_amount = $obrAmount + $adjustmentAmount;
+            $obrAmount = $obligation->obligationAmounts->sum('obr_amount') ?? 0;
+            $adjustmentAmount = $adjustmentAmount ?? 0;
+            $obligation->obr_amount = (float) ($obrAmount + $adjustmentAmount);
+
+            $obligation->disbursements->each(function ($disbursement) {
+                $disbursement->disbursement_amount = (float) ($disbursement->disbursement_amount ?? 0);
+            });
 
             // Add these fields directly to the obligation object
             $obligation->office_abbreviation = $obligation->officeAllotmentClass->offices->office_abbreviation ?? 'N/A';
@@ -273,8 +278,10 @@ class ObligationController extends Controller
                 } else {
                     $adjustmentSum = $amount->obligationAdjustments->sum('adjustment_amount');
                 }
+
+                $adjustmentSum = $adjustmentSum ?? 0;
                 
-                $originalObrAmount = $amount->obr_amount; // Original amount without adjustments
+                $originalObrAmount = $amount->obr_amount ?? 0; // Original amount without adjustments
                 $totalObrAmount = $originalObrAmount + $adjustmentSum; // Adjusted total
 
                 // Return as stdClass for proper JSON serialization
@@ -472,9 +479,11 @@ class ObligationController extends Controller
             } else {
                 $adjustments = $amount->obligationAdjustments->sum('adjustment_amount');
             }
+
+            $adjustments = $adjustments ?? 0;
             
-            $poTotal = $amount->purchaseOrders->sum('po_amount');
-            $disbursementTotal = $amount->disbursements->sum('disbursement_amount');
+            $poTotal = $amount->purchaseOrders->sum('po_amount') ?? 0;
+            $disbursementTotal = $amount->disbursements->sum('disbursement_amount') ?? 0;
             $appropriation = $amount->appropriation;
             
             // Calculate balance using the same formula as the index method

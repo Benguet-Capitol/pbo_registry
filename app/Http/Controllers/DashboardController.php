@@ -57,6 +57,8 @@ class DashboardController extends Controller
     ): array {
         // All OBR-amount rows for the given appropriations
         $obrAmountRows = ObligationAmount::whereIn('appropriation_id', $appropriationIds)
+            ->when($fromDate, fn($q) => $q->whereHas('obligation', fn($q2) => $q2->where('obr_date', '>=', $fromDate)))
+            ->when($toDate,   fn($q) => $q->whereHas('obligation', fn($q2) => $q2->where('obr_date', '<=', $toDate)))
             ->get(['id', 'appropriation_id', 'obr_amount']);
 
         // Cached collection-based lookups (no extra queries later)

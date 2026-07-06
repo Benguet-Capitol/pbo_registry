@@ -1883,9 +1883,17 @@ class ObligationController extends Controller
                 'obligationAdjustments',
                 'purchaseOrders',
                 'disbursements'
-            ])->where('office_allotment_class_id', $classId)
-                ->orderBy('obr_date', 'asc')
-                ->get();
+            ])->where('office_allotment_class_id', $classId);
+            
+            // Apply date filtering on obr_date if provided
+            if ($fromDate) {
+                $obligations->whereDate('obr_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $obligations->whereDate('obr_date', '<=', $toDate);
+            }
+            
+            $obligations = $obligations->orderBy('obr_date', 'asc')->get();
 
             // Transform obligations data
             $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate) {
@@ -2013,7 +2021,17 @@ class ObligationController extends Controller
                 'obligationAdjustments',
                 'purchaseOrders',
                 'disbursements'
-            ])->orderBy('obr_date', 'asc')->get();
+            ]);
+            
+            // Apply date filtering on obr_date if provided
+            if ($fromDate) {
+                $obligations->whereDate('obr_date', '>=', $fromDate);
+            }
+            if ($toDate) {
+                $obligations->whereDate('obr_date', '<=', $toDate);
+            }
+            
+            $obligations = $obligations->orderBy('obr_date', 'asc')->get();
 
             // Transform obligations data
             $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate, $appropriationId) {

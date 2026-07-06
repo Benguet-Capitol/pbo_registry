@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 
 
 class ObligationController extends Controller
@@ -892,6 +893,8 @@ class ObligationController extends Controller
                 'obligation_id' => $obligation->id
             ]);
             
+            $officeAllotmentClassId = $request->input('edit_office_allotment_class_id');
+            
             // Validate the request data
             $validated = $request->validate([
                 'edit_office_allotment_class_id' => 'required|integer|exists:office_allotment_classes,id',
@@ -903,9 +906,19 @@ class ObligationController extends Controller
                 'edit_obligation_amounts_id' => 'nullable|array',
                 'edit_obligation_amounts_id.*' => 'nullable|string',
                 'edit_account_code' => 'required|array',
-                'edit_account_code.*' => 'required|string|exists:appropriations,account_code',
+                'edit_account_code.*' => [
+                    'required',
+                    'string',
+                    // Must exist as an appropriation under the SELECTED class,
+                    // not just exist anywhere. This is what actually catches the
+                    // "same code string, different class" mismatch.
+                    Rule::exists('appropriations', 'account_code')
+                        ->where(fn ($query) => $query->where('office_allotment_class_id', $officeAllotmentClassId)),
+                ],
                 'edit_amount_of_obligation' => 'required|array',
                 'edit_amount_of_obligation.*' => 'required|numeric|min:0',
+            ], [
+                'edit_account_code.*.exists' => 'This account code is not valid for the selected Office and Allotment Class. Please re-select it from the dropdown.',
             ]);
 
             // Start database transaction

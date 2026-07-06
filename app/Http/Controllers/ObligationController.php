@@ -228,7 +228,7 @@ class ObligationController extends Controller
                 return $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0);
             });
 
-            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+            $appropriation->balance = round(($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount, 2);
         });
 
         // Build appropriation map for O(1) lookup instead of O(n) searches
@@ -256,7 +256,7 @@ class ObligationController extends Controller
             $obligation->obr_amount = (float) ($obrAmount + $adjustmentAmount);
 
             $obligation->disbursements->each(function ($disbursement) {
-                $disbursement->disbursement_amount = (float) ($disbursement->disbursement_amount ?? 0);
+                $disbursement->disbursement_amount = round((float) ($disbursement->disbursement_amount ?? 0), 2);
             });
 
             // Add these fields directly to the obligation object
@@ -292,7 +292,7 @@ class ObligationController extends Controller
                     'account_code' => $amount->account_code ?? '',
                     'obr_amount' => $originalObrAmount, // Original amount for edit modal
                     'amount' => $originalObrAmount, // Also set 'amount' field for edit modal
-                    'balance_from_allotment' => $balance + $originalObrAmount, // Balance before original obligation was added
+                    'balance_from_allotment' => round($balance + $originalObrAmount, 2), // Balance before original obligation was added
                     'description' => $amount->appropriation->description ?? '',
                     'program' => $amount->appropriation->programs ?? '',
                     'appropriation' => (object)[
@@ -971,7 +971,7 @@ class ObligationController extends Controller
                         // Update the obligation amount record with the new appropriation
                         // Related records (disbursements, purchase orders, adjustments) will automatically
                         // have the correct appropriation through the obligation_amounts relationship
-                        $existingAmount->update([
+                        $existingAmount->update([ 
                             'appropriation_id' => $newAppropriation->id,
                             'account_code' => $newAccountCode,
                             'obr_amount' => $newAmount,

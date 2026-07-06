@@ -475,8 +475,14 @@
                                     $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
                                     $obligationAmount = $obligation->obr_amount ?? 0;
 
-                                    $disbursementAmountStr = is_numeric($disbursementAmount) ? (string) $disbursementAmount : '0';
-                                    $obligationAmountStr = is_numeric($obligationAmount) ? (string) $obligationAmount : '0';
+                                    // number_format() forces fixed-point notation (never scientific notation),
+                                    // which bccomp() requires. A plain (string) cast can turn tiny floating-point
+                                    // rounding residue (e.g. 4.9999999999e-10) into "4.9999999999E-10", which
+                                    // bccomp() rejects as "not well-formed". This gets more likely to trigger
+                                    // as more rows are summed together (more floats added = more rounding noise),
+                                    // which is why it only surfaced once the table grew past ~10,000 records.
+                                    $disbursementAmountStr = number_format((float) (is_numeric($disbursementAmount) ? $disbursementAmount : 0), 2, '.', '');
+                                    $obligationAmountStr = number_format((float) (is_numeric($obligationAmount) ? $obligationAmount : 0), 2, '.', '');
 
                                     $isEqual = bccomp($disbursementAmountStr, $obligationAmountStr, 2) === 0;
                                     $isLower = $disbursementAmount < $obligationAmount && $disbursementAmount > 0;

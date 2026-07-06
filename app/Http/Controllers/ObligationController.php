@@ -942,48 +942,51 @@ class ObligationController extends Controller
             // Update or delete existing amounts
             foreach ($newObligationAmountIds as $index => $id) {
                 if (empty($id)) {
-                    // This is a new row (no ID), skip for now
                     continue;
                 }
-                
+
                 $existingAmount = $existingAmounts->firstWhere('id', $id);
                 if (!$existingAmount) {
                     continue;
                 }
-                
+
                 $newAccountCode = $newAccountCodes[$index] ?? null;
                 $newAmount = $newAmounts[$index] ?? null;
-                
+
                 if (!$newAccountCode || !isset($newAmount)) {
                     continue;
                 }
-                
+
                 $processedIds[] = $id;
-                
-                // Check if account code has changed
-                if ($existingAmount->account_code !== $newAccountCode) {
-                    // Find the new appropriation
-                    $newAppropriation = Appropriation::where('account_code', $newAccountCode)
-                        ->where('office_allotment_class_id', $validated['edit_office_allotment_class_id'])
-                        ->first();
-                    
-                    if ($newAppropriation) {
-                        // Update the obligation amount record with the new appropriation
-                        // Related records (disbursements, purchase orders, adjustments) will automatically
-                        // have the correct appropriation through the obligation_amounts relationship
-                        $existingAmount->update([ 
+
+                // Always resolve against the (possibly new) office_allotment_class_id.
+                // Account codes are not globally unique — the same code exists as a
+                // different Appropriation row per class — so appropriation_id must be
+                // re-derived every time, not only when the account_code string changes.
+                $newAppropriation = Appropriation::where('account_code', $newAccountCode)
+                    ->where('office_allotment_class_id', $validated['edit_office_allotment_class_id'])
+                    ->first();
+
+                if ($newAppropriation) {
+                    $needsUpdate = $existingAmount->appropriation_id != $newAppropriation->id
+                        || $existingAmount->account_code !== $newAccountCode
+                        || $existingAmount->obr_amount != $newAmount;
+
+                    if ($needsUpdate) {
+                        $existingAmount->update([
                             'appropriation_id' => $newAppropriation->id,
-                            'account_code' => $newAccountCode,
-                            'obr_amount' => $newAmount,
+                            'account_code'     => $newAccountCode,
+                            'obr_amount'       => $newAmount,
                         ]);
                     }
                 } else {
-                    // Account code hasn't changed, just update the amount if it changed
-                    if ($existingAmount->obr_amount != $newAmount) {
-                        $existingAmount->update([
-                            'obr_amount' => $newAmount,
-                        ]);
-                    }
+                    // No appropriation exists for this account_code under the new class —
+                    // don't silently leave a stale appropriation_id in place.
+                    Log::warning('No matching appropriation found when updating obligation_amount', [
+                        'account_code'              => $newAccountCode,
+                        'office_allotment_class_id' => $validated['edit_office_allotment_class_id'],
+                        'obligation_amount_id'      => $existingAmount->id,
+                    ]);
                 }
             }
             

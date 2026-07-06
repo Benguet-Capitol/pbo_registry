@@ -493,37 +493,36 @@
                 tableBody.appendChild(tr);
             });
         } else {
-            // If no amounts, check if PS class to auto-display all appropriations
-            if (selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.class === 'PS') {
-                populateEditAppropriationsTable(officeAllotmentClassId);
-            } else {
-                // For non-PS classes, add a blank row
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-1 py-2">
-                        <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
-                        <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.input type="text" name="edit_balance_from_allotment[]" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                    </td>
-                    <td class="px-1 py-2">
-                        <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                    </td>
-                    <td class="px-1 py-2 text-center">
-                        <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            }
+            // No amounts yet — add a single blank row for manual entry.
+            // NOTE: PS class used to auto-populate every appropriation here via
+            // populateEditAppropriationsTable(). That behavior has been removed
+            // so PS now behaves the same as MOOE/CO/CCO: manual per-row entry
+            // via the account code / description / program search dropdowns.
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-1 py-2">
+                    <x-form.input name="edit_account_code[]" placeholder="Account Code" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" oninput="filterEditAccountCodes(this)" autocomplete="off" />
+                    <div class="account-code-dropdown absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="editAccountCodeDropdown"></div>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" autocomplete="off"></x-form.textarea>
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.input type="text" name="edit_balance_from_allotment[]" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
+                </td>
+                <td class="px-1 py-2">
+                    <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
+                </td>
+                <td class="px-1 py-2 text-center">
+                    <button type="button" onclick="deleteRowEdit(this)" class="text-red-600 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-1 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
         }
         } catch (error) {
             console.error('Error populating edit table:', error);
@@ -641,15 +640,12 @@
                 updateEditProgramColumnHeader();
                 // Fetch new appropriations for the selected office_allotment_class
                 fetchEditAppropriations(item.id);
-                
-                // For PS classes, display all appropriations; for others, setup filtering
-                if (item.class === 'PS') {
-                    // After fetch completes, populate with all appropriations
-                    setTimeout(() => {
-                        populateEditAppropriationsTable(item.id);
-                    }, 100);
-                }
-                
+
+                // NOTE: PS classes no longer auto-populate all appropriations here.
+                // All classes (including PS) now rely on manual per-row entry via
+                // the account code / description / program search dropdowns above,
+                // combined with the "Add Row" button below.
+
                 dropdown.classList.add('hidden');
                 
             };
@@ -674,74 +670,6 @@
             .catch(error => {
                 console.error('Error fetching appropriations:', error);
             });
-    }
-
-    // Populate all appropriations in the edit table for PS classes
-    function populateEditAppropriationsTable(officeAllotmentClassId) {
-        const tableBody = document.querySelector('#edit_programs_table tbody');
-        tableBody.innerHTML = ''; // Clear existing rows
-
-        if (!officeAllotmentClassId) {
-            return;
-        }
-
-        // Hide Add Row button for PS classes
-        const addRowBtn = document.querySelector('button[onclick="addRowEdit()"]');
-        if (addRowBtn) addRowBtn.style.display = 'none';
-
-        // Get all appropriations for the selected office allotment class
-        const appropriationsForClass = window.editAppropriations.filter(item =>
-            String(item.office_allotment_class_id) === String(officeAllotmentClassId)
-        );
-
-        if (appropriationsForClass.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td colspan="6" class="px-4 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
-                    {{ __('No appropriations found for this office and allotment class') }}
-                </td>
-            `;
-            tableBody.appendChild(row);
-            return;
-        }
-
-        // Check if this is PDF or PEO-CO to determine column display
-        const isPDF = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.fund === 'Provincial Development Fund';
-        const isPEOCO = selectedEditOfficeAllotmentClass && selectedEditOfficeAllotmentClass.office === 'PEO' && selectedEditOfficeAllotmentClass.class === 'CO';
-        const showProjectNo = isPDF || isPEOCO;
-
-        // Create a row for each appropriation (without delete button initially)
-        appropriationsForClass.forEach((item) => {
-            const row = document.createElement('tr');
-            const programValue = showProjectNo ? (item.project_no || '') : (item.program || '');
-            // Remove commas from formatted numbers before parsing
-            const balanceFromAllotment = parseFloat((item.balance || '0').toString().replace(/,/g, '')) || 0;
-            
-            row.innerHTML = `
-                <input type="hidden" name="edit_obligation_amounts_id[]" value="" />
-                <td class="px-1 py-2">
-                    <x-form.input name="edit_account_code[]" placeholder="Account Code" value="${item.account_code}" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs bg-gray-100 dark:bg-gray-700" readonly />
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.textarea name="edit_description[]" placeholder="Description" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs bg-gray-100 dark:bg-gray-700" readonly>${item.description || ''}</x-form.textarea>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.textarea name="edit_programs[]" placeholder="Program" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs bg-gray-100 dark:bg-gray-700" readonly>${programValue}</x-form.textarea>
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.input type="text" name="edit_balance_from_allotment[]" value="${balanceFromAllotment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" placeholder="Balance" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" readonly />
-                </td>
-                <td class="px-1 py-2">
-                    <x-form.input type="text" name="edit_amount_of_obligation[]" oninput="validateAmountEdit(this); calculateTotalObligationEdit();" onblur="calculateTotalObligationEdit();" placeholder="Amount" autocomplete="off" class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs" />
-                </td>
-                <td class="px-1 py-2 text-center">
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-
-        // Reset total obligation
-        calculateTotalObligationEdit();
     }
 
     document.addEventListener('click', function(event) {
@@ -1266,6 +1194,9 @@
             tableMessage.classList.remove('hidden');
             isValid = false;
         }
+        // Every row's Amount of Obligation is required to be > 0 (applies to all
+        // classes, including PS — PS is entered manually per row just like the
+        // other allotment classes, so there is no "bulk" case to special-case here).
         const amountFields = document.querySelectorAll('[name="edit_amount_of_obligation[]"]');
         amountFields.forEach((field, index) => {
             const value = parseFloat(field.value || 0);

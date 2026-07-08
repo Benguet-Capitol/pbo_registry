@@ -1983,60 +1983,99 @@
                 }
 
                 /**
-                 * Print obligations table
+                 * Print obligations table, respecting the currently selected date range and search filter
                  */
                 function printObligationsModal(source = 'dashboard') {
                     const modalId = source === 'dashboard' ? 'obligationsModal' : 'accountObligationsModal';
                     const modal = document.getElementById(modalId);
-                    
+
                     if (!modal || !window.currentObligationsInfo) {
                         alert('No data to print');
                         return;
                     }
-                    
-                    // Clone the modal content for printing
-                    const printWindow = window.open('', '', 'height=800,width=1200');
-                    
+
+                    // Get date range filter values based on source
+                    const dateFromId = source === 'dashboard' ? 'obligationsDateFrom' : 'accountObligationsDateFrom';
+                    const dateToId = source === 'dashboard' ? 'obligationsDateTo' : 'accountObligationsDateTo';
+                    const dateFromValue = document.getElementById(dateFromId)?.value || '';
+                    const dateToValue = document.getElementById(dateToId)?.value || '';
+
                     // Get header information
                     const headerInfo = window.currentObligationsInfo;
-                    
+
                     // Get the table content
-                    const contentDiv = source === 'dashboard' ? 
+                    const contentDiv = source === 'dashboard' ?
                         document.getElementById('obligationsContent') :
                         document.getElementById('accountObligationsContent');
-                    
+
                     if (!contentDiv) {
                         alert('Could not retrieve table data');
                         return;
                     }
-                    
+
                     // Find the main table container (overflow-x-auto div)
                     const tableContainer = contentDiv.querySelector('div.overflow-x-auto');
                     if (!tableContainer) {
                         alert('Could not locate table container');
                         return;
                     }
-                    
+
                     // Clone the container to avoid modifying the original
                     const printableContent = tableContainer.cloneNode(true);
-                    
-                    // Remove all hidden obligation rows and their corresponding appropriations rows
+
+                    // Parse date range boundaries once
+                    const checkFrom = dateFromValue ? new Date(dateFromValue) : null;
+                    const checkTo = dateToValue ? new Date(dateToValue) : null;
+
+                    // Walk every obligation row: drop it if it's hidden by search OR falls outside
+                    // the selected date range, and recompute totals from only what's kept
                     const allObligationRows = printableContent.querySelectorAll('tbody tr.obligation-row');
                     const rowsToRemove = [];
-                    
+                    let printTotalAmount = 0;
+                    let printTotalPurchaseOrder = 0;
+                    let printTotalDisbursement = 0;
+                    let printedCount = 0;
+
                     allObligationRows.forEach(row => {
-                        if (row.style.display === 'none') {
-                            const obligationIndex = row.dataset.obligationIndex;
-                            // Mark this row for removal
+                        const obligationIndex = row.dataset.obligationIndex;
+                        const cells = row.querySelectorAll('td');
+                        const dateCellText = cells[2]?.textContent || '';
+
+                        let rowDate = null;
+                        try {
+                            rowDate = new Date(dateCellText);
+                        } catch (e) {
+                            rowDate = null;
+                        }
+
+                        let withinDateRange = true;
+                        if (rowDate && (checkFrom || checkTo)) {
+                            if (checkFrom && rowDate < checkFrom) withinDateRange = false;
+                            if (checkTo && rowDate > checkTo) withinDateRange = false;
+                        }
+
+                        const isHiddenBySearch = row.style.display === 'none';
+
+                        if (isHiddenBySearch || !withinDateRange) {
                             rowsToRemove.push(row);
-                            // Also mark its corresponding appropriations row for removal
                             const appRow = printableContent.querySelector(`tr.appropriations-row[data-obligation-index="${obligationIndex}"]`);
-                            if (appRow) {
-                                rowsToRemove.push(appRow);
-                            }
+                            if (appRow) rowsToRemove.push(appRow);
                         } else {
-                            // Make visible appropriations rows display properly
-                            const obligationIndex = row.dataset.obligationIndex;
+                            printedCount++;
+
+                            const amountText = (cells[6]?.textContent || '0').replace(/,/g, '').replace(/Cancelled/g, '0').trim();
+                            const amountValue = parseFloat(amountText);
+                            if (!isNaN(amountValue)) printTotalAmount += amountValue;
+
+                            const poText = (cells[7]?.textContent || '0').replace(/,/g, '').trim();
+                            const poValue = parseFloat(poText);
+                            if (!isNaN(poValue)) printTotalPurchaseOrder += poValue;
+
+                            const disbText = (cells[8]?.textContent || '0').replace(/,/g, '').trim();
+                            const disbValue = parseFloat(disbText);
+                            if (!isNaN(disbValue)) printTotalDisbursement += disbValue;
+
+                            // Make visible appropriations rows display properly in print
                             const appRow = printableContent.querySelector(`tr.appropriations-row[data-obligation-index="${obligationIndex}"]`);
                             if (appRow) {
                                 appRow.classList.remove('hidden');
@@ -2044,16 +2083,42 @@
                             }
                         }
                     });
-                    
-                    // Remove hidden rows from the DOM
-                    rowsToRemove.forEach(row => {
-                        row.remove();
-                    });
-                    
-                    // Get the HTML of the cloned container
+
+                    // Remove rows that don't belong in the printed set
+                    rowsToRemove.forEach(row => row.remove());
+
+                    // Recompute the footer totals so they match exactly what's printed
+                    const footerRow = printableContent.querySelector('tfoot tr');
+                    if (footerRow) {
+                        const footerCells = footerRow.querySelectorAll('td');
+                        if (footerCells.length >= 4) {
+                            footerCells[1].textContent = printTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            footerCells[2].textContent = printTotalPurchaseOrder > 0 ? printTotalPurchaseOrder.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                            footerCells[3].textContent = printTotalDisbursement > 0 ? printTotalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+                        }
+                    }
+
+                    // Get the HTML of the cloned, filtered container
                     const tableHTML = printableContent.outerHTML;
-                    
+
+                    // Build a readable date range string for the printed header
+                    let dateRangeText = '';
+                    if (dateFromValue || dateToValue) {
+                        const fromDisplay = dateFromValue
+                            ? new Date(dateFromValue).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                            : 'Start';
+                        const toDisplay = dateToValue
+                            ? new Date(dateToValue).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                            : 'Present';
+                        dateRangeText = ` | Date Range: ${fromDisplay} - ${toDisplay}`;
+                    }
+
+                    const noResultsMessage = printedCount === 0
+                        ? `<p style="text-align:center; padding: 20px; color: #999; font-style: italic;">No obligations found for the selected filters.</p>`
+                        : '';
+
                     // Create a comprehensive print document
+                    const printWindow = window.open('', '', 'height=800,width=1200');
                     const printContent = `
                         <!DOCTYPE html>
                         <html>
@@ -2109,24 +2174,8 @@
                                     border: 1px solid #ccc;
                                     padding: 8px;
                                 }
-                                .text-right {
-                                    text-align: right;
-                                }
-                                .text-center {
-                                    text-align: center;
-                                }
-                                .text-red {
-                                    color: #dc2626;
-                                }
-                                .text-green {
-                                    color: #16a34a;
-                                }
-                                .text-blue {
-                                    color: #2563eb;
-                                }
-                                .text-orange {
-                                    color: #ea580c;
-                                }
+                                .text-right { text-align: right; }
+                                .text-center { text-align: center; }
                                 .print-date {
                                     text-align: right;
                                     font-size: 10px;
@@ -2134,12 +2183,8 @@
                                     color: #666;
                                 }
                                 @media print {
-                                    body {
-                                        margin: 0;
-                                    }
-                                    .print-date {
-                                        display: none;
-                                    }
+                                    body { margin: 0; }
+                                    .print-date { display: none; }
                                 }
                             </style>
                         </head>
@@ -2148,12 +2193,13 @@
                                 <h1>OBLIGATIONS REPORT</h1>
                                 <p>Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                             </div>
-                            
+
                             <div class="office-info">
-                                Office: ${headerInfo.office} | Allotment Class: ${headerInfo.allotmentClass} | CY ${headerInfo.cyYear}
+                                Office: ${headerInfo.office} | Allotment Class: ${headerInfo.allotmentClass} | CY ${headerInfo.cyYear}${dateRangeText}
                             </div>
-                            
+
                             <div class="table-container">
+                                ${noResultsMessage}
                                 ${tableHTML}
                                 <div class="print-date">
                                     Printed on: ${new Date().toLocaleString()}
@@ -2162,8 +2208,7 @@
                         </body>
                         </html>
                     `;
-                    
-                    // Write content and close document to trigger print dialog
+
                     printWindow.document.write(printContent);
                     printWindow.document.close();
                 }

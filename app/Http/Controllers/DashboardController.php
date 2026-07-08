@@ -29,11 +29,16 @@ class DashboardController extends Controller
     // -------------------------------------------------------------------------
 
     /**
-     * Determine the current fiscal quarter (1–4) from the current date.
+     * Determine the fiscal quarter (1–4) for a given reference date.
+     * Falls back to the actual current date when no reference is provided,
+     * so unfiltered views behave exactly as before.
      */
-    private function currentQuarter(): int
+    private function currentQuarter(?string $referenceDate = null): int
     {
-        $month = Carbon::now()->month;
+        $month = $referenceDate
+            ? Carbon::parse($referenceDate)->month
+            : Carbon::now()->month;
+
         return match (true) {
             $month <= 3  => 1,
             $month <= 6  => 2,
@@ -407,7 +412,7 @@ class DashboardController extends Controller
         $adjustmentsByObrAmount         = $adjustmentsByObrAmount->toArray();
         $disbursementsByObrAmount       = $disbursementsByObrAmount->toArray();
 
-        $currentQuarter = $this->currentQuarter();
+        $currentQuarter = $this->currentQuarter($toDate);
 
         // --- Per-class metric stamping (no DB queries inside loop) ---
         foreach ($officeAllotmentClasses as $class) {
@@ -683,7 +688,7 @@ class DashboardController extends Controller
         // Sort appropriations
         $officeAllotmentClasses->appropriations = $this->sortAppropriations($officeAllotmentClasses->appropriations);
 
-        $currentQuarter = $this->currentQuarter();
+        $currentQuarter = $this->currentQuarter($toDate);
         $selectedYear   = $officeAllotmentClasses->year;
 
         // --- Class-level aggregates ---

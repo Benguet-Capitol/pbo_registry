@@ -2195,6 +2195,11 @@ if (typeof originalUpdateCardValues === 'function') {
         }
     }
 
+    // Page-level date filter values, used to seed the Obligations modal on first open
+    const pageDateFrom = '{{ request('from_date') }}';
+    const pageDateTo = '{{ request('to_date') }}';
+    let accountObligationsModalDateInitialized = false;
+
     function showAccountObligationsModal() {
         if (!currentAccountAppropriation || !currentAccountAppropriation.appropriationId) {
             alert('Could not retrieve appropriation information');
@@ -2205,6 +2210,20 @@ if (typeof originalUpdateCardValues === 'function') {
         const headerInfo = document.getElementById('accountObligationsHeaderInfo');
         const content = document.getElementById('accountObligationsContent');
         const loading = document.getElementById('accountObligationsLoading');
+
+        // Carry over the page-level date filter into the modal, but only the first
+        // time the modal is opened — after that, respect whatever the user set/cleared inside the modal
+        if (!accountObligationsModalDateInitialized) {
+            const dateFromInput = document.getElementById('accountObligationsDateFrom');
+            const dateToInput = document.getElementById('accountObligationsDateTo');
+            if (dateFromInput && pageDateFrom) {
+                dateFromInput.value = pageDateFrom;
+            }
+            if (dateToInput && pageDateTo) {
+                dateToInput.value = pageDateTo;
+            }
+            accountObligationsModalDateInitialized = true;
+        }
 
         modal.offsetHeight;
         modal.style.display = 'flex';

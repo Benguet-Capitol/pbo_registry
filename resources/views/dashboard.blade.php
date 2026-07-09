@@ -1664,6 +1664,11 @@
                     }
                 }
 
+                // Page-level date filter values, used to seed the Obligations modal on first open
+                const pageDateFrom = '{{ request('from_date') }}';
+                const pageDateTo = '{{ request('to_date') }}';
+                let obligationsModalDateInitialized = false;
+
                 /**
                  * Show obligations modal and fetch data
                  */
@@ -1691,6 +1696,20 @@
                             loading: !!loading,
                             headerInfo: !!headerInfo
                         });
+                    }
+
+                    // Carry over the page-level date filter into the modal, but only the first
+                    // time the modal is opened — after that, respect whatever the user set/cleared inside the modal
+                    if (!obligationsModalDateInitialized) {
+                        const dateFromInput = document.getElementById('obligationsDateFrom');
+                        const dateToInput = document.getElementById('obligationsDateTo');
+                        if (dateFromInput && pageDateFrom) {
+                            dateFromInput.value = pageDateFrom;
+                        }
+                        if (dateToInput && pageDateTo) {
+                            dateToInput.value = pageDateTo;
+                        }
+                        obligationsModalDateInitialized = true;
                     }
 
                     // Try to clear and show modal if elements exist

@@ -2485,18 +2485,12 @@ if (typeof originalUpdateCardValues === 'function') {
         const modal = document.getElementById('accountObligationsModal');
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
-        // Clear search input and date filters
+        // Clear search input only — date filters are intentionally preserved
+        // across opens (either the page-level filter or whatever the user set
+        // manually), matching the dashboard modal's behavior
         const searchInput = document.getElementById('accountObligationsSearchInput');
         if (searchInput) {
             searchInput.value = '';
-        }
-        const dateFrom = document.getElementById('accountObligationsDateFrom');
-        const dateTo = document.getElementById('accountObligationsDateTo');
-        if (dateFrom) {
-            dateFrom.value = '';
-        }
-        if (dateTo) {
-            dateTo.value = '';
         }
     }
 

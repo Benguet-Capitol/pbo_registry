@@ -2094,8 +2094,14 @@ class ObligationController extends Controller
                     $poAmount = number_format($totalPoAmount, 2);
                 }
                 
-                // Get total disbursement amount
-                $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
+                // Get total disbursement amount, scoped to the selected appropriation only
+                $obligationAmountIdsForThisAppropriation = $obligation->obligationAmounts
+                    ->where('appropriation_id', $appropriationId)
+                    ->pluck('id');
+
+                $disbursementAmount = $obligation->disbursements
+                    ->whereIn('obligation_amounts_id', $obligationAmountIdsForThisAppropriation)
+                    ->sum('disbursement_amount') ?? 0;
                 $disbursement = $disbursementAmount > 0 ? number_format($disbursementAmount, 2) : '-';
                 
                 // Get ALL appropriations from obligation_amounts in detail row (not filtered)

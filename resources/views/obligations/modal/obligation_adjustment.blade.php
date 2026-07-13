@@ -48,6 +48,7 @@
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id }}">
                             <!-- Filter Parameters -->
+                            <input type="hidden" name="page" value="{{ request('page') }}">
                             <input type="hidden" name="search" value="{{ request('search') ?? '' }}">
                             <input type="hidden" name="search_column" value="{{ request('search_column') ?? '' }}">
                             <input type="hidden" name="sort_by" value="{{ request('sort_by') ?? '' }}">

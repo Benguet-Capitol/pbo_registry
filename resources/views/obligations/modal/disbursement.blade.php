@@ -37,6 +37,7 @@
                             <input type="hidden" name="purchase_order_id" value="{{ isset($purchaseOrder) ? $purchaseOrder->id : null }}">
                             <input type="hidden" name="from" value="{{ request('from') ?? 'obligation' }}">
                             <!-- Filter Parameters -->
+                            <input type="hidden" name="page" value="{{ request('page') ?? '' }}">
                             <input type="hidden" name="search" value="{{ request('search') ?? '' }}">
                             <input type="hidden" name="search_column" value="{{ request('search_column') ?? '' }}">
                             <input type="hidden" name="sort_by" value="{{ request('sort_by') ?? '' }}">

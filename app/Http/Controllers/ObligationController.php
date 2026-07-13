@@ -25,6 +25,24 @@ use Illuminate\Validation\Rule;
 
 class ObligationController extends Controller
 {
+    private function obligationsIndexParams(Request $request): array
+    {
+        return $request->only([
+            'search',
+            'search_column',
+            'sort_by',
+            'sort_order',
+            'per_page',
+            'year1',
+            'office_allotment_class_filter',
+            'obr_type_filter',
+            'fund_filter',
+            'from_date',
+            'to_date',
+            'page',
+        ]);
+    }
+
     public function index(Request $request)
     {
         // --- Filters & Sorting setup ---
@@ -749,7 +767,7 @@ class ObligationController extends Controller
                 } else {
                     // If not preselected, redirect to obligations index
                     return redirect()
-                        ->route('obligations.index', $request->only(['search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter']))
+                        ->route('obligations.index', $this->obligationsIndexParams($request))
                         ->with('status', $statusMessage);
                 }
             } catch (\Exception $e) {
@@ -765,7 +783,7 @@ class ObligationController extends Controller
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'An error occurred while saving the obligation: ' . $e->getMessage())
-                    ->with($request->only(['search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter']));
+                    ->with($this->obligationsIndexParams($request));
             }
         } catch (\Exception $e) {
             // Log the error for debugging
@@ -1088,7 +1106,7 @@ class ObligationController extends Controller
                     ->with($request->only(['search']));
             }
 
-            return redirect()->route('obligations.index', $request->only(['search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter']))
+            return redirect()->route('obligations.index', $this->obligationsIndexParams($request))
                 ->with('status', [
                     'type' => 'update',
                     'message' => "Obligation Request No. <strong>{$validated['edit_obr_no']}</strong> under <strong>{$officeAbbreviation}</strong> - <strong>{$class}</strong> has been updated successfully!"
@@ -1104,7 +1122,7 @@ class ObligationController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'An error occurred while updating the obligation: ' . $e->getMessage())
-                ->with($request->only(['search', 'sort_by', 'sort_order', 'per_page', 'year1', 'office_allotment_class_filter', 'obr_type_filter', 'fund_filter']) );
+                ->with($this->obligationsIndexParams($request));
         }
     }
 
@@ -1161,10 +1179,7 @@ class ObligationController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('obligations.index', $request->only([
-                    'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1',
-                    'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
-                ]))
+                ->route('obligations.index', $this->obligationsIndexParams($request))
                 ->with('status', [
                     'type' => 'delete',
                     'message' => "Obligation Request No. <strong>{$obrNumber}</strong> under <strong>{$account_code}</strong> - <strong>{$class}</strong> with Total Amount: <strong>" . number_format($totalObrAmount, 2, '.', ',') . "</strong> has been deleted successfully!"
@@ -1179,10 +1194,8 @@ class ObligationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->route('obligations.index', $request->only([
-                'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 
-                'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
-            ]))->with('error', 'Failed to delete obligation. Please try again.');
+            return redirect()->route('obligations.index', $this->obligationsIndexParams($request))
+                ->with('error', 'Failed to delete obligation. Please try again.');
         }
     }
 
@@ -1279,10 +1292,7 @@ class ObligationController extends Controller
             // Determine redirect based on origin
             $from = $request->input('from');
             $redirectRoute = ($from === 'dashboard' || $from === 'accounts') ? 'dashboard' : 'obligations.index';
-            $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $request->only([
-                'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1',
-                'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
-            ]);
+            $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $this->obligationsIndexParams($request);
 
             return redirect()->route($redirectRoute, $queryParams)->with('status', [
                 'type' => 'delete',
@@ -1301,10 +1311,7 @@ class ObligationController extends Controller
             // Determine redirect based on origin
             $from = $request->input('from');
             $redirectRoute = ($from === 'dashboard' || $from === 'accounts') ? 'dashboard' : 'obligations.index';
-            $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $request->only([
-                'search', 'search_column', 'sort_by', 'sort_order', 'per_page', 'year1', 
-                'office_allotment_class_filter', 'obr_type_filter', 'fund_filter'
-            ]);
+            $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $this->obligationsIndexParams($request);
 
             return redirect()->route($redirectRoute, $queryParams)->with('error', 'Failed to cancel obligation. Please try again.');
         }
@@ -1565,7 +1572,7 @@ class ObligationController extends Controller
                 ->with('reopen_po_modal', true);
         }
 
-        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
+        return redirect()->route('obligations.index', $this->obligationsIndexParams($request))
             ->with('status', [
                 'type' => 'default',
                 'message' => "Purchase Order No: <strong>{$validated['po_number']}</strong> with Date: <strong>{$validated['po_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> has been created successfully!"
@@ -1676,7 +1683,7 @@ class ObligationController extends Controller
         // Determine redirect based on origin
         $from = $request->input('from', 'obligations');
         $redirectRoute = ($from === 'dashboard' || $from === 'accounts') ? 'dashboard' : 'obligations.index';
-        $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']);
+        $queryParams = ($from === 'dashboard' || $from === 'accounts') ? [] : $this->obligationsIndexParams($request);
         
         // Redirect back to the appropriate page with a success message
         return redirect()->route($redirectRoute, $queryParams)
@@ -1844,7 +1851,7 @@ class ObligationController extends Controller
                 ]);
         }
 
-        return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
+        return redirect()->route('obligations.index', $this->obligationsIndexParams($request))
             ->with('status', [
                 'type' => 'default',
                 'message' => "DV / Check No(s): <strong>{$dvNumbersMessage}</strong> for OBR No. <strong>{$obrNo}</strong> with DV / Check Date: <strong>{$validated['disbursement_date']}</strong> under Account Code(s): <strong>{$accountCodesMessage}</strong> with Total Amount: <strong>₱{$formattedAmount}</strong> has been created successfully!"
@@ -1862,7 +1869,7 @@ class ObligationController extends Controller
                 'payment_remarks' => $request->payment_remarks,
             ]);
 
-            return redirect()->route('obligations.index', $request->only(['year1', 'office_allotment_class_filter', 'obr_type_filter', 'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'fund_filter']))
+            return redirect()->route('obligations.index', $this->obligationsIndexParams($request))
                 ->with('status', [
                     'type' => 'update',
                     'message' => '<strong>Payment remarks</strong> for OBR No. <strong>' . $obligation->obr_no . '</strong> has been updated successfully!'

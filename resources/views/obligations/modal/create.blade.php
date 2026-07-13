@@ -1,6 +1,7 @@
 <!-- Create Obligations Modal -->
 <form id="createObligationsForm" method="POST" action="{{ route('obligations.store') }}">
     @csrf
+    <input type="hidden" name="page" value="{{ request('page') }}">
     <input type="hidden" name="year1" value="{{ request('year1') }}">
     <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
     <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">

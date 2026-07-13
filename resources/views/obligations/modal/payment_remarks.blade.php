@@ -42,6 +42,7 @@
                 <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
                 <input type="hidden" name="per_page" value="{{ request('per_page') }}">
                 <input type="hidden" name="search" value="{{ request('search') }}">
+                <input type="hidden" name="page" value="{{ request('page') }}">
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">

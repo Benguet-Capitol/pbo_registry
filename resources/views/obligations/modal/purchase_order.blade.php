@@ -48,6 +48,7 @@
             <!-- Modal body (scrollable) -->
             <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-6 py-3 text-xs">
                 <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
+                            <input type="hidden" name="page" value="{{ request('page') }}">
                             <input type="hidden" name="obligation_id" value="{{ $obligation->id ?? '' }}">
                             <input type="hidden" name="po_source" value="">
                             <input type="hidden" name="search" value="{{ request('search') ?? '' }}">

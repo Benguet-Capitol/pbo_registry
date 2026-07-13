@@ -26,6 +26,9 @@
                     $toDate = request('to_date') ? date('M d, Y', strtotime(request('to_date'))) : 'End';
                     $filters[] = "$fromDate - $toDate";
                 }
+
+                $dateFilterParams = array_filter(request()->only(['from_date', 'to_date']));
+                $dateFilterQuery  = http_build_query($dateFilterParams);
                 @endphp
 
                 @if (count($filters) > 0)
@@ -519,7 +522,7 @@
                         @forelse ($officeAllotmentClasses as $class)
                         <tr 
                             class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
-                            ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}'"
+                            ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}{{ $dateFilterQuery ? '?'.$dateFilterQuery : '' }}'"
                             data-class-id="{{ $class->id }}"
                             data-year="{{ $selectedYear }}"
                             data-appropriations="{{ $class->appropriations_sum }}"
@@ -553,7 +556,7 @@
 
                                     <!-- Dropdown Menu -->
                                     <div class="absolute top-full left-0 mt-1 w-48 z-50 hidden dropdown-menu bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl origin-top-right">
-                                        <a href="{{ route('dashboard.accounts', $class->id) }}" class="flex items-center px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150 group">
+                                        <a href="{{ route('dashboard.accounts', $class->id) }}{{ $dateFilterQuery ? '?'.$dateFilterQuery : '' }}" class="flex items-center px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150 group">
                                             <i class="fas fa-stream mr-2 text-blue-600 dark:text-blue-400"></i> Accounts
                                         </a>
                                         <a href="#" onclick="openObligationsModalFromDropdown(event, {{ $class->id }})" class="flex items-center px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-b-lg transition-colors duration-150 cursor-pointer">
@@ -1621,8 +1624,12 @@
                         contextMenu.style.top = event.clientY + 'px';
                         contextMenu.classList.remove('hidden');
                         
-                        // Set the href for context menu items
-                        document.getElementById('contextAccounts').href = '{{ route("dashboard.accounts", ":id") }}'.replace(':id', classId);
+                        // Set the href for context menu items, carrying over the current date filter
+                        const accountsParams = new URLSearchParams();
+                        if (pageDateFrom) accountsParams.set('from_date', pageDateFrom);
+                        if (pageDateTo) accountsParams.set('to_date', pageDateTo);
+                        const accountsQuery = accountsParams.toString();
+                        document.getElementById('contextAccounts').href = '{{ route("dashboard.accounts", ":id") }}'.replace(':id', classId) + (accountsQuery ? '?' + accountsQuery : '');
                     }
                 });
 

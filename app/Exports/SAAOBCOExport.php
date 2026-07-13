@@ -336,6 +336,17 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                             ->where('supplemental_date', '<=', $asOfDate)
                             ->sum('amount') * -1;
 
+                        $sbForLater = $app->supplementals
+                        ->where('type', 'Supplemental')
+                        ->where('supplemental_date', '<=', $asOfDate)
+                        ->sum(function ($supp) use ($currentQuarter) {
+                            $fl = 0;
+                            if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                            if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                            if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                            return $fl;
+                        });
+
                         // --- Realignments ---
                         $realignment = $app->realignments
                             ->where('realignment_date', '<=', $asOfDate)
@@ -367,6 +378,7 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                         if ($currentQuarter < 2) $forLater += $app->quarter2;
                         if ($currentQuarter < 3) $forLater += $app->quarter3;
                         if ($currentQuarter < 4) $forLater += $app->quarter4;
+                        $forLater += $sbForLater;
 
                         $allotment -= $forLater;
 

@@ -90,6 +90,18 @@ class SAAOBGFCurrentSummaryController extends Controller
                     ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
                     ->sum('amount') * -1;
 
+                $allotmentClass->sbForLater = $oacAppropriations
+                    ->flatMap->supplementals
+                    ->where('type', 'Supplemental')
+                    ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
+                    ->sum(function ($supp) use ($currentQuarter) {
+                        $fl = 0;
+                        if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                        if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                        if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                        return $fl;
+                    });
+
                 // Realignments
                 $allotmentClass->realignment = $oacAppropriations
                     ->flatMap->realignments
@@ -108,6 +120,7 @@ class SAAOBGFCurrentSummaryController extends Controller
                 if ($currentQuarter < 2) $allotmentClass->for_later_release += $oacAppropriations->sum('quarter2');
                 if ($currentQuarter < 3) $allotmentClass->for_later_release += $oacAppropriations->sum('quarter3');
                 if ($currentQuarter < 4) $allotmentClass->for_later_release += $oacAppropriations->sum('quarter4');
+                $allotmentClass->for_later_release += $allotmentClass->sbForLater;
 
                 // Allotment
                 $allotmentClass->allotment = $allotmentClass->authorized_appropriation - $allotmentClass->for_later_release;
@@ -255,6 +268,18 @@ class SAAOBGFCurrentSummaryController extends Controller
                             ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
                             ->sum('amount') * -1;
 
+                        $sbForLater = $oacAppropriations
+                            ->flatMap->supplementals
+                            ->where('type', 'Supplemental')
+                            ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
+                            ->sum(function ($supp) use ($currentQuarter) {
+                                $fl = 0;
+                                if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                                if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                                if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                                return $fl;
+                            });
+
                         $realignment = $oacAppropriations
                             ->flatMap->realignments
                             ->filter(fn($r) => $asOfDate ? $r->realignment_date <= $asOfDate : true)
@@ -272,7 +297,7 @@ class SAAOBGFCurrentSummaryController extends Controller
                         if ($currentQuarter < 2) $forLaterRelease += $oacAppropriations->sum('quarter2');
                         if ($currentQuarter < 3) $forLaterRelease += $oacAppropriations->sum('quarter3');
                         if ($currentQuarter < 4) $forLaterRelease += $oacAppropriations->sum('quarter4');
-
+                        $forLaterRelease += $sbForLater;
                         $allotment = $authorizedAppropriation - $forLaterRelease;
 
                         $obligationBase = $oacAppropriations
@@ -412,6 +437,18 @@ class SAAOBGFCurrentSummaryController extends Controller
                 ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
                 ->sum('amount') * -1;
 
+            $sbForLater = $oacAppropriations
+                ->flatMap->supplementals
+                ->where('type', 'Supplemental')
+                ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
+                ->sum(function ($supp) use ($currentQuarter) {
+                    $fl = 0;
+                    if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                    if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                    if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                    return $fl;
+                });
+
             $realignment = $oacAppropriations
                 ->flatMap->realignments
                 ->filter(fn($r) => $asOfDate ? $r->realignment_date <= $asOfDate : true)
@@ -428,6 +465,8 @@ class SAAOBGFCurrentSummaryController extends Controller
             if ($currentQuarter < 2) $forLaterRelease += $oacAppropriations->sum('quarter2');
             if ($currentQuarter < 3) $forLaterRelease += $oacAppropriations->sum('quarter3');
             if ($currentQuarter < 4) $forLaterRelease += $oacAppropriations->sum('quarter4');
+
+            $forLaterRelease += $sbForLater;
 
             $allotment = $authorizedAppropriation - $forLaterRelease;
 

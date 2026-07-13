@@ -228,22 +228,23 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
             $fundSourcesQuery->where('category', $selectedFundSource);
         }
 
-        $fundSources = $fundSourcesQuery->with([
-            'officeAllotmentClasses' => function ($query) {
-                $query->with([
-                    'appropriations', // no sorting here
-                    'appropriations.realignments',
-                    'appropriations.supplementals',
-                    'appropriations.obligationAmounts.obligation.obligationAdjustments'
-                ]);
-            }
-        ])
+        $fundSources = $fundSourcesQuery->with(['officeAllotmentClasses' => function ($query) use ($selectedYear) {
+                    $query->where('year', $selectedYear)
+                        ->with([
+                        'appropriations', // no sorting here
+                        'appropriations.realignments',
+                        'appropriations.supplementals',
+                        'appropriations.obligationAmounts.obligation.obligationAdjustments'
+                    ]);
+                }
+            ])
             ->get()
             ->groupBy('category')
             ->map(function ($sources, $category) use ($currentQuarter, $asOfDate) {
                 $fundSourceCodes = $sources->pluck('source');
 
                 $fundsInUse = OfficeAllotmentClass::whereIn('fund_source', $fundSourceCodes)
+                    ->where('year', $this->selectedYear)
                     ->pluck('fund')
                     ->unique();
 
@@ -279,6 +280,18 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                                         ->where('type', 'Reversion')
                                         ->where('supplemental_date', '<=', $asOfDate)
                                         ->sum('amount') * -1;
+
+                                    $sbForLater = $app->supplementals
+                                        ->where('type', 'Supplemental')
+                                        ->where('supplemental_date', '<=', $asOfDate)
+                                        ->sum(function ($supp) use ($currentQuarter) {
+                                            $fl = 0;
+                                            if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                                            if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                                            if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                                            return $fl;
+                                        });
+                                    $forLaterRelease += $sbForLater;
 
                                     // Realignments (filter by realignment_date)
                                     $realignments += $app->realignments

@@ -114,7 +114,8 @@ class DashboardController extends Controller
         array   $obrAmountsByAppropriationId,
         array   $obrAmountIdsByAppropriationId,
         array   $adjustmentsByObrAmount,
-        array   $disbursementsByObrAmount
+        array   $disbursementsByObrAmount,
+        array   $forLaterSupplementalsByClass = []
     ): void {
         // --- Appropriations ---
         $class->appropriations_sum  = $class->appropriations->sum('appropriation');
@@ -137,6 +138,8 @@ class DashboardController extends Controller
             if ($currentQuarter < 3) $forLater += $app->quarter3 ?? 0;
             if ($currentQuarter < 4) $forLater += $app->quarter4 ?? 0;
         }
+        // Supplementals are released on their own quarter schedule too
+        $forLater += $forLaterSupplementalsByClass[$class->id] ?? 0;
         $class->for_later_release = $forLater;
 
         $class->allotments_sum = $rawAllotments
@@ -379,15 +382,32 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
+        $currentQuarter = $this->currentQuarter($toDate);
+
         // --- Batch aggregations ---
-        $supplementalsByClass = Supplemental::where('type', 'Supplemental')
+        $supplementalRows = Supplemental::where('type', 'Supplemental')
             ->whereIn('office_allotment_classes_id', $classIds)
             ->when($fromDate, fn($q) => $q->where('supplemental_date', '>=', $fromDate))
             ->when($toDate,   fn($q) => $q->where('supplemental_date', '<=', $toDate))
-            ->get(['office_allotment_classes_id', 'amount'])
+            ->get(['office_allotment_classes_id', 'amount', 'quarter1', 'quarter2', 'quarter3', 'quarter4']);
+
+        $supplementalsByClass = $supplementalRows
             ->groupBy('office_allotment_classes_id')
             ->map(fn($items) => $items->sum('amount'))
             ->toArray();
+
+        $forLaterSupplementalsByClass = $supplementalRows
+        ->groupBy('office_allotment_classes_id')
+        ->map(function ($items) use ($currentQuarter) {
+            return $items->sum(function ($supp) use ($currentQuarter) {
+                $fl = 0;
+                if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                return $fl;
+            });
+        })
+        ->toArray();
 
         $reversionsByClass = Supplemental::where('type', 'Reversion')
             ->whereIn('office_allotment_classes_id', $classIds)
@@ -412,8 +432,6 @@ class DashboardController extends Controller
         $adjustmentsByObrAmount         = $adjustmentsByObrAmount->toArray();
         $disbursementsByObrAmount       = $disbursementsByObrAmount->toArray();
 
-        $currentQuarter = $this->currentQuarter($toDate);
-
         // --- Per-class metric stamping (no DB queries inside loop) ---
         foreach ($officeAllotmentClasses as $class) {
             $this->stampClassMetrics(
@@ -424,7 +442,8 @@ class DashboardController extends Controller
                 $obrAmountsByAppropriationId,
                 $obrAmountIdsByAppropriationId,
                 $adjustmentsByObrAmount,
-                $disbursementsByObrAmount
+                $disbursementsByObrAmount,
+                $forLaterSupplementalsByClass
             );
         }
 
@@ -458,6 +477,8 @@ class DashboardController extends Controller
         if ($currentQuarter < 2) $totalForLaterRelease += $quarterTotals->q2 ?? 0;
         if ($currentQuarter < 3) $totalForLaterRelease += $quarterTotals->q3 ?? 0;
         if ($currentQuarter < 4) $totalForLaterRelease += $quarterTotals->q4 ?? 0;
+
+        $totalForLaterRelease += array_sum($forLaterSupplementalsByClass);
 
         $totalAllotments = (($quarterTotals->q1 ?? 0) + ($quarterTotals->q2 ?? 0)
                           + ($quarterTotals->q3 ?? 0) + ($quarterTotals->q4 ?? 0))
@@ -792,13 +813,29 @@ class DashboardController extends Controller
             $appDisbursementsByObrId,
         ] = $this->buildObligationMaps($appIds, $fromDate, $toDate);
 
-        $appSupplementalsByAppId = Supplemental::where('type', 'Supplemental')
+        $appSupplementalRows = Supplemental::where('type', 'Supplemental')
             ->whereIn('appropriations_id', $appIds)
             ->when($fromDate, fn($q) => $q->where('supplemental_date', '>=', $fromDate))
             ->when($toDate,   fn($q) => $q->where('supplemental_date', '<=', $toDate))
-            ->get(['appropriations_id', 'amount'])
+            ->get(['appropriations_id', 'amount', 'quarter1', 'quarter2', 'quarter3', 'quarter4']);
+
+        $appSupplementalsByAppId = $appSupplementalRows
             ->groupBy('appropriations_id')
             ->map(fn($items) => $items->sum('amount'))
+            ->toArray();
+
+        // Supplementals for this appropriation, released on their own quarter schedule
+        $appForLaterSupplementalsByAppId = $appSupplementalRows
+            ->groupBy('appropriations_id')
+            ->map(function ($items) use ($currentQuarter) {
+                return $items->sum(function ($supp) use ($currentQuarter) {
+                    $fl = 0;
+                    if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                    if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                    if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                    return $fl;
+                });
+            })
             ->toArray();
 
         $appReversionsByAppId = Supplemental::where('type', 'Reversion')
@@ -839,6 +876,7 @@ class DashboardController extends Controller
             if ($currentQuarter < 2) $fl += $appropriation->quarter2 ?? 0;
             if ($currentQuarter < 3) $fl += $appropriation->quarter3 ?? 0;
             if ($currentQuarter < 4) $fl += $appropriation->quarter4 ?? 0;
+            $fl += $appForLaterSupplementalsByAppId[$appId] ?? 0;
             $appropriation->for_later_release  = $fl;
             $appropriation->allotments_sum    -= $fl;
 

@@ -109,6 +109,18 @@ class SAAOBFundSourceController extends Controller
                                         ->where('supplemental_date', '<=', $asOfDate)
                                         ->sum('amount') * -1;
 
+                                    $sbForLater = $app->supplementals
+                                        ->where('type', 'Supplemental')
+                                        ->where('supplemental_date', '<=', $asOfDate)
+                                        ->sum(function ($supp) use ($currentQuarter) {
+                                            $fl = 0;
+                                            if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                                            if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                                            if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                                            return $fl;
+                                        });
+                                    $forLaterRelease += $sbForLater;
+
                                     // Realignments (filter by realignment_date)
                                     $realignments += $app->realignments
                                         ->where('realignment_date', '<=', $asOfDate)

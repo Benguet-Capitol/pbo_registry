@@ -310,6 +310,17 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                             ->where('supplemental_date', '<=', $asOfDate)
                             ->sum('amount') * -1;
 
+                        $sbForLater = $appropriation->supplementals
+                            ->where('type', 'Supplemental')
+                            ->where('supplemental_date', '<=', $asOfDate)
+                            ->sum(function ($supp) use ($currentQuarter) {
+                                $fl = 0;
+                                if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                                if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                                if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                                return $fl;
+                            });
+
                         // Realignments (filter by realignment_date)
                         $realignment = $appropriation->realignments
                             ->where('realignment_date', '<=', $asOfDate)
@@ -328,6 +339,8 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                             ($currentQuarter < 3 ? ($appropriation->quarter3 ?? 0) : 0) +
                             ($currentQuarter < 4 ? ($appropriation->quarter4 ?? 0) : 0)
                         );
+
+                        $forLaterRelease += $sbForLater;
 
                         $allotment -= $forLaterRelease;
 
@@ -455,6 +468,17 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                             ->where('supplemental_date', '<=', $asOfDate)
                             ->sum('amount') * -1;
 
+                        $sbForLater = $appropriation->supplementals
+                            ->where('type', 'Supplemental')
+                            ->where('supplemental_date', '<=', $asOfDate)
+                            ->sum(function ($supp) use ($currentQuarter) {
+                                $fl = 0;
+                                if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                                if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                                if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                                return $fl;
+                            });
+
                         // Realignments (filter by realignment_date)
                         $realignment = $appropriation->realignments
                             ->where('realignment_date', '<=', $asOfDate)
@@ -473,6 +497,8 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                             ($currentQuarter < 3 ? ($appropriation->quarter3 ?? 0) : 0) +
                             ($currentQuarter < 4 ? ($appropriation->quarter4 ?? 0) : 0)
                         );
+
+                        $forLaterRelease += $sbForLater;
 
                         $allotment -= $forLaterRelease;
 

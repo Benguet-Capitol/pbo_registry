@@ -316,6 +316,18 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
                         ->where('supplemental_date', '<=', $asOfDate)
                         ->sum('amount') * -1;
 
+                    $oac->sbForLater = $oacAppropriations
+                        ->flatMap->supplementals
+                        ->where('type', 'Supplemental')
+                        ->where('supplemental_date', '<=', $asOfDate)
+                        ->sum(function ($supp) use ($currentQuarter) {
+                            $fl = 0;
+                            if ($currentQuarter < 2) $fl += $supp->quarter2 ?? 0;
+                            if ($currentQuarter < 3) $fl += $supp->quarter3 ?? 0;
+                            if ($currentQuarter < 4) $fl += $supp->quarter4 ?? 0;
+                            return $fl;
+                        });
+
                     // Realignments (filter by realignment_date)
                     $oac->realignment = $oacAppropriations
                         ->flatMap->realignments
@@ -334,6 +346,8 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
                     if ($currentQuarter < 3) $oac->for_later_release += $oacAppropriations->sum('quarter3');
                     if ($currentQuarter < 4) $oac->for_later_release += $oacAppropriations->sum('quarter4');
 
+                    $oac->for_later_release += $oac->sbForLater;
+
                     // Allotment
                     $oac->allotment = $oac->authorized_appropriation - $oac->for_later_release;
 
@@ -343,13 +357,14 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
                         ->filter(fn($oa) => $oa->obligation && $oa->obligation->obr_date <= $asOfDate)
                         ->sum('obr_amount');
 
-                    // Obligation Adjustments (filter by adjustment_date)
+                    // --- Obligation Adjustments (filter by adjustment_date and appropriation) ---
                     $obligationAdjustments = $oacAppropriations
                         ->flatMap->obligationAmounts
-                        ->flatMap(
-                            fn($oa) => $oa->obligation
-                                ? $oa->obligation->obligationAdjustments->where('adjustment_date', '<=', $asOfDate)
-                                : collect()
+                        ->flatMap(fn($oa) => $oa->obligation
+                            ? $oa->obligation->obligationAdjustments
+                                ->where('adjustment_date', '<=', $asOfDate)
+                                ->where('obligation_amounts_id', $oa->id) // ✅ ensure adjustment belongs to this appropriation's OA
+                            : collect()
                         )
                         ->sum('adjustment_amount');
                     $oac->obligations = $obligationBase + $obligationAdjustments;

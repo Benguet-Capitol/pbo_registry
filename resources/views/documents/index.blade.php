@@ -113,8 +113,8 @@
                                 $icon = $isCurrent ? ($sortOrder === 'asc' ? '▲' : '▼') : '';
                                 $sortQuery = array_merge(request()->except('page'), ['sort_by' => $column, 'sort_order' => $nextOrder]);
                             @endphp
-                            <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                <a href="?{{ http_build_query($sortQuery) }}" class="flex items-center justify-start gap-1 hover:text-blue-600 dark:hover:text-blue-400">
+                            <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300 ">
+                                <a href="?{{ http_build_query($sortQuery) }}" class="text-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
                                     {{ __($label) }}
                                     <span class="text-[10px]">{!! $icon !!}</span>
                                 </a>

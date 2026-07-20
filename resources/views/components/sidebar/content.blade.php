@@ -67,7 +67,14 @@
             <i class="fas fa-file-signature text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
-
+    <x-sidebar.link
+        title="Contract of Service"
+        href="{{ route('cos_lists.index') }}"
+        :isActive="request()->routeIs('cos_lists.index')">
+        <x-slot name="icon">
+            <i class="fas fa-file-contract text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
     <x-sidebar.link
         title="Archives"
         href="{{ route('documents.index') }}"
@@ -351,6 +358,14 @@
         :isActive="request()->routeIs('purchase_orders.all')">
         <x-slot name="icon">
             <i class="fas fa-file-invoice text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
+        </x-slot>
+    </x-sidebar.link>
+    <x-sidebar.link
+        title="Contract of Service"
+        href="{{ route('cos_lists.index') }}"
+        :isActive="request()->routeIs('cos_lists.index')">
+        <x-slot name="icon">
+            <i class="fas fa-file-contract text-xl flex-shrink-0 dark:text-gray-100" aria-hidden="true"></i>
         </x-slot>
     </x-sidebar.link>
     <x-sidebar.link

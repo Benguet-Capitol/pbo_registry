@@ -13,6 +13,7 @@ use App\Http\Controllers\AppropriationController;
 use App\Http\Controllers\ObligationAdjustmentController;
 use App\Http\Controllers\OfficeAllotmentClassController;
 use App\Http\Controllers\ObligationController;
+use App\Http\Controllers\CosListController;
 use App\Http\Controllers\ObligationFileController;
 use App\Http\Controllers\RealignmentFileController;
 use App\Http\Controllers\SupplementalFileController;
@@ -153,6 +154,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/obligation-files/{obligationFile}/preview', [ObligationFileController::class, 'preview'])->name('obligation_files.preview');
     Route::put('/obligation-files/{obligationFile}', [ObligationFileController::class, 'update'])->name('obligation_files.update');
     Route::delete('/obligation-files/{obligationFile}', [ObligationFileController::class, 'destroy'])->name('obligation_files.destroy');
+
+    // COS List Routes
+    Route::resource('cos_lists', CosListController::class);
+    Route::get('/api/cos_lists/appropriations/{classId}', [CosListController::class, 'getAppropriationsByClass'])->name('cos_lists.api.appropriations');
+    Route::get('/api/cos_lists/employees', [CosListController::class, 'getEmployees'])->name('cos_lists.api.employees');
+    Route::get('/api/cos_lists/employee/{employeeId}', [CosListController::class, 'getEmployeeInfo'])->name('cos_lists.api.employee');
 
     // Obligation Adjustment Routes
     Route::resource('obligation_adjustments', ObligationAdjustmentController::class);

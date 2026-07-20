@@ -1,7 +1,7 @@
 <x-perfect-scrollbar
     as="nav"
     aria-label="main"
-    class="flex flex-col flex-1 gap-2 px-2">
+    class="flex flex-col flex-1 gap-1 px-2">
 
     <!-- Administrator | Developer roles -->
     @role('Administrator|Developer')

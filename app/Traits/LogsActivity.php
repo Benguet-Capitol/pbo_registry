@@ -105,6 +105,9 @@ trait LogsActivity
                 case 'Employee':
                     $description = static::getEmployeeDescription($model, $action, $changes);
                     break;
+                case 'CosList':
+                    $description = static::getCosListDescription($model, $action, $changes);
+                    break;
                 default:
                     $description = static::getDefaultDescription($model, $action, $changes);
             }
@@ -886,6 +889,33 @@ trait LogsActivity
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error in getEmployeeDescription: ' . $e->getMessage());
             return "Employee action: {$action}";
+        }
+    }
+
+    // --- COSList ---
+    protected static function getCosListDescription($model, $action, $changes = [])
+    {
+        try {
+            $baseDetails = "Contract of Service: {$model->employee_name} ({$model->position_title})";
+
+            switch ($action) {
+                case 'create':
+                    return "Created new {$baseDetails}";
+                case 'update':
+                    $baseDescription = "Updated {$baseDetails}.";
+                    if (!empty($changes)) {
+                        $changedFields = static::formatChanges($model, $changes);
+                        return "{$baseDescription} Changes: [{$changedFields}]";
+                    }
+                    return $baseDescription;
+                case 'delete':
+                    return "Deleted {$baseDetails}";
+                default:
+                    return "Contract of Service action: {$action}";
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error in getCosListDescription: ' . $e->getMessage());
+            return "Contract of Service action: {$action}";
         }
     }
 

@@ -28,6 +28,8 @@
                 <input type="hidden" name="search_column" value="{{ request('search_column') }}">
                 <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
                 <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
+                <input type="hidden" name="page" value="{{ request('page') }}">
+
                 <button type="submit" class="text-red-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-trash text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Delete') }}

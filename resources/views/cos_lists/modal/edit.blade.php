@@ -403,6 +403,16 @@ function handleSaveEditCos() {
 }
 
 function filterEditOfficeAllotmentClasses() {
+    const officeAllotmentClassIdField = document.getElementById('edit_office_allotment_class_id');
+    const appropriationIdField = document.getElementById('edit_appropriation_id');
+    if (officeAllotmentClassIdField.value && appropriationIdField.value) {
+        appropriationIdField.value = '';
+        document.getElementById('edit_appropriation_name').value = '';
+        document.getElementById('editAppropriationDropdown').classList.add('hidden');
+        editAppropriations = [];
+    }
+    officeAllotmentClassIdField.value = '';
+
     const input = document.getElementById('edit_office_allotment_class').value.toLowerCase();
     const dropdown = document.getElementById('editOfficeAllotmentClassDropdown');
     const options = officeAllotmentClasses.filter(oac =>

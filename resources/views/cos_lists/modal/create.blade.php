@@ -438,6 +438,16 @@
     }
 
     function filterOfficeAllotmentClasses() {
+        const officeAllotmentClassIdField = document.getElementById('office_allotment_class_id');
+        const appropriationIdField = document.getElementById('appropriation_id');
+        if (officeAllotmentClassIdField.value && appropriationIdField.value) {
+            appropriationIdField.value = '';
+            document.getElementById('appropriation_name').value = '';
+            document.getElementById('AppropriationDropdown').classList.add('hidden');
+            appropriations = [];
+        }
+        officeAllotmentClassIdField.value = '';
+
         const input = document.getElementById('office_allotment_class').value.toLowerCase();
         const dropdown = document.getElementById('OfficeAllotmentClassDropdown');
         const options = officeAllotmentClasses.filter(oac =>

@@ -194,22 +194,23 @@ class ObligationController extends Controller
                 'per_page' => $perPage,
             ]);
 
-        // Only pull appropriations actually referenced by the obligations on this
-        // page/result-set, instead of every appropriation in the system.
-        $obligationsForBalance = $perPage == 'all' ? $obligations : $obligations->getCollection();
-
-        $appropriationIds = $obligationsForBalance
-            ->flatMap(fn ($obligation) => $obligation->obligationAmounts->pluck('appropriation_id'))
-            ->filter()
-            ->unique()
-            ->values();
-
+        // --- Preload Appropriations and related data ---
         $appropriations = Appropriation::select(
-            'id', 'office_allotment_class_id', 'account_code', 'description',
-            'programs', 'project_no', 'quarter1', 'quarter2', 'quarter3', 'quarter4'
-        )->whereIn('id', $appropriationIds) // <-- new
-        ->with(['obligationAmounts.obligationAdjustments', 'realignments', 'supplementals'])
-        ->get();
+            'id',
+            'office_allotment_class_id',
+            'account_code',
+            'description',
+            'programs',
+            'project_no',
+            'quarter1',
+            'quarter2',
+            'quarter3',
+            'quarter4'
+        )->with([
+            'obligationAmounts.obligationAdjustments',
+            'realignments',
+            'supplementals'
+        ])->get();
 
         $currentMonth = now()->month;
         $currentQuarter = ceil($currentMonth / 3);

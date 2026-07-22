@@ -760,6 +760,21 @@
 
 <script>
 
+    function showLoadingOverlay() {
+        let overlay = document.getElementById('pageLoadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pageLoadingOverlay';
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-30 z-[10005] flex items-center justify-center';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>';
+            document.body.appendChild(overlay);
+        }
+    }
+    document.getElementById('filterForm').addEventListener('submit', showLoadingOverlay);
+    document.getElementById('searchForm').addEventListener('submit', showLoadingOverlay);
+    document.querySelectorAll('#filterForm select').forEach(el => el.addEventListener('change', showLoadingOverlay));
+    document.querySelectorAll('.pagination a').forEach(el => el.addEventListener('click', showLoadingOverlay));
+
     // Date Range Validation: Set minimum to date based on from date
     const fromDateInput = document.getElementById('fromDate');
     const toDateInput = document.getElementById('toDate');
@@ -2255,41 +2270,79 @@ function openCreatePOModal(obligationId) {
         const table = document.getElementById('obligationsTable');
         const rows = table.querySelectorAll('tbody tr');
         
-        // Collect visible rows data
         const data = [];
         const headers = [];
         
-        // Get headers from table
         table.querySelectorAll('thead th').forEach(th => {
             headers.push(th.textContent.trim());
         });
         data.push(headers);
-        
-        // Get visible rows
+
+        // Extracts just the numeric value from amount cells, skipping the
+        // hidden "Add Obligation Adjustment" / "Add Purchase Order" /
+        // "Add Disbursement" tooltip text that lives in the same <td>.
+        // "Cancelled" or "N/A" is treated as 0.
+        function getAmountValue(td) {
+            const amountEl = td.querySelector('button, span');
+            const raw = (amountEl ? amountEl.textContent : td.textContent).trim();
+
+            if (/^cancelled$/i.test(raw) || /^n\/a$/i.test(raw)) {
+                return 0;
+            }
+
+            const num = parseFloat(raw.replace(/[^\d.-]/g, ''));
+            return isNaN(num) ? raw : num;
+        }
+
         rows.forEach(row => {
             if (row.style.display !== 'none') {
                 const rowData = [];
                 row.querySelectorAll('td').forEach(td => {
-                    rowData.push(td.textContent.trim());
+                    if (
+                        td.classList.contains('obligation-amount') ||
+                        td.classList.contains('po-amount') ||
+                        td.classList.contains('dv-amount') ||
+                        td.classList.contains('balance')
+                    ) {
+                        rowData.push(getAmountValue(td));
+                    } else {
+                        rowData.push(td.textContent.trim());
+                    }
                 });
                 data.push(rowData);
             }
         });
         
-        // Create workbook and worksheet
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Obligations');
         
-        // Set column widths
         const colWidths = headers.map(() => 15);
         ws['!cols'] = colWidths.map(w => ({ wch: w }));
+
+        // Apply "#,##0.00" number format to Obligation, Disbursement, Balance
+        // columns (data rows only, not the header).
+        const formattedColumnNames = ['Obligation', 'Disbursement', 'Balance'];
+        const numberFormat = '#,##0.00';
+
+        formattedColumnNames.forEach(colName => {
+            const colIndex = headers.indexOf(colName);
+            if (colIndex === -1) return;
+
+            const colLetter = XLSX.utils.encode_col(colIndex);
+            for (let r = 1; r < data.length; r++) {
+                const cellRef = `${colLetter}${r + 1}`;
+                const cell = ws[cellRef];
+                if (cell && typeof cell.v === 'number') {
+                    cell.t = 'n';
+                    cell.z = numberFormat;
+                }
+            }
+        });
         
-        // Generate Excel file with current date
         const today = new Date().toISOString().split('T')[0];
         XLSX.writeFile(wb, `obligations_${today}.xlsx`);
         
-        // Show success toast
         showToast('Obligations data exported successfully!', 'success');
     }
 </script>

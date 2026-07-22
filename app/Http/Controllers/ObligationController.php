@@ -172,7 +172,10 @@ class ObligationController extends Controller
             $query->orderBy($sortBy, $sortOrder);
         }
 
-        $query->orderBy('obr_date', 'desc');
+        // only add a tiebreaker when it's not already the primary sort
+        if ($sortBy !== 'obr_date') {
+            $query->orderBy('obr_date', 'desc');
+        }
 
         // --- Pagination ---
         $obligations = $perPage == 'all'
@@ -191,23 +194,22 @@ class ObligationController extends Controller
                 'per_page' => $perPage,
             ]);
 
-        // --- Preload Appropriations and related data ---
+        // Only pull appropriations actually referenced by the obligations on this
+        // page/result-set, instead of every appropriation in the system.
+        $obligationsForBalance = $perPage == 'all' ? $obligations : $obligations->getCollection();
+
+        $appropriationIds = $obligationsForBalance
+            ->flatMap(fn ($obligation) => $obligation->obligationAmounts->pluck('appropriation_id'))
+            ->filter()
+            ->unique()
+            ->values();
+
         $appropriations = Appropriation::select(
-            'id',
-            'office_allotment_class_id',
-            'account_code',
-            'description',
-            'programs',
-            'project_no',
-            'quarter1',
-            'quarter2',
-            'quarter3',
-            'quarter4'
-        )->with([
-            'obligationAmounts.obligationAdjustments',
-            'realignments',
-            'supplementals'
-        ])->get();
+            'id', 'office_allotment_class_id', 'account_code', 'description',
+            'programs', 'project_no', 'quarter1', 'quarter2', 'quarter3', 'quarter4'
+        )->whereIn('id', $appropriationIds) // <-- new
+        ->with(['obligationAmounts.obligationAdjustments', 'realignments', 'supplementals'])
+        ->get();
 
         $currentMonth = now()->month;
         $currentQuarter = ceil($currentMonth / 3);

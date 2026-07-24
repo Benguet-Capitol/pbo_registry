@@ -66,18 +66,31 @@
     <!-- Unified Filter Section -->
     <form method="GET" action="" class="bg-white overflow-hidden shadow-md sm:rounded-lg mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out" id="filterForm">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
-            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-4 flex items-center">
-                <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
-                Filters
-            </h4>
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 flex items-center">
+                    <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
+                    Filters
+                </h4>
+                <button
+                    type="button"
+                    onclick="clearAllFilters()"
+                    class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 inline-flex items-center transition-colors duration-150"
+                >
+                    <i class="fas fa-rotate-left mr-1"></i>
+                    Clear filters
+                </button>
+            </div>
             <!-- Shared validation message -->
-            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 animate-pulse transition-opacity duration-300 ease-in-out"></span>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
+            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 transition-opacity duration-300 ease-in-out"></span>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
                 <!-- Year Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="year1" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Year</label>
                     <x-form.select
                         name="year1"
                         id="year1"
+                        aria-label="Fiscal Year"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         @foreach($availableYears as $year)
@@ -86,10 +99,12 @@
                     </x-form.select>
                 </div>
                 <!-- Fund Source Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="fund_source_filter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Fund Source</label>
                     <x-form.select
                         name="fund_source_filter"
                         id="fund_source_filter"
+                        aria-label="Fund Source"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">All Fund Sources</option>
@@ -101,22 +116,26 @@
                     </x-form.select>
                 </div>
                 <!-- As of Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="as_of_filter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">As of</label>
                     <x-form.input
                         name="as_of_filter"
                         type="date"
                         autocomplete="off"
                         id="as_of_filter"
+                        aria-label="As of Date"
                         value="{{ request('as_of_filter', now()->format('Y-m-d')) }}"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                     </x-form.input>
                 </div>
                 <!-- Signatory Name Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_name" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Signatory <span class="text-red-500">*</span></label>
                     <x-form.select
                         name="signatory_name"
                         id="signatory_name"
+                        aria-label="Signatory Name"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">Select Signatory</option>
@@ -128,10 +147,12 @@
                     </x-form.select>
                 </div>
                 <!-- Signatory Designation Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_designation" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Designation <span class="text-red-500">*</span></label>
                     <x-form.select
                         name="signatory_designation"
                         id="signatory_designation"
+                        aria-label="Signatory Designation"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">Select Designation</option>
@@ -142,315 +163,362 @@
                 </div>
             </div>
 
+            @php
+                // Year and As-of-date are excluded here: both always carry a default value
+                // (current year, today), so treating them as removable "active" filters would
+                // leave two permanent chips cluttering this row on every page load.
+                $activeChips = [];
+                if(request('fund_source_filter')) $activeChips[] = ['label' => 'Fund Source', 'value' => request('fund_source_filter'), 'param' => 'fund_source_filter'];
+                if(request('signatory_name')) $activeChips[] = ['label' => 'Signatory', 'value' => request('signatory_name'), 'param' => 'signatory_name'];
+                if(request('signatory_designation')) $activeChips[] = ['label' => 'Designation', 'value' => request('signatory_designation'), 'param' => 'signatory_designation'];
+                if(request('year1')) $activeChips[] = ['label' => 'Year', 'value' => request('year1'), 'param' => 'year1'];
+                if(request('as_of_filter')) $activeChips[] = ['label' => 'As of', 'value' => request('as_of_filter'), 'param' => 'as_of_filter'];
+            @endphp
+            @if(count($activeChips) > 0)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <span class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Active:</span>
+                @foreach($activeChips as $chip)
+                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200 text-[11px] font-medium px-2 py-1 rounded-full">
+                    {{ $chip['label'] }}: {{ $chip['value'] }}
+                    <button type="button" onclick="removeFilter('{{ $chip['param'] }}')" class="hover:text-red-600 dark:hover:text-red-400" aria-label="Remove {{ $chip['label'] }} filter">
+                        <i class="fas fa-times text-[9px]"></i>
+                    </button>
+                </span>
+                @endforeach
+            </div>
+            @endif
+
             <!-- Buttons Row -->
             <div class="flex items-center space-x-2 mt-4">
                 <button
                     onclick="printSAAOBFundSourceTable()"
-                    class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
-                    type="button">
-                    <i class="fas fa-print text-lg mr-2 -ml-1 w-4 h-4"></i>
-                    Print Report
+                    class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                    type="button"
+                    id="print-btn">
+                    <i class="fas fa-print text-lg mr-2 -ml-1 w-4 h-4" id="print-btn-icon"></i>
+                    <span id="print-btn-label">Print Report</span>
                 </button>
 
-                <button 
+                <button
                     type="button"
                     onclick="exportSAAOBFundSourceExcel()"
-                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
+                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                     id="excel-export-btn">
-                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4"></i>
-                    Generate Excel
+                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4" id="excel-btn-icon"></i>
+                    <span id="excel-btn-label">Generate Excel</span>
                 </button>
             </div>
         </div>
 
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
+            @if($fundSources->isEmpty())
+                <div class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
+                    <i class="fas fa-folder-open text-4xl mb-3"></i>
+                    <p class="text-sm font-medium">No records found for the selected filters</p>
+                    <button type="button" onclick="clearAllFilters()" class="mt-3 text-xs text-blue-600 hover:underline dark:text-blue-400">Clear filters and try again</button>
+                </div>
+            @else
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <table id="SAAOBFundSourceTable" class="w-full text-[10px] text-gray-900 dark:text-gray-300 text-left">
-                    <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900">
-                        <tr>
-                            <th class="px-1 py-1 w-[200px] text-center">Funds</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved Appropriations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental Appropriations</th>
+                    <thead class="sticky top-0 z-10 border border-blue-400 bg-gradient-to-r from-blue-200 to-blue-300 text-blue-900 dark:bg-gradient-to-r dark:from-blue-700 dark:to-blue-600 dark:text-blue-200 transition-colors duration-300 ease-in-out">
+                        <tr class="text-[11px]">
+                            <th rowspan="2" class="px-1 py-1 w-[150px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Funds</th>
+                            <th colspan="5" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Appropriations</th>
+                            <th colspan="2" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Allotments</th>
+                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Obligations</th>
+                            <th colspan="2" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Balance from Appropriation</th>
+                            <th colspan="2" class="px-1 py-1 text-center">Balance from Allotment</th>
+                        </tr>
+                        <tr class="text-[10px]">
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="realignment">Realignments</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Authorized Appropriations</th>
+                            <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300">Authorized</th>
                             <th class="px-1 py-1 w-[100px] text-center">Allotments</th>
-                            <th class="px-1 py-1 w-[100px] text-center">For Later Release</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Obligations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Authorized Appropriation Balance</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">% of Utilization</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Allotment Balance</th>
-                            <th class="px-1 py-1 w-[70px] text-center">% of Utilization</th>
+                            <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300">For Later Release</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balance</th>
+                            <th class="px-1 py-1 w-[70px] text-center border-r border-blue-400 dark:border-blue-300" data-key="appropriation_accomplishment">% Used</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Balance</th>
+                            <th class="px-1 py-1 w-[70px] text-center">% Used</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($fundSources as $fundSource)
-                        <tr id="fundSourceRow" class="bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 uppercase font-bold border-t border-b border-gray-700 dark:border-gray-100 text-center text-sm">
+                        <tr id="fundSourceRow" class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 text-blue-900 dark:text-blue-200 uppercase font-bold border-t border-b border-blue-300 dark:border-blue-800 text-center text-sm transition-colors duration-300 ease-in-out">
                             <td colspan="13" class="px-2 py-3">{{ $fundSource['category'] }}</td>
                         </tr>
+
+                        @php
+                        $rowIndex = 0;
+                        @endphp
+
                         @foreach($fundSource['fund_types'] as $fundType)
                         @foreach($fundType['funds'] as $fund)
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <td class="px-2 py-2 text-left">{{ $fund['fund'] }}</td>
-                            <td class="px-2 py-2 text-right" data-key="appropriation">
-                                {{ $fund['approved_appropriation'] > 0 
-                                    ? number_format($fund['approved_appropriation'], 2) 
-                                    : ($fund['approved_appropriation'] < 0 
-                                        ? '(' . number_format(abs($fund['approved_appropriation']), 2) . ')' 
+                        @php
+                        $rowIndex++;
+                        @endphp
+                        <tr class="{{ $rowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out">
+                            <td class="px-2 py-2 font-semibold text-left">{{ $fund['fund'] }}</td>
+                            <td class="px-2 py-2 font-semibold text-right" data-key="appropriation">
+                                {{ $fund['approved_appropriation'] > 0
+                                    ? number_format($fund['approved_appropriation'], 2)
+                                    : ($fund['approved_appropriation'] < 0
+                                        ? '(' . number_format(abs($fund['approved_appropriation']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="sb_appropriation">
-                                {{ $fund['sb_appropriation'] > 0 
-                                    ? number_format($fund['sb_appropriation'], 2) 
-                                    : ($fund['sb_appropriation'] < 0 
-                                        ? '(' . number_format(abs($fund['sb_appropriation']), 2) . ')' 
+                                {{ $fund['sb_appropriation'] > 0
+                                    ? number_format($fund['sb_appropriation'], 2)
+                                    : ($fund['sb_appropriation'] < 0
+                                        ? '(' . number_format(abs($fund['sb_appropriation']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="reversion">
-                                {{ $fund['reversion'] > 0 
-                                    ? number_format($fund['reversion'], 2) 
-                                    : ($fund['reversion'] < 0 
-                                        ? '(' . number_format(abs($fund['reversion']), 2) . ')' 
+                                {{ $fund['reversion'] > 0
+                                    ? number_format($fund['reversion'], 2)
+                                    : ($fund['reversion'] < 0
+                                        ? '(' . number_format(abs($fund['reversion']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="realignment">
-                                {{ $fund['realignment'] > 0 
-                                    ? number_format($fund['realignment'], 2) 
-                                    : ($fund['realignment'] < 0 
-                                        ? '(' . number_format(abs($fund['realignment']), 2) . ')' 
+                                {{ $fund['realignment'] > 0
+                                    ? number_format($fund['realignment'], 2)
+                                    : ($fund['realignment'] < 0
+                                        ? '(' . number_format(abs($fund['realignment']), 2) . ')'
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-2 py-2 font-semibold text-right">
+                                {{ $fund['authorized'] > 0
+                                    ? number_format($fund['authorized'], 2)
+                                    : ($fund['authorized'] < 0
+                                        ? '(' . number_format(abs($fund['authorized']), 2) . ')'
+                                        : '-') }}
+                            </td>
+
+                            <td class="px-2 py-2 font-semibold text-right">
+                                {{ $fund['allotment'] > 0
+                                    ? number_format($fund['allotment'], 2)
+                                    : ($fund['allotment'] < 0
+                                        ? '(' . number_format(abs($fund['allotment']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right">
-                                {{ $fund['authorized'] > 0 
-                                    ? number_format($fund['authorized'], 2) 
-                                    : ($fund['authorized'] < 0 
-                                        ? '(' . number_format(abs($fund['authorized']), 2) . ')' 
+                                {{ $fund['for_later_release'] > 0
+                                    ? number_format($fund['for_later_release'], 2)
+                                    : ($fund['for_later_release'] < 0
+                                        ? '(' . number_format(abs($fund['for_later_release']), 2) . ')'
                                         : '-') }}
                             </td>
 
-                            <td class="px-2 py-2 text-right">
-                                {{ $fund['allotment'] > 0 
-                                    ? number_format($fund['allotment'], 2) 
-                                    : ($fund['allotment'] < 0 
-                                        ? '(' . number_format(abs($fund['allotment']), 2) . ')' 
-                                        : '-') }}
-                            </td>
-
-                            <td class="px-2 py-2 text-right">
-                                {{ $fund['for_later_release'] > 0 
-                                    ? number_format($fund['for_later_release'], 2) 
-                                    : ($fund['for_later_release'] < 0 
-                                        ? '(' . number_format(abs($fund['for_later_release']), 2) . ')' 
-                                        : '-') }}
-                            </td>
-
-                            <td class="px-2 py-2 text-right">
-                                {{ $fund['obligation'] > 0 
-                                    ? number_format($fund['obligation'], 2) 
-                                    : ($fund['obligation'] < 0 
-                                        ? '(' . number_format(abs($fund['obligation']), 2) . ')' 
+                            <td class="px-2 py-2 font-semibold text-right">
+                                {{ $fund['obligation'] > 0
+                                    ? number_format($fund['obligation'], 2)
+                                    : ($fund['obligation'] < 0
+                                        ? '(' . number_format(abs($fund['obligation']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="appropriation_balance">
-                                {{ $fund['appropriation_balance'] > 0 
-                                    ? number_format($fund['appropriation_balance'], 2) 
-                                    : ($fund['appropriation_balance'] < 0 
-                                        ? '(' . number_format(abs($fund['appropriation_balance']), 2) . ')' 
+                                {{ $fund['appropriation_balance'] > 0
+                                    ? number_format($fund['appropriation_balance'], 2)
+                                    : ($fund['appropriation_balance'] < 0
+                                        ? '(' . number_format(abs($fund['appropriation_balance']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-center" data-key="appropriation_accomplishment">
-                                {{ number_format($fund['appropriation_accomplishment'], 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $fund['appropriation_accomplishment'] ?? 0])
                             </td>
 
                             <td class="px-2 py-2 text-right">
-                                {{ $fund['allotment_balance'] > 0 
-                                    ? number_format($fund['allotment_balance'], 2) 
-                                    : ($fund['allotment_balance'] < 0 
-                                        ? '(' . number_format(abs($fund['allotment_balance']), 2) . ')' 
+                                {{ $fund['allotment_balance'] > 0
+                                    ? number_format($fund['allotment_balance'], 2)
+                                    : ($fund['allotment_balance'] < 0
+                                        ? '(' . number_format(abs($fund['allotment_balance']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-center">
-                                {{ number_format($fund['allotment_accomplishment'], 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $fund['allotment_accomplishment'] ?? 0])
                             </td>
                         </tr>
                         @endforeach
-                        <tr class="bg-gray-300 text-gray-700 dark:bg-gray-900 dark:text-white font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
+                        <tr class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-900 dark:from-gray-700 dark:to-gray-800 dark:text-gray-100 font-bold border-t-2 border-b-2 border-gray-500 dark:border-gray-600 text-[10px] transition-colors duration-300 ease-in-out">
                             <td class="px-2 py-2 text-right">{{ $fundType['totals']['fund'] }}:</td>
                             <td class="px-2 py-2 text-right" data-key="appropriation">
-                                {{ $fundType['totals']['approved_appropriation'] > 0 
-                                    ? number_format($fundType['totals']['approved_appropriation'], 2) 
-                                    : ($fundType['totals']['approved_appropriation'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['approved_appropriation']), 2) . ')' 
+                                {{ $fundType['totals']['approved_appropriation'] > 0
+                                    ? number_format($fundType['totals']['approved_appropriation'], 2)
+                                    : ($fundType['totals']['approved_appropriation'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['approved_appropriation']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="sb_appropriation">
-                                {{ $fundType['totals']['sb_appropriation'] > 0 
-                                    ? number_format($fundType['totals']['sb_appropriation'], 2) 
-                                    : ($fundType['totals']['sb_appropriation'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['sb_appropriation']), 2) . ')' 
+                                {{ $fundType['totals']['sb_appropriation'] > 0
+                                    ? number_format($fundType['totals']['sb_appropriation'], 2)
+                                    : ($fundType['totals']['sb_appropriation'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['sb_appropriation']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="reversion">
-                                {{ $fundType['totals']['reversion'] > 0 
-                                    ? number_format($fundType['totals']['reversion'], 2) 
-                                    : ($fundType['totals']['reversion'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['reversion']), 2) . ')' 
+                                {{ $fundType['totals']['reversion'] > 0
+                                    ? number_format($fundType['totals']['reversion'], 2)
+                                    : ($fundType['totals']['reversion'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['reversion']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="realignment">
-                                {{ $fundType['totals']['realignment'] > 0 
-                                    ? number_format($fundType['totals']['realignment'], 2) 
-                                    : ($fundType['totals']['realignment'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['realignment']), 2) . ')' 
+                                {{ $fundType['totals']['realignment'] > 0
+                                    ? number_format($fundType['totals']['realignment'], 2)
+                                    : ($fundType['totals']['realignment'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['realignment']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right">
-                                {{ $fundType['totals']['authorized'] > 0 
-                                    ? number_format($fundType['totals']['authorized'], 2) 
-                                    : ($fundType['totals']['authorized'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['authorized']), 2) . ')' 
+                                {{ $fundType['totals']['authorized'] > 0
+                                    ? number_format($fundType['totals']['authorized'], 2)
+                                    : ($fundType['totals']['authorized'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['authorized']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right">
-                                {{ $fundType['totals']['allotment'] > 0 
-                                    ? number_format($fundType['totals']['allotment'], 2) 
-                                    : ($fundType['totals']['allotment'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['allotment']), 2) . ')' 
+                                {{ $fundType['totals']['allotment'] > 0
+                                    ? number_format($fundType['totals']['allotment'], 2)
+                                    : ($fundType['totals']['allotment'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['allotment']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right">
-                                {{ $fundType['totals']['for_later_release'] > 0 
-                                    ? number_format($fundType['totals']['for_later_release'], 2) 
-                                    : ($fundType['totals']['for_later_release'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['for_later_release']), 2) . ')' 
+                                {{ $fundType['totals']['for_later_release'] > 0
+                                    ? number_format($fundType['totals']['for_later_release'], 2)
+                                    : ($fundType['totals']['for_later_release'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['for_later_release']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right">
-                                {{ $fundType['totals']['obligation'] > 0 
-                                    ? number_format($fundType['totals']['obligation'], 2) 
-                                    : ($fundType['totals']['obligation'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['obligation']), 2) . ')' 
+                                {{ $fundType['totals']['obligation'] > 0
+                                    ? number_format($fundType['totals']['obligation'], 2)
+                                    : ($fundType['totals']['obligation'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['obligation']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-right" data-key="appropriation_balance">
-                                {{ $fundType['totals']['appropriation_balance'] > 0 
-                                    ? number_format($fundType['totals']['appropriation_balance'], 2) 
-                                    : ($fundType['totals']['appropriation_balance'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['appropriation_balance']), 2) . ')' 
+                                {{ $fundType['totals']['appropriation_balance'] > 0
+                                    ? number_format($fundType['totals']['appropriation_balance'], 2)
+                                    : ($fundType['totals']['appropriation_balance'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['appropriation_balance']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-center" data-key="appropriation_accomplishment">
-                                {{ number_format($fundType['totals']['appropriation_accomplishment'], 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $fundType['totals']['appropriation_accomplishment'] ?? 0])
                             </td>
 
                             <td class="px-2 py-2 text-right">
-                                {{ $fundType['totals']['allotment_balance'] > 0 
-                                    ? number_format($fundType['totals']['allotment_balance'], 2) 
-                                    : ($fundType['totals']['allotment_balance'] < 0 
-                                        ? '(' . number_format(abs($fundType['totals']['allotment_balance']), 2) . ')' 
+                                {{ $fundType['totals']['allotment_balance'] > 0
+                                    ? number_format($fundType['totals']['allotment_balance'], 2)
+                                    : ($fundType['totals']['allotment_balance'] < 0
+                                        ? '(' . number_format(abs($fundType['totals']['allotment_balance']), 2) . ')'
                                         : '-') }}
                             </td>
 
                             <td class="px-2 py-2 text-center">
-                                {{ number_format($fundType['totals']['allotment_accomplishment'], 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $fundType['totals']['allotment_accomplishment'] ?? 0])
                             </td>
                         </tr>
                         @endforeach
-                        <tr class="bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-100 font-bold border-t-4 border-gray-800 text-[10px]">
+                        <tr class="bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 font-bold border-t-4 border-gray-600 dark:border-gray-600 text-[10px] transition-colors duration-300 ease-in-out">
                             <td class="px-2 py-2 text-right">Grand Total ({{ $fundSource['category'] }}):</td>
                             <td class="px-2 py-2 text-right" data-key="appropriation">
-                                {{ $fundSource['grand_totals']['approved_appropriation'] > 0 
-                                    ? number_format($fundSource['grand_totals']['approved_appropriation'], 2) 
-                                    : ($fundSource['grand_totals']['approved_appropriation'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['approved_appropriation']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['approved_appropriation'] > 0
+                                    ? number_format($fundSource['grand_totals']['approved_appropriation'], 2)
+                                    : ($fundSource['grand_totals']['approved_appropriation'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['approved_appropriation']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right" data-key="sb_appropriation">
-                                {{ $fundSource['grand_totals']['sb_appropriation'] > 0 
-                                    ? number_format($fundSource['grand_totals']['sb_appropriation'], 2) 
-                                    : ($fundSource['grand_totals']['sb_appropriation'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['sb_appropriation']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['sb_appropriation'] > 0
+                                    ? number_format($fundSource['grand_totals']['sb_appropriation'], 2)
+                                    : ($fundSource['grand_totals']['sb_appropriation'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['sb_appropriation']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right" data-key="reversion">
-                                {{ $fundSource['grand_totals']['reversion'] > 0 
-                                    ? number_format($fundSource['grand_totals']['reversion'], 2) 
-                                    : ($fundSource['grand_totals']['reversion'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['reversion']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['reversion'] > 0
+                                    ? number_format($fundSource['grand_totals']['reversion'], 2)
+                                    : ($fundSource['grand_totals']['reversion'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['reversion']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right" data-key="realignment">
-                                {{ $fundSource['grand_totals']['realignment'] > 0 
-                                    ? number_format($fundSource['grand_totals']['realignment'], 2) 
-                                    : ($fundSource['grand_totals']['realignment'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['realignment']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['realignment'] > 0
+                                    ? number_format($fundSource['grand_totals']['realignment'], 2)
+                                    : ($fundSource['grand_totals']['realignment'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['realignment']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right">
-                                {{ $fundSource['grand_totals']['authorized'] > 0 
-                                    ? number_format($fundSource['grand_totals']['authorized'], 2) 
-                                    : ($fundSource['grand_totals']['authorized'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['authorized']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['authorized'] > 0
+                                    ? number_format($fundSource['grand_totals']['authorized'], 2)
+                                    : ($fundSource['grand_totals']['authorized'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['authorized']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right">
-                                {{ $fundSource['grand_totals']['allotment'] > 0 
-                                    ? number_format($fundSource['grand_totals']['allotment'], 2) 
-                                    : ($fundSource['grand_totals']['allotment'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['allotment']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['allotment'] > 0
+                                    ? number_format($fundSource['grand_totals']['allotment'], 2)
+                                    : ($fundSource['grand_totals']['allotment'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['allotment']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right">
-                                {{ $fundSource['grand_totals']['for_later_release'] > 0 
-                                    ? number_format($fundSource['grand_totals']['for_later_release'], 2) 
-                                    : ($fundSource['grand_totals']['for_later_release'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['for_later_release']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['for_later_release'] > 0
+                                    ? number_format($fundSource['grand_totals']['for_later_release'], 2)
+                                    : ($fundSource['grand_totals']['for_later_release'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['for_later_release']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right">
-                                {{ $fundSource['grand_totals']['obligation'] > 0 
-                                    ? number_format($fundSource['grand_totals']['obligation'], 2) 
-                                    : ($fundSource['grand_totals']['obligation'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['obligation']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['obligation'] > 0
+                                    ? number_format($fundSource['grand_totals']['obligation'], 2)
+                                    : ($fundSource['grand_totals']['obligation'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['obligation']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-right" data-key="appropriation_balance">
-                                {{ $fundSource['grand_totals']['appropriation_balance'] > 0 
-                                    ? number_format($fundSource['grand_totals']['appropriation_balance'], 2) 
-                                    : ($fundSource['grand_totals']['appropriation_balance'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['appropriation_balance']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['appropriation_balance'] > 0
+                                    ? number_format($fundSource['grand_totals']['appropriation_balance'], 2)
+                                    : ($fundSource['grand_totals']['appropriation_balance'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['appropriation_balance']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-center" data-key="appropriation_accomplishment">
-                                {{ number_format($fundSource['grand_totals']['appropriation_accomplishment'], 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $fundSource['grand_totals']['appropriation_accomplishment'] ?? 0])
                             </td>
                             <td class="px-2 py-2 text-right">
-                                {{ $fundSource['grand_totals']['allotment_balance'] > 0 
-                                    ? number_format($fundSource['grand_totals']['allotment_balance'], 2) 
-                                    : ($fundSource['grand_totals']['allotment_balance'] < 0 
-                                        ? '(' . number_format(abs($fundSource['grand_totals']['allotment_balance']), 2) . ')' 
+                                {{ $fundSource['grand_totals']['allotment_balance'] > 0
+                                    ? number_format($fundSource['grand_totals']['allotment_balance'], 2)
+                                    : ($fundSource['grand_totals']['allotment_balance'] < 0
+                                        ? '(' . number_format(abs($fundSource['grand_totals']['allotment_balance']), 2) . ')'
                                         : '-') }}
                             </td>
                             <td class="px-2 py-2 text-center">
-                                {{ number_format($fundSource['grand_totals']['allotment_accomplishment'], 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $fundSource['grand_totals']['allotment_accomplishment'] ?? 0])
                             </td>
                         </tr>
                         @endforeach
@@ -458,6 +526,7 @@
                 </table>
             </div>
         </div>
+        @endif
     </div>
     </form>
 
@@ -480,6 +549,7 @@
                 if (errorMessage) {
                     errorSpan.textContent = errorMessage;
                     errorSpan.classList.remove('hidden');
+                    errorSpan.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     return false;
                 } else {
                     errorSpan.classList.add('hidden');
@@ -487,19 +557,45 @@
                 }
             }
 
+            // Clear filters (keeps year, resets everything else)
+            function clearAllFilters() {
+                const url = new URL(window.location.href);
+                const keep = ['year1'];
+                [...url.searchParams.keys()].forEach(key => {
+                    if (!keep.includes(key)) url.searchParams.delete(key);
+                });
+                window.location.href = url.toString();
+            }
+
+            // Remove a single filter param and resubmit
+            function removeFilter(param) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete(param);
+                window.location.href = url.toString();
+            }
+
             // Intercept PDF generation
             window.printSAAOBFundSourceTable = function() {
                 if (!validateSignatories()) return;
-                runPrintSAAOBFundSourceTable(); // call actual print function
-            };
 
-            // Intercept Excel Export Submit
-            document.querySelector(`form[action="{{ route('saaobFundSource.exportExcel') }}"]`)
-                .addEventListener('submit', function(e) {
-                    if (!validateSignatories()) {
-                        e.preventDefault();
+                const btn = document.getElementById('print-btn');
+                const icon = document.getElementById('print-btn-icon');
+                const label = document.getElementById('print-btn-label');
+                btn.disabled = true;
+                icon.className = 'fas fa-spinner fa-spin text-lg mr-2 -ml-1 w-4 h-4';
+                label.textContent = 'Preparing...';
+
+                // Give the browser a tick to paint the loading state before the print window blocks the thread
+                setTimeout(() => {
+                    try {
+                        runPrintSAAOBFundSourceTable();
+                    } finally {
+                        btn.disabled = false;
+                        icon.className = 'fas fa-print text-lg mr-2 -ml-1 w-4 h-4';
+                        label.textContent = 'Print Report';
                     }
-                });
+                }, 50);
+            };
 
             function runPrintSAAOBFundSourceTable() {
                 const table = document.getElementById('SAAOBFundSourceTable').cloneNode(true);
@@ -508,7 +604,9 @@
                     'appropriation',
                     'sb_appropriation',
                     'reversion',
-                    'realignment'
+                    'realignment',
+                    'appropriation_balance',
+                    'appropriation_accomplishment'
                 ];
 
                 // Remove only <td> and <th> elements matching these keys
@@ -519,31 +617,17 @@
                     }
                 });
 
-                // Style allotment class rows
-                table.querySelectorAll('[id^="CCOYear"]').forEach(tr => {
-                    tr.style.textTransform = 'uppercase';
-                    tr.style.fontWeight = 'bold';
-                    tr.style.fontSize = '10px';
-                    tr.style.paddingLeft = '12px'; // Indent the row
-                    // Also indent the first cell if needed
-                    const firstCell = tr.querySelector('td');
-                    if (firstCell) {
-                        firstCell.style.paddingLeft = '12px';
-                    }
-                });
-                // Style program rows
-                table.querySelectorAll('[id^="programRow-"]').forEach(tr => {
-                    tr.style.textTransform = 'uppercase';
-                    tr.style.fontWeight = 'bold';
-                    tr.style.fontStyle = 'italic';
-                    tr.style.fontSize = '10px';
-                    tr.style.paddingLeft = '32px'; // Indent the row
-                    // Also indent the first cell if needed
-                    const firstCell = tr.querySelector('td');
-                    if (firstCell) {
-                        firstCell.style.paddingLeft = '32px';
-                    }
-                });
+                // Adjust the grouped colspans in the first header row since some sub-columns were removed
+                const firstHeaderRow = table.querySelector('thead tr:first-child');
+                if (firstHeaderRow) {
+                    const groupCells = firstHeaderRow.querySelectorAll('th[colspan]');
+                    groupCells.forEach(th => {
+                        const text = th.textContent.trim();
+                        if (text === 'Appropriations') th.setAttribute('colspan', '1');
+                        if (text === 'Balance from Appropriation') th.remove();
+                    });
+                }
+
                 // Set tbody font size to 10px
                 Array.from(table.querySelectorAll('tbody')).forEach(tbody => {
                     tbody.style.fontSize = '10px';
@@ -573,7 +657,6 @@
                     });
                 });
 
-
                 // Make subtotal, total, and grand total rows bold and 1st/2nd/3rd column right-aligned, values uppercase
                 table.querySelectorAll('tr').forEach(tr => {
                     const cells = tr.querySelectorAll('td');
@@ -598,7 +681,7 @@
                     th.style.fontWeight = 'bold';
                     th.style.fontSize = '10px';
                 });
-                // Get selected office name (full name)
+                // Get selected fund source
                 const fundSourceSelect = document.getElementById('fund_source_filter');
                 let fundSourceText = 'Current and Continuing';
                 if (fundSourceSelect && fundSourceSelect.selectedIndex > 0) {
@@ -632,7 +715,7 @@
                     signatoryDesignation = signatoryDesignationInput.value;
                 }
 
-                const yearSelect = document.getElementById('year_filter');
+                const yearSelect = document.getElementById('year1');
                 const selectedYear = yearSelect?.value || new Date().getFullYear();
 
                 // Get screen dimensions
@@ -680,37 +763,61 @@
             }
 
             // Toast notification functions
-            function showSuccessToast() {
+            function showSuccessToast(message = 'Excel report generated successfully') {
                 const toast = document.getElementById('success-toast');
-                toast.classList.remove('hide');
+                const messageEl = document.getElementById('toast-message');
+                if (messageEl) messageEl.textContent = message;
+
+                toast.classList.remove('hide', 'pointer-events-none');
                 toast.classList.add('show');
-                
-                setTimeout(() => {
-                    closeSuccessToast();
-                }, 4000);
+
+                setTimeout(closeSuccessToast, 4000);
             }
 
             function closeSuccessToast() {
                 const toast = document.getElementById('success-toast');
                 toast.classList.remove('show');
-                toast.classList.add('hide');
+                toast.classList.add('hide', 'pointer-events-none');
+            }
+
+            function showErrorToast(message) {
+                const toast = document.getElementById('success-toast');
+                const messageEl = document.getElementById('toast-message');
+                const box = toast.querySelector('div');
+                if (messageEl) messageEl.textContent = message;
+                box.classList.remove('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+                box.classList.add('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+                toast.classList.remove('hide', 'pointer-events-none');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    closeSuccessToast();
+                    box.classList.remove('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+                    box.classList.add('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+                }, 4000);
             }
 
             function showLoadingToast() {
                 const toast = document.getElementById('loading-toast');
-                toast.classList.remove('hide');
+                toast.classList.remove('hide', 'pointer-events-none');
                 toast.classList.add('show');
             }
 
             function closeLoadingToast() {
                 const toast = document.getElementById('loading-toast');
                 toast.classList.remove('show');
-                toast.classList.add('hide');
+                toast.classList.add('hide', 'pointer-events-none');
             }
 
             // Export Excel via Fetch API
             async function exportSAAOBFundSourceExcel() {
                 if (!validateSignatories()) return;
+
+                const btn = document.getElementById('excel-export-btn');
+                const icon = document.getElementById('excel-btn-icon');
+                const label = document.getElementById('excel-btn-label');
+                btn.disabled = true;
+                icon.className = 'fas fa-spinner fa-spin text-lg mr-2 -ml-1 w-4 h-4';
+                label.textContent = 'Generating...';
 
                 showLoadingToast();
 
@@ -738,35 +845,41 @@
                     const url = window.URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    const year = document.querySelector('select[name="year1"]')?.value || new Date().getFullYear();
-                    const fundSourceFilter = document.querySelector('select[name="fund_source_filter"]')?.value || '';
-                    
+                    const year = document.getElementById('year1')?.value || new Date().getFullYear();
+                    const fundSourceFilter = document.getElementById('fund_source_filter')?.value || '';
+
                     let filename = 'SAAOB_';
-                    if (fundSourceFilter) {
-                        filename += `${fundSourceFilter}_${year}.xlsx`;
-                    } else {
-                        filename += `All_Fund_Sources_${year}.xlsx`;
-                    }
-                    
+                    filename += fundSourceFilter ? `${fundSourceFilter}_${year}.xlsx` : `All_Fund_Sources_${year}.xlsx`;
+
                     link.download = filename;
                     document.body.appendChild(link);
                     link.click();
-                    document.body.removeChild(link);
+                    link.remove();
                     window.URL.revokeObjectURL(url);
 
-                    setTimeout(() => {
-                        closeLoadingToast();
-                        showSuccessToast();
-                    }, 1000);
-                } catch (error) {
                     closeLoadingToast();
+                    showSuccessToast('Excel report generated successfully');
+                } catch (error) {
                     console.error('Export error:', error);
-                    alert('Failed to generate Excel file. Please try again.');
+                    closeLoadingToast();
+                    showErrorToast('Could not generate the Excel report. Please try again.');
+                } finally {
+                    btn.disabled = false;
+                    icon.className = 'fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4';
+                    label.textContent = 'Generate Excel';
                 }
             }
         </script>
 
         <style>
+            .filter-select {
+                transition: all 0.2s ease-in-out;
+            }
+
+            .filter-select:focus {
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 0 2px rgba(59, 130, 246, 0.5);
+            }
+
             /* Header sticky effect with smooth animation */
             thead {
                 animation: slideDown 0.3s ease-in-out;
@@ -784,12 +897,8 @@
             }
 
             /* Gradient text for section headers */
-            tr[id^="officeNameRow"] {
+            tr[id^="fundSourceRow"] {
                 animation: fadeIn 0.4s ease-in-out;
-            }
-
-            tr[id^="allotmentClassRow"] {
-                animation: fadeIn 0.4s ease-in-out 0.1s both;
             }
 
             @keyframes fadeIn {
@@ -811,27 +920,13 @@
             }
 
             /* Smooth color transition for hover states */
-            tr[id^="allotmentClassRow"]:hover {
+            tr[id^="fundSourceRow"]:hover {
                 transition: background 0.3s ease-in-out;
             }
 
             /* Table cell transition */
             td, th {
                 transition: background-color 0.2s ease-in-out;
-            }
-
-            /* Error message pulse animation */
-            #signatory_error {
-                animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-            }
-
-            @keyframes pulse {
-                0%, 100% {
-                    opacity: 1;
-                }
-                50% {
-                    opacity: 0.5;
-                }
             }
 
             /* Form transition on focus */
@@ -851,6 +946,12 @@
             }
 
             /* Table row fade animation */
+            tbody tr {
+                transition: all 0.2s ease-in-out;
+                opacity: 1;
+                animation: tableRowFade 0.3s ease-in-out;
+            }
+
             @keyframes tableRowFade {
                 from {
                     opacity: 0;
@@ -860,6 +961,43 @@
                     opacity: 1;
                     transform: translateY(0);
                 }
+            }
+
+            /* Enhanced scrollbar styling for table */
+            .overflow-y-auto::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .overflow-y-auto::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 4px;
+            }
+
+            .overflow-y-auto::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+                transition: background 0.2s ease-in-out;
+            }
+
+            .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+
+            .dark .overflow-y-auto::-webkit-scrollbar-track {
+                background: #1f2937;
+            }
+
+            .dark .overflow-y-auto::-webkit-scrollbar-thumb {
+                background: #4b5563;
+            }
+
+            .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                background: #6b7280;
+            }
+
+            .filter-select:focus-visible {
+                outline: 2px solid transparent;
+                outline-offset: 2px;
             }
 
             /* Toast notification animations */

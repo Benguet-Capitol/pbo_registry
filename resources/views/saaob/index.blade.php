@@ -25,7 +25,7 @@
                         @endif
                         @if($selectedAccountDisplay)
                         ({{ $selectedAccountDisplay }})
-                        @endif - 
+                        @endif -
                         Current (CY {{ $selectedYear }})
                     </span>
                 </h3>
@@ -77,18 +77,32 @@
     <!-- Unified Filter Section -->
     <form method="GET" action="" class="bg-white overflow-hidden shadow-md sm:rounded-lg mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out" id="filterForm">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
-            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-4 flex items-center">
-                <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
-                Filters
-            </h4>
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 flex items-center">
+                    <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
+                    Filters
+                </h4>
+                <button
+                    type="button"
+                    onclick="clearAllFilters()"
+                    class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 inline-flex items-center transition-colors duration-150"
+                >
+                    <i class="fas fa-rotate-left mr-1"></i>
+                    Clear filters
+                </button>
+            </div>
+
             <!-- Shared validation message -->
-            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 animate-pulse transition-opacity duration-300 ease-in-out"></span>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center">
+            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 transition-opacity duration-300 ease-in-out"></span>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
                 <!-- Year Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="year1" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Year</label>
                     <x-form.select
                         name="year1"
                         id="year1"
+                        aria-label="Fiscal Year"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         @foreach($availableYears as $year)
@@ -97,10 +111,12 @@
                     </x-form.select>
                 </div>
                 <!-- Office Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="office_filter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Office</label>
                     <x-form.select
                         name="office_filter"
                         id="office_filter"
+                        aria-label="Office"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">All Office</option>
@@ -112,10 +128,12 @@
                     </x-form.select>
                 </div>
                 <!-- Account Code Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="account_code" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Account</label>
                     <x-form.select
                         name="account_code"
                         id="account_code"
+                        aria-label="Account Code"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">All Accounts</option>
@@ -127,22 +145,28 @@
                     </x-form.select>
                 </div>
                 <!-- As of Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="as_of_filter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">As of</label>
                     <x-form.input
                         name="as_of_filter"
                         type="date"
                         autocomplete="off"
                         id="as_of_filter"
+                        aria-label="As of Date"
                         value="{{ request('as_of_filter', now()->format('Y-m-d')) }}"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                     </x-form.input>
                 </div>
                 <!-- Signatory Name Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_name" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        Signatory <span class="text-red-500">*</span>
+                    </label>
                     <x-form.select
                         name="signatory_name"
                         id="signatory_name"
+                        aria-label="Signatory Name"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">Select Signatory</option>
@@ -154,10 +178,14 @@
                     </x-form.select>
                 </div>
                 <!-- Signatory Designation Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_designation" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        Designation <span class="text-red-500">*</span>
+                    </label>
                     <x-form.select
                         name="signatory_designation"
                         id="signatory_designation"
+                        aria-label="Signatory Designation"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">Select Designation</option>
@@ -168,56 +196,93 @@
                 </div>
             </div>
 
+            @php
+                $activeChips = [];
+                if(request('office_filter') && $selectedOffice) $activeChips[] = ['label' => 'Office', 'value' => $selectedOffice->office_abbreviation, 'param' => 'office_filter'];
+                if($selectedAccountDisplay) $activeChips[] = ['label' => 'Account', 'value' => $selectedAccountDisplay, 'param' => 'account_code'];
+                if(request('signatory_name')) $activeChips[] = ['label' => 'Signatory', 'value' => request('signatory_name'), 'param' => 'signatory_name'];
+                if(request('signatory_designation')) $activeChips[] = ['label' => 'Designation', 'value' => request('signatory_designation'), 'param' => 'signatory_designation'];
+                if(request('year1')) $activeChips[] = ['label' => 'Year', 'value' => request('year1'), 'param' => 'year1'];
+                if(request('as_of_filter')) $activeChips[] = ['label' => 'As of', 'value' => request('as_of_filter'), 'param' => 'as_of_filter'];
+            @endphp
+            @if(count($activeChips) > 0)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <span class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Active:</span>
+                @foreach($activeChips as $chip)
+                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200 text-[11px] font-medium px-2 py-1 rounded-full">
+                    {{ $chip['label'] }}: {{ $chip['value'] }}
+                    <button type="button" onclick="removeFilter('{{ $chip['param'] }}')" class="hover:text-red-600 dark:hover:text-red-400" aria-label="Remove {{ $chip['label'] }} filter">
+                        <i class="fas fa-times text-[9px]"></i>
+                    </button>
+                </span>
+                @endforeach
+            </div>
+            @endif
+
             <!-- Buttons Row -->
             <div class="flex items-center space-x-2 mt-4">
                 <button
                     onclick="printSAAOBTable()"
-                    class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
-                    type="button">
-                    <i class="fas fa-print text-lg mr-2 -ml-1 w-4 h-4"></i>
-                    Print Report
+                    class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                    type="button"
+                    id="print-btn">
+                    <i class="fas fa-print text-lg mr-2 -ml-1 w-4 h-4" id="print-btn-icon"></i>
+                    <span id="print-btn-label">Print Report</span>
                 </button>
 
-                <button 
+                <button
                     type="button"
                     onclick="exportSAAOBExcel()"
-                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
+                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                     id="excel-export-btn">
-                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4"></i>
-                    Generate Excel
+                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4" id="excel-btn-icon"></i>
+                    <span id="excel-btn-label">Generate Excel</span>
                 </button>
             </div>
         </div>
 
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
+            @if($offices->isEmpty())
+            <div class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p class="text-sm font-medium">No records found for the selected filters</p>
+                <button type="button" onclick="clearAllFilters()" class="mt-3 text-xs text-blue-600 hover:underline dark:text-blue-400">Clear filters and try again</button>
+            </div>
+            @else
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-            
+
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
-                    <thead class="sticky top-0 z-10 bg-gradient-to-r from-gray-700 to-gray-800 text-white dark:bg-gradient-to-r dark:from-gray-200 dark:to-gray-300 dark:text-gray-900 transition-colors duration-300 ease-in-out">
+                    <thead class="sticky top-0 z-10 border border-blue-400 bg-gradient-to-r from-blue-200 to-blue-300 text-blue-900 dark:border-blue-300 dark:bg-gradient-to-r dark:from-blue-700 dark:to-blue-600 dark:text-blue-200 transition-colors duration-300 ease-in-out">
                         <tr>
-                            <th class="px-1 py-1 w-[150px] text-center">Functions / Programs / Projects / Activities</th>
-                            <th class="px-1 py-1 w-[140px] text-center">Account Code</th>
-                            <th class="px-1 py-1 w-[70px] text-center">FPP</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved Appropriations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental Appropriations</th>
+                            <th rowspan="2" class="px-1 py-1 w-[150px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Functions / Programs / Projects / Activities</th>
+                            <th rowspan="2" class="px-1 py-1 w-[140px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Account Code</th>
+                            <th rowspan="2" class="px-1 py-1 w-[70px] text-center align-middle border-r border-blue-400 dark:border-blue-300" title="Functions / Programs / Projects / Activities code">FPP</th>
+                            <th colspan="5" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Appropriations</th>
+                            <th colspan="2" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Allotments</th>
+                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Obligations</th>
+                            <th colspan="2" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Balance from Appropriation</th>
+                            <th colspan="2" class="px-1 py-1 text-center">Balance from Allotment</th>
+                        </tr>
+                        <tr class="text-[10px]">
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="realignment">Realignments</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Authorized Appropriations</th>
+                            <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300">Authorized</th>
                             <th class="px-1 py-1 w-[100px] text-center">Allotments</th>
-                            <th class="px-1 py-1 w-[100px] text-center">For Later Release</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Obligations</th>
-                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balances from Authorized Appropriation</th>
-                            <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">Percent of Utilization</th>
-                            <th class="px-1 py-1 w-[100px] text-center">Balances from Allotment</th>
-                            <th class="px-1 py-1 w-[70px] text-center">Percent of Utilization</th>
+                            <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300">For Later Release</th>
+                            <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balance</th>
+                            <th class="px-1 py-1 w-[70px] text-center border-r border-blue-400 dark:border-blue-300" data-key="appropriation_accomplishment">% Used</th>
+                            <th class="px-1 py-1 w-[100px] text-center">Balance</th>
+                            <th class="px-1 py-1 w-[70px] text-center">% Used</th>
                         </tr>
                     </thead>
 
                     <tbody class="border border-gray-300 dark:border-gray-600 text-[10px]">
                         @foreach($offices as $office)
-                        <tr id="officeNameRow-{{ $office->id }}" class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 text-gray-700 dark:text-gray-200 uppercase font-bold border-t border-b border-gray-700 dark:border-gray-100 text-center text-sm transition-colors duration-300 ease-in-out">
+                        <tr id="officeNameRow-{{ $office->id }}" class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 text-blue-900 dark:text-blue-200 uppercase font-bold border-t border-b border-blue-300 dark:border-blue-800 text-center text-sm transition-colors duration-300 ease-in-out">
                             <td colspan="15" class="px-3 py-3">{{ $office->office_name }}</td>
                         </tr>
 
@@ -226,7 +291,7 @@
                         @endphp
 
                         @foreach ($office->officeAllotmentClasses as $oac)
-                        <tr id="allotmentClassRow-{{ $oac->id }}" class="bg-gradient-to-r from-gray-600 to-gray-700 text-white dark:from-gray-200 dark:to-gray-300 dark:text-gray-800 font-bold border-t border-b text-xs uppercase transition-colors duration-300 ease-in-out hover:from-gray-700 hover:to-gray-800 dark:hover:from-gray-300 dark:hover:to-gray-400">
+                        <tr id="allotmentClassRow-{{ $oac->id }}" class="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-900 dark:from-blue-900 dark:to-blue-950 dark:text-blue-100 font-bold border-t border-b border-blue-300 dark:border-blue-800 text-xs uppercase transition-colors duration-300 ease-in-out hover:from-blue-200 hover:to-blue-300 dark:hover:from-blue-800 dark:hover:to-blue-900">
                             <td colspan="15" class="px-3 py-3">{{ $oac->allotmentClass->description }}</td>
                         </tr>
 
@@ -234,12 +299,12 @@
                         $classTotals = array_fill_keys(array_keys($officeTotals), 0);
                         $noProgramTotals = array_fill_keys(array_keys($officeTotals), 0);
                         $classAccomplishmentCounts = ['appropriation_accomplishment' => 0, 'allotment_accomplishment' => 0];
+                        $rowIndex = 0;
                         @endphp
 
                         {{-- Appropriations WITHOUT a Program --}}
                         @if (isset($oac->groupedAppropriations['']) && count($oac->groupedAppropriations['']) > 0)
                             @php
-                                // Check if there are any appropriations WITH programs
                                 $hasProgramGroups = false;
                                 foreach ($oac->groupedAppropriations as $program => $appropriations) {
                                     if ($program !== '') {
@@ -250,11 +315,12 @@
                             @endphp
 
                             @foreach ($oac->groupedAppropriations[''] as $appropriation)
-                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out">
-                                <td class="px-2 py-2 text-left">{{ $appropriation->description }}</td>
-                                <td class="px-2 py-2 text-center">{{ $appropriation->account_code }}</td>
-                                <td class="px-2 py-2 text-center">{{ $appropriation->fpp_code }}</td>
-                                <td class="px-2 py-2 text-right" data-key="appropriation">
+                            @php $rowIndex++; @endphp
+                            <tr class="{{ $rowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out">
+                                <td class="px-2 py-2 font-semibold text-left">{{ $appropriation->description }}</td>
+                                <td class="px-2 py-2 font-semibold text-center">{{ $appropriation->account_code }}</td>
+                                <td class="px-2 py-2 font-semibold text-center">{{ $appropriation->fpp_code }}</td>
+                                <td class="px-2 py-2 font-semibold text-right" data-key="appropriation">
                                     @php $val = $appropriation->appropriation ?? null; @endphp
                                     {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                                 </td>
@@ -274,12 +340,12 @@
                                     {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                                 </td>
 
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 font-semibold text-right">
                                     @php $val = $appropriation->authorized_appropriation ?? null; @endphp
                                     {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                                 </td>
 
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 font-semibold text-right">
                                     @php $val = $appropriation->allotment ?? null; @endphp
                                     {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                                 </td>
@@ -289,7 +355,7 @@
                                     {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                                 </td>
 
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 font-semibold text-right">
                                     @php $val = $appropriation->obligation ?? null; @endphp
                                     {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                                 </td>
@@ -300,7 +366,7 @@
                                 </td>
 
                                 <td class="px-2 py-2 text-center" data-key="appropriation_accomplishment">
-                                    {{ number_format($appropriation->appropriation_accomplishment ?? 0, 2) }}%
+                                    @include('saaob._utilization-badge', ['pct' => $appropriation->appropriation_accomplishment ?? 0])
                                 </td>
 
                                 <td class="px-2 py-2 text-right">
@@ -309,7 +375,7 @@
                                 </td>
 
                                 <td class="px-2 py-2 text-center">
-                                    {{ number_format($appropriation->allotment_accomplishment ?? 0, 2) }}%
+                                    @include('saaob._utilization-badge', ['pct' => $appropriation->allotment_accomplishment ?? 0])
                                 </td>
                             </tr>
 
@@ -325,23 +391,22 @@
                             @endphp
                             @endforeach
 
-                            {{-- Only show subtotal if there are program groups --}}
                             @if($hasProgramGroups)
-                            <tr class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 dark:from-gray-400 dark:to-gray-500 dark:text-gray-900 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px] transition-colors duration-300 ease-in-out">
+                            <tr class="bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 dark:from-gray-700 dark:to-gray-800 dark:text-gray-100 font-semibold border-t-2 border-b-2 border-gray-400 dark:border-gray-600 text-[10px] transition-colors duration-300 ease-in-out">
                                 <td colspan="3" class="px-2 py-2 text-right">Subtotal:</td>
                                 @foreach ($noProgramTotals as $key => $val)
-                                <td class="px-2 py-2 
-                                    @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
-                                        text-center 
-                                    @else 
-                                        text-right 
-                                    @endif" 
+                                <td class="px-2 py-2
+                                    @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment')
+                                        text-center
+                                    @else
+                                        text-right
+                                    @endif"
                                     data-key="{{ $key }}">
-                                    
+
                                     @if ($key === 'appropriation_accomplishment')
-                                        {{ $noProgramTotals['authorized_appropriation'] > 0 ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                        @include('saaob._utilization-badge', ['pct' => $noProgramTotals['authorized_appropriation'] > 0 ? ($noProgramTotals['obligation'] / $noProgramTotals['authorized_appropriation']) * 100 : 0])
                                     @elseif ($key === 'allotment_accomplishment')
-                                        {{ $noProgramTotals['allotment'] > 0 ? number_format(($noProgramTotals['obligation'] / $noProgramTotals['allotment']) * 100, 2) : '0.00' }}%
+                                        @include('saaob._utilization-badge', ['pct' => $noProgramTotals['allotment'] > 0 ? ($noProgramTotals['obligation'] / $noProgramTotals['allotment']) * 100 : 0])
                                     @else
                                         @if ($val == 0 || $val === null)
                                             -
@@ -365,16 +430,17 @@
                         $programAccomplishmentCounts = ['appropriation_accomplishment' => 0, 'allotment_accomplishment' => 0];
                         @endphp
 
-                        <tr id="programRow-{{ $loop->index }}-{{ $oac->id }}" class="bg-gray-200 text-gray-700 dark:bg-gray-300 dark:text-gray-700 font-semibold border-t border-b border-gray-400 dark:border-gray-100 italic">
+                        <tr id="programRow-{{ $loop->index }}-{{ $oac->id }}" class="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 font-semibold border-t border-b border-gray-300 dark:border-gray-600 italic">
                             <td colspan="15" class="px-6 py-2 text-xs">{{ $program }}</td>
                         </tr>
 
                         @foreach ($appropriations as $appropriation)
-                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out">
-                            <td class="px-2 py-2 text-left">{{ $appropriation->description }}</td>
-                            <td class="px-2 py-2 text-center">{{ $appropriation->account_code }}</td>
-                            <td class="px-2 py-2 text-center">{{ $appropriation->fpp_code }}</td>
-                            <td class="px-2 py-2 text-right" data-key="appropriation">
+                        @php $rowIndex++; @endphp
+                        <tr class="{{ $rowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out">
+                            <td class="px-2 py-2 font-semibold text-left">{{ $appropriation->description }}</td>
+                            <td class="px-2 py-2 font-semibold text-center">{{ $appropriation->account_code }}</td>
+                            <td class="px-2 py-2 font-semibold text-center">{{ $appropriation->fpp_code }}</td>
+                            <td class="px-2 py-2 font-semibold text-right" data-key="appropriation">
                                 @php $val = $appropriation->appropriation ?? null; @endphp
                                 {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                             </td>
@@ -394,12 +460,12 @@
                                 {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                             </td>
 
-                            <td class="px-2 py-2 text-right">
+                            <td class="px-2 py-2 font-semibold text-right">
                                 @php $val = $appropriation->authorized_appropriation ?? null; @endphp
                                 {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                             </td>
 
-                            <td class="px-2 py-2 text-right">
+                            <td class="px-2 py-2 font-semibold text-right">
                                 @php $val = $appropriation->allotment ?? null; @endphp
                                 {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                             </td>
@@ -409,7 +475,7 @@
                                 {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                             </td>
 
-                            <td class="px-2 py-2 text-right">
+                            <td class="px-2 py-2 font-semibold text-right">
                                 @php $val = $appropriation->obligation ?? null; @endphp
                                 {{ is_null($val) || $val == 0 ? '-' : ($val < 0 ? '(' . number_format(abs($val), 2) . ')' : number_format($val, 2)) }}
                             </td>
@@ -420,7 +486,7 @@
                             </td>
 
                             <td class="px-2 py-2 text-center" data-key="appropriation_accomplishment">
-                                {{ number_format($appropriation->appropriation_accomplishment ?? 0, 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $appropriation->appropriation_accomplishment ?? 0])
                             </td>
 
                             <td class="px-2 py-2 text-right">
@@ -429,7 +495,7 @@
                             </td>
 
                             <td class="px-2 py-2 text-center">
-                                {{ number_format($appropriation->allotment_accomplishment ?? 0, 2) }}%
+                                @include('saaob._utilization-badge', ['pct' => $appropriation->allotment_accomplishment ?? 0])
                             </td>
                         </tr>
 
@@ -445,21 +511,21 @@
                         @endphp
                         @endforeach
 
-                        <tr class="bg-gray-500 text-white dark:bg-gray-200 dark:text-gray-800 font-semibold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px]">
+                        <tr class="bg-gray-300 text-gray-900 dark:bg-gray-700 dark:text-gray-100 font-semibold border-t-2 border-b-2 border-gray-400 dark:border-gray-600 text-[10px]">
                             <td colspan="3" class="px-2 py-2 text-right italic">Subtotal: </td>
                             @foreach ($programTotals as $key => $val)
-                            <td class="px-2 py-2 
-                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
-                                    text-center 
-                                @else 
-                                    text-right 
-                                @endif" 
+                            <td class="px-2 py-2
+                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment')
+                                    text-center
+                                @else
+                                    text-right
+                                @endif"
                                 data-key="{{ $key }}">
-                                
+
                                 @if ($key === 'appropriation_accomplishment')
-                                    {{ $programTotals['authorized_appropriation'] > 0 ? number_format(($programTotals['obligation'] / $programTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $programTotals['authorized_appropriation'] > 0 ? ($programTotals['obligation'] / $programTotals['authorized_appropriation']) * 100 : 0])
                                 @elseif ($key === 'allotment_accomplishment')
-                                    {{ $programTotals['allotment'] > 0 ? number_format(($programTotals['obligation'] / $programTotals['allotment']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $programTotals['allotment'] > 0 ? ($programTotals['obligation'] / $programTotals['allotment']) * 100 : 0])
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -475,21 +541,21 @@
                         @endif
                         @endforeach
 
-                        <tr class="bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 dark:from-gray-200 dark:to-gray-300 dark:text-gray-800 font-bold border-t-2 border-b-2 border-gray-700 dark:border-gray-100 text-[10px] transition-colors duration-300 ease-in-out">
+                        <tr class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-900 dark:from-gray-700 dark:to-gray-800 dark:text-gray-100 font-bold border-t-2 border-b-2 border-gray-500 dark:border-gray-600 text-[10px] transition-colors duration-300 ease-in-out">
                             <td colspan="3" class="px-2 py-2 text-right">Total {{ $oac->allotmentClass->description }}: </td>
                             @foreach ($classTotals as $key => $val)
-                            <td class="px-2 py-2 
-                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
-                                    text-center 
-                                @else 
-                                    text-right 
-                                @endif" 
+                            <td class="px-2 py-2
+                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment')
+                                    text-center
+                                @else
+                                    text-right
+                                @endif"
                                 data-key="{{ $key }}">
-                                
+
                                 @if ($key === 'appropriation_accomplishment')
-                                    {{ $classTotals['authorized_appropriation'] > 0 ? number_format(($classTotals['obligation'] / $classTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $classTotals['authorized_appropriation'] > 0 ? ($classTotals['obligation'] / $classTotals['authorized_appropriation']) * 100 : 0])
                                 @elseif ($key === 'allotment_accomplishment')
-                                    {{ $classTotals['allotment'] > 0 ? number_format(($classTotals['obligation'] / $classTotals['allotment']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $classTotals['allotment'] > 0 ? ($classTotals['obligation'] / $classTotals['allotment']) * 100 : 0])
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -504,27 +570,27 @@
                         </tr>
                         @endforeach
 
-                        <tr class="bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-200 dark:to-gray-300 text-gray-200 dark:text-gray-700 font-bold border-t-2 border-b-2 text-[10px] transition-colors duration-300 ease-in-out border-gray-700 dark:border-gray-100">
+                        <tr class="bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 font-bold border-t-2 border-b-2 text-[10px] transition-colors duration-300 ease-in-out border-gray-600 dark:border-gray-600">
                             <td colspan="3" class="px-2 py-2 text-right">
                                 @if($isSEFConsolidated ?? false)
-                                    Grand Total {{ $office->office_name }}: 
+                                    Grand Total {{ $office->office_name }}:
                                 @else
-                                    Grand Total Current Operating Expenditure: 
+                                    Grand Total Current Operating Expenditure:
                                 @endif
                             </td>
                             @foreach ($officeTotals as $key => $val)
-                            <td class="px-2 py-2 
-                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
-                                    text-center 
-                                @else 
-                                    text-right 
-                                @endif" 
+                            <td class="px-2 py-2
+                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment')
+                                    text-center
+                                @else
+                                    text-right
+                                @endif"
                                 data-key="{{ $key }}">
-                                
+
                                 @if ($key === 'appropriation_accomplishment')
-                                    {{ $officeTotals['authorized_appropriation'] > 0 ? number_format(($officeTotals['obligation'] / $officeTotals['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $officeTotals['authorized_appropriation'] > 0 ? ($officeTotals['obligation'] / $officeTotals['authorized_appropriation']) * 100 : 0])
                                 @elseif ($key === 'allotment_accomplishment')
-                                    {{ $officeTotals['allotment'] > 0 ? number_format(($officeTotals['obligation'] / $officeTotals['allotment']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $officeTotals['allotment'] > 0 ? ($officeTotals['obligation'] / $officeTotals['allotment']) * 100 : 0])
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -540,28 +606,28 @@
                         @endforeach
                         {{-- Overall Total Row (only if all offices are selected or SEF consolidated) --}}
                         @if((empty($selectedOffice) || ($isSEFConsolidated ?? false)) && $overallTotal)
-                        <tr class="bg-blue-900 dark:bg-blue-800 text-white dark:text-gray-100 font-bold border-t-4 border-b-2 text-[11px]">
+                        <tr class="bg-blue-200 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-bold border-t-4 border-blue-500 dark:border-blue-800 border-b-2 text-[11px]">
                             <td colspan="3" class="px-2 py-3 text-right">
                                 @if($isSEFConsolidated ?? false)
-                                    Grand Total Current Operating Expenditure (SEF): 
+                                    Grand Total Current Operating Expenditure (SEF):
                                 @else
-                                    Overall Total: 
+                                    Overall Total:
                                 @endif
                             </td>
                             @foreach ($overallTotal as $key => $val)
                             @if(!in_array($key, ['count']))
-                            <td class="px-2 py-3 
-                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment') 
-                                    text-center 
-                                @else 
-                                    text-right 
-                                @endif" 
+                            <td class="px-2 py-3
+                                @if($key === 'appropriation_accomplishment' || $key === 'allotment_accomplishment')
+                                    text-center
+                                @else
+                                    text-right
+                                @endif"
                                 data-key="{{ $key }}">
-                                
+
                                 @if ($key === 'appropriation_accomplishment')
-                                    {{ $overallTotal['authorized_appropriation'] > 0 ? number_format(($overallTotal['obligation'] / $overallTotal['authorized_appropriation']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $overallTotal['authorized_appropriation'] > 0 ? ($overallTotal['obligation'] / $overallTotal['authorized_appropriation']) * 100 : 0])
                                 @elseif ($key === 'allotment_accomplishment')
-                                    {{ $overallTotal['allotment'] > 0 ? number_format(($overallTotal['obligation'] / $overallTotal['allotment']) * 100, 2) : '0.00' }}%
+                                    @include('saaob._utilization-badge', ['pct' => $overallTotal['allotment'] > 0 ? ($overallTotal['obligation'] / $overallTotal['allotment']) * 100 : 0])
                                 @else
                                     @if ($val == 0 || $val === null)
                                         -
@@ -580,7 +646,7 @@
                 </table>
             </div>
         </div>
-    </div>
+        @endif
     </div>
 
     <script>
@@ -602,6 +668,7 @@
         if (errorMessage) {
             errorSpan.textContent = errorMessage;
             errorSpan.classList.remove('hidden');
+            errorSpan.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             return false;
         } else {
             errorSpan.classList.add('hidden');
@@ -609,10 +676,44 @@
         }
     }
 
+    // Clear filters (keeps year, resets everything else)
+    function clearAllFilters() {
+        const url = new URL(window.location.href);
+        const keep = ['year1'];
+        [...url.searchParams.keys()].forEach(key => {
+            if (!keep.includes(key)) url.searchParams.delete(key);
+        });
+        window.location.href = url.toString();
+    }
+
+    // Remove a single filter param and resubmit
+    function removeFilter(param) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete(param);
+        window.location.href = url.toString();
+    }
+
     // Intercept PDF generation
     window.printSAAOBTable = function() {
         if (!validateSignatories()) return;
-        runPrintSAAOBTable(); // call actual print function
+
+        const btn = document.getElementById('print-btn');
+        const icon = document.getElementById('print-btn-icon');
+        const label = document.getElementById('print-btn-label');
+        btn.disabled = true;
+        icon.className = 'fas fa-spinner fa-spin text-lg mr-2 -ml-1 w-4 h-4';
+        label.textContent = 'Preparing...';
+
+        // Give the browser a tick to paint the loading state before the print window blocks the thread
+        setTimeout(() => {
+            try {
+                runPrintSAAOBTable();
+            } finally {
+                btn.disabled = false;
+                icon.className = 'fas fa-print text-lg mr-2 -ml-1 w-4 h-4';
+                label.textContent = 'Print Report';
+            }
+        }, 50);
     };
 
     // Intercept Excel Export with AJAX
@@ -622,9 +723,12 @@
         }
 
         const btn = document.getElementById('excel-export-btn');
+        const icon = document.getElementById('excel-btn-icon');
+        const label = document.getElementById('excel-btn-label');
         btn.disabled = true;
+        icon.className = 'fas fa-spinner fa-spin text-lg mr-2 -ml-1 w-4 h-4';
+        label.textContent = 'Generating...';
 
-        // Show loading toast
         showLoadingToast();
 
         const params = new URLSearchParams({
@@ -648,16 +752,21 @@
                 a.click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
-                
-                // Hide loading toast and show success toast
+
                 closeLoadingToast();
                 showSuccessToast('Excel report generated successfully');
+            } else {
+                closeLoadingToast();
+                showErrorToast('Could not generate the Excel report. Please try again.');
             }
         } catch (error) {
             console.error('Export failed:', error);
             closeLoadingToast();
+            showErrorToast('Something went wrong generating the report.');
         } finally {
             btn.disabled = false;
+            icon.className = 'fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4';
+            label.textContent = 'Generate Excel';
         }
     }
 
@@ -665,15 +774,14 @@
     function showSuccessToast(message = 'Excel report generated successfully') {
         const toast = document.getElementById('success-toast');
         const messageEl = document.getElementById('toast-message');
-        
+
         if (messageEl) {
             messageEl.textContent = message;
         }
-        
+
         toast.classList.remove('hide', 'pointer-events-none');
         toast.classList.add('show');
-        
-        // Auto dismiss after 4 seconds
+
         setTimeout(closeSuccessToast, 4000);
     }
 
@@ -681,6 +789,23 @@
         const toast = document.getElementById('success-toast');
         toast.classList.remove('show');
         toast.classList.add('hide', 'pointer-events-none');
+    }
+
+    function showErrorToast(message) {
+        // Reuses the success toast markup with red styling for a quick failure notice
+        const toast = document.getElementById('success-toast');
+        const messageEl = document.getElementById('toast-message');
+        const box = toast.querySelector('div');
+        if (messageEl) messageEl.textContent = message;
+        box.classList.remove('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+        box.classList.add('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+        toast.classList.remove('hide', 'pointer-events-none');
+        toast.classList.add('show');
+        setTimeout(() => {
+            closeSuccessToast();
+            box.classList.remove('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+            box.classList.add('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+        }, 4000);
     }
 
     function showLoadingToast() {
@@ -698,30 +823,26 @@
     function runPrintSAAOBTable() {
         const table = document.getElementById('dashboardTable').cloneNode(true);
 
-        // --- Insert a spacer row directly after the THEAD header row ---
         (function insertHeaderSpacer(clonedTable) {
             const thead = clonedTable.querySelector('thead');
             if (!thead) return;
-            const headerRow = thead.querySelector('tr');
-            if (!headerRow) return;
+            const headerRows = thead.querySelectorAll('tr');
+            const lastHeaderRow = headerRows[headerRows.length - 1];
+            if (!lastHeaderRow) return;
 
-            // count header columns (use th count so colspan matches)
-            const thCount = headerRow.querySelectorAll('th').length || 1;
+            const thCount = lastHeaderRow.querySelectorAll('th').length || 1;
 
-            // create spacer row
             const spacerRow = document.createElement('tr');
             spacerRow.className = 'header-spacer';
 
             const spacerTd = document.createElement('td');
             spacerTd.setAttribute('colspan', thCount);
             spacerTd.style.border = 'none';
-            spacerTd.style.height = '12px'; // adjust gap height here
+            spacerTd.style.height = '12px';
             spacerTd.style.background = 'transparent';
 
             spacerRow.appendChild(spacerTd);
-
-            // insert spacer row after headerRow
-            headerRow.parentNode.insertBefore(spacerRow, headerRow.nextSibling);
+            lastHeaderRow.parentNode.insertBefore(spacerRow, lastHeaderRow.nextSibling);
         })(table);
 
         const hiddenKeys = [
@@ -733,7 +854,6 @@
             'appropriation_accomplishment'
         ];
 
-        // Remove only <td> and <th> elements matching these keys
         table.querySelectorAll('thead th[data-key], tbody td[data-key]').forEach(cell => {
             const key = cell.getAttribute('data-key');
             if (hiddenKeys.includes(key)) {
@@ -741,48 +861,52 @@
             }
         });
 
-        // Style office rows
+        // Adjust the grouped colspans in the first header row since some sub-columns were removed
+        const firstHeaderRow = table.querySelector('thead tr:first-child');
+        if (firstHeaderRow) {
+            const groupCells = firstHeaderRow.querySelectorAll('th[colspan]');
+            // Appropriations group: was 5 (approved, supplemental, reversions, realignments, authorized) -> 1 (authorized only)
+            // Balance from Appropriation group: was 2 (balance, %) -> 0, remove entirely
+            groupCells.forEach(th => {
+                const text = th.textContent.trim();
+                if (text === 'Appropriations') th.setAttribute('colspan', '1');
+                if (text === 'Balance from Appropriation') th.remove();
+            });
+        }
+
         table.querySelectorAll('[id^="officeNameRow-"]').forEach(tr => {
             tr.style.textTransform = 'uppercase';
             tr.style.fontWeight = 'bold';
             tr.style.fontSize = '10px';
         });
-        // Style allotment class rows
         table.querySelectorAll('[id^="allotmentClassRow-"]').forEach(tr => {
             tr.style.fontWeight = 'bold';
             tr.style.fontSize = '10px';
-            tr.style.paddingLeft = '12px'; // Indent the row
-            // Also indent the first cell if needed
+            tr.style.paddingLeft = '12px';
             const firstCell = tr.querySelector('td');
             if (firstCell) {
                 firstCell.style.paddingLeft = '12px';
             }
         });
-        // Style program rows
         table.querySelectorAll('[id^="programRow-"]').forEach(tr => {
             tr.style.fontWeight = 'bold';
             tr.style.fontStyle = 'italic';
             tr.style.fontSize = '10px';
-            tr.style.paddingLeft = '32px'; // Indent the row
-            // Also indent the first cell if needed
+            tr.style.paddingLeft = '32px';
             const firstCell = tr.querySelector('td');
             if (firstCell) {
                 firstCell.style.paddingLeft = '32px';
             }
         });
-        // Set tbody font size to 10px
         Array.from(table.querySelectorAll('tbody')).forEach(tbody => {
             tbody.style.fontSize = '10px';
         });
-        // Set columns 4-11 and 13 text-align right in tbody (adjusted for removed columns)
         table.querySelectorAll('tbody tr').forEach(tr => {
             const cells = tr.querySelectorAll('td');
-            // After removing 6 columns, indices shift, so just align all except first 3 left columns
             for (let i = 3; i < cells.length; i++) {
                 cells[i].style.textAlign = 'right';
             }
         });
-        // Make subtotal, total, and grand total rows bold and 1st/2nd/3rd column right-aligned, values uppercase
         table.querySelectorAll('tr').forEach(tr => {
             const cells = tr.querySelectorAll('td');
             if (cells.length > 2) {
@@ -801,30 +925,26 @@
             }
         });
 
-        // Center align thead text
         Array.from(table.querySelectorAll('thead th')).forEach(th => {
             th.style.textAlign = 'center';
             th.style.fontWeight = 'bold';
             th.style.fontSize = '10px';
         });
 
-        // Get selected office name (full name)
         const officeSelect = document.getElementById('office_filter');
         let officeText = 'ALL OFFICES';
         if (officeSelect && officeSelect.selectedIndex > 0) {
             const selectedOption = officeSelect.options[officeSelect.selectedIndex];
             officeText = (selectedOption.getAttribute('data-office-name') || selectedOption.text).toUpperCase();
         }
-        
-        // Get selected account code
+
         const accountCodeSelect = document.getElementById('account_code');
         let accountCodeText = '';
         if (accountCodeSelect && accountCodeSelect.value) {
             const selectedOption = accountCodeSelect.options[accountCodeSelect.selectedIndex];
-            accountCodeText = selectedOption.text; // This already contains "code - description"
+            accountCodeText = selectedOption.text;
         }
-        
-        // Get as of date and format it
+
         const asOfInput = document.getElementById('as_of_filter');
         let asOfDate = '';
         if (asOfInput && asOfInput.value) {
@@ -839,7 +959,6 @@
             asOfDate = `${month} ${day}, ${year}`;
         }
 
-        // Get signatory name and designation
         const signatoryNameInput = document.getElementById('signatory_name');
         let signatoryName = '';
         if (signatoryNameInput && signatoryNameInput.value) {
@@ -851,7 +970,6 @@
             signatoryDesignation = signatoryDesignationInput.value;
         }
 
-        // Get screen dimensions
         const screenW = window.screen.availWidth;
         const screenH = window.screen.availHeight;
 
@@ -862,22 +980,6 @@
             body { font-family: sans-serif; }
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid #ccc; padding: 4px; }
-
-            th[data-key="ppas"] { width:200px; text-align:center; }
-            th[data-key="account_code"] { width:100px; text-align:center; }
-            th[data-key="appropriation"] { width:100px; text-align:center; }
-            th[data-key="sb_appropriation"] { width:100px; text-align:center; }
-            th[data-key="reversion"] { width:100px; text-align:center; }
-            th[data-key="realignment"] { width:100px; text-align:center; }
-            th[data-key="authorized_appropriation"] { width:100px; text-align:center; }
-            th[data-key="allotment"] { width:100px; text-align:center; }
-            th[data-key="obligation"] { width:100px; text-align:center; }
-            th[data-key="appropriation_balance"] { width:100px; text-align:center; }
-            th[data-key="appropriation_accomplishment"] { width:70px; text-align:center; }
-            th[data-key="disbursement"] { width:100px; text-align:center; }
-            th[data-key="disbursement_to_obligation"] { width:70px; text-align:center; }
-            th[data-key="disbursement_to_appropriation"] { width:70px; text-align:center; }
-            th[data-key="obligation_balance"] { width:100px; text-align:center; }
         </style>
     `);
         newWin.document.write('</head><body>');
@@ -915,12 +1017,10 @@
         newWin.document.close();
         newWin.focus();
         newWin.print();
-
     }
 </script>
 
     <style>
-        /* Smooth transitions for filter inputs */
         .filter-select {
             transition: all 0.2s ease-in-out;
         }
@@ -929,12 +1029,10 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 0 2px rgba(59, 130, 246, 0.5);
         }
 
-        /* Table row hover animations */
         tbody tr {
             transition: all 0.2s ease-in-out;
         }
 
-        /* Header sticky effect with smooth animation */
         thead {
             animation: slideDown 0.3s ease-in-out;
         }
@@ -950,7 +1048,6 @@
             }
         }
 
-        /* Gradient text for section headers */
         tr[id^="officeNameRow"] {
             animation: fadeIn 0.4s ease-in-out;
         }
@@ -968,7 +1065,6 @@
             }
         }
 
-        /* Button press animation */
         button {
             transition: all 0.2s ease-in-out;
         }
@@ -977,31 +1073,14 @@
             transition: all 0.1s ease-in-out;
         }
 
-        /* Smooth color transition for hover states */
         tr[id^="allotmentClassRow"]:hover {
             transition: background 0.3s ease-in-out;
         }
 
-        /* Table cell transition */
         td, th {
             transition: background-color 0.2s ease-in-out;
         }
 
-        /* Error message pulse animation */
-        #signatory_error {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        /* Form transition on focus */
         #filterForm {
             animation: slideUp 0.3s ease-in-out;
         }
@@ -1017,12 +1096,10 @@
             }
         }
 
-        /* Table container entrance animation */
         .bg-white.overflow-hidden.shadow-md {
             animation: slideUp 0.4s ease-in-out 0.1s both;
         }
 
-        /* Enhanced scrollbar styling for table */
         .overflow-y-auto::-webkit-scrollbar {
             width: 8px;
         }
@@ -1042,7 +1119,6 @@
             background: #94a3b8;
         }
 
-        /* Dark mode scrollbar */
         .dark .overflow-y-auto::-webkit-scrollbar-track {
             background: #1f2937;
         }
@@ -1055,7 +1131,6 @@
             background: #6b7280;
         }
 
-        /* Smooth staggered table rendering */
         tbody tr {
             opacity: 1;
             animation: tableRowFade 0.3s ease-in-out;
@@ -1070,13 +1145,11 @@
             }
         }
 
-        /* Focus indicator enhancement */
         .filter-select:focus-visible {
             outline: 2px solid transparent;
             outline-offset: 2px;
         }
 
-        /* Toast notification animations */
         @keyframes slideInToast {
             from {
                 opacity: 0;

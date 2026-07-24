@@ -62,18 +62,31 @@
     <!-- Unified Filter Section -->
     <form method="GET" action="" class="bg-white overflow-hidden shadow-md sm:rounded-lg mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out" id="filterForm">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
-            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-4 flex items-center">
-                <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
-                Filters
-            </h4>
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 flex items-center">
+                    <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
+                    Filters
+                </h4>
+                <button
+                    type="button"
+                    onclick="clearAllFilters()"
+                    class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 inline-flex items-center transition-colors duration-150"
+                >
+                    <i class="fas fa-rotate-left mr-1"></i>
+                    Clear filters
+                </button>
+            </div>
             <!-- Shared validation message -->
-            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 animate-pulse transition-opacity duration-300 ease-in-out"></span>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 items-center">
+            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 transition-opacity duration-300 ease-in-out"></span>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
                 <!-- Year Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="year1" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Year</label>
                     <x-form.select
                         name="year1"
                         id="year1"
+                        aria-label="Fiscal Year"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         @foreach($availableYears as $year)
@@ -82,10 +95,12 @@
                     </x-form.select>
                 </div>
                 <!-- Fund Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="fund_filter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Fund</label>
                     <x-form.select
                         name="fund_filter"
                         id="fund_filter"
+                        aria-label="Fund"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         @foreach($availableFunds as $fundKey => $fundLabel)
@@ -96,22 +111,28 @@
                     </x-form.select>
                 </div>
                 <!-- As of Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="as_of_filter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">As of</label>
                     <x-form.input
                         name="as_of_filter"
                         type="date"
                         autocomplete="off"
                         id="as_of_filter"
+                        aria-label="As of Date"
                         value="{{ request('as_of_filter', now()->format('Y-m-d')) }}"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                     </x-form.input>
                 </div>
                 <!-- Signatory Name Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_name" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        Signatory <span class="text-red-500">*</span>
+                    </label>
                     <x-form.select
                         name="signatory_name"
                         id="signatory_name"
+                        aria-label="Signatory Name"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">Select Signatory</option>
@@ -123,10 +144,14 @@
                     </x-form.select>
                 </div>
                 <!-- Signatory Designation Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_designation" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        Designation <span class="text-red-500">*</span>
+                    </label>
                     <x-form.select
                         name="signatory_designation"
                         id="signatory_designation"
+                        aria-label="Signatory Designation"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">Select Designation</option>
@@ -137,53 +162,92 @@
                 </div>
             </div>
 
+            @php
+                // Year and As-of-date are excluded here: both always carry a default value
+                // (current year, today), so treating them as removable "active" filters would
+                // leave two permanent chips cluttering this row on every page load.
+                $activeChips = [];
+                if(request('fund_filter') && request('fund_filter') !== 'all') $activeChips[] = ['label' => 'Fund', 'value' => $selectedFundLabel, 'param' => 'fund_filter'];
+                if(request('signatory_name')) $activeChips[] = ['label' => 'Signatory', 'value' => request('signatory_name'), 'param' => 'signatory_name'];
+                if(request('signatory_designation')) $activeChips[] = ['label' => 'Designation', 'value' => request('signatory_designation'), 'param' => 'signatory_designation'];
+            @endphp
+            @if(count($activeChips) > 0)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <span class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Active:</span>
+                @foreach($activeChips as $chip)
+                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200 text-[11px] font-medium px-2 py-1 rounded-full">
+                    {{ $chip['label'] }}: {{ $chip['value'] }}
+                    <button type="button" onclick="removeFilter('{{ $chip['param'] }}')" class="hover:text-red-600 dark:hover:text-red-400" aria-label="Remove {{ $chip['label'] }} filter">
+                        <i class="fas fa-times text-[9px]"></i>
+                    </button>
+                </span>
+                @endforeach
+            </div>
+            @endif
+
             <!-- Buttons Row -->
             <div class="flex items-center space-x-2 mt-4">
                 <button
                     type="button"
                     onclick="exportSummaryAccountsExcel()"
-                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
-                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4"></i>
-                    Generate Excel
+                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                    id="excel-export-btn">
+                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4" id="excel-btn-icon"></i>
+                    <span id="excel-btn-label">Generate Excel</span>
                 </button>
             </div>
         </div>
 
         <div class="p-4 bg-white rounded-md relative dark:bg-gray-800 transition-colors duration-300 ease-in-out">
+            @if($allotmentClassTotals->isEmpty())
+            <div class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p class="text-sm font-medium">No data available for the selected filters</p>
+                <button type="button" onclick="clearAllFilters()" class="mt-3 text-xs text-blue-600 hover:underline dark:text-blue-400">Clear filters and try again</button>
+            </div>
+            @else
             <div class="overflow-x-auto overflow-y-auto max-h-[700px] border border-gray-300 dark:border-gray-600 rounded-md">
             <table id="dashboardTable" class="min-w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
-                <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900">
+                <thead class="sticky top-0 z-10 border border-blue-400 bg-gradient-to-r from-blue-200 to-blue-300 text-blue-900 dark:bg-gradient-to-r dark:from-blue-700 dark:to-blue-600 dark:text-blue-200 transition-colors duration-300 ease-in-out">
                     <tr>
-                        <th class="px-1 py-1 w-[150px] text-center">Functions / Programs / Projects / Activities</th>
-                        <th class="px-1 py-1 w-[140px] text-center">Account Code</th>
-                        <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved Appropriations</th>
-                        <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental Appropriations</th>
+                        <th rowspan="2" class="px-1 py-1 w-[150px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Functions / Programs / Projects / Activities</th>
+                        <th rowspan="2" class="px-1 py-1 w-[140px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Account Code</th>
+                        <th colspan="5" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Appropriations</th>
+                        <th colspan="2" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Allotments</th>
+                        <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-blue-400 dark:border-blue-300">Obligations</th>
+                        <th colspan="2" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Balance from Appropriation</th>
+                        <th colspan="2" class="px-1 py-1 text-center">Balance from Allotment</th>
+                    </tr>
+                    <tr class="text-[10px]">
+                        <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation">Approved</th>
+                        <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental</th>
                         <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
                         <th class="px-1 py-1 w-[100px] text-center" data-key="realignment">Realignments</th>
-                        <th class="px-1 py-1 w-[100px] text-center">Authorized Appropriations</th>
+                        <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300">Authorized</th>
                         <th class="px-1 py-1 w-[100px] text-center">Allotments</th>
-                        <th class="px-1 py-1 w-[100px] text-center">For Later Release</th>
-                        <th class="px-1 py-1 w-[100px] text-center">Obligations</th>
-                        <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balances from Authorized Appropriation</th>
-                        <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">Percent of Utilization</th>
-                        <th class="px-1 py-1 w-[100px] text-center">Balances from Allotment</th>
-                        <th class="px-1 py-1 w-[70px] text-center">Percent of Utilization</th>
+                        <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300">For Later Release</th>
+                        <th class="px-1 py-1 w-[100px] text-center" data-key="appropriation_balance">Balance</th>
+                        <th class="px-1 py-1 w-[70px] text-center border-r border-blue-400 dark:border-blue-300" data-key="appropriation_accomplishment">% Used</th>
+                        <th class="px-1 py-1 w-[100px] text-center">Balance</th>
+                        <th class="px-1 py-1 w-[70px] text-center">% Used</th>
                     </tr>
                 </thead>
                 <tbody class="border border-gray-300 dark:border-gray-600 text-[10px]">
-                    @forelse ($allotmentClassTotals as $className => $items)
+                    @foreach ($allotmentClassTotals as $className => $items)
                         {{-- Allotment Class Header --}}
-                        <tr class="bg-gray-600 text-gray-100 dark:bg-gray-300 dark:text-gray-800 font-bold border-t border-b">
+                        <tr class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 text-blue-900 dark:text-blue-200 uppercase font-bold border-t border-b border-blue-300 dark:border-blue-800 transition-colors duration-300 ease-in-out">
                             <td colspan="14" class="px-2 py-2 text-xs">{{ $className }}</td>
                         </tr>
 
                         {{-- Individual Accounts with Appropriations --}}
                         @if(isset($items['accounts']) && !empty($items['accounts']))
+                            @php $rowIndex = 0; @endphp
                             @foreach ($items['accounts'] as $app)
-                            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-2 py-2 text-left">{{ $app['description'] }}</td>
-                                <td class="px-2 py-2 text-center">{{ $app['account_code'] }}</td>
-                                <td class="px-2 py-2 text-right">
+                            @php $rowIndex++; @endphp
+                            <tr class="{{ $rowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out">
+                                <td class="px-2 py-2 font-semibold text-left">{{ $app['description'] }}</td>
+                                <td class="px-2 py-2 font-semibold text-center">{{ $app['account_code'] }}</td>
+                                <td class="px-2 py-2 font-semibold text-right" data-key="appropriation">
                                     @if ($app['appropriation'] == 0 || is_null($app['appropriation']))
                                         -
                                     @elseif ($app['appropriation'] < 0)
@@ -192,7 +256,7 @@
                                         {{ number_format($app['appropriation'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 text-right" data-key="sb_appropriation">
                                     @if ($app['sb_appropriation'] == 0 || is_null($app['sb_appropriation']))
                                         -
                                     @elseif ($app['sb_appropriation'] < 0)
@@ -201,7 +265,7 @@
                                         {{ number_format($app['sb_appropriation'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 text-right" data-key="reversion">
                                     @if ($app['reversion'] == 0 || is_null($app['reversion']))
                                         -
                                     @elseif ($app['reversion'] < 0)
@@ -210,7 +274,7 @@
                                         {{ number_format($app['reversion'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 text-right" data-key="realignment">
                                     @if ($app['realignment'] == 0 || is_null($app['realignment']))
                                         -
                                     @elseif ($app['realignment'] < 0)
@@ -219,7 +283,7 @@
                                         {{ number_format($app['realignment'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 font-semibold text-right">
                                     @if ($app['authorized_appropriation'] == 0 || is_null($app['authorized_appropriation']))
                                         -
                                     @elseif ($app['authorized_appropriation'] < 0)
@@ -228,7 +292,7 @@
                                         {{ number_format($app['authorized_appropriation'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 font-semibold text-right">
                                     @if ($app['allotment'] == 0 || is_null($app['allotment']))
                                         -
                                     @elseif ($app['allotment'] < 0)
@@ -246,7 +310,7 @@
                                         {{ number_format($app['for_later_release'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 font-semibold text-right">
                                     @if ($app['obligation'] == 0 || is_null($app['obligation']))
                                         -
                                     @elseif ($app['obligation'] < 0)
@@ -255,7 +319,7 @@
                                         {{ number_format($app['obligation'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-right">
+                                <td class="px-2 py-2 text-right" data-key="appropriation_balance">
                                     @if ($app['appropriation_balance'] == 0 || is_null($app['appropriation_balance']))
                                         -
                                     @elseif ($app['appropriation_balance'] < 0)
@@ -264,8 +328,8 @@
                                         {{ number_format($app['appropriation_balance'], 2) }}
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-center">
-                                    {{ number_format($app['appropriation_accomplishment'], 2) }}%
+                                <td class="px-2 py-2 text-center" data-key="appropriation_accomplishment">
+                                    @include('saaob._utilization-badge', ['pct' => $app['appropriation_accomplishment'] ?? 0])
                                 </td>
                                 <td class="px-2 py-2 text-right">
                                     @if ($app['allotment_balance'] == 0 || is_null($app['allotment_balance']))
@@ -277,7 +341,7 @@
                                     @endif
                                 </td>
                                 <td class="px-2 py-2 text-center">
-                                    {{ number_format($app['allotment_accomplishment'], 2) }}%
+                                    @include('saaob._utilization-badge', ['pct' => $app['allotment_accomplishment'] ?? 0])
                                 </td>
                             </tr>
                         @endforeach
@@ -285,86 +349,87 @@
 
                         {{-- Total Per Allotment Class --}}
                         @if(isset($items['subtotals']))
-                        <tr class="bg-gray-200 dark:bg-gray-900 dark:text-white text-gray-700 font-bold border-t-2 border-b-2 text-[10px]">
+                        <tr class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-900 dark:from-gray-700 dark:to-gray-800 dark:text-gray-100 font-bold border-t-2 border-b-2 border-gray-500 dark:border-gray-600 text-[10px] transition-colors duration-300 ease-in-out">
                             <td colspan="2" class="px-2 py-2 text-right">Total {{ $className }}:</td>
-                            <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['appropriation'], 2) }}</td>
-                            <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['sb_appropriation'], 2) }}</td>
-                            <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['reversion'], 2) }}</td>
-                            <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['realignment'], 2) }}</td>
+                            <td class="px-2 py-2 text-right" data-key="appropriation">{{ number_format($items['subtotals']['appropriation'], 2) }}</td>
+                            <td class="px-2 py-2 text-right" data-key="sb_appropriation">{{ number_format($items['subtotals']['sb_appropriation'], 2) }}</td>
+                            <td class="px-2 py-2 text-right" data-key="reversion">{{ number_format($items['subtotals']['reversion'], 2) }}</td>
+                            <td class="px-2 py-2 text-right" data-key="realignment">{{ number_format($items['subtotals']['realignment'], 2) }}</td>
                             <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['authorized_appropriation'], 2) }}</td>
                             <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['allotment'], 2) }}</td>
                             <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['for_later_release'], 2) }}</td>
                             <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['obligation'], 2) }}</td>
-                            <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['appropriation_balance'], 2) }}</td>
-                            <td class="px-2 py-2 text-center">{{ number_format($items['subtotals']['utilization_percent'], 2) }}%</td>
+                            <td class="px-2 py-2 text-right" data-key="appropriation_balance">{{ number_format($items['subtotals']['appropriation_balance'], 2) }}</td>
+                            <td class="px-2 py-2 text-center" data-key="appropriation_accomplishment">
+                                @include('saaob._utilization-badge', ['pct' => $items['subtotals']['utilization_percent'] ?? 0])
+                            </td>
                             <td class="px-2 py-2 text-right">{{ number_format($items['subtotals']['allotment_balance'], 2) }}</td>
-                            <td class="px-2 py-2 text-center">{{ number_format($items['subtotals']['allotment_utilization_percent'], 2) }}%</td>
+                            <td class="px-2 py-2 text-center">
+                                @include('saaob._utilization-badge', ['pct' => $items['subtotals']['allotment_utilization_percent'] ?? 0])
+                            </td>
                         </tr>
                         @endif
-                    @empty
-                        <tr>
-                            <td colspan="14" class="px-3 py-4 text-center text-gray-500">No data available</td>
-                        </tr>
-                    @endforelse
+                    @endforeach
 
                     {{-- Grand Total Row --}}
-                    @if($allotmentClassTotals->isNotEmpty())
-                        @php
-                            $grandTotal = [
-                                'appropriation' => 0,
-                                'sb_appropriation' => 0,
-                                'reversion' => 0,
-                                'realignment' => 0,
-                                'authorized_appropriation' => 0,
-                                'allotment' => 0,
-                                'for_later_release' => 0,
-                                'obligation' => 0,
-                                'appropriation_balance' => 0,
-                                'allotment_balance' => 0,
-                            ];
-                            
-                            foreach ($allotmentClassTotals as $class => $items) {
-                                if (isset($items['subtotals'])) {
-                                    foreach ($grandTotal as $key => $val) {
-                                        $grandTotal[$key] += $items['subtotals'][$key] ?? 0;
-                                    }
+                    @php
+                        $grandTotal = [
+                            'appropriation' => 0,
+                            'sb_appropriation' => 0,
+                            'reversion' => 0,
+                            'realignment' => 0,
+                            'authorized_appropriation' => 0,
+                            'allotment' => 0,
+                            'for_later_release' => 0,
+                            'obligation' => 0,
+                            'appropriation_balance' => 0,
+                            'allotment_balance' => 0,
+                        ];
+
+                        foreach ($allotmentClassTotals as $class => $items) {
+                            if (isset($items['subtotals'])) {
+                                foreach ($grandTotal as $key => $val) {
+                                    $grandTotal[$key] += $items['subtotals'][$key] ?? 0;
                                 }
                             }
-                            
-                            $grandUtilization = $grandTotal['authorized_appropriation'] > 0 
-                                ? ($grandTotal['obligation'] / $grandTotal['authorized_appropriation']) * 100 
-                                : 0;
-                            
-                            $grandAllotmentUtilization = $grandTotal['allotment'] > 0 
-                                ? ($grandTotal['obligation'] / $grandTotal['allotment']) * 100 
-                                : 0;
-                        @endphp
-                        <tr class="bg-gray-800 dark:bg-gray-200 text-gray-100 dark:text-gray-900 font-bold border-t-4 border-b-2 text-[10px]">
-                            <td colspan="2" class="px-2 py-3 text-right">GRAND TOTAL:</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['appropriation'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['sb_appropriation'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['reversion'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['realignment'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['authorized_appropriation'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['allotment'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['for_later_release'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['obligation'], 2) }}</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['appropriation_balance'], 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($grandUtilization, 2) }}%</td>
-                            <td class="px-1 py-3 text-right">{{ number_format($grandTotal['allotment_balance'], 2) }}</td>
-                            <td class="px-1 py-3 text-center">{{ number_format($grandAllotmentUtilization, 2) }}%</td>
-                        </tr>
-                    @endif
+                        }
+
+                        $grandUtilization = $grandTotal['authorized_appropriation'] > 0
+                            ? ($grandTotal['obligation'] / $grandTotal['authorized_appropriation']) * 100
+                            : 0;
+
+                        $grandAllotmentUtilization = $grandTotal['allotment'] > 0
+                            ? ($grandTotal['obligation'] / $grandTotal['allotment']) * 100
+                            : 0;
+                    @endphp
+                    <tr class="bg-blue-200 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-bold border-t-4 border-blue-500 dark:border-blue-800 border-b-2 text-[10px]">
+                        <td colspan="2" class="px-2 py-3 text-right">GRAND TOTAL:</td>
+                        <td class="px-1 py-3 text-right" data-key="appropriation">{{ number_format($grandTotal['appropriation'], 2) }}</td>
+                        <td class="px-1 py-3 text-right" data-key="sb_appropriation">{{ number_format($grandTotal['sb_appropriation'], 2) }}</td>
+                        <td class="px-1 py-3 text-right" data-key="reversion">{{ number_format($grandTotal['reversion'], 2) }}</td>
+                        <td class="px-1 py-3 text-right" data-key="realignment">{{ number_format($grandTotal['realignment'], 2) }}</td>
+                        <td class="px-1 py-3 text-right">{{ number_format($grandTotal['authorized_appropriation'], 2) }}</td>
+                        <td class="px-1 py-3 text-right">{{ number_format($grandTotal['allotment'], 2) }}</td>
+                        <td class="px-1 py-3 text-right">{{ number_format($grandTotal['for_later_release'], 2) }}</td>
+                        <td class="px-1 py-3 text-right">{{ number_format($grandTotal['obligation'], 2) }}</td>
+                        <td class="px-1 py-3 text-right" data-key="appropriation_balance">{{ number_format($grandTotal['appropriation_balance'], 2) }}</td>
+                        <td class="px-1 py-3 text-center" data-key="appropriation_accomplishment">
+                            @include('saaob._utilization-badge', ['pct' => $grandUtilization])
+                        </td>
+                        <td class="px-1 py-3 text-right">{{ number_format($grandTotal['allotment_balance'], 2) }}</td>
+                        <td class="px-1 py-3 text-center">
+                            @include('saaob._utilization-badge', ['pct' => $grandAllotmentUtilization])
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        </div>
+        @endif
         </div>
     </div>
 </form>
 
 <style>
-    /* Smooth transitions for filter inputs */
     .filter-select {
         transition: all 0.2s ease-in-out;
     }
@@ -373,12 +438,10 @@
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 0 2px rgba(59, 130, 246, 0.5);
     }
 
-    /* Table row hover animations */
     tbody tr {
         transition: all 0.2s ease-in-out;
     }
 
-    /* Header sticky effect with smooth animation */
     thead {
         animation: slideDown 0.3s ease-in-out;
     }
@@ -394,11 +457,6 @@
         }
     }
 
-    /* Gradient text for section headers */
-    tr[id^="sectorRow"] {
-        animation: fadeIn 0.4s ease-in-out;
-    }
-
     @keyframes fadeIn {
         from {
             opacity: 0;
@@ -408,21 +466,6 @@
         }
     }
 
-    /* Error message pulse */
-    .animate-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.5;
-        }
-    }
-
-    /* Form container entrance animation */
     form {
         animation: slideUp 0.3s ease-in-out;
     }
@@ -438,12 +481,10 @@
         }
     }
 
-    /* Table container entrance animation */
     .bg-white.overflow-hidden.shadow-md {
         animation: slideUp 0.4s ease-in-out 0.1s both;
     }
 
-    /* Enhanced scrollbar styling for table */
     .overflow-y-auto::-webkit-scrollbar {
         width: 8px;
     }
@@ -463,7 +504,6 @@
         background: #94a3b8;
     }
 
-    /* Dark mode scrollbar */
     .dark .overflow-y-auto::-webkit-scrollbar-track {
         background: #1f2937;
     }
@@ -476,7 +516,6 @@
         background: #6b7280;
     }
 
-    /* Smooth staggered table rendering */
     tbody tr {
         opacity: 1;
         animation: tableRowFade 0.3s ease-in-out;
@@ -491,13 +530,11 @@
         }
     }
 
-    /* Focus indicator enhancement */
     .filter-select:focus-visible {
         outline: 2px solid transparent;
         outline-offset: 2px;
     }
 
-    /* Toast notification animations */
     @keyframes slideInToast {
         from {
             opacity: 0;
@@ -542,21 +579,81 @@
 </style>
 
 <script>
+    // Validation for the signatory fields
+    function validateSignatories() {
+        const name = document.getElementById('signatory_name').value.trim();
+        const designation = document.getElementById('signatory_designation').value.trim();
+        const errorSpan = document.getElementById('signatory_error');
+
+        let errorMessage = '';
+        if (!name && !designation) {
+            errorMessage = 'Please select both Signatory Name and Designation.';
+        } else if (!name) {
+            errorMessage = 'Please select a Signatory Name.';
+        } else if (!designation) {
+            errorMessage = 'Please select a Designation.';
+        }
+
+        if (errorMessage) {
+            errorSpan.textContent = errorMessage;
+            errorSpan.classList.remove('hidden');
+            errorSpan.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return false;
+        } else {
+            errorSpan.classList.add('hidden');
+            return true;
+        }
+    }
+
+    // Clear filters (keeps year, resets everything else)
+    function clearAllFilters() {
+        const url = new URL(window.location.href);
+        const keep = ['year1'];
+        [...url.searchParams.keys()].forEach(key => {
+            if (!keep.includes(key)) url.searchParams.delete(key);
+        });
+        window.location.href = url.toString();
+    }
+
+    // Remove a single filter param and resubmit
+    function removeFilter(param) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete(param);
+        window.location.href = url.toString();
+    }
+
     // Toast notification functions
-    function showSuccessToast() {
+    function showSuccessToast(message = 'File downloaded successfully') {
         const toast = document.getElementById('success-toast');
-        toast.classList.remove('hide');
+        const messageEl = document.getElementById('toast-message');
+        if (messageEl) messageEl.textContent = message;
+
+        toast.classList.remove('hide', 'pointer-events-none');
         toast.classList.add('show');
-        
-        setTimeout(() => {
-            closeSuccessToast();
-        }, 4000);
+
+        setTimeout(closeSuccessToast, 4000);
     }
 
     function closeSuccessToast() {
         const toast = document.getElementById('success-toast');
         toast.classList.remove('show');
-        toast.classList.add('hide');
+        toast.classList.add('hide', 'pointer-events-none');
+    }
+
+    function showErrorToast(message) {
+        const toast = document.getElementById('success-toast');
+        const messageEl = document.getElementById('toast-message');
+        const box = toast.querySelector('div');
+        if (messageEl) messageEl.textContent = message;
+        box.classList.remove('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+        box.classList.add('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+        toast.classList.remove('hide', 'pointer-events-none');
+        toast.classList.add('show');
+        setTimeout(() => {
+            closeSuccessToast();
+            box.classList.remove('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+            box.classList.add('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+        }, 4000);
     }
 
     function showLoadingToast() {
@@ -574,6 +671,13 @@
     // Excel export function using Fetch API
     async function exportSummaryAccountsExcel() {
         if (!validateSignatories()) return;
+
+        const btn = document.getElementById('excel-export-btn');
+        const icon = document.getElementById('excel-btn-icon');
+        const label = document.getElementById('excel-btn-label');
+        btn.disabled = true;
+        icon.className = 'fas fa-spinner fa-spin text-lg mr-2 -ml-1 w-4 h-4';
+        label.textContent = 'Generating...';
 
         showLoadingToast();
 
@@ -601,13 +705,13 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            
+
             // Get year and fund for filename
             const year = document.getElementById('year1').value;
             const fundFilter = document.getElementById('fund_filter').value;
             const fundSelectElement = document.getElementById('fund_filter');
             const fundLabel = fundSelectElement.options[fundSelectElement.selectedIndex].text;
-            
+
             let filename = 'SAAOB_Summary_';
             if (fundFilter === 'all' || !fundFilter) {
                 filename += year + '.xlsx';
@@ -620,60 +724,25 @@
             } else {
                 filename += year + '.xlsx';
             }
-            
+
             a.download = filename;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            a.remove();
 
             closeLoadingToast();
-            
-            setTimeout(() => {
-                showSuccessToast();
-            }, 500);
+            showSuccessToast('Excel report generated successfully');
         } catch (error) {
-            closeLoadingToast();
             console.error('Export error:', error);
-            alert('Failed to generate Excel file. Please try again.');
+            closeLoadingToast();
+            showErrorToast('Could not generate the Excel report. Please try again.');
+        } finally {
+            btn.disabled = false;
+            icon.className = 'fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4';
+            label.textContent = 'Generate Excel';
         }
     }
-
-    // Validation for the signatory fields and office allotment class
-    function validateSignatories() {
-        const name = document.getElementById('signatory_name').value.trim();
-        const designation = document.getElementById('signatory_designation').value.trim();
-        const errorSpan = document.getElementById('signatory_error');
-
-        let errorMessage = '';
-        
-
-        // Check signatory fields
-        if (!name && !designation) {
-            errorMessage = 'Please select both Signatory Name and Designation.';
-        } else if (!name) {
-            errorMessage = 'Please select a Signatory Name.';
-        } else if (!designation) {
-            errorMessage = 'Please select a Designation.';
-        }
-
-        if (errorMessage) {
-            errorSpan.textContent = errorMessage;
-            errorSpan.classList.remove('hidden');
-            return false;
-        } else {
-            errorSpan.classList.add('hidden');
-            return true;
-        }
-    }
-
-        // Intercept Excel Export Submit
-        document.querySelector(`form[action="{{ route('summaryaccounts.exportExcel') }}"]`)
-            .addEventListener('submit', function(e) {
-                if (!validateSignatories()) {
-                    e.preventDefault();
-                }
-            });
-    </script>
+</script>
 
 </x-app-layout>

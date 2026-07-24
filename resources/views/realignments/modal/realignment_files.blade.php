@@ -747,69 +747,84 @@
     }
 
     /**
-     * Render PDF preview - detects if image-based or regular PDF
+     * Render PDF preview - supports multiple pages
      */
     async function renderRealignmentPdfPreview(fileUrl) {
         const content = document.getElementById('realignmentFileViewContent');
-        
+
         try {
             // Load the PDF
-            const pdf = await pdfjsLib.getDocument(fileUrl).promise;
-            
-            // Get first page to detect if it's image-based
-            const page = await pdf.getPage(1);
-            const operatorList = await page.getOperatorList();
-            
-            // Check if PDF contains text (true PDF) or just images (scanned document)
-            const hasText = operatorList.fnArray.some(fn => {
-                const fnName = pdfjsLib.OPS[fn];
-                return fnName && (fnName.includes('Text') || fnName.includes('Show'));
-            });
+            const pdf = await pdfjsLib.getDocument({
+                url: fileUrl
+            }).promise;
 
-            if (!hasText && pdf.numPages <= 5) {
-                // It's likely an image-based PDF (scanned document), render as image
-                await renderRealignmentPdfAsImage(fileUrl, page);
-            } else {
-                // Regular PDF with text, use iframe
-                content.innerHTML = `<iframe src="${fileUrl}" class="w-full flex-1 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
+            // Clear existing content
+            content.innerHTML = '';
+
+            // Create scrollable container
+            const pdfContainer = document.createElement('div');
+            pdfContainer.className = 'w-full h-full overflow-auto flex flex-col items-center gap-6 p-4';
+
+            // Render every page
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+
+                const page = await pdf.getPage(pageNumber);
+
+                // Set scale
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+
+                // Create page wrapper
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = 'bg-white shadow-lg rounded-lg p-2';
+
+                // Create canvas
+                const canvas = document.createElement('canvas');
+
+                const context = canvas.getContext('2d');
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                canvas.className = 'max-w-full h-auto';
+
+                // Render page
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                // Add page number
+                const pageNumberLabel = document.createElement('div');
+                pageNumberLabel.className =
+                    'text-center text-xs text-gray-500 dark:text-gray-400 mt-2';
+
+                pageNumberLabel.textContent =
+                    `Page ${pageNumber} of ${pdf.numPages}`;
+
+                // Append elements
+                pageWrapper.appendChild(canvas);
+                pageWrapper.appendChild(pageNumberLabel);
+
+                pdfContainer.appendChild(pageWrapper);
             }
+
+            content.appendChild(pdfContainer);
+
         } catch (error) {
             console.error('Error rendering PDF:', error);
-            // Fallback to iframe for corrupted or problematic PDFs
-            content.innerHTML = `<iframe src="${fileUrl}" class="w-full flex-1 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
-        }
-    }
 
-    /**
-     * Render image-based PDF as image
-     */
-    async function renderRealignmentPdfAsImage(fileUrl, firstPage) {
-        const content = document.getElementById('realignmentFileViewContent');
-        
-        try {
-            const viewport = firstPage.getViewport({ scale: 2 });
-            const canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            const context = canvas.getContext('2d');
-
-            await firstPage.render({ canvasContext: context, viewport }).promise;
-            
-            const imageDataUrl = canvas.toDataURL('image/png');
+            // Fallback to browser PDF viewer
             content.innerHTML = `
-                <div class="flex flex-col flex-1 items-center justify-center">
-                    <div class="flex-1 overflow-auto w-full flex items-center justify-center">
-                        <img src="${imageDataUrl}" alt="PDF preview" class="rounded-lg" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3 flex-shrink-0">This is an image-based PDF (scanned document)</p>
-                </div>
+                <iframe
+                    src="${fileUrl}"
+                    class="w-full h-full rounded-lg border border-gray-300 dark:border-gray-600"
+                    style="min-height: 70vh;"
+                ></iframe>
             `;
-        } catch (error) {
-            console.error('Error rendering PDF as image:', error);
-            // Fallback to iframe
-            content.innerHTML = `<iframe src="${fileUrl}" class="w-full h-96 rounded-lg border border-gray-300 dark:border-gray-600"></iframe>`;
         }
     }
+
 
     /**
      * Setup drag and drop for realignments

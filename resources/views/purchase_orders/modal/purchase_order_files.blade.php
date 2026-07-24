@@ -612,130 +612,83 @@
         modal.setAttribute('aria-hidden', 'true');
     }
 
-    function renderPurchaseOrderFilePreview(fileType, fileUrl, filePath) {
+    /**
+     * Render PDF preview - supports multiple pages
+     */
+    async function renderPurchaseOrderFilePreview(fileType, fileUrl, filePath) {
         const content = document.getElementById('purchaseOrderFileViewContent');
-        const fileId = window.currentPurchaseOrderViewFileId;
-        
-        console.log('Rendering preview for:', { fileType, fileUrl, fileId });
-        
-        // Clear previous content
-        content.innerHTML = '';
-        
-        // Image types - PNG, JPG, GIF, WebP, SVG, BMP, TIFF, etc.
-        if (fileType.startsWith('image/')) {
-            const container = document.createElement('div');
-            container.className = 'flex-1 overflow-auto flex items-center justify-center';
-            
-            const img = document.createElement('img');
-            img.src = fileUrl;
-            img.alt = 'File preview';
-            img.className = 'rounded-lg';
-            img.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
-            
-            img.onerror = function() {
-                console.error('Image failed to load from:', fileUrl);
-                container.innerHTML = '';
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'text-center py-8 flex-1 flex items-center justify-center';
-                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle text-2xl text-red-500 mb-3"></i><p class="text-red-600 dark:text-red-400">Failed to load image.</p>';
-                const link = document.createElement('a');
-                link.href = fileUrl;
-                link.textContent = 'Try downloading instead';
-                link.className = 'text-blue-600 hover:underline';
-                errorDiv.appendChild(document.createElement('br'));
-                errorDiv.appendChild(link);
-                container.appendChild(errorDiv);
-            };
-            
-            container.appendChild(img);
-            content.appendChild(container);
-            return;
-        }
 
-        // PDF - Check if it's image-based or regular PDF
-        if (fileType === 'application/pdf') {
-            renderPurchaseOrderPdfPreview(fileUrl);
-            return;
-        }
+        try {
+            // Load the PDF
+            const pdf = await pdfjsLib.getDocument({
+                url: fileUrl
+            }).promise;
 
-        // Text files
-        if (fileType.startsWith('text/') || fileType.includes('application/json') || fileType.includes('application/xml') || fileType.includes('application/vnd.openxmlformats')) {
-            fetch(`${fileUrl}?preview=true`)
-                .then(response => response.text())
-                .then(text => {
-                    const lines = text.split('\n').slice(0, 100).join('\n');
-                    content.innerHTML = `<pre class="flex-1 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto text-xs line-numbers"><code>${escapePurchaseOrderHtml(lines)}${text.split('\n').length > 100 ? '\n\n... (file truncated)' : ''}</code></pre>`;
-                })
-                .catch(() => {
-                    content.innerHTML = '';
-                    const container = document.createElement('div');
-                    container.className = 'flex-1 flex items-center justify-center text-center py-8';
-                    container.innerHTML = '<p class="text-gray-600 dark:text-gray-400 mb-4">File preview temporarily unavailable</p>';
-                    const link = document.createElement('a');
-                    link.href = fileUrl;
-                    link.download = true;
-                    link.textContent = 'Download file';
-                    link.className = 'text-blue-600 dark:text-blue-400 hover:underline';
-                    container.appendChild(link);
-                    content.appendChild(container);
-                });
-            return;
-        }
+            // Clear existing content
+            content.innerHTML = '';
 
-        // Video types
-        if (fileType.startsWith('video/')) {
-            const container = document.createElement('div');
-            container.className = 'flex-1 flex items-center justify-center';
-            
-            const video = document.createElement('video');
-            video.controls = true;
-            video.className = 'w-full rounded-lg bg-black';
-            video.style.cssText = 'max-height: 100%; object-fit: contain;';
-            
-            const source = document.createElement('source');
-            source.src = fileUrl;
-            source.type = fileType;
-            
-            video.appendChild(source);
-            video.appendChild(document.createTextNode('Your browser does not support the video tag.'));
-            
-            container.appendChild(video);
-            content.appendChild(container);
-            return;
-        }
+            // Create scrollable container
+            const pdfContainer = document.createElement('div');
+            pdfContainer.className = 'w-full h-full overflow-auto flex flex-col items-center gap-6 p-4';
 
-        // Audio types
-        if (fileType.startsWith('audio/')) {
-            const container = document.createElement('div');
-            container.className = 'flex-1 flex items-center justify-center';
-            
-            const audio = document.createElement('audio');
-            audio.controls = true;
-            audio.className = 'w-full rounded-lg';
-            
-            const source = document.createElement('source');
-            source.src = fileUrl;
-            source.type = fileType;
-            
-            audio.appendChild(source);
-            audio.appendChild(document.createTextNode('Your browser does not support the audio element.'));
-            
-            container.appendChild(audio);
-            content.appendChild(container);
-            return;
-        }
+            // Render every page
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
 
-        // Default
-        const container = document.createElement('div');
-        container.className = 'flex-1 flex flex-col items-center justify-center text-center';
-        container.innerHTML = '<i class="fas fa-file text-4xl text-gray-400 dark:text-gray-500 mb-3"></i><p class="text-gray-600 dark:text-gray-400 mb-4">This file type cannot be previewed</p>';
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.download = true;
-        link.textContent = 'Click here to download';
-        link.className = 'text-blue-600 dark:text-blue-400 hover:underline';
-        container.appendChild(link);
-        content.appendChild(container);
+                const page = await pdf.getPage(pageNumber);
+
+                // Set scale
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+
+                // Create page wrapper
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = 'bg-white shadow-lg rounded-lg p-2';
+
+                // Create canvas
+                const canvas = document.createElement('canvas');
+
+                const context = canvas.getContext('2d');
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                canvas.className = 'max-w-full h-auto';
+
+                // Render page
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                // Add page number
+                const pageNumberLabel = document.createElement('div');
+                pageNumberLabel.className =
+                    'text-center text-xs text-gray-500 dark:text-gray-400 mt-2';
+
+                pageNumberLabel.textContent =
+                    `Page ${pageNumber} of ${pdf.numPages}`;
+
+                // Append elements
+                pageWrapper.appendChild(canvas);
+                pageWrapper.appendChild(pageNumberLabel);
+
+                pdfContainer.appendChild(pageWrapper);
+            }
+
+            content.appendChild(pdfContainer);
+
+        } catch (error) {
+            console.error('Error rendering PDF:', error);
+
+            // Fallback to browser PDF viewer
+            content.innerHTML = `
+                <iframe
+                    src="${fileUrl}"
+                    class="w-full h-full rounded-lg border border-gray-300 dark:border-gray-600"
+                    style="min-height: 70vh;"
+                ></iframe>
+            `;
+        }
     }
 
     function escapePurchaseOrderHtml(text) {

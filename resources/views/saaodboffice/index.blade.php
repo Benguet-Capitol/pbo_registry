@@ -287,7 +287,7 @@
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[700px] overflow-y-auto">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
-                    <thead class="sticky top-0 z-10 bg-gradient-to-r from-gray-700 to-gray-800 text-white dark:bg-gradient-to-r dark:from-gray-200 dark:to-gray-300 dark:text-gray-900 transition-colors duration-300 ease-in-out">
+                    <thead class="sticky top-0 z-10 border border-blue-400 bg-gradient-to-r from-blue-200 to-blue-300 text-blue-900 dark:bg-gradient-to-r dark:from-blue-900 dark:to-blue-950 dark:text-blue-200 transition-colors duration-300 ease-in-out">
                         <tr>
                             <th rowspan="2" class="px-1 py-1 w-[150px] text-center align-middle border-r border-gray-500 dark:border-gray-400" data-key="ppas">Functions / Programs / Projects / Activities</th>
                             <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-gray-500 dark:border-gray-400" data-key="account_code">Account Code</th>

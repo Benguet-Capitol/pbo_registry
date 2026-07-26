@@ -26,6 +26,9 @@
             50%  { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
         .anim-header  { animation: fadeInDown 0.55s cubic-bezier(.22,.68,0,1.2) both; }
         .anim-card    { animation: scaleIn    0.50s cubic-bezier(.22,.68,0,1.2) 0.15s both; }
@@ -38,22 +41,13 @@
         .logo-float         { animation: floatLogo 4s ease-in-out infinite; }
         .logo-float-delayed { animation: floatLogo 4s ease-in-out 0.8s infinite; }
 
-        /*
-         * The guest layout already provides:
-         *   .flex.flex-col.min-h-screen  →  full-height flex column
-         *   <x-footer />                 →  flex-shrink-0 at the bottom
-         *
-         * So the $slot (this file) only needs to fill the remaining space
-         * between the top of the column and the footer.
-         * We do that with flex-1 on the page-root div.
-         */
         .login-page-root {
-            flex: 1;                    /* grow to fill space above the footer */
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px 16px 32px;   /* breathing room top/sides/bottom */
+            padding: 16px 16px 32px;
             background: linear-gradient(135deg, #e8eef7 0%, #dce6f5 40%, #e4ebf5 70%, #edf1f8 100%);
             background-size: 400% 400%;
             animation: gradientShift 12s ease infinite;
@@ -68,12 +62,17 @@
             max-width: 480px;
             background: #ffffff;
             border-radius: 14px;
-            box-shadow: 0 4px 32px rgba(59, 80, 130, 0.12), 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 32px rgba(37, 99, 235, 0.12), 0 1px 4px rgba(0,0,0,0.06);
             padding: 40px 48px;
         }
         .dark .login-card {
             background: #1e293b;
             box-shadow: 0 4px 32px rgba(0,0,0,0.45);
+        }
+        @media (max-width: 480px) {
+            .login-card { padding: 28px 20px; border-radius: 12px; }
+            .logo-img   { width: 88px !important; height: 88px !important; }
+            .site-title { font-size: 26px !important; }
         }
 
         /* ── Inputs ───────────────────────────────────────────────── */
@@ -82,28 +81,33 @@
         .input-icon {
             position: absolute;
             left: 14px;
-            color: #6b7280;
+            color: #9ca3af;
             font-size: 13px;
             pointer-events: none;
             z-index: 1;
+            transition: color 0.2s;
         }
-        .dark .input-icon { color: #9ca3af; }
+        .dark .input-icon { color: #6b7280; }
+        .input-wrap:focus-within .input-icon { color: #2563eb; }
+        .dark .input-wrap:focus-within .input-icon { color: #60a5fa; }
 
         .login-input {
             width: 100%;
-            padding: 11px 14px 11px 40px;
-            border: 1px solid #d1d5db;
+            padding: 10px 14px 10px 40px;
+            border: 2px solid #d1d5db;
             border-radius: 8px;
             font-size: 14px;
             color: #111827;
             background: #ffffff;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s;
         }
         .login-input::placeholder { color: #9ca3af; }
         .login-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            border-color: #2563eb;
+        }
+        .login-input:invalid:not(:placeholder-shown) {
+            border-color: #dc2626;
         }
         .dark .login-input {
             background: #0f172a;
@@ -112,7 +116,6 @@
         }
         .dark .login-input:focus {
             border-color: #60a5fa;
-            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
         }
 
         .eye-btn {
@@ -127,8 +130,8 @@
             align-items: center;
             transition: color 0.2s;
         }
-        .eye-btn:hover { color: #374151; }
-        .dark .eye-btn:hover { color: #cbd5e1; }
+        .eye-btn:hover, .eye-btn:focus-visible { color: #2563eb; }
+        .dark .eye-btn:hover, .dark .eye-btn:focus-visible { color: #60a5fa; }
 
         /* ── Sign In button ───────────────────────────────────────── */
         .signin-btn {
@@ -145,6 +148,10 @@
             cursor: pointer;
             transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
             box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .signin-btn:hover {
             opacity: 0.92;
@@ -152,6 +159,21 @@
             box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
         }
         .signin-btn:active { transform: translateY(0); opacity: 1; }
+        .signin-btn:disabled {
+            opacity: 0.75;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
 
         /* ── Labels ───────────────────────────────────────────────── */
         .field-label {
@@ -188,14 +210,15 @@
         .dark .auth-error { background: #450a0a; border-color: #7f1d1d; color: #fca5a5; }
 
         .auth-status {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #2563eb;
             border-radius: 8px;
             padding: 10px 14px;
             font-size: 13px;
             margin-bottom: 16px;
         }
+        .dark .auth-status { background: #172554; border-color: #1e3a8a; color: #93c5fd; }
     </style>
 
     <div id="pageRoot" class="login-page-root">
@@ -206,12 +229,12 @@
                 <div class="logo-float">
                     <img src="{{ asset('benguetlogo.png') }}"
                          alt="Province of Benguet"
-                         class="w-32 h-32 object-contain drop-shadow-md">
+                         class="logo-img w-32 h-32 object-contain drop-shadow-md">
                 </div>
                 <div class="logo-float-delayed">
                     <img src="{{ asset('bagongpilipinaslogo.png') }}"
                          alt="Bagong Pilipinas"
-                         class="w-32 h-32 object-contain drop-shadow-md">
+                         class="logo-img w-32 h-32 object-contain drop-shadow-md">
                 </div>
             </div>
             <h1 class="site-title">PBO | REGISTRY</h1>
@@ -222,11 +245,11 @@
         <div class="login-card anim-card">
 
             @if (session('status'))
-                <div class="auth-status">{{ session('status') }}</div>
+                <div class="auth-status" role="alert">{{ session('status') }}</div>
             @endif
 
             @if ($errors->any())
-                <div class="auth-error">
+                <div class="auth-error" role="alert">
                     <ul class="list-none space-y-1">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -240,7 +263,7 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter your credentials to continue</p>
             </div>
 
-            <form method="POST" action="{{ route('login') }}" onsubmit="handleSubmit(event)">
+            <form method="POST" action="{{ route('login') }}" onsubmit="return handleSubmit(event)">
                 @csrf
 
                 {{-- Username --}}
@@ -252,7 +275,7 @@
                             id="username" type="text" name="username"
                             value="{{ old('username') }}"
                             placeholder="Enter your username"
-                            autocomplete="off" autofocus
+                            autocomplete="username" autofocus
                             class="login-input">
                     </div>
                 </div>
@@ -267,7 +290,7 @@
                             placeholder="Enter your password"
                             autocomplete="current-password"
                             class="login-input" style="padding-right: 42px;">
-                        <button type="button" class="eye-btn" onclick="togglePassword()" tabindex="-1">
+                        <button type="button" class="eye-btn" onclick="togglePassword()" aria-label="Show password">
                             <i id="eyeShow" class="fas fa-eye text-sm"></i>
                             <i id="eyeHide" class="fas fa-eye-slash text-sm" style="display:none;"></i>
                         </button>
@@ -276,8 +299,10 @@
 
                 {{-- Submit --}}
                 <div class="anim-field-4">
-                    <button type="submit" class="signin-btn">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    <button type="submit" id="signinBtn" class="signin-btn">
+                        <span class="btn-spinner" id="btnSpinner"></span>
+                        <i id="btnIcon" class="fas fa-sign-in-alt"></i>
+                        <span id="btnText">Sign In</span>
                     </button>
                 </div>
 
@@ -298,20 +323,40 @@
             const input   = document.getElementById('password');
             const eyeShow = document.getElementById('eyeShow');
             const eyeHide = document.getElementById('eyeHide');
+            const btn     = document.querySelector('.eye-btn');
             if (input.type === 'password') {
                 input.type = 'text';
                 eyeShow.style.display = 'none';
                 eyeHide.style.display = 'inline';
+                btn.setAttribute('aria-label', 'Hide password');
             } else {
                 input.type = 'password';
                 eyeShow.style.display = 'inline';
                 eyeHide.style.display = 'none';
+                btn.setAttribute('aria-label', 'Show password');
             }
         }
 
         function handleSubmit(e) {
-            const root = document.getElementById('pageRoot');
+            const root    = document.getElementById('pageRoot');
+            const btn     = document.getElementById('signinBtn');
+            const spinner = document.getElementById('btnSpinner');
+            const icon    = document.getElementById('btnIcon');
+            const text    = document.getElementById('btnText');
+
+            // Prevent double submission
+            if (btn.disabled) {
+                e.preventDefault();
+                return false;
+            }
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            icon.style.display = 'none';
+            text.textContent = 'Signing In...';
+
             if (root) root.classList.add('animate-fade-out');
+            return true;
         }
     </script>
 

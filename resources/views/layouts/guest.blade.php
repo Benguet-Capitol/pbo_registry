@@ -37,7 +37,7 @@
             <x-footer />
         </div>
 
-        <div class="fixed top-10 right-10">
+        <div class="fixed top-10 right-10 border-2 border-blue-500 dark:border-blue-700 rounded-lg">
             <x-button
                 type="button"
                 icon-only

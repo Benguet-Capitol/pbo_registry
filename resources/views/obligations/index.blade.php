@@ -217,9 +217,9 @@
                 <!-- Right: Total Records and Search Input -->
                 <div class="flex items-center space-x-4">
                     <!-- Export Button -->
-                    <button type="button" onclick="exportObligationsToExcel()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900" title="Export filtered data to Excel">
-                        <i class="fas fa-download text-lg mr-2 -ml-1 w-4 h-4"></i>
-                        Export to Excel
+                    <button type="button" id="exportObligationsBtn" onclick="exportObligationsToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-6 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors">
+                        <i id="exportObligationsIcon" class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4"></i>
+                        <span id="exportObligationsLabel">Export to Excel</span>
                     </button>
                     <!-- Total Records -->
                     <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
@@ -2266,36 +2266,43 @@ function openCreatePOModal(obligationId) {
     /**
      * Export filtered obligations data to Excel XLSX
      */
-    function exportObligationsToExcel() {
-        const table = document.getElementById('obligationsTable');
-        const rows = table.querySelectorAll('tbody tr');
-        
-        const data = [];
-        const headers = [];
-        
-        table.querySelectorAll('thead th').forEach(th => {
-            headers.push(th.textContent.trim());
-        });
-        data.push(headers);
+    async function exportObligationsToExcel() {
+        const button = document.getElementById('exportObligationsBtn');
+        if (button.dataset.loading === 'true') {
+            return;
+        }
+        button.dataset.loading = 'true';
 
-        // Extracts just the numeric value from amount cells, skipping the
-        // hidden "Add Obligation Adjustment" / "Add Purchase Order" /
-        // "Add Disbursement" tooltip text that lives in the same <td>.
-        // "Cancelled" or "N/A" is treated as 0.
-        function getAmountValue(td) {
-            const amountEl = td.querySelector('button, span');
-            const raw = (amountEl ? amountEl.textContent : td.textContent).trim();
+        const icon = document.getElementById('exportObligationsIcon');
+        const label = document.getElementById('exportObligationsLabel');
 
-            if (/^cancelled$/i.test(raw) || /^n\/a$/i.test(raw)) {
-                return 0;
+        icon.classList.remove('fa-file-excel');
+        icon.classList.add('fa-spinner', 'fa-spin');
+        button.classList.add('opacity-60', 'pointer-events-none');
+
+        try {
+            const table = document.getElementById('obligationsTable');
+            const allRows = Array.from(table.querySelectorAll('tbody tr'))
+                .filter(row => row.style.display !== 'none');
+
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => headers.push(th.textContent.trim()));
+
+            const data = [headers];
+
+            function getAmountValue(td) {
+                const amountEl = td.querySelector('button, span');
+                const raw = (amountEl ? amountEl.textContent : td.textContent).trim();
+
+                if (/^cancelled$/i.test(raw) || /^n\/a$/i.test(raw)) {
+                    return 0;
+                }
+
+                const num = parseFloat(raw.replace(/[^\d.-]/g, ''));
+                return isNaN(num) ? raw : num;
             }
 
-            const num = parseFloat(raw.replace(/[^\d.-]/g, ''));
-            return isNaN(num) ? raw : num;
-        }
-
-        rows.forEach(row => {
-            if (row.style.display !== 'none') {
+            function extractRow(row) {
                 const rowData = [];
                 row.querySelectorAll('td').forEach(td => {
                     if (
@@ -2309,41 +2316,70 @@ function openCreatePOModal(obligationId) {
                         rowData.push(td.textContent.trim());
                     }
                 });
-                data.push(rowData);
+                return rowData;
             }
-        });
-        
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Obligations');
-        
-        const colWidths = headers.map(() => 15);
-        ws['!cols'] = colWidths.map(w => ({ wch: w }));
 
-        // Apply "#,##0.00" number format to Obligation, Disbursement, Balance
-        // columns (data rows only, not the header).
-        const formattedColumnNames = ['Obligation', 'Disbursement', 'Balance'];
-        const numberFormat = '#,##0.00';
+            // Process in chunks, yielding to the browser between each one so the
+            // tab stays responsive and repaints the progress label — a plain
+            // synchronous loop over thousands of rows would freeze the page for
+            // its entire duration with no visual feedback in between.
+            const CHUNK_SIZE = 500;
+            const total = allRows.length;
 
-        formattedColumnNames.forEach(colName => {
-            const colIndex = headers.indexOf(colName);
-            if (colIndex === -1) return;
+            for (let i = 0; i < total; i += CHUNK_SIZE) {
+                const chunk = allRows.slice(i, i + CHUNK_SIZE);
+                chunk.forEach(row => data.push(extractRow(row)));
 
-            const colLetter = XLSX.utils.encode_col(colIndex);
-            for (let r = 1; r < data.length; r++) {
-                const cellRef = `${colLetter}${r + 1}`;
-                const cell = ws[cellRef];
-                if (cell && typeof cell.v === 'number') {
-                    cell.t = 'n';
-                    cell.z = numberFormat;
+                const processed = Math.min(i + CHUNK_SIZE, total);
+                const percent = Math.round((processed / total) * 100);
+                label.textContent = `Exporting... ${percent}%`;
+
+                // Yield one tick back to the browser before the next chunk
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            label.textContent = 'Generating file...';
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Obligations');
+
+            const colWidths = headers.map(() => 15);
+            ws['!cols'] = colWidths.map(w => ({ wch: w }));
+
+            const formattedColumnNames = ['Obligation', 'Disbursement', 'Balance'];
+            const numberFormat = '#,##0.00';
+
+            formattedColumnNames.forEach(colName => {
+                const colIndex = headers.indexOf(colName);
+                if (colIndex === -1) return;
+
+                const colLetter = XLSX.utils.encode_col(colIndex);
+                for (let r = 1; r < data.length; r++) {
+                    const cellRef = `${colLetter}${r + 1}`;
+                    const cell = ws[cellRef];
+                    if (cell && typeof cell.v === 'number') {
+                        cell.t = 'n';
+                        cell.z = numberFormat;
+                    }
                 }
-            }
-        });
-        
-        const today = new Date().toISOString().split('T')[0];
-        XLSX.writeFile(wb, `obligations_${today}.xlsx`);
-        
-        showToast('Obligations data exported successfully!', 'success');
+            });
+
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `obligations_${today}.xlsx`);
+
+            showToast('Obligations data exported successfully!', 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast('Failed to export obligations data.', 'error');
+        } finally {
+            icon.classList.remove('fa-spinner', 'fa-spin');
+            icon.classList.add('fa-file-excel');
+            label.textContent = 'Export to Excel';
+            button.classList.remove('opacity-60', 'pointer-events-none');
+            button.dataset.loading = 'false';
+        }
     }
 </script>
 

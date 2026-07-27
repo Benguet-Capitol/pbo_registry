@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Spatie\SimpleExcel\SimpleExcelReader;
+use Illuminate\Support\Facades\Validator;
 
 class AppropriationController extends Controller
 {
@@ -473,28 +474,83 @@ class AppropriationController extends Controller
 
         $missingHeaders = array_diff($requiredHeaders, $headers);
         if (count($missingHeaders)) {
-            return redirect()->back()->withErrors(['file' => 'Missing required columns: ' . implode(', ', $missingHeaders)]);
+            return redirect()->back()->with('error',
+                'Import failed. Missing required column(s): <strong>' . implode(', ', $missingHeaders) . '</strong>. Please use the sample format.'
+            );
         }
 
-        $importedCount = 0;
+        $errors = [];
+        $validRows = [];
+        $rowNumber = 1; // row 1 = header, so data starts at row 2
 
-        $reader->getRows()->each(function (array $rowProperties) use ($request, $headerMap, &$importedCount) {
+        $reader->getRows()->each(function (array $rowProperties) use ($headerMap, &$errors, &$validRows, &$rowNumber) {
+            $rowNumber++;
+
             $data = [];
-
             foreach ($headerMap as $friendlyHeader => $dbField) {
                 $value = $rowProperties[$friendlyHeader] ?? null;
+                $value = is_string($value) ? trim($value) : $value;
 
                 if (in_array($dbField, ['quarter1', 'quarter2', 'quarter3', 'quarter4'])) {
-                    $data[$dbField] = $value !== null && $value !== '' ? $value : 0.00;
+                    $data[$dbField] = ($value !== null && $value !== '') ? $value : 0.00;
                 } else {
-                    $data[$dbField] = $value;
+                    $data[$dbField] = ($value === '') ? null : $value;
                 }
             }
 
-            $data['office_allotment_class_id'] = $request->office_allotment_class_id;
+            $validator = Validator::make($data, [
+                'account_code'      => 'required|string|max:255',
+                'description'       => 'required|string|max:255',
+                'appropriation'     => 'required|numeric',
+                'programs'          => 'nullable|string|max:255',
+                'project_no'        => 'nullable|string|max:255',
+                'project_location'  => 'nullable|string|max:255',
+                'cco_year'          => 'nullable|string|max:255',
+                'quarter1'          => 'nullable|numeric',
+                'quarter2'          => 'nullable|numeric',
+                'quarter3'          => 'nullable|numeric',
+                'quarter4'          => 'nullable|numeric',
+                'remarks'           => 'nullable|string|max:255',
+            ], [
+                'account_code.required'  => 'Account Code is required.',
+                'description.required'   => 'Description is required.',
+                'appropriation.required' => 'Appropriation is required.',
+                'appropriation.numeric'  => 'Appropriation must be a valid number.',
+                'quarter1.numeric'       => '1st Quarter Allotment must be a valid number.',
+                'quarter2.numeric'       => '2nd Quarter Allotment must be a valid number.',
+                'quarter3.numeric'       => '3rd Quarter Allotment must be a valid number.',
+                'quarter4.numeric'       => '4th Quarter Allotment must be a valid number.',
+            ]);
 
-            Appropriation::create($data);
-            $importedCount++;
+            if ($validator->fails()) {
+                $errors["Row {$rowNumber}"] = $validator->errors()->all();
+            } else {
+                $validRows[] = $data;
+            }
+        });
+
+        if (count($errors) > 0) {
+            $displayErrors = array_slice($errors, 0, 20, true); // cap so the alert doesn't get huge
+            $lines = [];
+            foreach ($displayErrors as $row => $messages) {
+                $lines[] = "<strong>{$row}:</strong> " . implode(' ', $messages);
+            }
+
+            $extra = count($errors) > 20 ? '<br><em>...and ' . (count($errors) - 20) . ' more row(s) with errors.</em>' : '';
+
+            return redirect()->back()->with('error',
+                '<strong>Import failed — ' . count($errors) . ' row(s) have errors. Nothing was imported.</strong><br>' .
+                implode('<br>', $lines) . $extra
+            );
+        }
+
+        $importedCount = 0;
+        DB::transaction(function () use ($validRows, $request, &$importedCount) {
+            foreach ($validRows as $data) {
+                $data['office_allotment_class_id'] = $request->office_allotment_class_id;
+                Appropriation::create($data);
+                $importedCount++;
+            }
         });
 
         return redirect()->back()->with('status', "<strong>{$importedCount} account(s)</strong> imported successfully!");

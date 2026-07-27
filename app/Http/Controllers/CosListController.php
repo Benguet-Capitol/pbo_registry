@@ -9,6 +9,8 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use App\Exports\CosListExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CosListController extends Controller
 {
@@ -439,5 +441,70 @@ class CosListController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error fetching employee'], 500);
         }
+    }
+
+    public function export(Request $request)
+    {
+        if (!$request->filled('office_allotment_class_filter')) {
+            abort(400, 'Office/Allotment Class filter is required to export.');
+        }
+
+        $selectedYear = $request->input('year1', date('Y'));
+
+        $officeAllotmentClass = OfficeAllotmentClass::with('offices', 'allotmentClass')
+            ->findOrFail($request->office_allotment_class_filter);
+
+        // One specific account, or every COS-eligible account under this office/class
+        if ($request->filled('appropriation_filter')) {
+            $appropriations = collect([Appropriation::findOrFail($request->appropriation_filter)]);
+        } else {
+            $appropriations = $officeAllotmentClass->appropriations()
+                ->where(function ($q) {
+                    foreach (self::COS_ELIGIBLE_APPROPRIATION_CODES as $code) {
+                        $q->orWhere('account_code', 'like', $code . '%');
+                    }
+                })
+                ->orderBy('account_code')
+                ->get();
+        }
+
+        $sections = $appropriations->map(function ($appropriation) use ($officeAllotmentClass, $selectedYear) {
+            $cosList = CosList::where('office_allotment_class_id', $officeAllotmentClass->id)
+                ->where('appropriation_id', $appropriation->id)
+                ->whereHas('officeAllotmentClass', fn($q) => $q->where('year', $selectedYear))
+                ->orderBy('id')
+                ->get();
+
+            return [
+                'account_label' => trim($appropriation->account_code . ' - ' . ($appropriation->description ?? '')),
+                'cos_list' => $cosList,
+                'total_annual_rate' => (float) $cosList->sum('annual_rate'),
+                'total_appropriation' => $this->calculateTotalAppropriation($appropriation),
+            ];
+        })->values();
+
+        $officeName = $officeAllotmentClass->offices->office_name
+            ?? $officeAllotmentClass->offices->office_abbreviation;
+        $allotmentClassName = $officeAllotmentClass->allotmentClass->description;
+
+        $filename = 'COS_' . str_replace(' ', '_', $officeAllotmentClass->offices->office_abbreviation)
+            . '_' . $selectedYear . '.xlsx';
+
+        return Excel::download(new CosListExport($sections, $officeName, $allotmentClassName), $filename);
+    }
+
+    /**
+     * Pulled out of index() so export() doesn't duplicate this calculation —
+     * consider replacing the copy in index() with a call to this too.
+     */
+    private function calculateTotalAppropriation(Appropriation $appropriation): float
+    {
+        $base = (float) $appropriation->appropriation;
+        $supplementalAdd = (float) $appropriation->supplementals()->where('type', 'Supplemental')->sum('amount');
+        $supplementalDeduct = (float) $appropriation->supplementals()->where('type', 'Reversion')->sum('amount');
+        $realignmentAdd = (float) $appropriation->realignments()->where('type', 'Recipient')->sum('amount');
+        $realignmentDeduct = (float) $appropriation->realignments()->where('type', 'Source')->sum('amount');
+
+        return $base + $supplementalAdd - $supplementalDeduct + $realignmentAdd - $realignmentDeduct;
     }
 }

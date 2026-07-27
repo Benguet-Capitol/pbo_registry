@@ -158,7 +158,7 @@
                 <!-- Right: Total Records and Search Input -->
                 <div class="flex items-center space-x-4">
                     <!-- Export Button -->
-                    <button type="button" onclick="exportPurchaseOrdersToExcel()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900" title="Export filtered data to Excel">
+                    <button type="button" onclick="exportPurchaseOrdersToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
                         <i class="fas fa-download text-lg mr-2 -ml-1 w-4 h-4"></i>
                         Export to Excel
                     </button>

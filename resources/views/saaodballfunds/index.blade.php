@@ -243,12 +243,12 @@
                 <table id="saaodbAllFundsTable" class="w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 border border-blue-400 bg-gradient-to-r from-blue-200 to-blue-300 text-blue-900 dark:bg-gradient-to-r dark:from-blue-900 dark:to-blue-950 dark:text-blue-200 transition-colors duration-300 ease-in-out">
                         <tr>
-                            <th rowspan="2" class="px-1 py-1 w-[150px] text-center align-middle border-r border-gray-500 dark:border-gray-400" data-key="allotment_class">Allotment Class</th>
-                            <th colspan="5" class="px-1 py-1 text-center border-r border-gray-500 dark:border-gray-400">Appropriations</th>
-                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-gray-500 dark:border-gray-400" data-key="allotment">Allotments</th>
-                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-gray-500 dark:border-gray-400" data-key="obligation">Obligations</th>
-                            <th colspan="2" class="px-1 py-1 text-center border-r border-gray-500 dark:border-gray-400">Obligation Status</th>
-                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-gray-500 dark:border-gray-400" data-key="disbursement">Actual Disbursements</th>
+                            <th rowspan="2" class="px-1 py-1 w-[150px] text-center align-middle border-r border-blue-400 dark:border-blue-300" data-key="allotment_class">Allotment Class</th>
+                            <th colspan="5" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Appropriations</th>
+                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-blue-400 dark:border-blue-300" data-key="allotment">Allotments</th>
+                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-blue-400 dark:border-blue-300" data-key="obligation">Obligations</th>
+                            <th colspan="2" class="px-1 py-1 text-center border-r border-blue-400 dark:border-blue-300">Obligation Status</th>
+                            <th rowspan="2" class="px-1 py-1 w-[100px] text-center align-middle border-r border-blue-400 dark:border-blue-300" data-key="disbursement">Actual Disbursements</th>
                             <th colspan="3" class="px-1 py-1 text-center">Disbursement Status</th>
                         </tr>
                         <tr class="text-[10px]">
@@ -256,9 +256,9 @@
                             <th class="px-1 py-1 w-[100px] text-center" data-key="sb_appropriation">Supplemental</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="reversion">Reversions</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="realignment">Realignments</th>
-                            <th class="px-1 py-1 w-[100px] text-center border-r border-gray-500 dark:border-gray-400" data-key="authorized_appropriation">Authorized</th>
+                            <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300" data-key="authorized_appropriation">Authorized</th>
                             <th class="px-1 py-1 w-[70px] text-center" data-key="appropriation_accomplishment">% Obligated</th>
-                            <th class="px-1 py-1 w-[100px] text-center border-r border-gray-500 dark:border-gray-400" data-key="appropriation_balance">Unobligated Balance</th>
+                            <th class="px-1 py-1 w-[100px] text-center border-r border-blue-400 dark:border-blue-300" data-key="appropriation_balance">Unobligated Balance</th>
                             <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_appropriation">% Disbursed / Authorized</th>
                             <th class="px-1 py-1 w-[100px] text-center" data-key="obligation_balance">Unpaid Obligations</th>
                             <th class="px-1 py-1 w-[70px] text-center" data-key="disbursement_to_obligation">% Disbursed / Obligated</th>

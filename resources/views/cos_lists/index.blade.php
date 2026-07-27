@@ -167,6 +167,17 @@
                 </button>
                 <!-- Right: Total Records and Search Input -->
                 <div class="flex items-center space-x-4">
+                    <!-- Export to Excel Button -->
+                    @if(request()->filled('office_allotment_class_filter'))
+                        <button type="button"
+                        id="exportBtn"
+                        data-url="{{ route('cos_lists.export', request()->only(['year1', 'office_allotment_class_filter', 'appropriation_filter'])) }}"
+                        onclick="handleExportClick(this)"
+                        class="text-green-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors">
+                            <i id="exportBtnIcon" class="fas fa-file-excel text-xl mr-1 -ml-1 w-5 h-5"></i>
+                            <span id="exportBtnLabel">{{ __('Export to Excel') }}</span>
+                        </button>
+                    @endif
                     <!-- Total Records -->
                     <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
@@ -318,15 +329,14 @@
                     </table>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Pagination -->
+            <!-- Pagination -->
     @if($cosList->hasPages())
-        <div class="mt-6">
+        <div class="mt-2">
             {{ $cosList->links() }}
         </div>
     @endif
+        </div>
+    </div>
 
     </div>
 
@@ -430,6 +440,59 @@
             dropdowns.forEach(dropdown => {
                 dropdown.classList.add('hidden');
             });
+        }
+
+        async function handleExportClick(button) {
+            if (button.dataset.loading === 'true') {
+                return;
+            }
+            button.dataset.loading = 'true';
+
+            const icon = document.getElementById('exportBtnIcon');
+            const label = document.getElementById('exportBtnLabel');
+
+            icon.classList.remove('fa-file-excel');
+            icon.classList.add('fa-spinner', 'fa-spin');
+            label.textContent = '{{ __("Exporting...") }}';
+            button.classList.add('opacity-60', 'pointer-events-none');
+
+            try {
+                const response = await fetch(button.dataset.url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Export failed with status ${response.status}`);
+                }
+
+                const blob = await response.blob();
+
+                // Pull the filename the controller set via Excel::download(), falling
+                // back to a generic name if the header is missing for some reason
+                const disposition = response.headers.get('Content-Disposition') || '';
+                const match = disposition.match(/filename="?([^"]+)"?/);
+                const filename = match ? match[1] : 'cos_list_export.xlsx';
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const tempLink = document.createElement('a');
+                tempLink.href = downloadUrl;
+                tempLink.download = filename;
+                document.body.appendChild(tempLink);
+                tempLink.click();
+                document.body.removeChild(tempLink);
+                window.URL.revokeObjectURL(downloadUrl);
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('{{ __("Failed to export. Please try again.") }}');
+            } finally {
+                icon.classList.remove('fa-spinner', 'fa-spin');
+                icon.classList.add('fa-file-excel');
+                label.textContent = '{{ __("Export to Excel") }}';
+                button.classList.remove('opacity-60', 'pointer-events-none');
+                button.dataset.loading = 'false';
+            }
         }
     </script>
     <style>

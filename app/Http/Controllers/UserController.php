@@ -18,7 +18,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10); // Default to 10 rows per page
+        $perPage = $request->input('per_page', 'all'); // Default to 10 rows per page
         $search = $request->input('search');
 
         // Get sorting parameters from query string, default to 'id' and 'desc'

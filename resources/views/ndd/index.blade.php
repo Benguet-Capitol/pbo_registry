@@ -62,18 +62,31 @@
     <!-- Unified Filter Section -->
     <form method="GET" action="" class="bg-white overflow-hidden shadow-md sm:rounded-lg mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out" id="filterForm">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
-            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 mb-4 flex items-center">
-                <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
-                Filters
-            </h4>
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100 flex items-center">
+                    <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
+                    Filters
+                </h4>
+                <button
+                    type="button"
+                    onclick="clearAllFilters()"
+                    class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 inline-flex items-center transition-colors duration-150"
+                >
+                    <i class="fas fa-rotate-left mr-1"></i>
+                    Clear filters
+                </button>
+            </div>
             <!-- Shared validation message -->
-            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 animate-pulse transition-opacity duration-300 ease-in-out"></span>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 items-center mb-3">
+            <span id="signatory_error" class="text-red-600 text-sm font-semibold mb-3 hidden block px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900 border-l-4 border-red-600 dark:border-red-400 transition-opacity duration-300 ease-in-out"></span>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end mb-3">
                 <!-- Year Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="year1" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Year</label>
                     <x-form.select
                         name="year1"
                         id="year1"
+                        aria-label="Fiscal Year"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         @foreach($availableYears as $year)
@@ -82,37 +95,45 @@
                     </x-form.select>
                 </div>
                 <!-- Office Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="officeFilter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Office</label>
                     <x-form.select
                         name="office_filter"
                         id="officeFilter"
+                        aria-label="Office"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">All Offices</option>
                         @foreach($offices as $office)
-                            <option value="{{ $office->id }}" {{ request('office_filter') == $office->id ? 'selected' : '' }}>
+                            <option value="{{ $office->id }}" data-office-name="{{ $office->office_abbreviation }}" {{ request('office_filter') == $office->id ? 'selected' : '' }}>
                                 {{ $office->office_abbreviation }}
                             </option>
                         @endforeach
                     </x-form.select>
                 </div>
                 <!-- As of Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="as_of_filter" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">As of</label>
                     <x-form.input
                         name="as_of_filter"
                         type="date"
                         autocomplete="off"
                         id="as_of_filter"
+                        aria-label="As of Date"
                         value="{{ request('as_of_filter', now()->format('Y-m-d')) }}"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                     </x-form.input>
                 </div>
                 <!-- Signatory Name Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_name" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        Signatory <span class="text-red-500">*</span>
+                    </label>
                     <x-form.select
                         name="signatory_name"
                         id="signatory_name"
+                        aria-label="Signatory Name"
                         class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
                         onchange="this.form.submit()">
                         <option value="">Select Signatory</option>
@@ -124,35 +145,78 @@
                     </x-form.select>
                 </div>
                 <!-- Signatory Designation Filter -->
-                <div class="flex items-center space-x-2">
+                <div class="flex flex-col space-y-1">
+                    <label for="signatory_designation" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        Designation <span class="text-red-500">*</span>
+                    </label>
                     <x-form.select
-                    name="signatory_designation"
-                    id="signatory_designation"
-                    class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
-                    onchange="this.form.submit()">
-                    <option value="">Select Designation</option>
-                    <option value="Provincial Budget Officer" {{ request('signatory_designation') == 'Provincial Budget Officer' ? 'selected' : '' }}>Provincial Budget Officer</option>
-                    <option value="Acting Provincial Budget Officer" {{ request('signatory_designation') == 'Acting Provincial Budget Officer' ? 'selected' : '' }}>Acting Provincial Budget Officer</option>
-                    <option value="OIC, Provincial Budget Officer" {{ request('signatory_designation') == 'OIC, Provincial Budget Officer' ? 'selected' : '' }}>OIC, Provincial Budget Officer</option>
-                </x-form.select>
+                        name="signatory_designation"
+                        id="signatory_designation"
+                        aria-label="Signatory Designation"
+                        class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-400 focus:border-transparent hover:border-blue-400 dark:hover:border-blue-500"
+                        onchange="this.form.submit()">
+                        <option value="">Select Designation</option>
+                        <option value="Provincial Budget Officer" {{ request('signatory_designation') == 'Provincial Budget Officer' ? 'selected' : '' }}>Provincial Budget Officer</option>
+                        <option value="Acting Provincial Budget Officer" {{ request('signatory_designation') == 'Acting Provincial Budget Officer' ? 'selected' : '' }}>Acting Provincial Budget Officer</option>
+                        <option value="OIC, Provincial Budget Officer" {{ request('signatory_designation') == 'OIC, Provincial Budget Officer' ? 'selected' : '' }}>OIC, Provincial Budget Officer</option>
+                    </x-form.select>
                 </div>
             </div>
+
+            @php
+                // Year and As-of-date are excluded here: both always carry a default value
+                // (current year, today), so treating them as removable "active" filters would
+                // leave two permanent chips cluttering this row on every page load.
+                $activeChips = [];
+                if(request('office_filter')) {
+                    $selectedOfficeObj = $offices->firstWhere('id', request('office_filter'));
+                    if($selectedOfficeObj) $activeChips[] = ['label' => 'Office', 'value' => $selectedOfficeObj->office_abbreviation, 'param' => 'office_filter'];
+                }
+                if(request('signatory_name')) $activeChips[] = ['label' => 'Signatory', 'value' => request('signatory_name'), 'param' => 'signatory_name'];
+                if(request('signatory_designation')) $activeChips[] = ['label' => 'Designation', 'value' => request('signatory_designation'), 'param' => 'signatory_designation'];
+            @endphp
+            @if(count($activeChips) > 0)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <span class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Active:</span>
+                @foreach($activeChips as $chip)
+                <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200 text-[11px] font-medium px-2 py-1 rounded-full">
+                    {{ $chip['label'] }}: {{ $chip['value'] }}
+                    <button type="button" onclick="removeFilter('{{ $chip['param'] }}')" class="hover:text-red-600 dark:hover:text-red-400" aria-label="Remove {{ $chip['label'] }} filter">
+                        <i class="fas fa-times text-[9px]"></i>
+                    </button>
+                </span>
+                @endforeach
+            </div>
+            @endif
 
             <!-- Buttons Row -->
             <div class="flex items-center space-x-2 mt-4">
                 <button
                     type="button"
                     onclick="exportNDDExcel()"
-                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
-                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4"></i>Generate Excel
+                    class="text-green-700 inline-flex leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                    id="excel-export-btn">
+                    <i class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4" id="excel-btn-icon"></i>
+                    <span id="excel-btn-label">Generate Excel</span>
                 </button>
             </div>
         </div>
 
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
-            <div class="overflow-x-auto overflow-y-auto max-h-[700px] border border-gray-300 dark:border-gray-600 rounded-md">
+            @php
+                $hasObligations = is_countable($obligations) ? count($obligations) > 0 : !empty($obligations);
+            @endphp
+            @if(!$hasObligations)
+            <div class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p class="text-sm font-medium">No obligations found matching the criteria</p>
+                <button type="button" onclick="clearAllFilters()" class="mt-3 text-xs text-blue-600 hover:underline dark:text-blue-400">Clear filters and try again</button>
+            </div>
+            @else
+            <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
+            <div class="max-h-[700px] overflow-y-auto">
                 <table id="dashboardTable" class="min-w-full text-[11px] text-gray-900 dark:text-gray-300 text-left">
-                    <thead class="sticky top-0 z-10 bg-gray-700 text-gray-100 dark:bg-gray-200 dark:text-gray-900 border border-gray-300 dark:border-gray-600">
+                    <thead class="sticky top-0 z-10 border border-blue-400 bg-gradient-to-r from-blue-200 to-blue-300 text-blue-900 dark:border-blue-300 dark:bg-gradient-to-r dark:from-blue-700 dark:to-blue-600 dark:text-blue-200 transition-colors duration-300 ease-in-out">
                         <tr>
                             <th class="px-2 py-2 min-w-[200px] text-center border border-gray-300 dark:border-gray-600">Payee / Supplier / Particulars</th>
                             <th class="px-2 py-2 min-w-[100px] text-center border border-gray-300 dark:border-gray-600">Budget Control No.</th>
@@ -163,65 +227,75 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @php
-                            $hasObligations = is_countable($obligations) ? count($obligations) > 0 : !empty($obligations);
-                        @endphp
-                        
-                        @if($hasObligations)
-                            @foreach($obligations as $officeName => $officeObligations)
-                                <!-- Office Header Row -->
-                                <tr class="bg-gray-100 dark:bg-gray-600">
-                                    <td colspan="6" class="px-2 py-2 font-bold text-xs border border-gray-300 dark:border-gray-600">
-                                        {{ $officeName }}
-                                    </td>
-                                </tr>
-                                
-                                <!-- Obligations for this office -->
-                                @foreach($officeObligations as $obligation)
-                                    <tr class="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                        <td class="px-1 py-1 border border-gray-300 dark:border-gray-600">{{ $obligation['payee'] }}</td>
-                                        <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-center">{{ $obligation['budget_control_no'] }}</td>
-                                        <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-center">{{ $obligation['po_number'] }}</td>
-                                        <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-center">{{ $obligation['po_date'] }}</td>
-                                        <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-right">{{ $obligation['amount'] }}</td>
-                                        <td class="px-1 py-1 border border-gray-300 dark:border-gray-600">{{ $obligation['remarks'] }}</td>
-                                    </tr>
-                                @endforeach
-                                
-                                <!-- Office Total Row -->
-                                <tr class="bg-gray-200 dark:bg-gray-700 font-bold border-b">
-                                    <td colspan="4" class="px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 text-right">Total ({{ $officeName }}):</td>
-                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-right">{{ $totals[$officeName] }}</td>
-                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600"></td>
-                                </tr>
-                            @endforeach
-                            
-                            <!-- Grand Total Row -->
-                            <tr class="bg-gray-800 dark:bg-gray-900 text-white dark:text-gray-100 font-bold">
-                                <td colspan="4" class="px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 text-right">Grand Total:</td>
-                                <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-right">{{ $totals['GRAND_TOTAL'] }}</td>
-                                <td class="px-1 py-1 border border-gray-300 dark:border-gray-600"></td>
-                            </tr>
-                        @else
-                            <tr>
-                                <td colspan="6" class="px-1 py-4 text-center text-gray-500 dark:text-gray-400">
-                                    No obligations found matching the criteria.
+                        @foreach($obligations as $officeName => $officeObligations)
+                            <!-- Office Header Row -->
+                            <tr class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 text-blue-900 dark:text-blue-200 transition-colors duration-300 ease-in-out">
+                                <td colspan="6" class="px-2 py-2 font-bold text-xs border border-blue-300 dark:border-blue-800">
+                                    {{ $officeName }}
                                 </td>
                             </tr>
-                        @endif
+
+                            <!-- Obligations for this office -->
+                            @php $officeRowIndex = 0; @endphp
+                            @foreach($officeObligations as $obligation)
+                                @php $officeRowIndex++; @endphp
+                                <tr class="{{ $officeRowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-900' }} border-b dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-150 ease-in-out">
+                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600">{{ $obligation['payee'] }}</td>
+                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-center">{{ $obligation['budget_control_no'] }}</td>
+                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-center">{{ $obligation['po_number'] }}</td>
+                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-center">{{ $obligation['po_date'] }}</td>
+                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600 text-right">{{ $obligation['amount'] }}</td>
+                                    <td class="px-1 py-1 border border-gray-300 dark:border-gray-600">{{ $obligation['remarks'] }}</td>
+                                </tr>
+                            @endforeach
+
+                            <!-- Office Total Row -->
+                            <tr class="bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-bold border-b border-gray-400 dark:border-gray-600">
+                                <td colspan="4" class="px-2 py-2 text-xs border border-gray-400 dark:border-gray-600 text-right">Total ({{ $officeName }}):</td>
+                                <td class="px-1 py-1 border border-gray-400 dark:border-gray-600 text-right">{{ $totals[$officeName] }}</td>
+                                <td class="px-1 py-1 border border-gray-400 dark:border-gray-600"></td>
+                            </tr>
+                        @endforeach
+
+                        <!-- Grand Total Row -->
+                        <tr class="bg-blue-200 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-bold">
+                            <td colspan="4" class="px-2 py-2 text-xs border border-blue-400 dark:border-blue-800 text-right">Grand Total:</td>
+                            <td class="px-1 py-1 border border-blue-400 dark:border-blue-800 text-right">{{ $totals['GRAND_TOTAL'] }}</td>
+                            <td class="px-1 py-1 border border-blue-400 dark:border-blue-800"></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
+            </div>
+            @endif
         </div>
+    </div>
     </div>
 
     <script>
-        function showSuccessToast(message = 'Success!') {
+        // Clear filters (keeps year, resets everything else)
+        function clearAllFilters() {
+            const url = new URL(window.location.href);
+            const keep = ['year1'];
+            [...url.searchParams.keys()].forEach(key => {
+                if (!keep.includes(key)) url.searchParams.delete(key);
+            });
+            window.location.href = url.toString();
+        }
+
+        // Remove a single filter param and resubmit
+        function removeFilter(param) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete(param);
+            window.location.href = url.toString();
+        }
+
+        function showSuccessToast(message = 'File downloaded successfully') {
             const toast = document.getElementById('success-toast');
             const successMessage = document.getElementById('toast-message');
             if (successMessage) successMessage.textContent = message;
             if (toast) {
-                toast.classList.remove('hide');
+                toast.classList.remove('hide', 'pointer-events-none');
                 toast.classList.add('show');
                 setTimeout(() => closeSuccessToast(), 4000);
             }
@@ -231,14 +305,30 @@
             const toast = document.getElementById('success-toast');
             if (toast) {
                 toast.classList.remove('show');
-                toast.classList.add('hide');
+                toast.classList.add('hide', 'pointer-events-none');
             }
+        }
+
+        function showErrorToast(message) {
+            const toast = document.getElementById('success-toast');
+            const messageEl = document.getElementById('toast-message');
+            const box = toast.querySelector('div');
+            if (messageEl) messageEl.textContent = message;
+            box.classList.remove('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+            box.classList.add('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+            toast.classList.remove('hide', 'pointer-events-none');
+            toast.classList.add('show');
+            setTimeout(() => {
+                closeSuccessToast();
+                box.classList.remove('from-red-50', 'to-red-100', 'border-red-300', 'dark:from-red-900', 'dark:to-red-800', 'dark:border-red-700');
+                box.classList.add('from-green-50', 'to-green-100', 'border-green-300', 'dark:from-green-900', 'dark:to-green-800', 'dark:border-green-700');
+            }, 4000);
         }
 
         function showLoadingToast() {
             const toast = document.getElementById('loading-toast');
             if (toast) {
-                toast.classList.remove('hide');
+                toast.classList.remove('hide', 'pointer-events-none');
                 toast.classList.add('show');
             }
         }
@@ -247,7 +337,7 @@
             const toast = document.getElementById('loading-toast');
             if (toast) {
                 toast.classList.remove('show');
-                toast.classList.add('hide');
+                toast.classList.add('hide', 'pointer-events-none');
             }
         }
 
@@ -269,6 +359,7 @@
             if (errorMessage) {
                 errorSpan.textContent = errorMessage;
                 errorSpan.classList.remove('hidden');
+                errorSpan.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 return false;
             } else {
                 errorSpan.classList.add('hidden');
@@ -278,9 +369,16 @@
 
         async function exportNDDExcel() {
             if (!validateSignatories()) return;
-            
+
+            const btn = document.getElementById('excel-export-btn');
+            const icon = document.getElementById('excel-btn-icon');
+            const label = document.getElementById('excel-btn-label');
+            btn.disabled = true;
+            icon.className = 'fas fa-spinner fa-spin text-lg mr-2 -ml-1 w-4 h-4';
+            label.textContent = 'Generating...';
+
             showLoadingToast();
-            
+
             const params = new URLSearchParams({
                 year1: document.getElementById('year1').value,
                 office_filter: document.getElementById('officeFilter').value,
@@ -298,30 +396,59 @@
                 });
 
                 if (!response.ok) throw new Error('Export failed');
-                
+
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `NDD_${new Date().getFullYear()}.xlsx`;
+                link.download = `NDD_${document.getElementById('year1').value || new Date().getFullYear()}.xlsx`;
                 document.body.appendChild(link);
                 link.click();
-                document.body.removeChild(link);
+                link.remove();
                 window.URL.revokeObjectURL(url);
 
                 closeLoadingToast();
-                setTimeout(() => showSuccessToast('Excel file downloaded successfully!'), 500);
+                showSuccessToast('Excel file downloaded successfully!');
             } catch (error) {
-                closeLoadingToast();
                 console.error('Export error:', error);
-                alert('Error exporting file: ' + error.message);
+                closeLoadingToast();
+                showErrorToast('Could not generate the Excel report. Please try again.');
+            } finally {
+                btn.disabled = false;
+                icon.className = 'fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4';
+                label.textContent = 'Generate Excel';
             }
         }
     </script>
 
     <!-- CSS Animations -->
     <style>
-        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pageSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}form{animation:slideUp .3s ease-in-out}.toast{opacity:0;transform:translateX(400px);pointer-events:none;transition:all .3s ease-in-out}.toast.show{opacity:1;transform:translateX(0);pointer-events:auto}.toast.hide{opacity:0;transform:translateX(400px);pointer-events:none}.page-transition{animation:pageSlideUp .4s ease-in-out}
+        .filter-select {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .filter-select:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pageSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        form{animation:slideUp .3s ease-in-out}
+        .toast{opacity:0;transform:translateX(400px);pointer-events:none;transition:all .3s ease-in-out}
+        .toast.show{opacity:1;transform:translateX(0);pointer-events:auto}
+        .toast.hide{opacity:0;transform:translateX(400px);pointer-events:none}
+        .page-transition{animation:pageSlideUp .4s ease-in-out}
+
+        .overflow-y-auto::-webkit-scrollbar { width: 8px; }
+        .overflow-y-auto::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .overflow-y-auto::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; transition: background 0.2s ease-in-out; }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark .overflow-y-auto::-webkit-scrollbar-track { background: #1f2937; }
+        .dark .overflow-y-auto::-webkit-scrollbar-thumb { background: #4b5563; }
+        .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover { background: #6b7280; }
     </style>
 
 </x-app-layout>

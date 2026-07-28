@@ -77,14 +77,14 @@
                 </div>
                 <div class="flex items-center">
                     <div class="flex items-center">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for users" class="form-control border border-gray-300 rounded-lg px-4 py-2 mr-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for users" class="form-control border border-gray-300 w-[300px] rounded-lg px-4 py-2 mr-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                         <form method="GET" action="{{ route('users.index') }}">
                         <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                            <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
+                            <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>All</option>
                         </x-form.select>
                         <button type="submit" class="hidden"></button>
                         </form>

@@ -54,7 +54,7 @@
 
             <div class="mb-6 animate-[fadeInUp_0.45s_ease-out_0.25s_both]">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Sign In</h2>
-                <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Enter your credentials to continue</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Enter credentials to continue</p>
             </div>
 
             <form method="POST" action="{{ route('login') }}" onsubmit="return handleSubmit(event)">
@@ -74,7 +74,7 @@
                         <input
                             id="username" type="text" name="username"
                             value="{{ old('username') }}"
-                            placeholder="Enter your username"
+                            placeholder="Enter username"
                             autocomplete="username" autofocus
                             class="w-full pl-10 pr-3.5 py-2 border rounded-lg text-base outline-none transition-all
                                 border-gray-300 text-gray-900 bg-white placeholder:text-gray-500
@@ -97,7 +97,7 @@
                         </span>
                         <input
                             id="password" type="password" name="password"
-                            placeholder="Enter your password"
+                            placeholder="Enter password"
                             autocomplete="current-password"
                             class="w-full pl-10 pr-[42px] py-2 border rounded-lg text-base outline-none transition-all
                                 border-gray-300 text-gray-900 bg-white placeholder:text-gray-500

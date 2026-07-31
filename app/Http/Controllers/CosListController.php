@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use App\Exports\CosListExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CosListImport;
+use App\Exports\CosListImportTemplateExport;
 
 class CosListController extends Controller
 {
@@ -506,5 +508,47 @@ class CosListController extends Controller
         $realignmentDeduct = (float) $appropriation->realignments()->where('type', 'Source')->sum('amount');
 
         return $base + $supplementalAdd - $supplementalDeduct + $realignmentAdd - $realignmentDeduct;
+    }
+
+    public function downloadImportTemplate()
+    {
+        return Excel::download(new CosListImportTemplateExport, 'cos_list_import_template.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls',
+            'office_allotment_class_filter' => 'required|exists:office_allotment_classes,id',
+            'appropriation_filter' => 'required|exists:appropriations,id',
+        ]);
+
+        $redirectParams = $request->only([
+            'year1', 'office_allotment_class_filter', 'appropriation_filter',
+            'per_page', 'search', 'search_column', 'sort_by', 'sort_order', 'page',
+        ]);
+
+        $import = new CosListImport(
+            (int) $request->office_allotment_class_filter,
+            (int) $request->appropriation_filter
+        );
+
+        try {
+            Excel::import($import, $request->file('file'));
+        } catch (\Exception $e) {
+            return redirect()->route('cos_lists.index', $redirectParams)
+                ->with('import_errors', ['File could not be read: ' . $e->getMessage()]);
+        }
+
+        if (!empty($import->errors)) {
+            return redirect()->route('cos_lists.index', $redirectParams)
+                ->with('import_errors', $import->errors)
+                ->with('import_success', $import->importedCount > 0
+                    ? "{$import->importedCount} record(s) imported successfully. Some rows had errors — see below."
+                    : null);
+        }
+
+        return redirect()->route('cos_lists.index', $redirectParams)
+            ->with('import_success', "{$import->importedCount} record(s) imported successfully.");
     }
 }

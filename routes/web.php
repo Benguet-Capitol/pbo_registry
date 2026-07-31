@@ -156,6 +156,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/obligation-files/{obligationFile}', [ObligationFileController::class, 'destroy'])->name('obligation_files.destroy');
 
     // COS List Routes
+    Route::get('cos_lists/import-template', [CosListController::class, 'downloadImportTemplate'])->name('cos_lists.import_template');
+    Route::post('cos_lists/import', [CosListController::class, 'import'])->name('cos_lists.import');
     Route::get('cos_lists/export', [CosListController::class, 'export'])->name('cos_lists.export');
     Route::resource('cos_lists', CosListController::class);
     Route::get('/api/cos_lists/appropriations/{classId}', [CosListController::class, 'getAppropriationsByClass'])->name('cos_lists.api.appropriations');

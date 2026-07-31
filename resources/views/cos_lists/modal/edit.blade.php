@@ -725,14 +725,19 @@ function computeTotalAmount(monthlyRate, fromDate, toDate) {
     return total;
 }
 
+function parseDateOnly(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+
 function calculateEditTotalContractAmount() {
     const monthlyRate = parseFloat(document.getElementById('edit_monthly_rate').value) || 0;
     const fromDateVal = document.getElementById('edit_from_date').value;
     const toDateVal = document.getElementById('edit_to_date').value;
 
     if (fromDateVal && toDateVal && monthlyRate > 0) {
-        const from = new Date(fromDateVal);
-        const to = new Date(toDateVal);
+        const from = parseDateOnly(fromDateVal);   // was: new Date(fromDateVal)
+        const to = parseDateOnly(toDateVal);       // was: new Date(toDateVal)
 
         if (to >= from) {
             const totalAmount = computeTotalAmount(monthlyRate, from, to);

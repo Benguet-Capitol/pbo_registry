@@ -39,6 +39,7 @@
     @include('cos_lists.modal.create')
     @include('cos_lists.modal.edit')
     @include('cos_lists.modal.delete')
+    @include('cos_lists.modal.import')
 
     <!-- Page Content Wrapper with Transition -->
     <div class="page-transition">
@@ -167,6 +168,13 @@
                 </button>
                 <!-- Right: Total Records and Search Input -->
                 <div class="flex items-center space-x-4">
+                    <!-- Import from Excel Button -->
+                    @if(request()->filled('office_allotment_class_filter') && request()->filled('appropriation_filter'))
+                        <button type="button" onclick="openImportModal()" class="text-purple-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-colors">
+                            <i class="fas fa-file-import text-xl mr-1 -ml-1 w-5 h-5"></i>
+                            {{ __('Import from Excel') }}
+                        </button>
+                    @endif
                     <!-- Export to Excel Button -->
                     @if(request()->filled('office_allotment_class_filter'))
                         <button type="button"

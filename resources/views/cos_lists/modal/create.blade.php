@@ -726,6 +726,11 @@
         document.getElementById('EmployeeDropdown').classList.add('hidden');
     }
 
+    function parseDateOnly(dateStr) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
     // Counts Mon–Fri days between two dates (inclusive)
     function countWeekdays(from, to) {
         let count = 0;
@@ -777,8 +782,8 @@
         const toDateVal = document.getElementById('to_date').value;
 
         if (fromDateVal && toDateVal && monthlyRate > 0) {
-            const from = new Date(fromDateVal);
-            const to = new Date(toDateVal);
+            const from = parseDateOnly(fromDateVal);   // was: new Date(fromDateVal)
+            const to = parseDateOnly(toDateVal);       // was: new Date(toDateVal)
 
             if (to >= from) {
                 const totalAmount = computeTotalAmount(monthlyRate, from, to);
@@ -814,6 +819,7 @@
     window.searchEmployee = searchEmployee;
     window.selectEmployeeFromDropdown = selectEmployeeFromDropdown;
     window.selectVacantPosition = selectVacantPosition;
+    window.parseDateOnly = parseDateOnly;
     window.calculateTotalContractAmount = calculateTotalContractAmount;
     window.countWeekdays = countWeekdays;
     window.computeTotalAmount = computeTotalAmount;

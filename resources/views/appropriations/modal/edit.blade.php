@@ -252,7 +252,7 @@
         document.querySelector("input[name='appropriation_id']").value = appropriation.id;
 
         // Corrected form ID
-        document.getElementById('editAppropriationsForm').action = '/appropriations/' + appropriation.id;
+        document.getElementById('editAppropriationsForm').action = '/appropriations/' + appropriation.id + window.location.search;
 
         document.getElementById('edit_programs').value = appropriation.programs;
         updateTextColor(document.getElementById('edit_programs'));

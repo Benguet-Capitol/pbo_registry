@@ -1,5 +1,5 @@
 <!-- Create Appropriations Modal -->
-<form id="createAppropriationsForm" method="POST" action="{{ route('appropriations.store') }}">
+<form id="createAppropriationsForm" method="POST" action="{{ route('appropriations.store', request()->query()) }}">
     @csrf
     <div id="createAppropriationsModal" style="display: none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="w-full max-w-4xl rounded-xl shadow-2xl transform transition-all duration-300 ease-out bg-white dark:bg-gray-800 overflow-hidden hidden animate-scaleInUp max-h-[90vh] flex flex-col" style="animation: scaleInUp 0.3s ease-out;">
@@ -90,18 +90,6 @@
                                     <span id="descriptionError" class="text-red-500 text-xs"></span>
                                 </div>
                             </div>
-                            <!-- Account Code ID -->
-                            <!-- <div class="sm:col-span-3">
-                                <x-form.label for="id2" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('ID (For repeatedly used Account Codes)')" />
-                                <div class="mt-2">
-                                    <x-form.input-with-icon-wrapper>
-                                        <x-slot name="icon">
-                                            <i class="fas fa-landmark-flag"></i>
-                                        </x-slot>
-                                        <x-form.input withicon type="text" name="id2" id="id2" autocomplete="off" placeholder="{{ __('Account Code ID') }}" class="block w-full bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"/>
-                                    </x-form.input-with-icon-wrapper>
-                                </div>
-                            </div> -->
                             <!-- FPP Code -->
                             <div class="sm:col-span-3">
                                 <x-form.label for="fpp_code" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('FPP Code')" />

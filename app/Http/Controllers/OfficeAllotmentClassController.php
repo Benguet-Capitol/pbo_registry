@@ -17,6 +17,25 @@ use Illuminate\View\View;
 class OfficeAllotmentClassController extends Controller
 {
     /**
+     * Build the query params (filters, search, sort, page) needed to
+     * redirect back to the index while preserving the user's current view.
+     */
+    private function indexParams(Request $request): array
+    {
+        return array_filter([
+            'year1' => $request->input('year1'),
+            'search' => $request->input('search'),
+            'office_filter' => $request->input('office_filter'),
+            'allotment_class_filter' => $request->input('allotment_class_filter'),
+            'fund_source_filter' => $request->input('fund_source_filter'),
+            'per_page' => $request->input('per_page'),
+            'sort_by' => $request->input('sort_by'),
+            'sort_order' => $request->input('sort_order'),
+            'page' => $request->input('page'),
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -301,7 +320,7 @@ class OfficeAllotmentClassController extends Controller
             'responsibility_code' => $validated['edit_responsibility_code'],
         ]);
 
-        return redirect()->route('office_allotment_classes.index')
+        return redirect()->route('office_allotment_classes.index', $this->indexParams($request))
                 ->with('status', 'Allotment class: <strong>' . $office_allotment_class->class . '</strong> under <strong>' . $office_allotment_class->office_abbreviation . '</strong> has been updated successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('status', '⚠️ <strong>Error:</strong> Update failed — ' . $e->getMessage());
@@ -310,7 +329,7 @@ class OfficeAllotmentClassController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(OfficeAllotmentClass $office_allotment_class): RedirectResponse
+    public function destroy(Request $request, OfficeAllotmentClass $office_allotment_class): RedirectResponse
     {
         try {
             // Store details before deletion
@@ -321,7 +340,7 @@ class OfficeAllotmentClassController extends Controller
             $appropriationsCount = Appropriation::where('office_allotment_class_id', $office_allotment_class->id)->count();
 
             if ($appropriationsCount > 0) {
-                return redirect()->route('office_allotment_classes.index')
+                return redirect()->route('office_allotment_classes.index', $this->indexParams($request))
                     ->with('error', 
                         "Cannot delete Allotment Class: <strong>{$class}</strong> under <strong>{$officeAbbreviation}</strong>. " .
                         "This allotment class has <strong>{$appropriationsCount}</strong> account(s) associated with it. " .
@@ -332,7 +351,7 @@ class OfficeAllotmentClassController extends Controller
             // Proceed with deletion if no related records exist
             $office_allotment_class->delete();
 
-            return redirect()->route('office_allotment_classes.index')
+            return redirect()->route('office_allotment_classes.index', $this->indexParams($request))
                 ->with('status', 
                     'Allotment class: <strong>' . $class . '</strong> under <strong>' . $officeAbbreviation . '</strong> has been deleted successfully!'
                 );

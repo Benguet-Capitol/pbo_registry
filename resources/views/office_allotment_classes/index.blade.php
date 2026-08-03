@@ -277,7 +277,7 @@
                 <tbody id="officeAllotmentBody">
                     @forelse ($office_allotment_classes as $office_allotment_class)
                         <tr
-                            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200 ease-in-out"
+                            class="{{ $loop->even ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer relative transition-colors duration-200 ease-in-out"
                             ondblclick="window.location.href='{{ route('appropriations.index', ['office_allotment_class_id' => $office_allotment_class->id]) }}'"
                             oncontextmenu="showContextMenu(event, this)"
                             data-id="{{ $office_allotment_class->id }}"
@@ -334,7 +334,6 @@
                             Total Approved Appropriation:
                         </td>
                         <td id="totalAppropriationFooter" class="px-1 py-3 font-bold text-sm text-gray-900 dark:text-white"></td>
-                        <td></td>
                     </tr>
                 </tfoot>
             </table>

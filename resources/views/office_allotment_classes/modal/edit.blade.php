@@ -221,7 +221,7 @@
             if (box) box.classList.remove('hidden');
         }, 10);
 
-        document.getElementById('editOfficeAllotmentClassForm').action = '{{ route("office_allotment_classes.update", ":id") }}'.replace(':id', officeAllotmentClass.id);
+        document.getElementById('editOfficeAllotmentClassForm').action = '{{ route("office_allotment_classes.update", ":id") }}'.replace(':id', officeAllotmentClass.id) + window.location.search;
 
         document.getElementById('edit_year').value = officeAllotmentClass.year;
         document.getElementById('edit_fund_source').value = officeAllotmentClass.fund_source;

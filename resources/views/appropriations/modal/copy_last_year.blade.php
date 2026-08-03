@@ -782,7 +782,7 @@ function submitCopyLastYearForm() {
 
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/appropriations/store-from-last-year';
+    form.action = '/appropriations/store-from-last-year' + window.location.search;
     form.innerHTML = '<input type="hidden" name="_token" value="' + document.querySelector('meta[name="csrf-token"]').content + '">';
 
     const officeAllotmentClassId = document.querySelector('[name="office_allotment_class_id"]')?.value || new URLSearchParams(window.location.search).get('office_allotment_class_id');

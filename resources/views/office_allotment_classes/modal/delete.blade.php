@@ -56,7 +56,7 @@
             const box = modal.querySelector('div.hidden');
             if (box) box.classList.remove('hidden');
         }, 10);
-        document.getElementById('deleteForm').action = '{{ route("office_allotment_classes.destroy", ":id") }}'.replace(':id', userId);
+        document.getElementById('deleteForm').action = '{{ route("office_allotment_classes.destroy", ":id") }}'.replace(':id', userId) + window.location.search;
         document.getElementById('deleteModalContent').innerHTML = `Are you sure you want to delete this Registry for <strong class="text-red-700 dark:text-red-400 font-semibold">${officeAbbreviation}</strong> with allotment class <strong class="text-red-700 dark:text-red-400 font-semibold">${allotmentClass}</strong>? This action cannot be undone.`;
     }
 

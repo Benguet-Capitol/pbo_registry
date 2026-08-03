@@ -43,7 +43,7 @@
         }
 
         // Set form action dynamically
-        document.getElementById('deleteForm').action = '{{ route("appropriations.destroy", ":id") }}'.replace(':id', appropriationId);
+        document.getElementById('deleteForm').action = '{{ route("appropriations.destroy", ":id") }}'.replace(':id', appropriationId) + window.location.search;
 
         // Set modal content with formatted values
         document.getElementById('deleteModalContent').innerHTML = `

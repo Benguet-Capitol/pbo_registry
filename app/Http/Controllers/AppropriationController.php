@@ -21,6 +21,23 @@ use Illuminate\Support\Facades\Validator;
 class AppropriationController extends Controller
 {
     use SortsAppropriations;
+
+    /**
+     * Build the query params (office_allotment_class_id, search, sort, per_page, page)
+     * needed to redirect back to the index while preserving the user's current view.
+     */
+    private function indexParams(Request $request, $officeAllotmentClassId = null): array
+    {
+        return array_filter([
+            'office_allotment_class_id' => $officeAllotmentClassId ?? $request->input('office_allotment_class_id'),
+            'search' => $request->input('search'),
+            'sort_by' => $request->input('sort_by'),
+            'sort_order' => $request->input('sort_order'),
+            'per_page' => $request->input('per_page'),
+            'page' => $request->input('page'),
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -251,7 +268,7 @@ class AppropriationController extends Controller
             $count++;
         }
 
-        return redirect(route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId]))
+        return redirect(route('appropriations.index', $this->indexParams($request, $officeAllotmentClassId)))
             ->with('status', "<strong>{$count} account(s)</strong> from last year have been copied successfully!");
     }
 
@@ -304,7 +321,7 @@ class AppropriationController extends Controller
             'remarks' => $validated['remarks'],
         ]);
 
-        return redirect(route('appropriations.index', ['office_allotment_class_id' => $appropriations->office_allotment_class_id]))
+        return redirect(route('appropriations.index', $this->indexParams($request, $appropriations->office_allotment_class_id)))
             ->with('status', 'Appropriations of <strong>' . number_format($appropriations->appropriation, 2) . '</strong> under <strong>Account Code: ' . $appropriations->account_code . ' - ' . $appropriations->description . '</strong> has been created successfully!');
     }
 
@@ -371,14 +388,14 @@ class AppropriationController extends Controller
             'remarks' => $validated['edit_remarks'],
         ]);
 
-        return redirect(route('appropriations.index', ['office_allotment_class_id' => $appropriation->office_allotment_class_id]))
+        return redirect(route('appropriations.index', $this->indexParams($request, $appropriation->office_allotment_class_id)))
             ->with('status', 'Appropriations of <strong>' . number_format($appropriation->appropriation, 2) . '</strong> under <strong>Account Code: ' . $appropriation->account_code . ' - ' . $appropriation->description . '</strong> has been updated successfully!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Appropriation $appropriation): RedirectResponse
+    public function destroy(Request $request, Appropriation $appropriation): RedirectResponse
     {
         try {
             $officeAllotmentClassId = $appropriation->office_allotment_class_id;
@@ -391,7 +408,7 @@ class AppropriationController extends Controller
                 ->count('obligation_id');
 
             if ($obligationsCount > 0) {
-                return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+                return redirect()->route('appropriations.index', $this->indexParams($request, $officeAllotmentClassId))
                     ->with('error', 
                         "Cannot delete Account Code: <strong>{$accountCode} - {$description}</strong>. " .
                         "This Account has <strong>{$obligationsCount}</strong> obligation(s) associated with it. " .
@@ -402,7 +419,7 @@ class AppropriationController extends Controller
             $realignmentsCount = Realignment::where('appropriations_id', $appropriation->id)->count();
 
             if ($realignmentsCount > 0) {
-                return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+                return redirect()->route('appropriations.index', $this->indexParams($request, $officeAllotmentClassId))
                     ->with('error', 
                         "Cannot delete Account Code: <strong>{$accountCode} - {$description}</strong>. " .
                         "This Account has <strong>{$realignmentsCount}</strong> realignment(s) associated with it. " .
@@ -413,7 +430,7 @@ class AppropriationController extends Controller
             $supplementalsCount = Supplemental::where('appropriations_id', $appropriation->id)->count();
 
             if ($supplementalsCount > 0) {
-                return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+                return redirect()->route('appropriations.index', $this->indexParams($request, $officeAllotmentClassId))
                     ->with('error', 
                         "Cannot delete Account Code: <strong>{$accountCode} - {$description}</strong>. " .
                         "This Account has <strong>{$supplementalsCount}</strong> supplemental/reversion(s) associated with it. " .
@@ -423,7 +440,7 @@ class AppropriationController extends Controller
 
             $appropriation->delete();
 
-            return redirect()->route('appropriations.index', ['office_allotment_class_id' => $officeAllotmentClassId])
+            return redirect()->route('appropriations.index', $this->indexParams($request, $officeAllotmentClassId))
                 ->with('status', 
                     'Appropriations of <strong>' . number_format($appropriationAmount, 2) . '</strong> under <strong>Account Code: ' . $accountCode . ' - ' . $description . '</strong> has been deleted successfully!'
                 );

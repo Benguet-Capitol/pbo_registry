@@ -313,7 +313,7 @@
                 <tbody>
                     @forelse ($appropriations as $appropriation)
                     <tr 
-                        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer relative transition-colors duration-200 ease-in-out"
+                        class="{{ $loop->even ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer relative transition-colors duration-200 ease-in-out"
                         oncontextmenu="showAppropriationContextMenu(event, this)"
                         @if(isset($appropriation))
                             data-appropriation='@json($appropriation)'

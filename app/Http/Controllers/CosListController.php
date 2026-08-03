@@ -37,7 +37,7 @@ class CosListController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+    $perPage = $request->input('per_page', 10);
     $search = $request->input('search');
     $searchColumn = $request->input('search_column', '');
     $sortBy = $request->query('sort_by', 'id');
@@ -148,9 +148,11 @@ class CosListController extends Controller
         ? $query->get()
         : $query->paginate($perPage)->appends([
             'search' => $search,
+            'search_column' => $searchColumn,
             'sort_by' => $sortBy,
             'sort_order' => $sortOrder,
             'year1' => $selectedYear,
+            'per_page' => $perPage,
             'office_allotment_class_filter' => $request->office_allotment_class_filter,
             'appropriation_filter' => $request->appropriation_filter,
         ]);

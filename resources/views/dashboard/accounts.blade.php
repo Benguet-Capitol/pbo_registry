@@ -2033,7 +2033,7 @@ function addHeatmapToggle() {
         const toggleButton = document.createElement('button');
         toggleButton.id = 'heatmapToggle';
         toggleButton.onclick = toggleHeatmap;
-        toggleButton.className = 'px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors duration-200 dark:bg-indigo-500 dark:hover:bg-indigo-600';
+        toggleButton.className = 'text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none';
         toggleButton.innerHTML = '🎨 Enable Heatmap';
         
         tableHeader.appendChild(toggleButton);

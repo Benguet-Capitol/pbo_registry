@@ -185,23 +185,25 @@
 
             <!-- Date Range Filter Row -->
             <!-- From Date Filter -->
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 {{ $isGuest ? 'lg:col-span-2' : '' }}">
                 <label for="fromDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">From Date</label>
                 <x-form.input type="date" name="from_date" id="fromDate" value="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
             </div>
 
             <!-- To Date Filter -->
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 {{ $isGuest ? 'lg:col-span-2' : '' }}">
                 <label for="toDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">To Date</label>
                 <x-form.input type="date" name="to_date" id="toDate" value="{{ request('to_date') }}" min="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
             </div>
 
             <!-- Apply Filter Button -->
-            <div class="flex items-end">
+            <div class="flex items-end space-x-2">
                 <button type="submit" class="w-full text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-filter mr-2"></i>Apply Date Filter
                 </button>
             </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center mb-2" id="filterContent" style="display: none;">
         </div>
     </form>
     <!-- Search Input - Always Visible -->
@@ -484,6 +486,19 @@
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
                 <label for="dashboardTable" class="ml-4 block text-md font-semibold text-blue-800 dark:text-blue-400">Office Allotment Classes</label>
+
+                <div id="tableActionButtons" class="flex items-center gap-2">
+                    @role('Guest')
+                    <button
+                        id="exportSaaobBtn"
+                        type="button"
+                        onclick="exportSaaob(this, '{{ route('saaob.exportExcel', ['year1' => $selectedYear, 'as_of_filter' => request('to_date')]) }}')"
+                        class="text-green-700 inline-flex items-center leading-4 tracking-wider border border-green-700 hover:bg-green-700 hover:text-white font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-400 dark:text-green-400 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                        <i class="fas fa-file-excel mr-2" id="exportSaaobIcon"></i>
+                        <span id="exportSaaobLabel">Generate SAAOB</span>
+                    </button>
+                    @endrole
+                </div>
             </div>
             <div class="overflow-auto max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
@@ -3731,15 +3746,15 @@
 
     // Add heatmap toggle button to the page
     function addHeatmapToggle() {
-        const tableHeader = document.querySelector('.bg-white.overflow-hidden.shadow-sm.sm\\:rounded-lg.mt-4.mb-4 .flex.justify-between.items-center.mb-4');
-        if (tableHeader && !document.getElementById('heatmapToggle')) {
+        const buttonContainer = document.getElementById('tableActionButtons');
+        if (buttonContainer && !document.getElementById('heatmapToggle')) {
             const toggleButton = document.createElement('button');
             toggleButton.id = 'heatmapToggle';
             toggleButton.onclick = toggleHeatmap;
-            toggleButton.className = 'px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition-colors duration-200 dark:bg-indigo-500 dark:hover:bg-indigo-600';
+            toggleButton.className = 'text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none';
             toggleButton.innerHTML = '🎨 Enable Heatmap';
-            
-            tableHeader.appendChild(toggleButton);
+
+            buttonContainer.appendChild(toggleButton);
         }
     }
 
@@ -4324,6 +4339,99 @@
         // Initialize Volume Metrics Charts
         initializeVolumeMetricsCharts();
     });
+
+    /**
+         * Trigger the SAAOB export via fetch so we can detect true completion
+         * (success or failure) instead of guessing with a fixed timeout, then
+         * save the returned file and show a toast.
+         */
+        async function exportSaaob(button, url) {
+            if (button.disabled) return;
+
+            const icon = document.getElementById('exportSaaobIcon');
+            const label = document.getElementById('exportSaaobLabel');
+
+            button.disabled = true;
+            icon.className = 'fas fa-spinner fa-spin mr-2';
+            label.textContent = 'Generating...';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Export failed with status ' + response.status);
+                }
+
+                const blob = await response.blob();
+
+                // Pull the real filename from Content-Disposition instead of hardcoding one
+                let filename = 'SAAOB_export.xlsx';
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition) {
+                    const match = disposition.match(/filename="?([^";]+)"?/);
+                    if (match && match[1]) filename = match[1];
+                }
+
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(blobUrl);
+
+                showToast('SAAOB report generated successfully.', 'success');
+            } catch (error) {
+                console.error('SAAOB export error:', error);
+                showToast('Failed to generate SAAOB report. Please try again.', 'error');
+            } finally {
+                button.disabled = false;
+                icon.className = 'fas fa-file-excel mr-2';
+                label.textContent = 'Generate SAAOB';
+            }
+        }
+
+        /**
+         * Lightweight toast notification, styled to match the existing success
+         * alert on this page (top-right, auto-dismiss after 5s).
+         */
+        function showToast(message, type = 'success') {
+            const existing = document.getElementById('saaobToast');
+            if (existing) existing.remove();
+
+            const isSuccess = type === 'success';
+            const bgClass = isSuccess
+                ? 'bg-green-50 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-600 dark:text-green-100'
+                : 'bg-red-50 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-600 dark:text-red-100';
+            const iconClass = isSuccess
+                ? 'fas fa-check-circle text-green-600 dark:text-green-400'
+                : 'fas fa-exclamation-circle text-red-600 dark:text-red-400';
+
+            const toast = document.createElement('div');
+            toast.id = 'saaobToast';
+            toast.className = 'fixed top-6 right-6 max-w-md z-50 animate-slide-in';
+            toast.innerHTML = `
+                <div class="${bgClass} border-2 px-5 py-4 rounded-xl shadow-2xl flex items-start gap-3">
+                    <i class="${iconClass} mt-0.5 flex-shrink-0 text-lg"></i>
+                    <p class="font-semibold text-sm flex-1">${message}</p>
+                    <button type="button" onclick="document.getElementById('saaobToast')?.remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.3s ease';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
 
     // Function to initialize volume metrics charts
     function initializeVolumeMetricsCharts() {

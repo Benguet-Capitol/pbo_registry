@@ -361,9 +361,17 @@ class SAAOBController extends Controller
         $year = $request->input('year1');
         $officeId = $request->input('office_filter');
         $accountCode = $request->input('account_code');
-        $asOf = $request->input('as_of_filter');
+        $asOfDate = $request->filled('as_of_filter') ? $request->input('as_of_filter') : now()->toDateString();
         $signatoryName = $request->input('signatory_name');
         $signatoryDesignation = $request->input('signatory_designation');
+
+        // Guests are locked to their own office and export without signatories
+        $isGuest = auth()->user()->hasRole('Guest');
+        if ($isGuest) {
+            $officeId = auth()->user()->office;
+            $signatoryName = null;
+            $signatoryDesignation = null;
+        }
 
         // Check if selected office is a SEF office
         $isSEFConsolidated = false;
@@ -401,14 +409,14 @@ class SAAOBController extends Controller
             'Year' => $year,
             'Office' => !empty($officeId) ? (Office::find($officeId)?->office_abbreviation . ($isSEFConsolidated ? ' (SEF Consolidated)' : '')) : 'All',
             'Account Code' => $accountCode ?? 'All',
-            'As Of Date' => $asOf,
+            'As Of Date' => $asOfDate,
         ]);
 
         return Excel::download(new SAAOBExport(
             $year,
             $officeId,
             $accountCode,
-            $asOf,
+            $asOfDate,
             $signatoryName,
             $signatoryDesignation,
             $isSEFConsolidated

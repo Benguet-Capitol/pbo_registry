@@ -87,8 +87,8 @@
     <form method="GET" action=""  id="filterForm">
         <div class="flex items-center justify-between mb-3">
             <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Filters</h4>
-            <button type="button" onclick="toggleFilters()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <i class="fas fa-chevron-down" id="filterToggle"></i>
+            <button type="button" onclick="toggleFilters()" class="text-blue-500 hover:text-gray-700 dark:text-blue-400 dark:hover:text-gray-200">
+                <i class="fas fa-circle-chevron-down" id="filterToggle"></i>
             </button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 items-center mb-2" id="filterContent" style="display: none;">
@@ -221,8 +221,8 @@
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                 Insights & Analytics
             </h3>
-            <button onclick="toggleWidget('analyticsPanel')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <i class="fas fa-chevron-down" id="analyticsPanelToggle"></i>
+            <button onclick="toggleWidget('analyticsPanel')" class="text-blue-500 hover:text-gray-700 dark:text-blue-400 dark:hover:text-gray-200">
+                <i class="fas fa-circle-chevron-down" id="analyticsPanelToggle"></i>
             </button>
         </div>
 
@@ -1093,14 +1093,14 @@
                     <input 
                         type="date" 
                         id="obligationsDateFrom" 
-                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                         onchange="refreshObligationsModal()"
                     >
                     <span class="text-gray-600 dark:text-gray-400 text-xs">to</span>
                     <input 
                         type="date" 
                         id="obligationsDateTo" 
-                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                         onchange="refreshObligationsModal()"
                     >
                     <button 
@@ -1115,7 +1115,7 @@
                         type="text" 
                         id="obligationsSearchInput" 
                         placeholder="Search obligations..." 
-                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                         oninput="filterObligationsTable(this.value, 'dashboard')"
                     >
                 </div>
@@ -3946,7 +3946,7 @@
         if (content && toggle) {
             const isHidden = content.style.display === 'none';
             content.style.display = isHidden ? 'block' : 'none';
-            toggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            toggle.className = isHidden ? 'fas fa-circle-chevron-up' : 'fas fa-circle-chevron-down';
             
             // If opening the analytics panel, trigger animation
             if (isHidden && widgetId === 'analyticsPanel') {
@@ -3967,7 +3967,7 @@
         if (filterContent && filterToggle) {
             const isHidden = filterContent.style.display === 'none';
             filterContent.style.display = isHidden ? 'grid' : 'none';
-            filterToggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            filterToggle.className = isHidden ? 'fas fa-circle-chevron-up' : 'fas fa-circle-chevron-down';
         }
     }
 

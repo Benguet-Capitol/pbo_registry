@@ -106,8 +106,8 @@
             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                 Insights & Analytics
             </h3>
-            <button onclick="toggleWidget('accountAnalyticsPanel')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <i class="fas fa-chevron-down" id="accountAnalyticsPanelToggle"></i>
+            <button onclick="toggleWidget('accountAnalyticsPanel')" class="text-blue-500 hover:text-gray-700 dark:text-blue-400 dark:hover:text-gray-200">
+                <i class="fas fa-circle-chevron-down" id="accountAnalyticsPanelToggle"></i>
             </button>
         </div>
 
@@ -928,14 +928,14 @@
                     <input 
                         type="date" 
                         id="accountObligationsDateFrom" 
-                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                         onchange="refreshAccountObligationsModal()"
                     >
                     <span class="text-gray-600 dark:text-gray-400 text-xs">to</span>
                     <input 
                         type="date" 
                         id="accountObligationsDateTo" 
-                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                         onchange="refreshAccountObligationsModal()"
                     >
                     <button 
@@ -950,7 +950,7 @@
                         type="text" 
                         id="accountObligationsSearchInput" 
                         placeholder="Search obligations..." 
-                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                         oninput="filterObligationsTable(this.value, 'accounts')"
                     >
                 </div>
@@ -1822,7 +1822,7 @@ function toggleWidget(widgetId) {
         if (content && toggle) {
             const isHidden = content.style.display === 'none';
             content.style.display = isHidden ? 'block' : 'none';
-            toggle.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            toggle.className = isHidden ? 'fas fa-circle-chevron-up' : 'fas fa-circle-chevron-down';
             
             // If opening the analytics panel, initialize charts
             if (isHidden) {

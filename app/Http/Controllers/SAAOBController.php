@@ -419,7 +419,8 @@ class SAAOBController extends Controller
             $asOfDate,
             $signatoryName,
             $signatoryDesignation,
-            $isSEFConsolidated
+            $isSEFConsolidated,
+            $isGuest
         ), $fileName);
     }
 }

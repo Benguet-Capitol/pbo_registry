@@ -298,5 +298,15 @@
                 {{ $signatoryDesignation ? $signatoryDesignation : '_____________________' }}
             </td>
         </tr>
+       @if($isGuest)
+        <tr>
+            <td colspan="15"></td> {{-- spacing --}}
+        </tr>
+        <tr class="generated-footnote-row" data-rowtype="footnote">
+            <td colspan="15" style="padding-top: 20px; font-size: 9px; font-style: italic; text-align: right; font-weight: bold;">
+                Generated from PBO | Registry as of {{ now()->setTimezone('Asia/Manila')->format('F d, Y g:i A') }}
+            </td>
+        </tr>
+        @endif
     </tbody>
 </table>

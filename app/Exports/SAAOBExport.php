@@ -28,8 +28,9 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
     protected $signatoryName;
     protected $signatoryDesignation;
     protected $isSEFConsolidated;
+    protected $isGuest;
 
-    public function __construct($selectedYear, $selectedOffice, $accounts, $asOfDate, $signatoryName, $signatoryDesignation, $isSEFConsolidated = false)
+    public function __construct($selectedYear, $selectedOffice, $accounts, $asOfDate, $signatoryName, $signatoryDesignation, $isSEFConsolidated = false, $isGuest = false)
     {
         $this->selectedYear = $selectedYear;
         $this->selectedOffice = $selectedOffice;
@@ -38,6 +39,7 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
         $this->signatoryName = $signatoryName;
         $this->signatoryDesignation = $signatoryDesignation;
         $this->isSEFConsolidated = $isSEFConsolidated;
+        $this->isGuest = $isGuest;
     }
 
     public function registerEvents(): array
@@ -259,6 +261,30 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
                             ->setFormatCode('0.00%');
                     }
                 }
+            }
+
+            // === GUEST EXPORT: LOCK WORKBOOK ===
+            if ($this->isGuest) {
+                $spreadsheet = $sheet->getParent();
+
+                $password = config('app.saaodb_export_password', 'pbo-registry-export');
+
+                $sheet->getProtection()->setSheet(true);
+                $sheet->getProtection()->setPassword($password);
+                $sheet->getProtection()->setFormatCells(false);
+                $sheet->getProtection()->setFormatColumns(false);
+                $sheet->getProtection()->setFormatRows(false);
+                $sheet->getProtection()->setInsertRows(false);
+                $sheet->getProtection()->setInsertColumns(false);
+                $sheet->getProtection()->setDeleteRows(false);
+                $sheet->getProtection()->setDeleteColumns(false);
+                $sheet->getProtection()->setSort(false);
+                $sheet->getProtection()->setAutoFilter(false);
+                $sheet->getProtection()->setPivotTables(false);
+
+                $spreadsheet->getSecurity()->setLockStructure(true);
+                $spreadsheet->getSecurity()->setLockWindows(true);
+                $spreadsheet->getSecurity()->setWorkbookPassword($password);
             }
         },
     ];
@@ -518,6 +544,7 @@ class SAAOBExport implements FromView, WithStyles, WithEvents
             'signatoryName' => $this->signatoryName,
             'signatoryDesignation' => $this->signatoryDesignation,
             'isSEFConsolidated' => $this->isSEFConsolidated,
+            'isGuest' => $this->isGuest,
         ]);
     }
 

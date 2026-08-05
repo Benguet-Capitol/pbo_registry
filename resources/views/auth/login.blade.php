@@ -13,16 +13,16 @@
                 bg-gradient-to-r from-blue-100 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
 
         {{-- Logos + Title --}}
-        <div class="text-center mb-8 animate-[fadeInDown_0.55s_cubic-bezier(.22,.68,0,1.2)_both]">
-            <div class="flex items-center justify-center gap-6 mb-4">
+        <div class="text-center mb-6 sm:mb-8 animate-[fadeInDown_0.55s_cubic-bezier(.22,.68,0,1.2)_both]">
+            <div class="flex items-center justify-center gap-4 sm:gap-6 mb-4">
                 <img src="{{ asset('benguetlogo.png') }}" alt="Province of Benguet"
-                    class="w-[88px] h-[88px] sm:w-32 sm:h-32 object-contain drop-shadow-md
+                    class="w-16 h-16 xs:w-20 xs:h-20 sm:w-32 sm:h-32 object-contain drop-shadow-md
                             animate-[floatLogo_2s_ease-in-out_infinite]">
                 <img src="{{ asset('bagongpilipinaslogo.png') }}" alt="Bagong Pilipinas"
-                    class="w-[88px] h-[88px] sm:w-32 sm:h-32 object-contain drop-shadow-md
+                    class="w-16 h-16 xs:w-20 xs:h-20 sm:w-32 sm:h-32 object-contain drop-shadow-md
                             animate-[floatLogo_2s_ease-in-out_0.4s_infinite]">
             </div>
-            <h1 class="text-[36px] sm:text-[38px] font-bold text-[#080b13] dark:text-slate-100 leading-[1.1]">
+            <h1 class="text-[26px] xs:text-[30px] sm:text-[38px] font-bold text-[#080b13] dark:text-slate-100 leading-[1.1]">
                 PBO | REGISTRY
             </h1>
             <p class="text-sm text-[#0e1015] dark:text-slate-300 mt-1">Provincial Budget Office</p>
@@ -30,7 +30,7 @@
 
         {{-- Login Card --}}
         <div class="w-full max-w-[450px] bg-white dark:bg-gray-800 rounded-[12px] sm:rounded-[14px]
-                    sm:px-9 sm:py-8
+                    px-5 py-6 sm:px-9 sm:py-8
                     border border-blue-200 dark:border-gray-700
                     animate-[scaleIn_0.50s_cubic-bezier(.22,.68,0,1.2)_0.15s_both]">
 
@@ -52,17 +52,17 @@
                 </div>
             @endif
 
-            <div class="mb-6 animate-[fadeInUp_0.45s_ease-out_0.25s_both]">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Sign In</h2>
-                <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Enter credentials to continue</p>
+            <div class="mb-5 sm:mb-6 animate-[fadeInUp_0.45s_ease-out_0.25s_both]">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">Sign In</h2>
+                <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">Enter credentials</p>
             </div>
 
             <form method="POST" action="{{ route('login') }}" onsubmit="return handleSubmit(event)">
                 @csrf
 
                 {{-- Username --}}
-                <div class="mb-5 animate-[fadeInUp_0.45s_ease-out_0.35s_both]">
-                    <label for="username" class="block text-[15px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <div class="mb-4 sm:mb-5 animate-[fadeInUp_0.45s_ease-out_0.35s_both]">
+                    <label for="username" class="block text-sm sm:text-[15px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Username
                     </label>
                     <div class="group relative flex items-center">
@@ -76,7 +76,7 @@
                             value="{{ old('username') }}"
                             placeholder="Enter username"
                             autocomplete="username" autofocus
-                            class="w-full pl-10 pr-3.5 py-2 border rounded-lg text-base outline-none transition-all
+                            class="w-full pl-10 pr-3.5 py-2.5 sm:py-2 border rounded-lg text-base outline-none transition-all
                                 border-gray-300 text-gray-900 bg-white placeholder:text-gray-500
                                 focus:border-2 focus:border-blue-600
                                 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-50 dark:focus:border-blue-400
@@ -85,8 +85,8 @@
                 </div>
 
                 {{-- Password --}}
-                <div class="mb-7 animate-[fadeInUp_0.45s_ease-out_0.45s_both]">
-                    <label for="password" class="block text-[15px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <div class="mb-6 sm:mb-7 animate-[fadeInUp_0.45s_ease-out_0.45s_both]">
+                    <label for="password" class="block text-sm sm:text-[15px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Password
                     </label>
                     <div class="group relative flex items-center">
@@ -99,7 +99,7 @@
                             id="password" type="password" name="password"
                             placeholder="Enter password"
                             autocomplete="current-password"
-                            class="w-full pl-10 pr-[42px] py-2 border rounded-lg text-base outline-none transition-all
+                            class="w-full pl-10 pr-[42px] py-2.5 sm:py-2 border rounded-lg text-base outline-none transition-all
                                 border-gray-300 text-gray-900 bg-white placeholder:text-gray-500
                                 focus:border-2 focus:border-blue-600
                                 dark:bg-slate-900 dark:border-gray-700 dark:text-slate-100 dark:focus:border-blue-400
@@ -117,7 +117,7 @@
                 {{-- Submit --}}
                 <div class="animate-[fadeInUp_0.45s_ease-out_0.55s_both]">
                     <button type="submit" id="signinBtn"
-                            class="w-full py-2 rounded-lg text-[13px] font-bold tracking-[0.08em] uppercase text-white
+                            class="w-full py-2.5 sm:py-2 rounded-lg text-[13px] font-bold tracking-[0.08em] uppercase text-white
                                    bg-gradient-to-r from-blue-700 to-blue-600 dark:from-blue-600 dark:to-blue-500
                                    flex items-center justify-center gap-2
                                    shadow-[0_2px_10px_rgba(37,99,235,0.35)]
@@ -133,9 +133,9 @@
                 </div>
 
                 @if (Route::has('register'))
-                <p class="text-center text-xs text-gray-600 dark:text-gray-400 mt-8">
+                <p class="text-center text-xs text-gray-600 dark:text-gray-400 mt-6 sm:mt-8">
                     For account assistance,<br>
-                    <span class="font-semibold text-gray-600 dark:text-gray-300">Contact your administrator</span>
+                    <span class="font-semibold text-gray-600 dark:text-gray-300">Contact the System Administrator</span>
                 </p>
                 @endif
 

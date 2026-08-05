@@ -1,4 +1,3 @@
-    
 <?php
 
 use App\Http\Controllers\OfficeController;
@@ -47,11 +46,6 @@ use App\Http\Controllers\DocumentController;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
 */
 
 Route::get('/', function () {
@@ -63,14 +57,32 @@ Route::middleware(['auth'])->group(function() {
     Route::get('activity-logs/data', [ActivityLogController::class, 'data'])->name('activity-logs.data');
 });
 
+// ------------------------------------------------------------------
+// Routes any logged-in user can reach, Guest included
+// ------------------------------------------------------------------
 Route::middleware('auth')->group(function () {
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     // Dashboard Routes
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/accounts/{id}', [DashboardController::class, 'accounts'])->name('dashboard.accounts');
+
+    //Obligation Routes for the dashboard
+    Route::get('/api/obligations/by-office-allotment-class/{classId}', [ObligationController::class, 'getByOfficeAllotmentClass'])->name('obligations.api.byOfficeAllotmentClass');
+    Route::get('/api/obligations/by-appropriation/{appropriationId}', [ObligationController::class, 'getByAppropriation'])->name('obligations.api.byAppropriation');
+
+    // SAAOB by Office-Current Report Routes
+    Route::get('saaob/export-excel', [SAAOBController::class, 'exportExcel'])->name('saaob.exportExcel');
+    
+});
+
+// ------------------------------------------------------------------
+// Routes restricted to users with specific roles (Developer, Administrator, Obligation, Disbursement)
+// ------------------------------------------------------------------
+Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement'])->group(function () {
 
     // User Routes (restricted to Developer and Administrator)
     Route::resource('users', UserController::class);
@@ -93,27 +105,23 @@ Route::middleware('auth')->group(function () {
     Route::resource('sectors', SectorController::class);
     //Program Routes
     Route::resource('programs', ProgramController::class);
+
     //Appropriation Routes
     Route::get('appropriations/account-codes', [AppropriationController::class, 'getAccountCodes'])
         ->name('appropriations.accountCodes');
-
     Route::get('appropriations/allotment-class-info', [AppropriationController::class, 'getAllotmentClassInfo'])
         ->name('appropriations.getAllotmentClassInfo');
-    
     Route::get('appropriations/by-office-allotment-class', [AppropriationController::class, 'getByOfficeAllotmentClass'])
         ->name('appropriations.getByOfficeAllotmentClass');
-    
     Route::get('appropriations/last-year', [AppropriationController::class, 'getLastYearappropriations'])
         ->name('appropriations.getLastYear');
-    
     Route::post('appropriations/store-from-last-year', [AppropriationController::class, 'storeFromLastYear'])
         ->name('appropriations.storeFromLastYear');
-    
     Route::post('appropriations/import', [AppropriationController::class, 'import'])
         ->name('appropriations.import');
-    
     // Resource route - MUST BE AFTER custom routes
     Route::resource('appropriations', AppropriationController::class);
+
     //Get Fund
     Route::get('/get-fund/{office_id}', function ($office_id) {
         $office = Office::find($office_id);
@@ -130,21 +138,19 @@ Route::middleware('auth')->group(function () {
 
     //Obligation Routes
     Route::resource('obligations', ObligationController::class);
-    Route::post('/obligations/{obligation}/cancel', [ObligationController::class, 'cancel'])->name('obligations.cancel');
     Route::get('obligations/{obligation}/purchase-order-modal', [ObligationController::class, 'showPurchaseOrderModal'])->name('obligations.purchase_order_modal');
-    Route::post('/obligations/{obligation}/store-purchase-order', [ObligationController::class, 'storePurchaseOrder'])->name('obligations.storePurchaseOrder');
     Route::get('obligations/{obligation}/obligation-adjustment-modal', [ObligationController::class, 'showObligationAdjustmentModal'])->name('obligations.obligation_adjustment_modal');
-    Route::post('/obligations/{obligation}/store-obligation-adjustment', [ObligationController::class, 'storeObligationAdjustment'])->name('obligations.storeObligationAdjustment');
     Route::get('obligations/{obligation}/disbursement-modal', [ObligationController::class, 'showDisbursementModal'])->name('obligations.disbursement_modal');
-    Route::post('/obligations/{obligation}/store-disbursement', [ObligationController::class, 'storeDisbursement'])->name('obligations.storeDisbursement');
-    Route::post('/obligations/{obligation}/payment-remarks', [ObligationController::class, 'updatePaymentRemarks'])->name('obligations.updatePaymentRemarks');
     Route::get('/obligations/{obligation}/activity-history', [ObligationController::class, 'activityHistory'])->name('obligations.activityHistory');
-    Route::get('/api/obligations/by-office-allotment-class/{classId}', [ObligationController::class, 'getByOfficeAllotmentClass'])->name('obligations.api.byOfficeAllotmentClass');
-    Route::get('/api/obligations/by-appropriation/{appropriationId}', [ObligationController::class, 'getByAppropriation'])->name('obligations.api.byAppropriation');
+    Route::get('/api/obligations/existing-obr-numbers', [ObligationController::class, 'getExistingObrNumbers'])->name('obligations.api.existingObrNumbers');
     Route::get('/api/obligations/{obligationId}/details', [ObligationController::class, 'getObligationDetails'])->name('obligations.api.details');
     Route::get('/api/obligations/{obligationId}/amounts', [ObligationController::class, 'getObligationAmounts'])->name('obligations.api.amounts');
     Route::get('/api/obligations/{obligationId}/year', [ObligationController::class, 'getObligationYear'])->name('obligations.api.year');
-    Route::get('/api/obligations/existing-obr-numbers', [ObligationController::class, 'getExistingObrNumbers'])->name('obligations.api.existingObrNumbers');
+    Route::post('/obligations/{obligation}/cancel', [ObligationController::class, 'cancel'])->name('obligations.cancel');
+    Route::post('/obligations/{obligation}/store-purchase-order', [ObligationController::class, 'storePurchaseOrder'])->name('obligations.storePurchaseOrder');
+    Route::post('/obligations/{obligation}/store-obligation-adjustment', [ObligationController::class, 'storeObligationAdjustment'])->name('obligations.storeObligationAdjustment');
+    Route::post('/obligations/{obligation}/store-disbursement', [ObligationController::class, 'storeDisbursement'])->name('obligations.storeDisbursement');
+    Route::post('/obligations/{obligation}/payment-remarks', [ObligationController::class, 'updatePaymentRemarks'])->name('obligations.updatePaymentRemarks');
 
     // Obligation Files Routes
     Route::post('/obligations/{obligation}/files', [ObligationFileController::class, 'store'])->name('obligation_files.store');
@@ -169,9 +175,7 @@ Route::middleware('auth')->group(function () {
 
     // Purchase Order Routes
     Route::resource('purchase_orders', PurchaseOrderController::class);
-    // Unified Purchase Order module view
     Route::get('purchase-orders/all', [PurchaseOrderController::class, 'all'])->name('purchase_orders.all');
-    // API endpoint to get purchase orders by po_number
     Route::get('/api/purchase-orders/by-number/{poNumber}', [PurchaseOrderController::class, 'getByPoNumber'])->name('purchase_orders.api.byNumber');
 
     // Purchase Order Files Routes
@@ -185,16 +189,12 @@ Route::middleware('auth')->group(function () {
 
     // Disbursement Routes
     Route::resource('disbursements', DisbursementController::class);
-    // Unified Disbursement module view
     Route::get('disbursement/all', [DisbursementController::class, 'all'])->name('disbursements.all');
-    // Check DV number uniqueness
     Route::post('/api/disbursements/check-dv-number', [DisbursementController::class, 'checkDvNumber'])->name('disbursements.checkDvNumber');
-    // Check PO number uniqueness
     Route::post('/api/purchase-orders/check-po-number', [PurchaseOrderController::class, 'checkPoNumber'])->name('purchase_orders.checkPoNumber');
 
     // Realignments Routes
     Route::resource('realignments', RealignmentController::class);
-    // Check realignment deletion date
     Route::post('/api/realignments/check-deletion-date', [RealignmentController::class, 'checkRealignmentDeletionDate'])->name('realignments.checkDeletionDate');
 
     // Realignment Files Routes
@@ -217,56 +217,43 @@ Route::middleware('auth')->group(function () {
 
     // Supplemental Routes
     Route::resource('supplementals', SupplementalController::class);
-    // Check supplemental deletion date
     Route::post('/api/supplementals/check-deletion-date', [SupplementalController::class, 'checkSupplementalDeletionDate'])->name('supplementals.checkDeletionDate');
 
     // SAAOB by Office-Current Report Routes
     Route::get('/saaob', [SAAOBController::class, 'index'])->name('saaob.index');
-    // SAAOB Excel Export
-    Route::get('saaob/export-excel', [SAAOBController::class, 'exportExcel'])->name('saaob.exportExcel');
+    
     // SAAOB by Office-Continuing Report Routes
     Route::get('/saaobco', [SAAOBCOController::class, 'index'])->name('saaobco.index');
-    // SAAOBCO Excel Export
     Route::get('saaobco/export-excel', [SAAOBCOController::class, 'exportExcel'])->name('saaobco.exportExcel');
     // SAAOB Fund per Sector by Fund per Sector Report Routes
     Route::get('/saaobfundsector', [SAAOBFundSectorController::class, 'index'])->name('saaobfundsector.index');
-    // SAAOB Fund per Sector Excel Export
     Route::get('saaobFundSector/export-excel', [SAAOBFundSectorController::class, 'exportExcel'])->name('saaobFundSector.exportExcel');
     // SAAOB All Funds Report Routes
     Route::get('/saaobfundsource', [SAAOBFundSourceController::class, 'index'])->name('saaobfundsource.index');
-    // SAAOB Fund per Sector Excel Export
     Route::get('saaobFundSource/export-excel', [SAAOBFundSourceController::class, 'exportExcel'])->name('saaobFundSource.exportExcel');
     // SAAOB GF Current Report Routes
     Route::get('/saaobgfcurrent', [SAAOBGFCurrentController::class, 'index'])->name('saaobgfcurrent.index');
-    // SAAOB GF Current Excel Export
     Route::get('saaobGFCurrent/export-excel', [SAAOBGFCurrentController::class, 'exportExcel'])->name('saaobGFCurrent.exportExcel');
     // SAAOB GF Current Summary Report Routes
     Route::get('/saaobgfcurrentsummary', [SAAOBGFCurrentSummaryController::class, 'index'])->name('saaobgfcurrentsummary.index');
-    // SAAOB GF Current Excel Export
     Route::get('saaobGFCurrentSummary/export-excel', [SAAOBGFCurrentSummaryController::class, 'exportExcel'])->name('saaobGFCurrentSummary.exportExcel');
     // SAAODB Offices Report Routes
     Route::get('/saaodboffices', [SAAODBOfficeController::class, 'index'])->name('saaodboffice.index');
-    // SAAODB Offices Excel Export
     Route::get('saaodb/export-excel', [SAAODBOfficeController::class, 'exportExcel'])->name('saaodb.exportExcel');
     // SAAODB All Funds Report Routes
     Route::get('/saaodballfunds', [SAAODBAllFundsController::class, 'index'])->name('saaodballfunds.index');
-    // SAAODB All Funds Excel Export
     Route::get('saaodbAllFunds/export-excel', [SAAODBAllFundsController::class, 'exportExcel'])->name('saaodbAllFunds.exportExcel');
     // SAAODB GF Report Routes
     Route::get('/saaodbgf', [SAAODBGFController::class, 'index'])->name('saaodbgf.index');
-    // SAAODB GF Excel Export
     Route::get('saaodbGF/export-excel', [SAAODBGFController::class, 'exportExcel'])->name('saaodbGF.exportExcel');
     // RAO Report Routes
     Route::get('/rao', [RAOController::class, 'index'])->name('rao.index');
-    // RAO Excel Export
     Route::get('rao/export-excel', [RAOController::class, 'exportExcel'])->name('rao.exportExcel');
     // Accounts Summary Report Routes
     Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');
-    // Accounts Summary Excel Export
     Route::get('summaryaccounts/export-excel', [AccountsSummaryController::class, 'exportExcel'])->name('summaryaccounts.exportExcel');
     // NDD Report Routes
     Route::get('/ndd', [NDDController::class, 'index'])->name('ndd.index');
-    // NDD Excel Export
     Route::get('ndd/export-excel', [NDDController::class, 'exportExcel'])->name('ndd.exportExcel');
 
     // Document Routes (SPA with modals)

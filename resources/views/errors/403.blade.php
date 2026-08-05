@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ asset('benguetlogo.ico') }}">
     <title>403 - Access Forbidden</title>
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -88,7 +89,7 @@
                     Go to Dashboard
                 </a>
                 <a href="/" class="block w-full border-2 border-amber-600 text-amber-600 font-semibold py-3 rounded-lg hover:bg-amber-50 transition-colors duration-300">
-                    Back to Home
+                    Back to Log in
                 </a>
             </div>
 

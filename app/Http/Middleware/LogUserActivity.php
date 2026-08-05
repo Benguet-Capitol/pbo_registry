@@ -13,12 +13,13 @@ class LogUserActivity
     {
         $response = $next($request);
 
-        if ($request->user()) {
+        // Only log activity for the Guest role
+        if ($request->user() && $request->user()->hasRole('Guest')) {
             $route = $request->route();
             if ($route) {
                 $routeName = $route->getName();
                 $method = $request->method();
-                
+
                 // Skip logging for certain routes
                 if (!$this->shouldSkipLogging($routeName)) {
                     $description = $this->getDescriptionFromRoute($routeName, $method);

@@ -4,25 +4,18 @@ namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
-
 class Kernel extends HttpKernel
 {
     /**
-     * The application's global HTTP middleware stack.
-     *
-     * These middleware are run during every request to your application.
-     *
-     * @var array
+     * NOTE: This file is not loaded by Laravel 11+ when bootstrap/app.php
+     * uses Application::configure(). All middleware registration should
+     * live in bootstrap/app.php instead. Keeping this file around risks
+     * someone assuming it's authoritative when it isn't.
      */
     protected $middleware = [
         // ...existing code...
     ];
 
-    /**
-     * The application's route middleware groups.
-     *
-     * @var array
-     */
     protected $middlewareGroups = [
         'web' => [
             \App\Http\Middleware\LogUserActivity::class,
@@ -34,13 +27,6 @@ class Kernel extends HttpKernel
         ],
     ];
 
-    /**
-     * The application's route middleware.
-     *
-     * These middleware may be assigned to groups or used individually.
-     *
-     * @var array
-     */
     protected $routeMiddleware = [
         // ...existing code...
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

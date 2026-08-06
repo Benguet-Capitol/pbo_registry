@@ -10,7 +10,7 @@
 
     <x-slot name="header">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 class="text-xl font-semibold leading-tight">
+            <h2 class="text-xl font-semibold leading-tight break-words">
                 Dashboard | Current Balances
 
                 @php
@@ -42,7 +42,7 @@
             <!-- Right: Breadcrumb Navigation -->
             @if(isset($breadcrumb))
             <nav class="text-xs text-gray-600 dark:text-gray-300" aria-label="Breadcrumb">
-                <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse">
+                <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse flex-wrap">
                     @foreach ($breadcrumb as $index => $item)
                     <li>
                         @if (!empty($item['route']) && $index < count($breadcrumb) - 1)
@@ -67,12 +67,12 @@
     @php
     $status = session('status');
     @endphp
-    <div id="successAlert" class="fixed top-6 right-6 max-w-2xl z-50 animate-slide-in">
-        <div class="bg-green-50 border-2 border-green-300 text-green-800 px-6 py-5 rounded-xl shadow-2xl dark:bg-green-900 dark:border-green-600 dark:text-green-100 flex items-start justify-between gap-4">
+    <div id="successAlert" class="fixed top-4 right-4 left-4 sm:left-auto sm:top-6 sm:right-6 max-w-2xl z-50 animate-slide-in">
+        <div class="bg-green-50 border-2 border-green-300 text-green-800 px-4 py-4 sm:px-6 sm:py-5 rounded-xl shadow-2xl dark:bg-green-900 dark:border-green-600 dark:text-green-100 flex items-start justify-between gap-4">
             <div class="flex items-start gap-4">
                 <i class="fas fa-check-circle text-green-600 dark:text-green-400 mt-1 flex-shrink-0 text-2xl"></i>
                 <div class="flex-1">
-                    <p class="font-semibold text-base leading-relaxed">{!! $status['message'] ?? $status !!}</p>
+                    <p class="font-semibold text-sm sm:text-base leading-relaxed">{!! $status['message'] ?? $status !!}</p>
                 </div>
             </div>
             <button type="button" class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 flex-shrink-0" onclick="closeSuccessAlert()">
@@ -185,14 +185,14 @@
 
             <!-- Date Range Filter Row -->
             <!-- From Date Filter -->
-            <div class="flex items-center space-x-2 {{ $isGuest ? 'lg:col-span-2' : '' }}">
-                <label for="fromDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">From Date</label>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 {{ $isGuest ? 'lg:col-span-2' : '' }}">
+                <label for="fromDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100">From Date</label>
                 <x-form.input type="date" name="from_date" id="fromDate" value="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
             </div>
 
             <!-- To Date Filter -->
-            <div class="flex items-center space-x-2 {{ $isGuest ? 'lg:col-span-2' : '' }}">
-                <label for="toDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">To Date</label>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 {{ $isGuest ? 'lg:col-span-2' : '' }}">
+                <label for="toDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100">To Date</label>
                 <x-form.input type="date" name="to_date" id="toDate" value="{{ request('to_date') }}" min="{{ request('from_date') }}" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" />
             </div>
 
@@ -484,10 +484,10 @@
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-4 mb-4 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
                 <label for="dashboardTable" class="ml-4 block text-md font-semibold text-blue-800 dark:text-blue-400">Office Allotment Classes</label>
 
-                <div id="tableActionButtons" class="flex items-center gap-2">
+                <div id="tableActionButtons" class="flex flex-wrap items-center gap-2">
                     @role('Guest')
                     <button
                         id="exportSaaobBtn"
@@ -500,7 +500,7 @@
                     @endrole
                 </div>
             </div>
-            <div class="overflow-auto max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
+            <div class="overflow-auto max-h-[60vh] sm:max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
@@ -1061,68 +1061,70 @@
     </div>
 
     <!-- Obligations Modal -->
-    <div id="obligationsModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50">
-        <div class="flex flex-col max-h-[90vh] w-full max-w-screen-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+    <div id="obligationsModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+        <div class="flex flex-col max-h-[95vh] sm:max-h-[90vh] w-full max-w-screen-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
             <!-- Modal Header -->
-            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-list-check text-blue-600 dark:text-blue-300 text-xl"></i>
-                    <div>
-                        <h3 class="text-base leading-6 font-semibold text-blue-900 dark:text-blue-100">
+            <div class="flex justify-between items-start sm:items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 border-b-2 border-blue-200 dark:border-blue-700 rounded-t-lg">
+                <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0">
+                    <i class="fas fa-list-check text-blue-600 dark:text-blue-300 text-lg sm:text-xl mt-0.5 sm:mt-0"></i>
+                    <div class="min-w-0">
+                        <h3 class="text-sm sm:text-base leading-6 font-semibold text-blue-900 dark:text-blue-100">
                             Obligations
                         </h3>
-                        <span id="obligationsHeaderInfo" class="text-xs text-blue-700 dark:text-blue-300"></span>
+                        <span id="obligationsHeaderInfo" class="block text-[11px] sm:text-xs text-blue-700 dark:text-blue-300 break-words"></span>
                     </div>
                 </div>
-                <button onclick="closeObligationsModal()" class="text-blue-600 dark:text-blue-300 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-full p-2 transition-colors duration-200">
-                    <i class="fas fa-times text-xl"></i>
+                <button onclick="closeObligationsModal()" class="flex-shrink-0 text-blue-600 dark:text-blue-300 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-full p-2 transition-colors duration-200">
+                    <i class="fas fa-times text-lg sm:text-xl"></i>
                 </button>
             </div>
 
             <!-- Search and Total Records Section -->
-            <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                <div class="flex items-center space-x-3">
+            <div class="px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <div class="flex flex-wrap items-center gap-2">
                     <!-- Total Records -->
-                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 flex-shrink-0">
+                    <div class="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 flex-shrink-0">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
                         <span id="obligationsTotalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">0</span>
                     </div>
                     <!-- Date Range Filter -->
-                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-shrink-0">Date Range:</span>
-                    <input 
-                        type="date" 
-                        id="obligationsDateFrom" 
-                        class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
-                        onchange="refreshObligationsModal()"
-                    >
-                    <span class="text-gray-600 dark:text-gray-400 text-xs">to</span>
-                    <input 
-                        type="date" 
-                        id="obligationsDateTo" 
-                        class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
-                        onchange="refreshObligationsModal()"
-                    >
-                    <button 
-                        onclick="document.getElementById('obligationsDateFrom').value = ''; document.getElementById('obligationsDateTo').value = ''; refreshObligationsModal()"
-                        class="px-2 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
-                        title="Clear date range"
-                    >
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-shrink-0">Date Range:</span>
+                        <input 
+                            type="date" 
+                            id="obligationsDateFrom" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                            onchange="refreshObligationsModal()"
+                        >
+                        <span class="text-gray-600 dark:text-gray-400 text-xs">to</span>
+                        <input 
+                            type="date" 
+                            id="obligationsDateTo" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                            onchange="refreshObligationsModal()"
+                        >
+                        <button 
+                            onclick="document.getElementById('obligationsDateFrom').value = ''; document.getElementById('obligationsDateTo').value = ''; refreshObligationsModal()"
+                            class="px-2 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
+                            title="Clear date range"
+                        >
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                     <!-- Search Input -->
                     <input 
                         type="text" 
                         id="obligationsSearchInput" 
                         placeholder="Search obligations..." 
-                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+                        class="w-full sm:flex-1 sm:min-w-[180px] px-3 py-2 border border-gray-300 rounded-lg text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
                         oninput="filterObligationsTable(this.value, 'dashboard')"
                     >
                 </div>
             </div>
 
             <!-- Modal Body -->
-            <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] px-6 py-4">
+            <div class="overflow-y-auto flex-1 max-h-[calc(95vh-260px)] sm:max-h-[calc(90vh-280px)] px-3 sm:px-6 py-3 sm:py-4">
                 <div id="obligationsContent" class="space-y-4">
                     <!-- Loading spinner -->
                     <div id="obligationsLoading" class="flex justify-center items-center py-8">
@@ -1132,12 +1134,12 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
-                <button onclick="printObligationsModal('dashboard')" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <div class="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 p-3 sm:p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg flex-shrink-0">
+                <button onclick="printObligationsModal('dashboard')" class="w-full sm:w-auto justify-center text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-print mr-2"></i>
                     Print
                 </button>
-                <button onclick="closeObligationsModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <button onclick="closeObligationsModal()" class="w-full sm:w-auto justify-center text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     Close
                 </button>
@@ -1148,7 +1150,7 @@
     <!-- Context Menu for Obligation Rows in Dashboard Modal -->
     @role('Administrator|Developer|Obligation')
     <div id="dashboardObligationContextMenu" 
-        class="absolute hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl"
+        class="absolute hidden w-48 max-w-[calc(100vw-1rem)] bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl"
         style="display: none; z-index: 10001; position: fixed;">
         <button id="contextObligationDetails"
                 class="w-full text-left block px-4 py-2 text-xs text-blue-900 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-t-lg transition-colors duration-150">
@@ -1186,32 +1188,32 @@
     @endrole
 
     <!-- Obligation History Modal -->
-    <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
-        <div class="flex flex-col max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+    <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+        <div class="flex flex-col max-h-[95vh] sm:max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
             <!-- Modal header -->
-            <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
-                    <div>
-                        <h3 class="text-base leading-6 font-semibold text-gray-900 dark:text-gray-100">
+            <div class="flex justify-between items-start sm:items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
+                <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0">
+                    <i class="fas fa-history text-gray-600 dark:text-gray-300 text-lg sm:text-xl mt-0.5 sm:mt-0"></i>
+                    <div class="min-w-0">
+                        <h3 class="text-sm sm:text-base leading-6 font-semibold text-gray-900 dark:text-gray-100">
                             Obligation Status/History
                         </h3>
-                        <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
+                        <span id="historyObligationInfo" class="block text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 break-words"></span>
                     </div>
                 </div>
-                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 hover:text-white hover:bg-gray-600 dark:hover:bg-gray-700 rounded-full p-2 transition-colors duration-200">
-                    <i class="fas fa-times text-xl"></i>
+                <button type="button" onclick="closeObligationHistoryModal()" class="flex-shrink-0 text-gray-600 dark:text-gray-300 hover:text-white hover:bg-gray-600 dark:hover:bg-gray-700 rounded-full p-2 transition-colors duration-200">
+                    <i class="fas fa-times text-lg sm:text-xl"></i>
                 </button>
             </div>
             <!-- Modal body (scrollable) -->
-            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-6 space-y-3">
+            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(95vh-220px)] sm:max-h-[calc(90vh-240px)] p-3 sm:p-6 space-y-3">
                 <div class="flex justify-center items-center py-8">
                     <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
                 </div>
             </div>
             <!-- Modal footer -->
-            <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+            <div class="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 p-3 sm:p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                <button type="button" onclick="closeObligationHistoryModal()" class="w-full sm:w-auto justify-center text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                     <i class="fas fa-times mr-2"></i>
                     Close
                 </button>
@@ -1221,28 +1223,28 @@
 
     <!-- Cancellation Modal for Dashboard -->
     <form id="dashboardCancelObligationForm" method="POST">
-        <div id="dashboardCancellationModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10004] flex items-center justify-center bg-black bg-opacity-50">
-            <div class="flex flex-col max-h-[90vh] w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
+        <div id="dashboardCancellationModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10004] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+            <div class="flex flex-col max-h-[95vh] sm:max-h-[90vh] w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
                 <!-- Modal header -->
-                <div class="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900 dark:to-violet-900 border-b-2 border-purple-200 dark:border-purple-700 rounded-t-lg">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-ban text-purple-600 dark:text-purple-300 text-xl"></i>
-                        <h3 class="text-base leading-6 font-semibold text-purple-900 dark:text-purple-100">
+                <div class="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900 dark:to-violet-900 border-b-2 border-purple-200 dark:border-purple-700 rounded-t-lg">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <i class="fas fa-ban text-purple-600 dark:text-purple-300 text-lg sm:text-xl"></i>
+                        <h3 class="text-sm sm:text-base leading-6 font-semibold text-purple-900 dark:text-purple-100">
                             Cancel Obligation
                         </h3>
                     </div>
-                    <button type="button" onclick="closeDashboardCancellationModal()" class="text-purple-600 dark:text-purple-300 hover:text-white hover:bg-purple-600 dark:hover:bg-purple-700 rounded-full p-2 transition-colors duration-200">
-                        <i class="fas fa-times text-xl"></i>
+                    <button type="button" onclick="closeDashboardCancellationModal()" class="flex-shrink-0 text-purple-600 dark:text-purple-300 hover:text-white hover:bg-purple-600 dark:hover:bg-purple-700 rounded-full p-2 transition-colors duration-200">
+                        <i class="fas fa-times text-lg sm:text-xl"></i>
                     </button>
                 </div>
                 <!-- Modal body (scrollable) -->
-                <div class="overflow-y-auto flex-1 max-h-[calc(90vh-280px)] p-6">
+                <div class="overflow-y-auto flex-1 max-h-[calc(95vh-260px)] sm:max-h-[calc(90vh-280px)] p-3 sm:p-6">
                     <input type="hidden" id="dashboardHiddenObligationId" name="obligation_id" value="">
                     <p class="text-sm font-bold text-gray-700 dark:text-gray-300">
                         Do you want to proceed with the cancellation of this Obligation? If cancelled, the obligation amount will be set to zero.
                     </p>
 
-                    <div class="mt-4">
+                    <div class="mt-4 overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <tbody>
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
@@ -1283,12 +1285,12 @@
                     </div>
                 </div>
                 <!-- Modal footer -->
-                <div class="flex justify-end gap-3 p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                    <button type="button" onclick="proceedDashboardCancellation()" class="text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                <div class="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 p-3 sm:p-6 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                    <button type="button" onclick="proceedDashboardCancellation()" class="w-full sm:w-auto justify-center text-red-600 dark:text-red-400 inline-flex leading-4 tracking-wider hover:text-white border border-red-600 dark:border-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                         <i class="fas fa-window-close mr-2"></i>
                         Proceed
                     </button>
-                    <button type="button" onclick="closeDashboardCancellationModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
+                    <button type="button" onclick="closeDashboardCancellationModal()" class="w-full sm:w-auto justify-center text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-6 py-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
                         <i class="fas fa-times mr-2"></i>
                         Cancel
                     </button>
@@ -1794,7 +1796,7 @@
                             if (data.success && data.data && Array.isArray(data.data) && data.data.length > 0) {
                                 // Create table with obligations
                                 let tableHTML = `
-                                    <div class="overflow-x-auto flex flex-col" style="max-height: calc(90vh - 340px);">
+                                    <div class="overflow-x-auto flex flex-col obligations-inner-scroll">
                                         <table class="w-full text-xs text-gray-700 dark:text-gray-300" style="table-layout: fixed;">
                                             <colgroup>
                                                 <col style="width: 50px;">
@@ -4414,9 +4416,9 @@
 
             const toast = document.createElement('div');
             toast.id = 'saaobToast';
-            toast.className = 'fixed top-6 right-6 max-w-md z-50 animate-slide-in';
+            toast.className = 'fixed top-4 right-4 left-4 sm:left-auto sm:top-6 sm:right-6 max-w-md z-50 animate-slide-in';
             toast.innerHTML = `
-                <div class="${bgClass} border-2 px-5 py-4 rounded-xl shadow-2xl flex items-start gap-3">
+                <div class="${bgClass} border-2 px-4 py-3 sm:px-5 sm:py-4 rounded-xl shadow-2xl flex items-start gap-3">
                     <i class="${iconClass} mt-0.5 flex-shrink-0 text-lg"></i>
                     <p class="font-semibold text-sm flex-1">${message}</p>
                     <button type="button" onclick="document.getElementById('saaobToast')?.remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
@@ -4727,6 +4729,17 @@
 
         .dark .apexcharts-tooltip-text {
             color: #f3f4f6 !important;
+        }
+
+        /* Mobile: fixed-width data tables scroll horizontally within their card */
+        @media (max-width: 640px) {
+            #dashboardTable { font-size: 10px; }
+        }
+
+        /* JS-built obligations table inside the Obligations Modal: shrink on small screens */
+        .obligations-inner-scroll { max-height: calc(90vh - 340px); }
+        @media (max-width: 640px) {
+            .obligations-inner-scroll { max-height: calc(95vh - 320px); }
         }
     </style>
 

@@ -74,6 +74,13 @@
                         {{ __('Create User') }}
                     </button>
                     @endcan
+
+                    @can('edit users')
+                    <button onclick="openRoleRestrictionModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-500 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-400 dark:text-gray-300 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                        <i class="fas fa-user-lock text-xl mr-3 -ml-1 w-5 h-5"></i>
+                        {{ __('Role Login Access') }}
+                    </button>
+                    @endcan
                 </div>
                 <div class="flex items-center">
                     <div class="flex items-center">
@@ -126,6 +133,7 @@
                                 @endif
                             </a>
                         </th>
+                        <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Status</th>
                         @canany(['edit users', 'delete users'])<th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th>@endcanany
                     </tr>
                 </thead>
@@ -139,6 +147,14 @@
                             {{ $user->office_abbreviation }}
                         </td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <span class="px-2 py-1 rounded-full font-semibold
+                                        {{ $user->is_restricted
+                                            ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200'
+                                            : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' }}">
+                                {{ $user->is_restricted ? 'Restricted' : 'Active' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                             <div class="relative inline-block text-left">
                                 @canany(['edit users', 'delete users'])
                                 <button onclick="toggleDropdown(this)" 
@@ -147,6 +163,13 @@
                                 </button>
                                 <div class="absolute right-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
                                     @can('edit users')
+                                    <form method="POST" action="{{ route('users.toggle-restriction', $user) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
+                                            <i class="fas fa-user-lock mr-2"></i>{{ $user->is_restricted ? 'Activate' : 'Restrict' }}
+                                        </button>
+                                    </form>
                                     <button onclick='openEditUserModal(@json($user))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
                                         <i class="fas fa-edit mr-2"></i>Edit
                                     </button>
@@ -175,6 +198,7 @@
     @include('users.modal.create')
     @include('users.modal.delete')
     @include('users.modal.edit')
+    @include('users.modal.role')
 
 <script>
     // Function to filter table rows
@@ -233,6 +257,16 @@
         document.querySelectorAll('.dropdown, .autocomplete-dropdown').forEach(drop => {
             drop.classList.add('hidden');
         });
+    }
+
+    function openRoleRestrictionModal() {
+        document.getElementById('roleRestrictionModal').classList.remove('hidden');
+        document.getElementById('roleRestrictionModal').classList.add('flex');
+    }
+
+    function closeRoleRestrictionModal() {
+        document.getElementById('roleRestrictionModal').classList.add('hidden');
+        document.getElementById('roleRestrictionModal').classList.remove('flex');
     }
 
 </script>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
@@ -86,27 +87,30 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
 
     // User Routes (restricted to Developer and Administrator)
     Route::resource('users', UserController::class);
-    //Employee Routes
+    Route::patch('/users/{user}/toggle-restriction', [UserController::class, 'toggleRestriction'])->name('users.toggle-restriction');
+    // Employee Routes
     Route::get('/employees/check-unique', [EmployeeController::class, 'checkUnique']);
     Route::resource('employees', EmployeeController::class);
-    //Account Code Routes
+    // Account Code Routes
     Route::resource('account_codes', AccountCodeController::class);
-    //Office Routes
+    // Office Routes
     Route::resource('offices', OfficeController::class);
-    //Office Allotment Class Routes
+    // Office Allotment Class Routes
     Route::resource('office_allotment_classes', OfficeAllotmentClassController::class);
-    //Allotment Class Routes
+    // Allotment Class Routes
     Route::resource('allotment_classes', AllotmentClassController::class);
-    //Fund Routes
+    // Fund Routes
     Route::resource('funds', FundController::class);
-    //Fund Source Routes
+    // Fund Source Routes
     Route::resource('fund_sources', FundSourceController::class);
-    //Sector Routes
+    // Sector Routes
     Route::resource('sectors', SectorController::class);
-    //Program Routes
+    // Program Routes
     Route::resource('programs', ProgramController::class);
+    // Role Routes
+    Route::patch('/roles/{role}/toggle-restriction', [RoleController::class, 'toggleRestriction'])->name('roles.toggle-restriction');
 
-    //Appropriation Routes
+    // Appropriation Routes
     Route::get('appropriations/account-codes', [AppropriationController::class, 'getAccountCodes'])
         ->name('appropriations.accountCodes');
     Route::get('appropriations/allotment-class-info', [AppropriationController::class, 'getAllotmentClassInfo'])
@@ -119,10 +123,9 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
         ->name('appropriations.storeFromLastYear');
     Route::post('appropriations/import', [AppropriationController::class, 'import'])
         ->name('appropriations.import');
-    // Resource route - MUST BE AFTER custom routes
     Route::resource('appropriations', AppropriationController::class);
 
-    //Get Fund
+    // Get Fund
     Route::get('/get-fund/{office_id}', function ($office_id) {
         $office = Office::find($office_id);
         return response()->json([
@@ -133,10 +136,10 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
             'office_abbreviation' => $office ? $office->office_abbreviation : ''
         ]);
     });
-    //Get Office Allotment Classes
+    // Get Office Allotment Classes
     Route::get('/get-continuing-allotment-classes', [OfficeAllotmentClassController::class, 'getContinuingAllotmentClasses']);
 
-    //Obligation Routes
+    // Obligation Routes
     Route::resource('obligations', ObligationController::class);
     Route::get('obligations/{obligation}/purchase-order-modal', [ObligationController::class, 'showPurchaseOrderModal'])->name('obligations.purchase_order_modal');
     Route::get('obligations/{obligation}/obligation-adjustment-modal', [ObligationController::class, 'showObligationAdjustmentModal'])->name('obligations.obligation_adjustment_modal');

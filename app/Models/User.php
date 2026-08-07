@@ -26,6 +26,11 @@ class User extends Authenticatable
         'password',
         'usertype',
         'office',
+        'is_restricted',
+    ];
+    
+    protected $casts = [
+        'is_restricted' => 'boolean',
     ];
 
     /**

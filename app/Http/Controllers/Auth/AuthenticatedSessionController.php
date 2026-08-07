@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use App\Services\ActivityLogger;
+use App\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 class AuthenticatedSessionController extends Controller
@@ -28,21 +29,42 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $user = Auth::user();
+
+        // 1. Check if this specific user account is restricted
+        if ($user->is_restricted) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('error',
+                'Login has been temporarily restricted.<br> Please contact the <strong>System Administrator</strong>.'
+            );
+        }
+
+        // 2. Check if this user's role is restricted
+        $role = Role::where('name', $user->usertype)->first();
+
+        if ($role && $role->is_login_restricted) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('error',
+                'Login for the <strong>' . $user->usertype . '</strong> Role is temporarily restricted.<br> Please contact the <strong>System Administrator</strong>.'
+            );
+        }
+
         $request->session()->regenerate();
 
-        $user = Auth::user();
         $roleInfo = '';
-        
-        // Get roles directly from the user model
         try {
             if ($user && $user->roles) {
                 $roles = collect($user->roles)->pluck('name')->implode(', ');
                 $roleInfo = $roles ? " as {$roles} Role" : '';
             }
-        } catch (\Exception $e) {
-            // Silently handle any role retrieval errors
-        }
-        
+        } catch (\Exception $e) {}
+
         ActivityLogger::log("User {$user->name} logged in{$roleInfo}", 'auth', [
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent()

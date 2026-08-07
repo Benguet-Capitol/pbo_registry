@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'is_login_restricted'];
+
+    protected $casts = [
+        'is_login_restricted' => 'boolean',
+    ];
 
     public function permissions(): BelongsToMany
     {

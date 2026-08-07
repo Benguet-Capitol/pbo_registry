@@ -62,7 +62,7 @@ class UserController extends Controller
         // Get employees and sort by name (locally)
         $employees = Employee::all()->sortBy('name');
 
-        //Get roles
+        // Get roles
         $roles = Role::all()->sortBy('id');
 
         // Get all offices for any dropdowns/filters you might need
@@ -163,5 +163,23 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('users.index')->with('status', 'User <strong>' . $userName . '</strong> from <strong>' . $officeAbbr . '</strong> has been deleted successfully!');
+    }
+
+    public function toggleRestriction(User $user): RedirectResponse
+    {
+        // Prevent an admin from restricting themselves
+        if (auth()->id() === $user->id) {
+            return redirect()->route('users.index')
+                ->with('error', 'You cannot restrict your own account.');
+        }
+
+        $user->update(['is_restricted' => ! $user->is_restricted]);
+
+        $user->load('officeRelation');
+        $officeAbbr = $user->office_abbreviation;
+        $status = $user->is_restricted ? 'restricted' : 'active';
+
+        return redirect()->route('users.index')
+            ->with('status', 'User <strong>' . $user->name . '</strong> from <strong>' . $officeAbbr . '</strong> is now <strong>' . $status . '</strong>.');
     }
 }

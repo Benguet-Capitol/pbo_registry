@@ -35,15 +35,22 @@
                     animate-[scaleIn_0.50s_cubic-bezier(.22,.68,0,1.2)_0.15s_both]">
 
             @if (session('status'))
-                <div class="bg-blue-50 border border-blue-200 text-blue-600 rounded-lg px-3.5 py-2.5 text-[13px] mb-4
-                            dark:bg-blue-950 dark:border-blue-900 dark:text-blue-300" role="alert">
+                <div class="bg-blue-50 border border-blue-200 text-blue-600 rounded-lg px-3.5 py-2.5 text-sm mb-4
+                            dark:bg-blue-950 dark:border-blue-900 dark:text-blue-300 text-center font-bold" role="alert">
                     {{ session('status') }}
                 </div>
             @endif
 
+            @if (session('error'))
+                <div class="bg-red-50 border border-red-200 text-red-600 rounded-lg px-3.5 py-2.5 text-sm mb-4
+                            dark:bg-red-950 dark:border-red-900 dark:text-red-300 text-center font-bold" role="alert">
+                    {!! session('error') !!}
+                </div>
+            @endif
+
             @if ($errors->any())
-                <div class="bg-red-50 border border-red-200 text-red-600 rounded-lg px-3.5 py-2.5 text-[13px] mb-4
-                            dark:bg-red-950 dark:border-red-900 dark:text-red-300" role="alert">
+                <div class="bg-red-50 border border-red-200 text-red-600 rounded-lg px-3.5 py-2.5 text-sm mb-4
+                            dark:bg-red-950 dark:border-red-900 dark:text-red-300 text-center font-bold" role="alert">
                     <ul class="list-none space-y-1">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>

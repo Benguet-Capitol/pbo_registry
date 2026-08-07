@@ -34,7 +34,7 @@
     @endif
 
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center">
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Realignment / Augmentation') }}
 
@@ -64,7 +64,7 @@
             <!-- Right: Breadcrumb Navigation -->
             @if(isset($breadcrumb))
             <nav class="text-xs text-gray-600 dark:text-gray-300" aria-label="Breadcrumb">
-                <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse">
+                <ol class="list-none p-0 inline-flex flex-wrap items-center space-x-1 rtl:space-x-reverse">
                     @foreach ($breadcrumb as $index => $item)
                     <li>
                         @if (!empty($item['route']) && $index < count($breadcrumb) - 1)
@@ -92,18 +92,18 @@
             <i class="fas fa-filter mr-2 text-blue-600 dark:text-blue-400"></i>
             Filters
         </h4>
-        
+
         <form id="filterForm" method="GET" action="{{ route('realignments.index') }}">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="year1" class="sr-only">Year</label>
-                    <x-form.select 
-                    name="year1" 
-                    id="year1" 
-                    class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
-                    data-default="{{ date('Y') }}" 
+                    <x-form.select
+                    name="year1"
+                    id="year1"
+                    class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    data-default="{{ date('Y') }}"
                     onchange="this.form.submit()">
                         @foreach($availableYears as $year1)
                             <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
@@ -114,10 +114,10 @@
                 <!-- Office and Allotment Class Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="officeAllotmentClass" class="sr-only">Office & Class</label>
-                    <x-form.select 
-                    name="office_allotment_class_id" 
-                    id="officeAllotmentClass" 
-                    class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
+                    <x-form.select
+                    name="office_allotment_class_id"
+                    id="officeAllotmentClass"
+                    class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     data-default=""
                     onchange="this.form.submit()">
                         <option value="">All Allotment Classes per Office</option>
@@ -132,10 +132,10 @@
                 <!-- OBR Type Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="realignment_type" class="sr-only">Realignment Type</label>
-                    <x-form.select 
-                    name="realignment_type_filter" 
-                    id="realignment_type_filter" 
-                    class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" 
+                    <x-form.select
+                    name="realignment_type_filter"
+                    id="realignment_type_filter"
+                    class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     data-default=""
                     onchange="this.form.submit()">
                         <option value="">All Types</option>
@@ -147,10 +147,10 @@
                 <!-- Per Page Dropdown -->
                 <div class="flex items-center space-x-2">
                     <label for="perPage" class="sr-only">Show per page</label>
-                    <x-form.select 
-                    name="per_page" 
-                    id="perPage" 
-                    class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" 
+                    <x-form.select
+                    name="per_page"
+                    id="perPage"
+                    class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                     onchange="this.form.submit()">
                         <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
@@ -161,160 +161,156 @@
                 </div>
             </div>
         </form>
+
+        @php
+            $activeFilterChips = [];
+
+            if (request('office_allotment_class_id')) {
+                $officeClass = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_id'));
+                if ($officeClass) {
+                    $activeFilterChips[] = [
+                        'label' => $officeClass->offices->office_abbreviation . ' - ' . $officeClass->allotmentClass->class,
+                        'url' => '?' . http_build_query(request()->except(['office_allotment_class_id', 'page'])),
+                    ];
+                }
+            }
+            if (request('realignment_type_filter')) {
+                $activeFilterChips[] = [
+                    'label' => 'Type: ' . request('realignment_type_filter'),
+                    'url' => '?' . http_build_query(request()->except(['realignment_type_filter', 'page'])),
+                ];
+            }
+            if (request('search')) {
+                $activeFilterChips[] = [
+                    'label' => 'Search: "' . request('search') . '"',
+                    'url' => '?' . http_build_query(request()->except(['search', 'page'])),
+                    'isClientSide' => true,
+                ];
+            }
+        @endphp
+
+        @if (count($activeFilterChips) > 0)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
+                @foreach ($activeFilterChips as $chip)
+                    <span class="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700">
+                        {{ $chip['label'] }}
+                        @if (!empty($chip['isClientSide']))
+                            <button type="button" onclick="clearSearchFilter()" class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors" title="Clear">
+                                <i class="fas fa-times text-[10px]"></i>
+                            </button>
+                        @else
+                            <a href="{{ $chip['url'] }}" class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors" title="Remove filter">
+                                <i class="fas fa-times text-[10px]"></i>
+                            </a>
+                        @endif
+                    </span>
+                @endforeach
+                <a href="{{ route('realignments.index') }}" class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 underline ml-1">
+                    Clear all
+                </a>
+            </div>
+        @endif
     </div>
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-                <div>
+            <div class="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-4">
+                <div class="flex-shrink-0">
                     @can('create realignments')
-                    <button onclick="openCreateRealignmentModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                    <button onclick="openCreateRealignmentModal()" class="text-blue-600 inline-flex items-center justify-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center w-full md:w-auto dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                         <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                         {{ __('Create Realignment | Augmentation') }}
                     </button>
                     @endcan
                 </div>
                 <!-- Right: Total Records and Search Input -->
-                <div class="flex items-center space-x-4">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
                     <!-- Total Records -->
-                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                    <div class="flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
                         <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
                     </div>
                     <!-- Search Input -->
-                    <div class="flex items-center space-x-2 min-w-96">
-                        <i class="fas fa-search text-gray-400"></i>
+                    <div class="flex items-center space-x-2 w-full sm:w-72 md:w-96">
+                        <i class="fas fa-search text-gray-400 flex-shrink-0"></i>
                         <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for realignments" class="form-control border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                     </div>
                 </div>
             </div>
 
-            <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
-            <div class="max-h-[720px] overflow-y-auto">
-            <table id="realignmentsTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
-                    <tr>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Office & Class
-                                @if($sortBy == 'office_allotment_class')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'realignment_no', 'sort_order' => $sortBy == 'realignment_no' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Realignment No.
-                                @if($sortBy == 'realignment_no')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'realignment_date', 'sort_order' => $sortBy == 'realignment_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Realignment Date
-                                @if($sortBy == 'realignment_date')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'type', 'sort_order' => $sortBy == 'type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Type
-                                @if($sortBy == 'type')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                Programs
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                Account Code
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                Description
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'basis', 'sort_order' => $sortBy == 'basis' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Basis
-                                @if($sortBy == 'basis')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
-                        <th class="px-1 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            <a href="{{ route('realignments.index', ['sort_by' => 'amount', 'sort_order' => $sortBy == 'amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                Amount
-                                @if($sortBy == 'amount')
-                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                @endif
-                            </a>
-                        </th>
-                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                            Files
-                        </th>
-                        <!-- th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th> -->
-                    </tr>
-                </thead>
-                <tbody>
+            <!-- Legend / column headers for the Source | Recipient split -->
+            <div class="hidden md:grid grid-cols-[1fr_28px_1fr] items-center gap-0 mb-1 px-1">
+                <div class="text-center text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 py-1">
+                    <i class="fas fa-arrow-up mr-1"></i>Source
+                </div>
+                <div class="flex justify-center text-gray-400 dark:text-gray-500">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="text-center text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-300 py-1">
+                    <i class="fas fa-arrow-down mr-1"></i>Recipient
+                </div>
+            </div>
+
+            <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+            <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="realignmentsContainer">
+                @php
+                    $totalSource = 0;
+                    $totalRecipient = 0;
+                    $groupedRealignments = $realignments->groupBy('realignment_no');
+                @endphp
+
+                @forelse ($groupedRealignments as $realignmentNo => $group)
                     @php
-                        $totalSource = 0;
-                        $totalRecipient = 0;
+                        $sources = $group->where('type', 'Source')->values();
+                        $recipients = $group->where('type', 'Recipient')->values();
+                        $groupSourceTotal = $sources->sum('amount');
+                        $groupRecipientTotal = $recipients->sum('amount');
+                        $totalSource += $groupSourceTotal;
+                        $totalRecipient += $groupRecipientTotal;
+                        $isBalanced = abs($groupSourceTotal - $groupRecipientTotal) < 0.01;
+                        $firstItem = $group->first();
+                        $fileCount = \App\Models\RealignmentFile::where('realignment_no', $realignmentNo)->count();
+                        $searchText = strtolower(collect([
+                            $realignmentNo,
+                            $firstItem->realignment_date,
+                            $firstItem->basis,
+                            $group->pluck('officeAllotmentClass.office_abbreviation')->implode(' '),
+                            $group->pluck('officeAllotmentClass.class')->implode(' '),
+                            $group->pluck('appropriation.programs')->implode(' '),
+                            $group->pluck('appropriation.account_code')->implode(' '),
+                            $group->pluck('appropriation.description')->implode(' '),
+                        ])->implode(' '));
                     @endphp
-                    @forelse ($realignments as $realignment)
-                        @php
-                            if ($realignment->type === 'Source') {
-                                $totalSource += $realignment->amount;
-                            } elseif ($realignment->type === 'Recipient') {
-                                $totalRecipient += $realignment->amount;
-                            }
-                        @endphp
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
-                            oncontextmenu="showRealignmentContextMenu(event, this)"
-                            data-realignment='@json($realignment)'
-                            data-realignment-no="{{ $realignment->realignment_no }}">
-                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                                {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
-                            </td>
-                            <td class="font-semibold text-left px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_no }}</td>
-                            <td class="px-2 py-2 text-left border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->realignment_date }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300">
-                                @if($realignment->type === 'Recipient')
-                                    <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
-                                        {{ ucfirst($realignment->type) }}
-                                    </span>
-                                @elseif($realignment->type === 'Source')
-                                    <span class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold">
-                                        {{ ucfirst($realignment->type) }}
+                    <div class="realignment-group bg-white dark:bg-gray-800 border-2 border-gray-400 dark:border-gray-500 rounded-lg overflow-hidden shadow-sm text-xs"
+                         data-search-text="{{ $searchText }}"
+                         data-realignment-no="{{ $realignmentNo }}">
+
+                        <!-- Group Header -->
+                        <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <span class="font-bold text-gray-800 dark:text-gray-100">
+                                    <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $realignmentNo }}
+                                </span>
+                                <span class="text-gray-600 dark:text-gray-300">
+                                    <i class="far fa-calendar mr-1"></i>{{ $firstItem->realignment_date }}
+                                </span>
+                                <span class="text-gray-600 dark:text-gray-300">
+                                    <span class="font-semibold">Basis:</span> {{ $firstItem->basis }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if ($isBalanced)
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" title="Source and Recipient totals match">
+                                        <i class="fas fa-check-circle"></i>Balanced
                                     </span>
                                 @else
-                                    <span class="text-gray-600 dark:text-gray-300">{{ ucfirst($realignment->type) }}</span>
-                                @endif
-                            </td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->programs ?? '-' }}</td>
-                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $realignment->appropriation->account_code ?? '-' }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-xs">{{ $realignment->appropriation->description ?? '-' }}</td>
-                            <td class="font-semibold px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300 max-w-md">{{ $realignment->basis }}</td>
-                            <td class="px-2 py-2 border-b border-gray-300 text-right">
-                                @if($realignment->type === 'Recipient')
-                                    <span class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold">
-                                        {{ number_format($realignment->amount, 2) }}
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" title="Source and Recipient totals do not match">
+                                        <i class="fas fa-triangle-exclamation"></i>Mismatch
                                     </span>
-                                @elseif($realignment->type === 'Source')
-                                    <span class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold">
-                                        {{ number_format($realignment->amount, 2) }}
-                                    </span>
-                                @else 
-                                    <span class="text-gray-600 dark:text-gray-300 ">{{ number_format($realignment->amount, 2) }}</span>
                                 @endif
-                            </td>
-                            <td class="px-1 py-2 border-b border-gray-300 text-center">
-                                @php
-                                    $fileCount = \App\Models\RealignmentFile::where('realignment_no', $realignment->realignment_no)->count();
-                                @endphp
-                                <button onclick="openRealignmentFilesModal('{{ $realignment->realignment_no }}')"
+                                <button onclick="openRealignmentFilesModal('{{ $realignmentNo }}')"
                                     class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
                                     @if($fileCount > 0)
                                         bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
@@ -325,57 +321,126 @@
                                     <i class="fas fa-file"></i>
                                     <span>{{ $fileCount }}</span>
                                 </button>
-                            </td>
-                            <!-- <td class="px-2 py-2 border-b border-gray-300 text-gray-600 dark:text-gray-300">
-                                <div class="relative inline-block text-left">
-                                    <button onclick="toggleDropdown(this)" 
-                                            class="relative text-xs group px-2 py-1.5">
-                                            <span class="fas fa-ellipsis-v"></span>
-                                            
-                                            <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }} | {{ $realignment->realignment_no }} | {{ number_format($realignment->amount, 2) }}
-                                            </span>
-                                        </button>
-                                    <div class="absolute right-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
-                                        @can('edit realignments')
-                                        <button onclick='openEditRealignmentModal(@json($realignment))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
-                                            <i class="fas fa-edit mr-2"></i>Edit
-                                        </button>
-                                        @endcan
-                                        @can('delete realignments')
-                                        <button onclick="openDeleteRealignmentModal({{ $realignment->id }}, '{{ $realignment->realignment_no }}', '{{ $realignment->type }}', '{{ $realignment->amount }}', '{{ $realignment->appropriations_id }}')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
-                                            <i class="fas fa-trash mr-2"></i>Delete
-                                        </button>
-                                        @endcan
-                                    </div>
+                            </div>
+                        </div>
+
+                        <!-- Source (left) | Recipient (right) -->
+                        <div class="grid grid-cols-1 md:grid-cols-[1fr_24px_1fr] divide-y md:divide-y-0 divide-gray-200 dark:divide-gray-700">
+
+                            <!-- SOURCE COLUMN -->
+                            <div class="bg-blue-50/50 dark:bg-blue-950/10 md:border-r md:border-gray-200 md:dark:border-gray-700">
+                                <div class="md:hidden px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 font-bold uppercase tracking-wide">
+                                    Source
                                 </div>
-                            </td> -->
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
-                                No Realignments found
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-                <tfoot>
-                    <tr id="realignmentsFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
-                        <td colspan="5" class="text-center text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
-                            Total Source:
-                            <span id="totalSourceFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">
-                                {{ number_format($totalSource, 2) }}
-                            </span>
-                        </td>
-                        <td colspan="5" class="text-center text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
-                            Total Recipient:
-                            <span id="totalRecipientFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-semibold ml-2">
-                                {{ number_format($totalRecipient, 2) }}
-                            </span>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
+                                @forelse($sources as $realignment)
+                                    <div class="realignment-entry px-3 py-2 border-b-2 border-blue-700 dark:border-blue-700 last:border-b-0 hover:bg-blue-100/60 dark:hover:bg-blue-900/30 cursor-pointer"
+                                         oncontextmenu="showRealignmentContextMenu(event, this)"
+                                         data-realignment='@json($realignment)'
+                                         data-realignment-no="{{ $realignment->realignment_no }}"
+                                         data-type="Source">
+                                        <div class="flex flex-wrap justify-between items-start gap-2 pb-1.5 mb-1.5 border-b border-blue-500 dark:border-blue-700">
+                                            <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">
+                                                {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
+                                            </div>
+                                            <div class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-sm tabular-nums whitespace-nowrap">
+                                                {{ number_format($realignment->amount, 2) }}
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-gray-500 dark:text-gray-400">
+                                            <span class="text-gray-500 dark:text-gray-500">Account Code:</span>
+                                            <span class="font-medium text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->account_code ?? '-' }}</span>
+                                            <span class="text-gray-500 dark:text-gray-500">Program:</span>
+                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->programs ?? '-' }}</span>
+                                            <span class="text-gray-500 dark:text-gray-500">Description:</span>
+                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->description ?? '-' }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="px-3 py-4 text-center text-gray-400 dark:text-gray-500 italic">
+                                        No source entry
+                                    </div>
+                                @endforelse
+                                <div class="flex justify-between items-center px-3 py-1.5 bg-blue-100/70 dark:bg-blue-900/40 border-t-2 border-blue-200 dark:border-blue-700">
+                                    <span class="font-bold text-blue-800 dark:text-blue-300">Subtotal (Source)</span>
+                                    <span class="font-bold text-blue-800 dark:text-blue-300 tabular-nums">{{ number_format($groupSourceTotal, 2) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- FLOW CONNECTOR (desktop only) -->
+                            <div class="hidden md:flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                                <i class="fas fa-arrow-right {{ $isBalanced ? 'text-emerald-500' : 'text-amber-500' }}"></i>
+                            </div>
+
+                            <!-- RECIPIENT COLUMN -->
+                            <div class="bg-green-50/50 dark:bg-green-950/10 md:border-l md:border-gray-200 md:dark:border-gray-700">
+                                <div class="md:hidden px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 font-bold uppercase tracking-wide">
+                                    Recipient
+                                </div>
+                                @forelse($recipients as $realignment)
+                                    <div class="realignment-entry px-3 py-2 border-b-2 border-green-700 dark:border-green-700 last:border-b-0 hover:bg-green-100/60 dark:hover:bg-green-900/30 cursor-pointer"
+                                         oncontextmenu="showRealignmentContextMenu(event, this)"
+                                         data-realignment='@json($realignment)'
+                                         data-realignment-no="{{ $realignment->realignment_no }}"
+                                         data-type="Recipient">
+                                        <div class="flex flex-wrap justify-between items-start gap-2 pb-1.5 mb-1.5 border-b border-green-500 dark:border-green-700">
+                                            <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">
+                                                {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
+                                            </div>
+                                            <div class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-bold text-sm tabular-nums whitespace-nowrap">
+                                                {{ number_format($realignment->amount, 2) }}
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-gray-500 dark:text-gray-400">
+                                            <span class="text-gray-500 dark:text-gray-500">Account Code:</span>
+                                            <span class="font-medium text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->account_code ?? '-' }}</span>
+                                            <span class="text-gray-500 dark:text-gray-500">Program:</span>
+                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->programs ?? '-' }}</span>
+                                            <span class="text-gray-500 dark:text-gray-500">Description:</span>
+                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->description ?? '-' }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="px-3 py-4 text-center text-gray-400 dark:text-gray-500 italic">
+                                        No recipient entry
+                                    </div>
+                                @endforelse
+                                <div class="flex justify-between items-center px-3 py-1.5 bg-green-100/70 dark:bg-green-900/40 border-t-2 border-green-200 dark:border-green-700">
+                                    <span class="font-bold text-green-800 dark:text-green-300">Subtotal (Recipient)</span>
+                                    <span class="font-bold text-green-800 dark:text-green-300 tabular-nums">{{ number_format($groupRecipientTotal, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="px-3 py-6 text-center text-gray-500 dark:text-gray-400">
+                        No Realignments found
+                    </div>
+                @endforelse
+
+                <!-- Shown by JS when a search query matches no visible groups -->
+                <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                    No realignments match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
+                    <button type="button" onclick="clearSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                        Clear search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Totals Footer -->
+            <div id="realignmentsFooter" class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-300 dark:divide-gray-600 bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600">
+                <div class="text-center text-sm px-1 py-3">
+                    Total Source:
+                    <span id="totalSourceFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">
+                        {{ number_format($totalSource, 2) }}
+                    </span>
+                </div>
+                <div class="text-center text-sm px-1 py-3">
+                    Total Recipient:
+                    <span id="totalRecipientFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-bold text-base tabular-nums ml-2">
+                        {{ number_format($totalRecipient, 2) }}
+                    </span>
+                </div>
             </div>
             </div>
              <!-- Pagination -->
@@ -388,8 +453,8 @@
     </div>
 
     <!-- Context Menu -->
-    <div id="realignmentContextMenu" 
-        class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
+    <div id="realignmentContextMenu"
+        class="fixed hidden w-48 max-w-[calc(100vw-16px)] bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
         <button id="contextFiles"
                 class="w-full text-left block px-4 py-2 text-xs text-green-900 hover:bg-green-200 dark:text-green-100 dark:hover:bg-green-700 transition-colors duration-150">
@@ -421,68 +486,63 @@
 <script>
     (function() {
     const menu = document.getElementById('realignmentContextMenu');
-    let tableContainer;
 
-    // Function to handle scroll events
-    function handleTableScroll() {
-        hideRealignmentContextMenu();
-    }
-
-    // showContextMenu receives the mouse event and the row element
+    // showContextMenu receives the mouse event and the entry element
     window.showRealignmentContextMenu = function(event, row) {
         event.preventDefault();
         event.stopPropagation();
 
         if (!menu) return;
 
-        // Remove highlight from previously selected row
-        document.querySelectorAll('table tbody tr.context-menu-active').forEach(r => {
+        // Remove highlight from previously selected entry
+        document.querySelectorAll('.realignment-entry.context-menu-active').forEach(r => {
             r.classList.remove('context-menu-active');
         });
-        
-        // Highlight the current row
+
+        // Highlight the current entry
         row.classList.add('context-menu-active');
         window.currentContextMenuRow = row;
 
-        // Get element positions
+        // The menu is position:fixed, so we work in raw viewport coordinates
+        // (clientX/clientY) and must NOT add page scroll offsets, or the menu
+        // drifts away from the cursor the further the page has been scrolled.
         const menuHeight = 200; // Approximate menu height
+        const menuWidth = 192; // w-48 = 12rem = 192px
         const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        const mouseX = event.clientX;
         const mouseY = event.clientY;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
         // Determine if menu should appear above or below the cursor
-        let top, verticalAlignment;
+        let top;
         const spaceBelow = viewportHeight - mouseY;
         const spaceAbove = mouseY;
 
         if (spaceBelow > menuHeight + 20) {
             // Show below cursor, tight to cursor position
-            top = mouseY + scrollTop;
-            verticalAlignment = 'below';
+            top = mouseY;
         } else if (spaceAbove > menuHeight + 20) {
             // Show above cursor, positioned lower so it's beside cursor
-            top = mouseY + scrollTop - menuHeight + 40;
-            verticalAlignment = 'above';
+            top = mouseY - menuHeight + 40;
         } else {
-            // Default to below
-            top = mouseY + scrollTop;
-            verticalAlignment = 'below';
+            // Not enough room either way (common on short mobile viewports) —
+            // pin it as low as it can go while staying fully on screen.
+            top = viewportHeight - menuHeight - 8;
+        }
+        // Clamp so it never renders off the top/bottom edge
+        top = Math.min(Math.max(top, 8), viewportHeight - 8);
+
+        // Calculate left position (tight to cursor, with edge collision detection)
+        let left = mouseX + 2;
+
+        // Check if menu goes off screen to the right
+        if (left + menuWidth > viewportWidth) {
+            left = mouseX - menuWidth - 2;
         }
 
-        // Calculate left position (tight to cursor, with right edge collision detection)
-        let left = event.clientX + scrollLeft + 2;
-        const menuWidth = 192; // w-48 = 12rem = 192px
-        const viewportWidth = window.innerWidth;
-        
-        // Check if menu goes off screen to the right
-        if (left + menuWidth > viewportWidth + scrollLeft) {
-            left = event.clientX + scrollLeft - menuWidth - 2;
-        }
-        
         // Ensure menu doesn't go off screen to the left
-        if (left < scrollLeft) {
-            left = scrollLeft + 2;
+        if (left < 8) {
+            left = 8;
         }
 
         // Position menu
@@ -546,7 +606,7 @@
             document.addEventListener('click', hideRealignmentContextMenu);
             window.addEventListener('resize', hideRealignmentContextMenu);
             window.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
-            const container = document.querySelector('.overflow-x-auto');
+            const container = document.getElementById('realignmentsContainer');
             if (container) {
                 container.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
             }
@@ -568,7 +628,7 @@
         document.removeEventListener('click', hideRealignmentContextMenu);
         window.removeEventListener('resize', hideRealignmentContextMenu);
         window.removeEventListener('scroll', hideRealignmentContextMenu);
-        const container = document.querySelector('.overflow-x-auto');
+        const container = document.getElementById('realignmentsContainer');
         if (container) {
             container.removeEventListener('scroll', hideRealignmentContextMenu);
         }
@@ -580,69 +640,103 @@
     });
 
     /**
-     * Filter table rows based on search input
+     * Filter realignment group cards based on search input
      */
     function filterRealignments(searchValue) {
-        const rows = document.querySelectorAll('#realignmentsTable tbody tr');
-        const lowerSearch = searchValue.toLowerCase();
+        const groups = document.querySelectorAll('.realignment-group');
+        const lowerSearch = searchValue.toLowerCase().trim();
+        let visibleCount = 0;
 
-        rows.forEach(row => {
-            const rowText = row.textContent.toLowerCase();
-            if (rowText.includes(lowerSearch)) {
-                row.style.display = '';
+        groups.forEach(group => {
+            const searchText = group.dataset.searchText || group.textContent.toLowerCase();
+            if (searchText.includes(lowerSearch)) {
+                group.style.display = '';
+                visibleCount++;
             } else {
-                row.style.display = 'none';
+                group.style.display = 'none';
             }
         });
+
+        // Show a "no results" message when a search query matches nothing
+        const noResultsMsg = document.getElementById('noSearchResultsMsg');
+        const noResultsQuery = document.getElementById('noSearchResultsQuery');
+        if (noResultsMsg) {
+            if (lowerSearch.length > 0 && visibleCount === 0 && groups.length > 0) {
+                if (noResultsQuery) noResultsQuery.textContent = `"${searchValue.trim()}"`;
+                noResultsMsg.classList.remove('hidden');
+            } else {
+                noResultsMsg.classList.add('hidden');
+            }
+        }
 
         // Update total records count and footer totals
         updateTotalRecordsCount();
         updateFooterTotals();
     }
+    window.filterRealignments = filterRealignments;
+
+    /**
+     * Clear the search box (used by the active-filter chip and the no-results message)
+     */
+    window.clearSearchFilter = function() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            filterRealignments('');
+            searchInput.focus();
+        }
+    };
 
     function updateFooterTotals() {
-        let table = document.getElementById("realignmentsTable");
-        let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
         let totalSource = 0;
         let totalRecipient = 0;
-        for (let i = 0; i < tr.length; i++) {
-            if (tr[i].style.display === "none") continue;
-            let typeCell = tr[i].getElementsByTagName("td")[3];
-            let amountCell = tr[i].getElementsByTagName("td")[8];
-            if (!typeCell || !amountCell) continue;
-            let type = typeCell.textContent.trim();
-            let amountText = amountCell.textContent.replace(/[^\d.-]/g, '');
-            let amount = parseFloat(amountText);
-            if (isNaN(amount)) amount = 0;
-            if (type === 'Source') {
-                totalSource += amount;
-            } else if (type === 'Recipient') {
-                totalRecipient += amount;
-            }
+
+        document.querySelectorAll('.realignment-group').forEach(group => {
+            if (group.style.display === 'none') return;
+
+            group.querySelectorAll('.realignment-entry[data-type="Source"]').forEach(entry => {
+                const realignment = entry.dataset.realignment ? JSON.parse(entry.dataset.realignment) : null;
+                if (realignment) {
+                    totalSource += parseFloat(realignment.amount) || 0;
+                }
+            });
+            group.querySelectorAll('.realignment-entry[data-type="Recipient"]').forEach(entry => {
+                const realignment = entry.dataset.realignment ? JSON.parse(entry.dataset.realignment) : null;
+                if (realignment) {
+                    totalRecipient += parseFloat(realignment.amount) || 0;
+                }
+            });
+        });
+
+        const sourceEl = document.getElementById('totalSourceFooter');
+        const recipientEl = document.getElementById('totalRecipientFooter');
+        if (sourceEl) {
+            sourceEl.textContent = totalSource.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
-        document.getElementById('totalSourceFooter').textContent = totalSource.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        document.getElementById('totalRecipientFooter').textContent = totalRecipient.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        if (recipientEl) {
+            recipientEl.textContent = totalRecipient.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
         // Always show the footer
-        document.getElementById('realignmentsFooter').style.display = '';
+        const footer = document.getElementById('realignmentsFooter');
+        if (footer) footer.style.display = '';
     }
 
     /**
-     * Update total records count based on visible rows (counted per realignment_no)
+     * Update total records count based on visible groups (counted per realignment_no)
      */
     function updateTotalRecordsCount() {
-        const rows = document.querySelectorAll('#realignmentsTable tbody tr');
-        let realignmentNos = new Set();
+        const groups = document.querySelectorAll('.realignment-group');
+        let visibleCount = 0;
 
-        rows.forEach(row => {
-            // Check if row is visible (display is not 'none')
-            if (row.style.display !== 'none' && row.dataset.realignmentNo) {
-                realignmentNos.add(row.dataset.realignmentNo);
+        groups.forEach(group => {
+            if (group.style.display !== 'none') {
+                visibleCount++;
             }
         });
 
         const totalRecordsElement = document.getElementById('totalRecordsCount');
         if (totalRecordsElement) {
-            totalRecordsElement.textContent = realignmentNos.size;
+            totalRecordsElement.textContent = visibleCount;
         }
     }
 
@@ -657,6 +751,7 @@
 
         // Initialize total records count
         updateTotalRecordsCount();
+        updateFooterTotals();
 
         // Add search input listener for real-time updates
         const searchInput = document.getElementById('searchInput');
@@ -697,10 +792,6 @@
             drop.classList.add('hidden');
         });
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        updateFooterTotals();
-    });
 </script>
 
 <style>
@@ -719,13 +810,13 @@
         animation: pageSlideUp 0.4s ease-in-out;
     }
 
-    /* Row highlight when context menu is open */
-    table tbody tr.context-menu-active {
+    /* Entry highlight when context menu is open */
+    .realignment-entry.context-menu-active {
         background-color: rgba(59, 130, 246, 0.15);
         transition: background-color 0.2s ease-in-out;
     }
 
-    .dark table tbody tr.context-menu-active {
+    .dark .realignment-entry.context-menu-active {
         background-color: rgba(59, 130, 246, 0.25);
     }
 </style>

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
+    public const EXEMPT_FROM_RESTRICTION = ['Administrator', 'Developer'];
+    
     protected $fillable = ['name', 'is_login_restricted'];
 
     protected $casts = [

@@ -31,28 +31,32 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // 1. Check if this specific user account is restricted
-        if ($user->is_restricted) {
-            Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+        // Administrator and Developer are always exempt from restriction
+        if (! in_array($user->usertype, \App\Models\Role::EXEMPT_FROM_RESTRICTION)) {
 
-            return redirect()->route('login')->with('error',
-                'Login has been temporarily restricted.<br> Please contact the <strong>System Administrator</strong>.'
-            );
-        }
+            // 1. Check if this specific user account is restricted
+            if ($user->is_restricted) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
 
-        // 2. Check if this user's role is restricted
-        $role = Role::where('name', $user->usertype)->first();
+                return redirect()->route('login')->with('error',
+                    'Authentication/Login has been temporarily restricted. Please contact the <strong>System Administrator</strong>.'
+                );
+            }
 
-        if ($role && $role->is_login_restricted) {
-            Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            // 2. Check if this user's role is restricted
+            $role = \App\Models\Role::where('name', $user->usertype)->first();
 
-            return redirect()->route('login')->with('error',
-                'Login for the <strong>' . $user->usertype . '</strong> Role is temporarily restricted.<br> Please contact the <strong>System Administrator</strong>.'
-            );
+            if ($role && $role->is_login_restricted) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->with('error',
+                    'Authentication/Login for the <strong>' . $user->usertype . '</strong> Role is temporarily restricted. Please contact the <strong>System Administrator</strong>.'
+                );
+            }
         }
 
         $request->session()->regenerate();

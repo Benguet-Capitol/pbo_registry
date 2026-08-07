@@ -68,12 +68,15 @@ class UserController extends Controller
         // Get all offices for any dropdowns/filters you might need
         $offices = Office::orderBy('id')->get();
 
+        // Get role names that are currently login-restricted, for status display
+        $restrictedRoleNames = $roles->where('is_login_restricted', true)->pluck('name')->all();
+
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'Users']
         ];
 
-        return view('users.index', compact('users', 'perPage', 'search', 'sortBy', 'sortOrder', 'employees', 'roles', 'offices', 'breadcrumb'))
+        return view('users.index', compact('users', 'perPage', 'search', 'sortBy', 'sortOrder', 'employees', 'roles', 'offices', 'restrictedRoleNames', 'breadcrumb'))
             ->with('status', session('status'));
     }
 
@@ -167,10 +170,14 @@ class UserController extends Controller
 
     public function toggleRestriction(User $user): RedirectResponse
     {
-        // Prevent an admin from restricting themselves
         if (auth()->id() === $user->id) {
             return redirect()->route('users.index')
                 ->with('error', 'You cannot restrict your own account.');
+        }
+
+        if (in_array($user->usertype, \App\Models\Role::EXEMPT_FROM_RESTRICTION)) {
+            return redirect()->route('users.index')
+                ->with('error', 'Users with the <strong>' . $user->usertype . '</strong> role cannot be restricted.');
         }
 
         $user->update(['is_restricted' => ! $user->is_restricted]);

@@ -9,17 +9,16 @@ class RoleController extends Controller
 {
     public function toggleRestriction(Role $role): RedirectResponse
     {
-        // Safety guard: never let the currently logged-in user's own role get restricted
-        if (auth()->user()->usertype === $role->name) {
+        if (in_array($role->name, Role::EXEMPT_FROM_RESTRICTION)) {
             return redirect()->route('users.index')
-                ->with('error', 'You cannot restrict your own role (<strong>' . $role->name . '</strong>).');
+                ->with('error', 'The <strong>' . $role->name . '</strong> role cannot be restricted.');
         }
 
         $role->update(['is_login_restricted' => ! $role->is_login_restricted]);
 
-        $status = $role->is_login_restricted ? 'restricted' : 'active';
+        $status = $role->is_login_restricted ? 'restricted' : 'unrestricted';
 
         return redirect()->route('users.index')
-            ->with('status', 'Login for <strong>' . $role->name . '</strong> Role is now <strong>' . $status . '</strong>.');
+            ->with('status', 'Login for role <strong>' . $role->name . '</strong> is now <strong>' . $status . '</strong>.');
     }
 }

@@ -147,12 +147,21 @@
                             {{ $user->office_abbreviation }}
                         </td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            @php
+                                $isExemptRole = in_array($user->usertype, \App\Models\Role::EXEMPT_FROM_RESTRICTION);
+                                $isRoleRestricted = !$isExemptRole && in_array($user->usertype, $restrictedRoleNames);
+                                $isUserRestricted = !$isExemptRole && $user->is_restricted;
+                                $isEffectivelyRestricted = $isUserRestricted || $isRoleRestricted;
+                            @endphp
                             <span class="px-2 py-1 rounded-full font-semibold
-                                        {{ $user->is_restricted
+                                        {{ $isEffectivelyRestricted
                                             ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200'
                                             : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' }}">
-                                {{ $user->is_restricted ? 'Restricted' : 'Active' }}
+                                {{ $isEffectivelyRestricted ? 'Restricted' : 'Active' }}
                             </span>
+                            @if($isRoleRestricted && !$isUserRestricted)
+                                <span class="block text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">via role</span>
+                            @endif
                         </td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                             <div class="relative inline-block text-left">
@@ -163,13 +172,32 @@
                                 </button>
                                 <div class="absolute right-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg hidden dropdown-menu z-10 dark:bg-gray-700 dark:border-gray-600">
                                     @can('edit users')
-                                    <form method="POST" action="{{ route('users.toggle-restriction', $user) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
+                                    @if($isExemptRole)
+                                        <button type="button" disabled title="{{ $user->usertype }} accounts cannot be restricted"
+                                            class="w-full text-left px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                                            <i class="fas fa-shield-alt mr-2"></i>Exempt
+                                        </button>
+                                    @elseif($isRoleRestricted && !$isUserRestricted)
+                                        <button type="button" disabled title="Blocked via the {{ $user->usertype }} role — restrict individually not needed"
+                                            class="w-full text-left px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                                            <i class="fas fa-lock mr-2"></i>Restricted (Role)
+                                        </button>
+                                    @else
+                                        <form id="userToggleForm-{{ $user->id }}" method="POST" action="{{ route('users.toggle-restriction', $user) }}">
+                                            @csrf
+                                            @method('PATCH')
+                                        </form>
+                                        <button type="button"
+                                            onclick="confirmToggle({
+                                                formId: 'userToggleForm-{{ $user->id }}',
+                                                action: {{ $user->is_restricted ? 'false' : 'true' }},
+                                                subjectLabel: {{ Js::from($user->name) }},
+                                                subjectType: 'user'
+                                            })"
+                                            class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
                                             <i class="fas fa-user-lock mr-2"></i>{{ $user->is_restricted ? 'Activate' : 'Restrict' }}
                                         </button>
-                                    </form>
+                                    @endif
                                     <button onclick='openEditUserModal(@json($user))' class="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-600">
                                         <i class="fas fa-edit mr-2"></i>Edit
                                     </button>
@@ -199,6 +227,7 @@
     @include('users.modal.delete')
     @include('users.modal.edit')
     @include('users.modal.role')
+    @include('users.modal.confirm')
 
 <script>
     // Function to filter table rows

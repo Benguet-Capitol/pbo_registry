@@ -15,18 +15,36 @@
         <div class="space-y-2">
             @foreach ($roles as $role)
             <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-                <span class="text-sm text-gray-700 dark:text-gray-200">{{ $role->name }}</span>
-                <form method="POST" action="{{ route('roles.toggle-restriction', $role) }}">
+                <div>
+                    <span class="text-sm text-gray-700 dark:text-gray-200">{{ $role->name }}</span>
+                    <span class="block text-[10px] text-gray-400 dark:text-gray-500">
+                        {{ $users->where('usertype', $role->name)->count() }} user(s)
+                    </span>
+                </div>
+                @if(in_array($role->name, \App\Models\Role::EXEMPT_FROM_RESTRICTION))
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-500 dark:bg-gray-600 dark:text-gray-400 cursor-not-allowed"
+                        title="This role cannot be restricted">
+                        <i class="fas fa-shield-alt mr-1"></i>Exempt
+                    </span>
+                @else
+                <form id="roleToggleForm-{{ $role->id }}" method="POST" action="{{ route('roles.toggle-restriction', $role) }}">
                     @csrf
                     @method('PATCH')
-                    <button type="submit"
-                        class="px-3 py-1 rounded-full text-xs font-semibold transition
-                               {{ $role->is_login_restricted
-                                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-200'
-                                    : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-200' }}">
-                        {{ $role->is_login_restricted ? 'Restricted' : 'Active' }}
-                    </button>
                 </form>
+                <button type="button"
+                    onclick="confirmToggle({
+                        formId: 'roleToggleForm-{{ $role->id }}',
+                        action: {{ $role->is_login_restricted ? 'false' : 'true' }},
+                        subjectLabel: {{ Js::from($role->name) }},
+                        subjectType: 'role'
+                    })"
+                    class="px-3 py-1 rounded-full text-xs font-semibold transition
+                           {{ $role->is_login_restricted
+                                ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-200'
+                                : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-200' }}">
+                    {{ $role->is_login_restricted ? 'Restricted' : 'Active' }}
+                </button>
+                @endif
             </div>
             @endforeach
         </div>

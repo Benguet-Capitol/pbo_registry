@@ -240,7 +240,29 @@
                 </div>
             </div>
 
-            <!-- Legend / column headers for the Source | Recipient split -->
+            <!-- View toggle: Card / List -->
+            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+                <button type="button" id="realignmentsListViewBtn" onclick="setRealignmentsView('table')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-table-list"></i> List View
+                </button>
+                <button type="button" id="realignmentsCardViewBtn" onclick="setRealignmentsView('card')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-grip"></i> Card View
+                </button>
+            </div>
+
+            <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->
+            <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md mb-3 bg-gray-50 dark:bg-gray-900">
+                <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                No realignments match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
+                <button type="button" onclick="clearSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                    Clear search
+                </button>
+            </div>
+
+            <!-- Legend / column headers for the Source | Recipient split (card view only) -->
+            <div id="realignmentsCardView">
             <div class="hidden md:grid grid-cols-[1fr_28px_1fr] items-center gap-0 mb-1 px-1">
                 <div class="text-center text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 py-1">
                     <i class="fas fa-arrow-up mr-1"></i>Source
@@ -259,6 +281,9 @@
                     $totalSource = 0;
                     $totalRecipient = 0;
                     $groupedRealignments = $realignments->groupBy('realignment_no');
+                    // Cached per-group values so the List View below doesn't need to recompute or re-query them
+                    $groupBalanced = [];
+                    $groupFileCounts = [];
                 @endphp
 
                 @forelse ($groupedRealignments as $realignmentNo => $group)
@@ -272,6 +297,8 @@
                         $isBalanced = abs($groupSourceTotal - $groupRecipientTotal) < 0.01;
                         $firstItem = $group->first();
                         $fileCount = \App\Models\RealignmentFile::where('realignment_no', $realignmentNo)->count();
+                        $groupBalanced[$realignmentNo] = $isBalanced;
+                        $groupFileCounts[$realignmentNo] = $fileCount;
                         $searchText = strtolower(collect([
                             $realignmentNo,
                             $firstItem->realignment_date,
@@ -283,7 +310,7 @@
                             $group->pluck('appropriation.description')->implode(' '),
                         ])->implode(' '));
                     @endphp
-                    <div class="realignment-group bg-white dark:bg-gray-800 border-2 border-gray-400 dark:border-gray-500 rounded-lg overflow-hidden shadow-sm text-xs"
+                    <div class="realignment-group bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg overflow-hidden shadow-sm text-xs"
                          data-search-text="{{ $searchText }}"
                          data-realignment-no="{{ $realignmentNo }}">
 
@@ -416,15 +443,6 @@
                         No Realignments found
                     </div>
                 @endforelse
-
-                <!-- Shown by JS when a search query matches no visible groups -->
-                <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
-                    No realignments match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
-                    <button type="button" onclick="clearSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
-                        Clear search
-                    </button>
-                </div>
             </div>
 
             <!-- Totals Footer -->
@@ -443,6 +461,119 @@
                 </div>
             </div>
             </div>
+            </div>
+            <!-- /#realignmentsCardView -->
+
+            <!-- List View (flat table, one row per Source/Recipient entry) -->
+            <div id="realignmentsTableView" class="hidden">
+                <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <div class="max-h-[720px] overflow-y-auto" id="realignmentsTableContainer">
+                            <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
+                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">No.</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Date</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Type</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Account Code</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Program</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Description</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Basis</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Amount</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Balanced</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Files</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($realignments as $realignment)
+                                        @php
+                                            $rowSearchText = strtolower(collect([
+                                                $realignment->realignment_no,
+                                                $realignment->realignment_date,
+                                                $realignment->basis,
+                                                $realignment->type,
+                                                $realignment->officeAllotmentClass->office_abbreviation ?? '',
+                                                $realignment->officeAllotmentClass->class ?? '',
+                                                $realignment->appropriation->programs ?? '',
+                                                $realignment->appropriation->account_code ?? '',
+                                                $realignment->appropriation->description ?? '',
+                                            ])->implode(' '));
+                                            $rowFileCount = $groupFileCounts[$realignment->realignment_no] ?? 0;
+                                            $rowBalanced = $groupBalanced[$realignment->realignment_no] ?? true;
+                                        @endphp
+                                        <tr class="realignment-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                            oncontextmenu="showRealignmentContextMenu(event, this)"
+                                            data-realignment='@json($realignment)'
+                                            data-realignment-no="{{ $realignment->realignment_no }}"
+                                            data-type="{{ $realignment->type }}"
+                                            data-amount="{{ (float) $realignment->amount }}"
+                                            data-search-text="{{ $rowSearchText }}">
+                                            <td class="font-semibold px-2 py-2">{{ $realignment->realignment_no }}</td>
+                                            <td class="px-2 py-2">{{ $realignment->realignment_date }}</td>
+                                            <td class="px-2 py-2">
+                                                @if ($realignment->type === 'Source')
+                                                    <span class="px-2 py-1 rounded font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Source</span>
+                                                @else
+                                                    <span class="px-2 py-1 rounded font-semibold bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Recipient</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-left px-2 py-2">{{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}</td>
+                                            <td class="font-semibold px-2 py-2">{{ $realignment->appropriation->account_code ?? '-' }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $realignment->appropriation->programs ?? '-' }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $realignment->appropriation->description ?? '-' }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $realignment->basis }}</td>
+                                            <td class="px-2 py-2 text-right font-bold tabular-nums {{ $realignment->type === 'Source' ? 'text-blue-700 dark:text-blue-300' : 'text-green-700 dark:text-green-300' }}">
+                                                {{ number_format($realignment->amount, 2) }}
+                                            </td>
+                                            <td class="px-2 py-2">
+                                                @if ($rowBalanced)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"><i class="fas fa-check-circle"></i></span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><i class="fas fa-triangle-exclamation"></i></span>
+                                                @endif
+                                            </td>
+                                            <td class="px-2 py-2">
+                                                <button onclick="event.stopPropagation(); openRealignmentFilesModal('{{ $realignment->realignment_no }}')"
+                                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
+                                                    @if($rowFileCount > 0)
+                                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
+                                                    @else
+                                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
+                                                    @endif"
+                                                    title="View files">
+                                                    <i class="fas fa-file"></i>
+                                                    <span>{{ $rowFileCount }}</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="11" class="px-3 py-6 text-center text-gray-500 dark:text-gray-400">
+                                                No Realignments found
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Totals Footer -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-300 dark:divide-gray-600 bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600">
+                        <div class="text-center text-sm px-1 py-3">
+                            Total Source:
+                            <span id="totalSourceFooterTable" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">0.00</span>
+                        </div>
+                        <div class="text-center text-sm px-1 py-3">
+                            Total Recipient:
+                            <span id="totalRecipientFooterTable" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-bold text-base tabular-nums ml-2">0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /#realignmentsTableView -->
+
              <!-- Pagination -->
             <div class="mt-4">
                 @if ($perPage != 'all')
@@ -606,10 +737,12 @@
             document.addEventListener('click', hideRealignmentContextMenu);
             window.addEventListener('resize', hideRealignmentContextMenu);
             window.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
-            const container = document.getElementById('realignmentsContainer');
-            if (container) {
-                container.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
-            }
+            ['realignmentsContainer', 'realignmentsTableContainer'].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.addEventListener('scroll', hideRealignmentContextMenu, { passive: true });
+                }
+            });
         }, 30);
     };
 
@@ -628,10 +761,12 @@
         document.removeEventListener('click', hideRealignmentContextMenu);
         window.removeEventListener('resize', hideRealignmentContextMenu);
         window.removeEventListener('scroll', hideRealignmentContextMenu);
-        const container = document.getElementById('realignmentsContainer');
-        if (container) {
-            container.removeEventListener('scroll', hideRealignmentContextMenu);
-        }
+        ['realignmentsContainer', 'realignmentsTableContainer'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                container.removeEventListener('scroll', hideRealignmentContextMenu);
+            }
+        });
     }
 
     // Hide on Escape key
@@ -640,7 +775,7 @@
     });
 
     /**
-     * Filter realignment group cards based on search input
+     * Filter realignment group cards based on search input (Card View)
      */
     function filterRealignments(searchValue) {
         const groups = document.querySelectorAll('.realignment-group');
@@ -657,23 +792,48 @@
             }
         });
 
-        // Show a "no results" message when a search query matches nothing
-        const noResultsMsg = document.getElementById('noSearchResultsMsg');
-        const noResultsQuery = document.getElementById('noSearchResultsQuery');
-        if (noResultsMsg) {
-            if (lowerSearch.length > 0 && visibleCount === 0 && groups.length > 0) {
-                if (noResultsQuery) noResultsQuery.textContent = `"${searchValue.trim()}"`;
-                noResultsMsg.classList.remove('hidden');
-            } else {
-                noResultsMsg.classList.add('hidden');
-            }
-        }
-
-        // Update total records count and footer totals
+        updateNoResultsMessage(lowerSearch, visibleCount, groups.length, searchValue);
         updateTotalRecordsCount();
         updateFooterTotals();
     }
     window.filterRealignments = filterRealignments;
+
+    /**
+     * Filter individual Source/Recipient rows based on search input (List View)
+     */
+    function filterRealignmentsTable(searchValue) {
+        const rows = document.querySelectorAll('.realignment-row');
+        const lowerSearch = searchValue.toLowerCase().trim();
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const searchText = row.dataset.searchText || row.textContent.toLowerCase();
+            if (searchText.includes(lowerSearch)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        updateNoResultsMessage(lowerSearch, visibleCount, rows.length, searchValue);
+        updateTotalRecordsCount();
+        updateFooterTotals();
+    }
+    window.filterRealignmentsTable = filterRealignmentsTable;
+
+    function updateNoResultsMessage(lowerSearch, visibleCount, totalCount, rawValue) {
+        const noResultsMsg = document.getElementById('noSearchResultsMsg');
+        const noResultsQuery = document.getElementById('noSearchResultsQuery');
+        if (!noResultsMsg) return;
+
+        if (lowerSearch.length > 0 && visibleCount === 0 && totalCount > 0) {
+            if (noResultsQuery) noResultsQuery.textContent = `"${rawValue.trim()}"`;
+            noResultsMsg.classList.remove('hidden');
+        } else {
+            noResultsMsg.classList.add('hidden');
+        }
+    }
 
     /**
      * Clear the search box (used by the active-filter chip and the no-results message)
@@ -682,54 +842,69 @@
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.value = '';
-            filterRealignments('');
+            filterActiveRealignmentsView('');
             searchInput.focus();
         }
     };
 
     function updateFooterTotals() {
+        const isTableView = !document.getElementById('realignmentsTableView').classList.contains('hidden');
         let totalSource = 0;
         let totalRecipient = 0;
 
-        document.querySelectorAll('.realignment-group').forEach(group => {
-            if (group.style.display === 'none') return;
+        if (isTableView) {
+            document.querySelectorAll('.realignment-row').forEach(row => {
+                if (row.style.display === 'none') return;
+                const amount = parseFloat(row.dataset.amount) || 0;
+                if (row.dataset.type === 'Source') {
+                    totalSource += amount;
+                } else if (row.dataset.type === 'Recipient') {
+                    totalRecipient += amount;
+                }
+            });
+        } else {
+            document.querySelectorAll('.realignment-group').forEach(group => {
+                if (group.style.display === 'none') return;
 
-            group.querySelectorAll('.realignment-entry[data-type="Source"]').forEach(entry => {
-                const realignment = entry.dataset.realignment ? JSON.parse(entry.dataset.realignment) : null;
-                if (realignment) {
-                    totalSource += parseFloat(realignment.amount) || 0;
-                }
+                group.querySelectorAll('.realignment-entry[data-type="Source"]').forEach(entry => {
+                    const realignment = entry.dataset.realignment ? JSON.parse(entry.dataset.realignment) : null;
+                    if (realignment) {
+                        totalSource += parseFloat(realignment.amount) || 0;
+                    }
+                });
+                group.querySelectorAll('.realignment-entry[data-type="Recipient"]').forEach(entry => {
+                    const realignment = entry.dataset.realignment ? JSON.parse(entry.dataset.realignment) : null;
+                    if (realignment) {
+                        totalRecipient += parseFloat(realignment.amount) || 0;
+                    }
+                });
             });
-            group.querySelectorAll('.realignment-entry[data-type="Recipient"]').forEach(entry => {
-                const realignment = entry.dataset.realignment ? JSON.parse(entry.dataset.realignment) : null;
-                if (realignment) {
-                    totalRecipient += parseFloat(realignment.amount) || 0;
-                }
-            });
+        }
+
+        const format = (n) => n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        ['totalSourceFooter', 'totalSourceFooterTable'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = format(totalSource);
         });
-
-        const sourceEl = document.getElementById('totalSourceFooter');
-        const recipientEl = document.getElementById('totalRecipientFooter');
-        if (sourceEl) {
-            sourceEl.textContent = totalSource.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-        if (recipientEl) {
-            recipientEl.textContent = totalRecipient.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-        // Always show the footer
-        const footer = document.getElementById('realignmentsFooter');
-        if (footer) footer.style.display = '';
+        ['totalRecipientFooter', 'totalRecipientFooterTable'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = format(totalRecipient);
+        });
     }
 
     /**
-     * Update total records count based on visible groups (counted per realignment_no)
+     * Update total records count for the active view.
+     * Card View counts distinct realignment groups; List View counts visible rows.
      */
     function updateTotalRecordsCount() {
-        const groups = document.querySelectorAll('.realignment-group');
+        const isTableView = !document.getElementById('realignmentsTableView').classList.contains('hidden');
+        const items = isTableView
+            ? document.querySelectorAll('.realignment-row')
+            : document.querySelectorAll('.realignment-group');
         let visibleCount = 0;
 
-        groups.forEach(group => {
-            if (group.style.display !== 'none') {
+        items.forEach(item => {
+            if (item.style.display !== 'none') {
                 visibleCount++;
             }
         });
@@ -740,6 +915,64 @@
         }
     }
 
+    /**
+     * Re-apply the current search value to whichever view is active
+     */
+    function filterActiveRealignmentsView(searchValue) {
+        const isTableView = !document.getElementById('realignmentsTableView').classList.contains('hidden');
+        if (isTableView) {
+            filterRealignmentsTable(searchValue);
+        } else {
+            filterRealignments(searchValue);
+        }
+    }
+
+    /**
+     * Card / List view toggle
+     */
+    function updateRealignmentsViewButtons(view) {
+        const cardBtn = document.getElementById('realignmentsCardViewBtn');
+        const listBtn = document.getElementById('realignmentsListViewBtn');
+        const activeClasses = ['bg-white', 'dark:bg-gray-700', 'text-blue-700', 'dark:text-blue-300', 'shadow-sm'];
+        const inactiveClasses = ['text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200'];
+
+        [cardBtn, listBtn].forEach(btn => btn.classList.remove(...activeClasses, ...inactiveClasses));
+
+        if (view === 'table') {
+            listBtn.classList.add(...activeClasses);
+            cardBtn.classList.add(...inactiveClasses);
+        } else {
+            cardBtn.classList.add(...activeClasses);
+            listBtn.classList.add(...inactiveClasses);
+        }
+    }
+
+    window.setRealignmentsView = function(view) {
+        const cardView = document.getElementById('realignmentsCardView');
+        const tableView = document.getElementById('realignmentsTableView');
+
+        if (view === 'table') {
+            cardView.classList.add('hidden');
+            tableView.classList.remove('hidden');
+        } else {
+            view = 'card';
+            tableView.classList.add('hidden');
+            cardView.classList.remove('hidden');
+        }
+
+        try {
+            localStorage.setItem('realignmentsView', view);
+        } catch (e) {
+            // localStorage unavailable — view just won't persist
+        }
+
+        updateRealignmentsViewButtons(view);
+
+        // Re-apply the current search to the view that just became active
+        const searchInput = document.getElementById('searchInput');
+        filterActiveRealignmentsView(searchInput ? searchInput.value : '');
+    };
+
     // Initial setup
     document.addEventListener('DOMContentLoaded', () => {
         // Hide context menu when clicking outside
@@ -749,15 +982,20 @@
             }
         });
 
-        // Initialize total records count
-        updateTotalRecordsCount();
-        updateFooterTotals();
+        // Apply saved view preference (defaults to table)
+        let savedView = 'table';
+        try {
+            savedView = localStorage.getItem('realignmentsView') || 'table';
+        } catch (e) {
+            // ignore
+        }
+        setRealignmentsView(savedView);
 
         // Add search input listener for real-time updates
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', function() {
-                filterRealignments(this.value);
+                filterActiveRealignmentsView(this.value);
             });
         }
     });

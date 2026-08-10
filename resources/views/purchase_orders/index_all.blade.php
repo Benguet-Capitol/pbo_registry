@@ -3,7 +3,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center">
             <h3 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('All Purchase Orders') }}
 
@@ -30,7 +30,7 @@
             <!-- Right: Breadcrumb Navigation -->
                 @if(isset($breadcrumb))
                 <nav class="text-xs text-gray-600 dark:text-gray-300" aria-label="Breadcrumb">
-                    <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse">
+                    <ol class="list-none p-0 inline-flex flex-wrap items-center space-x-1 rtl:space-x-reverse">
                         @foreach ($breadcrumb as $index => $item)
                         <li>
                             @if (!empty($item['route']) && $index < count($breadcrumb) - 1)
@@ -89,7 +89,7 @@
         </h4>
 
         <form id="filterForm" method="GET" action="{{ route('purchase_orders.all') }}">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
 
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
@@ -143,33 +143,119 @@
                 </div>
             </div>
         </form>
+
+        @php
+            $activeFilterChips = [];
+
+            if (request('office_allotment_class_filter')) {
+                $officeClassChip = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_filter'));
+                if ($officeClassChip) {
+                    $activeFilterChips[] = [
+                        'label' => $officeClassChip->offices->office_abbreviation . ' - ' . $officeClassChip->allotmentClass->class,
+                        'url' => '?' . http_build_query(request()->except(['office_allotment_class_filter', 'page'])),
+                    ];
+                }
+            }
+            if (request('allotment_class_filter')) {
+                $allotmentClassChip = $allotmentClasses->firstWhere('id', request('allotment_class_filter'));
+                if ($allotmentClassChip) {
+                    $activeFilterChips[] = [
+                        'label' => $allotmentClassChip->description,
+                        'url' => '?' . http_build_query(request()->except(['allotment_class_filter', 'page'])),
+                    ];
+                }
+            }
+            if (request('search')) {
+                $searchColumnLabels = [
+                    'po_number' => 'PO Number',
+                    'po_date' => 'PO Date',
+                    'pr_no' => 'PR Number',
+                    'supplier' => 'Supplier',
+                    'delivery_period' => 'Delivery Period',
+                    'po_remarks' => 'Remarks',
+                ];
+                $searchChipLabel = 'Search: "' . request('search') . '"';
+                if (request('search_column') && isset($searchColumnLabels[request('search_column')])) {
+                    $searchChipLabel .= ' in ' . $searchColumnLabels[request('search_column')];
+                }
+                $activeFilterChips[] = [
+                    'label' => $searchChipLabel,
+                    'url' => '?' . http_build_query(request()->except(['search', 'search_column', 'page'])),
+                    'isClientSide' => true,
+                ];
+            }
+        @endphp
+
+        @if (count($activeFilterChips) > 0)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
+                @foreach ($activeFilterChips as $chip)
+                    <span class="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700">
+                        {{ $chip['label'] }}
+                        @if (!empty($chip['isClientSide']))
+                            <button type="button" onclick="clearPurchaseOrderSearchFilter()" class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors" title="Clear">
+                                <i class="fas fa-times text-[10px]"></i>
+                            </button>
+                        @else
+                            <a href="{{ $chip['url'] }}" class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors" title="Remove filter">
+                                <i class="fas fa-times text-[10px]"></i>
+                            </a>
+                        @endif
+                    </span>
+                @endforeach
+                <a href="{{ route('purchase_orders.all') }}" class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 underline ml-1">
+                    Clear all
+                </a>
+            </div>
+        @endif
     </div>
 
-    <!-- Purchase Orders Table -->
+    <!-- Purchase Orders -->
      <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800">
-        <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-end items-center mb-4">
-                <!-- @can('create purchase orders')
+        <div class="p-4 sm:p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
+            @php
+                $sortOptions = [
+                    'po_date' => 'PO Date',
+                    'po_number' => 'PO Number',
+                    'pr_no' => 'PR Number',
+                    'supplier' => 'Supplier',
+                    'delivery_period' => 'Delivery Period',
+                    'po_amount' => 'PO Amount',
+                    'remarks' => 'Remarks',
+                ];
+            @endphp
+            {{-- @can('create purchase orders')
+            <div class="mb-4">
                 <button onclick="openCreateModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-3 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Add Purchase Order') }}
                 </button>
-                @endcan -->
-                <!-- Right: Total Records and Search Input -->
-                <div class="flex items-center space-x-4">
-                    <!-- Export Button -->
-                    <button type="button" onclick="exportPurchaseOrdersToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
-                        <i class="fas fa-download text-lg mr-2 -ml-1 w-4 h-4"></i>
-                        Export to Excel
-                    </button>
-                    <!-- Total Records -->
-                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
-                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
-                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
-                    </div>
+            </div>
+            @endcan --}}
+
+            <!-- Sort pills (left) and Export / Search / Total Records (right), all inline -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
+                    @foreach ($sortOptions as $sortKey => $sortLabel)
+                        @php
+                            $isActiveSort = $sortBy == $sortKey;
+                            $nextOrder = $isActiveSort && $sortOrder == 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="?{{ http_build_query(array_merge(request()->except(['page', 'sort_by', 'sort_order']), ['sort_by' => $sortKey, 'sort_order' => $nextOrder])) }}"
+                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                           {{ $isActiveSort ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600' }}">
+                            {{ $sortLabel }}
+                            @if ($isActiveSort)
+                                <i class="fas fa-arrow-{{ $sortOrder == 'asc' ? 'up' : 'down' }} text-[10px]"></i>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
                     <!-- Search Form -->
-                    <form id="searchForm" method="GET" action="{{ route('purchase_orders.all') }}" class="flex items-center space-x-2 min-w-96">
+                    <form id="searchForm" method="GET" action="{{ route('purchase_orders.all') }}" class="flex flex-wrap items-center gap-2">
                         <!-- Hidden inputs to preserve filters -->
                         <input type="hidden" name="year1" value="{{ $selectedYear }}">
                         <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
@@ -177,8 +263,8 @@
                         <input type="hidden" name="sort_by" value="{{ $sortBy }}">
                         <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
                         <input type="hidden" name="allotment_class_filter" value="{{ request('allotment_class_filter') }}">
-                        
-                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+
+                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-36 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">All Columns</option>
                             <option value="po_number" {{ request('search_column') == 'po_number' ? 'selected' : '' }}>PO Number</option>
                             <option value="po_date" {{ request('search_column') == 'po_date' ? 'selected' : '' }}>PO Date</option>
@@ -187,156 +273,211 @@
                             <option value="delivery_period" {{ request('search_column') == 'delivery_period' ? 'selected' : '' }}>Delivery Period</option>
                             <option value="po_remarks" {{ request('search_column') == 'po_remarks' ? 'selected' : '' }}>Remarks</option>
                         </x-form.select>
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search purchase orders" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                        <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search purchase orders" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-48 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                        <button type="submit" class="flex-shrink-0 text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                             <i class="fas fa-search"></i>
                         </button>
                     </form>
+
+                    <!-- Export Button -->
+                    <button type="button" onclick="exportPurchaseOrdersToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 whitespace-nowrap">
+                        <i class="fas fa-download mr-1"></i>
+                        Export to Excel
+                    </button>
+
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
-            <div class="max-h-[720px] overflow-y-auto">
-            <table id="purchaseOrdersTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-8">
-                <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
-                    <tr>
-                        @php
-                            $columns = [
-                                'office_class' => 'Office & Class',
-                                'obr_no' => 'OBR No.',
-                                'particulars' => 'Particulars',
-                                'program' => 'Program',
-                                'account_code' => 'Account Code',
-                                'description' => 'Description',
-                                'po_number' => 'PO Number',
-                                'po_date' => 'PO Date',
-                                'pr_no' => 'PR Number',
-                                'supplier' => 'Supplier',
-                                'delivery_period' => 'Delivery Period',
-                                'po_amount' => 'Purchase Order',
-                                'disbursement' => 'Disbursement',
-                                'remarks' => 'Remarks',
-                                'files' => 'Files',
-                            ];
-                            $sortable = ['po_date', 'po_number', 'pr_no', 'supplier', 'delivery_period', 'po_amount', 'remarks'];
-                        @endphp
-                        @foreach($columns as $key => $label)
-                            <th class="px-2 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300">
-                                @if(in_array($key, $sortable))
-                                    @php
-                                        $isCurrent = request('sort_by') === $key;
-                                        $sortOrder = $isCurrent && request('sort_order', 'desc') === 'asc' ? 'desc' : 'asc';
-                                        $icon = $isCurrent ? (request('sort_order', 'desc') === 'asc' ? '▲' : '▼') : '';
-                                        $query = array_merge(request()->except(['page', 'sort_by', 'sort_order']), ['sort_by' => $key, 'sort_order' => $sortOrder]);
-                                    @endphp
-                                    <a href="?{{ http_build_query($query) }}" class="flex items-center justify-center">
-                                        {{ $label }}
-                                        <span class="ml-1">{!! $icon !!}</span>
-                                    </a>
-                                @else
-                                    {{ $label }}
-                                @endif
-                            </th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
+            <!-- PO Cards -->
+            <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="purchaseOrdersContainer">
                     @forelse($purchaseOrders as $purchaseOrder)
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer relative"
-                            oncontextmenu="showPurchaseOrderContextMenu(event, this)"
-                            data-po='@json($purchaseOrder)'
-                            data-po-id="{{ $purchaseOrder->id }}"
-                            data-po-number="{{ $purchaseOrder->po_number }}"
-                            data-obligation-id="{{ $purchaseOrder->obligation_id }}">
-                            <td class="px-2 py-3 font-semibold text-left text-gray-700 dark:text-gray-300">
-                                {{ optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-' }} -
-                                {{ optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-' }}
-                            </td>
-                            <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
-                            <td class="px-2 py-3 text-left text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->obligation->particulars ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
-                                @php
-                                    $programs = $purchaseOrder->obligation->obligationAmounts
-                                        ->where('id', $purchaseOrder->obligation_amounts_id)
-                                        ->first()?->appropriation?->programs;
-                                @endphp
-                                {{ $programs ?: '-' }}
-                            </td>
-                            <td class="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300">
-                                @php
-                                    $accountCode = $purchaseOrder->obligation->obligationAmounts
-                                        ->where('id', $purchaseOrder->obligation_amounts_id)
-                                        ->first()?->account_code ?? '-';
-                                @endphp
-                                {{ $accountCode }}
-                            </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">
-                                @php
-                                    $description = $purchaseOrder->obligation->obligationAmounts
-                                        ->where('id', $purchaseOrder->obligation_amounts_id)
-                                        ->first()?->appropriation?->description ?? '-';
-                                @endphp
-                                {{ $description }}
-                            </td>
-                            <td class="px-2 py-3 font-semibold text-blue-700 dark:text-blue-300">{{ $purchaseOrder->po_number }}</td>
-                            <td class="px-2 py-3 font-semibold text-left text-blue-700 dark:text-blue-300">{{ $purchaseOrder->po_date ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->pr_no ?? '-' }}</td>
-                            <td class="px-2 py-3 font-semibold text-gray-700 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
-                            <td class="px-2 py-3 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($purchaseOrder->po_amount, 2) }}</td>
-                            <td class="px-2 py-3 text-right text-gray-600 dark:text-gray-300">
-                                @if($purchaseOrder->disbursement_amount > 0)
-                                    <span class="font-semibold text-green-700 dark:text-green-300">{{ number_format($purchaseOrder->disbursement_amount, 2) }}</span>
-                                @else
-                                    <span class="text-gray-400">-</span>
+                        @php
+                            $officeClassLabel = (optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-') . ' - ' . (optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-');
+                            $obligationAmount = $purchaseOrder->obligation->obligationAmounts->where('id', $purchaseOrder->obligation_amounts_id)->first();
+                            $program = $obligationAmount?->appropriation?->programs ?? '-';
+                            $accountCode = $obligationAmount?->account_code ?? '-';
+                            $description = $obligationAmount?->appropriation?->description ?? '-';
+                            $fileCount = \App\Models\PurchaseOrderFile::where('po_number', $purchaseOrder->po_number)->count();
+                            $poAmount = (float)($purchaseOrder->po_amount ?? 0);
+                            $disbursementAmount = (float)($purchaseOrder->disbursement_amount ?? 0);
+                            $disbursedPct = $poAmount > 0 ? min(100, round(($disbursementAmount / $poAmount) * 100)) : 0;
+
+                            $searchText = strtolower(collect([
+                                $officeClassLabel,
+                                $purchaseOrder->obligation->obr_no ?? '',
+                                $purchaseOrder->obligation->particulars ?? '',
+                                $program,
+                                $accountCode,
+                                $description,
+                                $purchaseOrder->po_number,
+                                $purchaseOrder->po_date,
+                                $purchaseOrder->pr_no,
+                                $purchaseOrder->supplier,
+                                $purchaseOrder->delivery_period,
+                                $purchaseOrder->po_remarks,
+                            ])->implode(' '));
+                        @endphp
+                        <div class="po-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
+                             oncontextmenu="showPurchaseOrderContextMenu(event, this)"
+                             data-po='@json($purchaseOrder)'
+                             data-po-id="{{ $purchaseOrder->id }}"
+                             data-po-number="{{ $purchaseOrder->po_number }}"
+                             data-obligation-id="{{ $purchaseOrder->obligation_id }}"
+                             data-po-amount="{{ $poAmount }}"
+                             data-disbursement-amount="{{ $disbursementAmount }}"
+                             data-office-class="{{ $officeClassLabel }}"
+                             data-obr-no="{{ $purchaseOrder->obligation->obr_no ?? '-' }}"
+                             data-particulars="{{ $purchaseOrder->obligation->particulars ?? '-' }}"
+                             data-program="{{ $program }}"
+                             data-account-code="{{ $accountCode }}"
+                             data-description="{{ $description }}"
+                             data-file-count="{{ $fileCount }}"
+                             data-search-text="{{ $searchText }}">
+
+                            <!-- Card Header -->
+                            <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                    <span class="font-bold text-blue-700 dark:text-blue-300">
+                                        <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $purchaseOrder->po_number }}
+                                    </span>
+                                    <span class="text-gray-600 dark:text-gray-300">
+                                        <i class="far fa-calendar mr-1"></i>{{ $purchaseOrder->po_date ?? '-' }}
+                                    </span>
+                                    <span class="text-gray-600 dark:text-gray-300">
+                                        <span class="font-semibold">OBR:</span> {{ $purchaseOrder->obligation->obr_no ?? '-' }}
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    @role('Developer|Administrator|Obligation|Disbursement')
+                                    <button type="button" onclick="event.stopPropagation(); openPurchaseOrderFilesModal('{{ $purchaseOrder->po_number }}')"
+                                        class="text-green-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
+                                        <i class="fas fa-file"></i>
+                                        <span>{{ $fileCount }}</span>
+                                    </button>
+
+                                    <button type="button" onclick="event.stopPropagation(); displayObligationDetailsModal({{ $purchaseOrder->obligation_id }})"
+                                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                        <i class="fas fa-eye"></i><span>View</span>
+                                    </button>
+
+                                    <button type="button" onclick="event.stopPropagation(); openEditPurchaseOrderModal(JSON.parse(this.closest('.po-card').dataset.po))"
+                                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                        <i class="fas fa-edit"></i><span>Edit</span>
+                                    </button>
+                                    @endrole
+
+                                    @role('Developer|Administrator|Disbursement')
+                                    @can('create disbursement')
+                                    <button type="button" onclick="event.stopPropagation(); openCreateDisbursementModal({{ $purchaseOrder->obligation_id }}, {{ $purchaseOrder->id }})"
+                                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                        <i class="fas fa-file-medical-alt"></i><span>DV</span>
+                                    </button>
+                                    @endcan
+                                    @endrole
+                                </div>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="px-3 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
+                                <div class="col-span-2">
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Office & Class</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $officeClassLabel }}</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Supplier</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $purchaseOrder->supplier ?? '-' }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">PR Number</div>
+                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->pr_no ?? '-' }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Delivery Period</div>
+                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->delivery_period ?? '-' }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Account Code</div>
+                                    <div class="font-medium text-gray-700 dark:text-gray-200 break-words">{{ $accountCode }}</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Program</div>
+                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $program }}</div>
+                                </div>
+                                <div class="col-span-2 sm:col-span-4">
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Description</div>
+                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $description }}</div>
+                                </div>
+                                <div class="col-span-2 sm:col-span-4">
+                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Particulars</div>
+                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->obligation->particulars ?? '-' }}</div>
+                                </div>
+                                @if($purchaseOrder->po_remarks)
+                                    <div class="col-span-2 sm:col-span-4 pt-1 border-t border-gray-100 dark:border-gray-700">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Remarks</div>
+                                        <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->po_remarks }}</div>
+                                    </div>
                                 @endif
-                            </td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 max-w-xs">{{ $purchaseOrder->po_remarks ?? '-' }}</td>
-                            <td class="px-2 py-3 text-gray-600 dark:text-gray-300 text-center">
-                                @php
-                                    $fileCount = \App\Models\PurchaseOrderFile::where('po_number', $purchaseOrder->po_number)->count();
-                                @endphp
-                                <button onclick="openPurchaseOrderFilesModal('{{ $purchaseOrder->po_number }}')"
-                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
-                                    @if($fileCount > 0)
-                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
-                                    @else
-                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
-                                    @endif"
-                                    title="View files">
-                                    <i class="fas fa-file"></i>
-                                    <span>{{ $fileCount }}</span>
-                                </button>
-                            </td>
-                            <!-- @canany(['edit purchase orders', 'delete purchase orders'])
-                                <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
-                                </td>
-                            @endcanany -->
-                        </tr>
+                            </div>
+
+                            <!-- Card Footer: Amount / Disbursement -->
+                            <div class="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                                <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                                    <div>
+                                        <span class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mr-1">PO Amount</span>
+                                        <span class="font-bold text-sm tabular-nums text-blue-700 dark:text-blue-300">{{ number_format($poAmount, 2) }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mr-1">Disbursed</span>
+                                        @if($disbursementAmount > 0)
+                                            <span class="font-bold text-sm tabular-nums text-emerald-700 dark:text-emerald-400">{{ number_format($disbursementAmount, 2) }}</span>
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">-</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                @if($poAmount > 0)
+                                    <div class="mt-1.5 h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden" title="{{ $disbursedPct }}% disbursed">
+                                        <div class="h-full rounded-full {{ $disbursedPct >= 100 ? 'bg-emerald-500' : 'bg-blue-500' }}" style="width: {{ $disbursedPct }}%"></div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
                     @empty
-                        <tr>
-                            <td colspan="15" class="py-4 text-center text-gray-500">No purchase orders found.</td>
-                        </tr>
+                        <div class="px-3 py-10 text-center text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-file-circle-question text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                            No purchase orders found.
+                            @if(count($activeFilterChips) > 0)
+                                <a href="{{ route('purchase_orders.all') }}" class="block mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                                    Clear filters and try again
+                                </a>
+                            @endif
+                        </div>
                     @endforelse
-                </tbody>
-                <tfoot>
-                    <tr id="purchaseOrdersFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
-                        <td colspan="8" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
 
-                        </td>
-                        <td colspan="5" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
-                            Total Purchase Order Amount:
-                            <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-semibold ml-2">
-                                0.00
-                            </span>
-                        </td>
-                        <td colspan="2" class="text-right text-xs font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                    <!-- Shown by JS when a search query matches no visible cards -->
+                    <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                        No purchase orders match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
+                        <button type="button" onclick="clearPurchaseOrderSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                            Clear search
+                        </button>
+                    </div>
+                </div>
 
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
-            </div>
+                <!-- Totals Footer -->
+                <div id="purchaseOrdersFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600 text-center text-sm px-3 py-3">
+                    Total Purchase Order Amount:
+                    <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">
+                        0.00
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -345,7 +486,7 @@
     @include('obligations.modal.obligation_details')
     <div id="createDisbursementModalContainer"></div>
     <div id="purchaseOrderContextMenu" 
-        class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
+        class="fixed hidden w-48 max-w-[calc(100vw-16px)] bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
         @role('Developer|Administrator|Obligation|Disbursement')
         <button id="contextFiles"
@@ -383,19 +524,16 @@
         // Prevent multiple submissions
         let isSubmittingDisbursement = false;
 
+        /**
+         * Recompute the Total Purchase Order Amount footer from each visible
+         * card's data-po-amount attribute.
+         */
         function updatePurchaseOrdersFooterTotal() {
-            let table = document.getElementById("purchaseOrdersTable");
-            let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
             let totalPO = 0;
-            for (let i = 0; i < tr.length; i++) {
-                if (tr[i].style.display === "none") continue;
-                let amountCell = tr[i].getElementsByTagName("td")[11]; // 12th column is PO Amount
-                if (!amountCell) continue;
-                let amountText = amountCell.textContent.replace(/[^\d.-]/g, '');
-                let amount = parseFloat(amountText);
-                if (isNaN(amount)) amount = 0;
-                totalPO += amount;
-            }
+            document.querySelectorAll('#purchaseOrdersContainer .po-card').forEach(card => {
+                if (card.style.display === 'none') return;
+                totalPO += parseFloat(card.dataset.poAmount) || 0;
+            });
             document.getElementById('totalPOAmountFooter').textContent = totalPO.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             // Always show the footer
             document.getElementById('purchaseOrdersFooter').style.display = '';
@@ -405,42 +543,64 @@
             updatePurchaseOrdersFooterTotal();
             updateTotalRecordsCount();
         });
-        function filterTable() {
-            // Declare variables
-            var input, filter, table, tr, td, i, j, txtValue;
-            input = document.getElementById("searchInput");
-            filter = input.value.toLowerCase();
-            table = document.getElementById("purchaseOrdersTable");
-            tr = table.getElementsByTagName("tr");
 
-            // Loop through all table rows, and hide those who don't match the search query
-            for (i = 1; i < tr.length; i++) {
-                tr[i].style.display = "none";
-                td = tr[i].getElementsByTagName("td");
-                for (j = 0; j < td.length; j++) {
-                    if (td[j]) {
-                        txtValue = td[j].textContent || td[j].innerText;
-                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                            tr[i].style.display = "";
-                            break;
-                        }
-                    }
+        /**
+         * Filter PO cards based on the search input
+         */
+        function filterTable() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('#purchaseOrdersContainer .po-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const searchText = card.dataset.searchText || card.textContent.toLowerCase();
+                if (searchText.includes(filter)) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show a "no results" message when a search query matches nothing
+            const noResultsMsg = document.getElementById('noSearchResultsMsg');
+            const noResultsQuery = document.getElementById('noSearchResultsQuery');
+            if (noResultsMsg) {
+                if (filter.length > 0 && visibleCount === 0 && cards.length > 0) {
+                    if (noResultsQuery) noResultsQuery.textContent = `"${input.value.trim()}"`;
+                    noResultsMsg.classList.remove('hidden');
+                } else {
+                    noResultsMsg.classList.add('hidden');
                 }
             }
+
             updateTotalRecordsCount();
         }
 
         /**
-         * Update total records count based on visible rows (counted per po_number)
+         * Clear the search box (used by the active-filter chip and the no-results message)
+         */
+        function clearPurchaseOrderSearchFilter() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterTable();
+                updatePurchaseOrdersFooterTotal();
+                searchInput.focus();
+            }
+        }
+
+        /**
+         * Update total records count based on visible cards (counted per po_number)
          */
         function updateTotalRecordsCount() {
-            const rows = document.querySelectorAll('#purchaseOrdersTable tbody tr');
+            const cards = document.querySelectorAll('#purchaseOrdersContainer .po-card');
             let poNumbers = new Set();
 
-            rows.forEach(row => {
-                // Check if row is visible (display is not 'none')
-                if (row.style.display !== 'none' && row.dataset.poNumber) {
-                    poNumbers.add(row.dataset.poNumber);
+            cards.forEach(card => {
+                if (card.style.display !== 'none' && card.dataset.poNumber) {
+                    poNumbers.add(card.dataset.poNumber);
                 }
             });
 
@@ -450,7 +610,7 @@
             }
         }
 
-        // Add event listener for input event to filter table as you type
+        // Add event listener for input event to filter cards as you type
         document.getElementById('searchInput').addEventListener('input', function() {
             filterTable();
             updatePurchaseOrdersFooterTotal();
@@ -459,60 +619,51 @@
         // Context Menu Handler for Purchase Orders
         const poMenu = document.getElementById('purchaseOrderContextMenu');
 
-        window.showPurchaseOrderContextMenu = function(event, row) {
+        window.showPurchaseOrderContextMenu = function(event, card) {
             event.preventDefault();
             event.stopPropagation();
             
-            // Remove highlight from previously selected row
-            document.querySelectorAll('table tbody tr.context-menu-active').forEach(r => {
+            // Remove highlight from previously selected card
+            document.querySelectorAll('.po-card.context-menu-active').forEach(r => {
                 r.classList.remove('context-menu-active');
             });
             
-            // Highlight the current row
-            row.classList.add('context-menu-active');
-            window.currentContextMenuRow = row;
+            // Highlight the current card
+            card.classList.add('context-menu-active');
+            window.currentContextMenuRow = card;
 
             if (!poMenu) return;
 
-            // Get element positions
+            // The menu is position:fixed, so we work in raw viewport coordinates
+            // (clientX/clientY) and must NOT add page scroll offsets, or the menu
+            // drifts away from the cursor the further the page has been scrolled.
             const menuHeight = 150; // Approximate menu height
+            const menuWidth = 192; // w-48 = 12rem = 192px
             const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const mouseX = event.clientX;
             const mouseY = event.clientY;
-            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
             // Determine if menu should appear above or below the cursor
-            let top, verticalAlignment;
+            let top;
             const spaceBelow = viewportHeight - mouseY;
             const spaceAbove = mouseY;
 
             if (spaceBelow > menuHeight + 20) {
-                // Show below cursor, tight to cursor position
-                top = mouseY + scrollTop;
-                verticalAlignment = 'below';
+                top = mouseY;
             } else if (spaceAbove > menuHeight + 20) {
-                // Show above cursor, positioned lower so it's beside cursor
-                top = mouseY + scrollTop - menuHeight + 40;
-                verticalAlignment = 'above';
+                top = mouseY - menuHeight + 40;
             } else {
-                // Default to below
-                top = mouseY + scrollTop;
-                verticalAlignment = 'below';
+                top = viewportHeight - menuHeight - 8;
             }
+            top = Math.min(Math.max(top, 8), viewportHeight - 8);
 
-            // Calculate left position (tight to cursor, with right edge collision detection)
-            let left = event.clientX + scrollLeft + 2;
-            const menuWidth = 192; // w-48 = 12rem = 192px
-            const viewportWidth = window.innerWidth;
-            
-            // Check if menu goes off screen to the right
-            if (left + menuWidth > viewportWidth + scrollLeft) {
-                left = event.clientX + scrollLeft - menuWidth - 2;
+            let left = mouseX + 2;
+            if (left + menuWidth > viewportWidth) {
+                left = mouseX - menuWidth - 2;
             }
-            
-            // Ensure menu doesn't go off screen to the left
-            if (left < scrollLeft) {
-                left = scrollLeft + 2;
+            if (left < 8) {
+                left = 8;
             }
 
             // Position menu
@@ -523,7 +674,7 @@
             poMenu.classList.remove('hidden');
 
             // Get purchase order data and set up menu items
-            const purchaseOrder = row.dataset.po ? JSON.parse(row.dataset.po) : null;
+            const purchaseOrder = card.dataset.po ? JSON.parse(card.dataset.po) : null;
             if (purchaseOrder) {
                 // Files button
                 const filesBtn = poMenu.querySelector('#contextFiles');
@@ -567,9 +718,12 @@
                 document.addEventListener('click', hidePurchaseOrderContextMenu);
                 window.addEventListener('resize', hidePurchaseOrderContextMenu);
                 window.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
-                
-                // Add scroll listener to container
-                container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
+
+                // Add scroll listener to the scrollable card container
+                const container = document.getElementById('purchaseOrdersContainer');
+                if (container) {
+                    container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
+                }
             }, 30);
         };
 
@@ -589,8 +743,8 @@
             window.removeEventListener('resize', hidePurchaseOrderContextMenu);
             window.removeEventListener('scroll', hidePurchaseOrderContextMenu);
             
-            // Clean up container listeners
-            const container = document.querySelector('.overflow-x-auto');
+            // Clean up container listener
+            const container = document.getElementById('purchaseOrdersContainer');
             if (container) {
                 container.removeEventListener('scroll', hidePurchaseOrderContextMenu);
             }
@@ -603,7 +757,7 @@
 
         // Initialize scroll event listeners
         document.addEventListener('DOMContentLoaded', () => {
-            const container = document.querySelector('.overflow-x-auto');
+            const container = document.getElementById('purchaseOrdersContainer');
             if (container) {
                 container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
             }
@@ -1481,46 +1635,53 @@
         }
 
         /**
-         * Export filtered purchase orders data to Excel
+         * Export filtered purchase orders data to Excel.
+         * Reads directly from each visible card's data attributes since
+         * the layout is card-based rather than a table.
          */
         function exportPurchaseOrdersToExcel() {
-            const table = document.getElementById('purchaseOrdersTable');
-            const rows = table.querySelectorAll('tbody tr');
-            
-            // Collect visible rows data
-            const data = [];
-            const headers = [];
-            
-            // Get headers from table
-            table.querySelectorAll('thead th').forEach(th => {
-                headers.push(th.textContent.trim());
+            const headers = [
+                'Office & Class', 'OBR No.', 'Particulars', 'Program', 'Account Code', 'Description',
+                'PO Number', 'PO Date', 'PR Number', 'Supplier', 'Delivery Period',
+                'Purchase Order', 'Disbursement', 'Remarks', 'Files'
+            ];
+            const data = [headers];
+
+            document.querySelectorAll('#purchaseOrdersContainer .po-card').forEach(card => {
+                if (card.style.display === 'none') return;
+                const po = JSON.parse(card.dataset.po);
+                data.push([
+                    card.dataset.officeClass || '',
+                    card.dataset.obrNo || '',
+                    card.dataset.particulars || '',
+                    card.dataset.program || '',
+                    card.dataset.accountCode || '',
+                    card.dataset.description || '',
+                    po.po_number || '',
+                    po.po_date || '',
+                    po.pr_no || '',
+                    po.supplier || '',
+                    po.delivery_period || '',
+                    card.dataset.poAmount || '0',
+                    card.dataset.disbursementAmount || '0',
+                    po.po_remarks || '',
+                    card.dataset.fileCount || '0',
+                ]);
             });
-            data.push(headers);
-            
-            // Get visible rows
-            rows.forEach(row => {
-                if (row.style.display !== 'none') {
-                    const rowData = [];
-                    row.querySelectorAll('td').forEach(td => {
-                        rowData.push(td.textContent.trim());
-                    });
-                    data.push(rowData);
-                }
-            });
-            
+
             // Create workbook and worksheet
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Purchase Orders');
-            
+
             // Set column widths
             const colWidths = headers.map(() => 15);
             ws['!cols'] = colWidths.map(w => ({ wch: w }));
-            
+
             // Generate Excel file with current date
             const today = new Date().toISOString().split('T')[0];
             XLSX.writeFile(wb, `purchase_orders_${today}.xlsx`);
-            
+
             // Show success toast
             showToast('Purchase orders data exported successfully!', 'success');
         }
@@ -1572,14 +1733,14 @@
         animation: slideOutRight 0.3s ease-out;
     }
 
-    /* Row highlight when context menu is open */
-    table tbody tr.context-menu-active {
-        background-color: rgba(59, 130, 246, 0.15);
+    /* Card highlight when context menu is open */
+    .po-card.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.1);
         transition: background-color 0.2s ease-in-out;
     }
 
-    .dark table tbody tr.context-menu-active {
-        background-color: rgba(59, 130, 246, 0.25);
+    .dark .po-card.context-menu-active {
+        background-color: rgba(59, 130, 246, 0.2);
     }
 </style>
     </div>

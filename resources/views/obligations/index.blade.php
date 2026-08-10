@@ -3,7 +3,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center">
             <!-- Left: Obligations Title with Filters -->
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Obligations') }}
@@ -42,7 +42,7 @@
             <!-- Right: Breadcrumb Navigation -->
             @if(isset($breadcrumb))
             <nav class="text-xs text-gray-600 dark:text-gray-300" aria-label="Breadcrumb">
-                <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse">
+                <ol class="list-none p-0 inline-flex flex-wrap items-center space-x-1 rtl:space-x-reverse">
                     @foreach ($breadcrumb as $index => $item)
                     <li>
                         @if (!empty($item['route']) && $index < count($breadcrumb) - 1)
@@ -115,8 +115,8 @@
             <input type="hidden" name="search_column" value="{{ request('search_column') }}">
             <input type="hidden" name="sort_by" value="{{ $sortBy }}">
             <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
-            
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
 
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
@@ -179,7 +179,7 @@
             </div>
 
             <!-- Date Range Filter Row -->
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mt-2">
                 <!-- From Date Filter -->
                 <div class="flex flex-col space-x-2">
                     <label for="fromDate" class="text-xs font-semibold text-gray-700 dark:text-gray-100 mb-2">From Date</label>
@@ -200,35 +200,134 @@
                 </div>
             </div>
         </form>
+
+        @php
+            $activeFilterChips = [];
+
+            if (request('office_allotment_class_filter')) {
+                $officeClassChip = $officeAllotmentClasses->firstWhere('id', request('office_allotment_class_filter'));
+                if ($officeClassChip) {
+                    $activeFilterChips[] = [
+                        'label' => $officeClassChip->offices->office_abbreviation . ' - ' . $officeClassChip->allotmentClass->class,
+                        'url' => '?' . http_build_query(request()->except(['office_allotment_class_filter', 'page'])),
+                    ];
+                }
+            }
+            if (request('fund_filter')) {
+                $activeFilterChips[] = [
+                    'label' => 'Fund: ' . request('fund_filter'),
+                    'url' => '?' . http_build_query(request()->except(['fund_filter', 'page'])),
+                ];
+            }
+            if (request('obr_type_filter')) {
+                $activeFilterChips[] = [
+                    'label' => 'Type: ' . request('obr_type_filter'),
+                    'url' => '?' . http_build_query(request()->except(['obr_type_filter', 'page'])),
+                ];
+            }
+            if (request('from_date') || request('to_date')) {
+                $fromDateChip = request('from_date') ? date('M d, Y', strtotime(request('from_date'))) : 'Start';
+                $toDateChip = request('to_date') ? date('M d, Y', strtotime(request('to_date'))) : 'End';
+                $activeFilterChips[] = [
+                    'label' => "$fromDateChip - $toDateChip",
+                    'url' => '?' . http_build_query(request()->except(['from_date', 'to_date', 'page'])),
+                ];
+            }
+            if (request('search')) {
+                $searchColumnLabels = [
+                    'obr_no' => 'OBR No.',
+                    'obr_date' => 'OBR Date',
+                    'obr_type' => 'OBR Type',
+                    'particulars' => 'Particulars',
+                    'office_abbreviation' => 'Office',
+                    'allotment_class' => 'Allotment Class',
+                    'processed_by' => 'Processed By',
+                    'remarks' => 'Remarks',
+                ];
+                $searchChipLabel = 'Search: "' . request('search') . '"';
+                if (request('search_column') && isset($searchColumnLabels[request('search_column')])) {
+                    $searchChipLabel .= ' in ' . $searchColumnLabels[request('search_column')];
+                }
+                $activeFilterChips[] = [
+                    'label' => $searchChipLabel,
+                    'url' => '?' . http_build_query(request()->except(['search', 'search_column', 'page'])),
+                    'isClientSide' => true,
+                ];
+            }
+        @endphp
+
+        @if (count($activeFilterChips) > 0)
+            <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
+                @foreach ($activeFilterChips as $chip)
+                    <span class="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700">
+                        {{ $chip['label'] }}
+                        @if (!empty($chip['isClientSide']))
+                            <button type="button" onclick="clearObligationSearchFilter()" class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors" title="Clear">
+                                <i class="fas fa-times text-[10px]"></i>
+                            </button>
+                        @else
+                            <a href="{{ $chip['url'] }}" class="w-4 h-4 flex items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors" title="Remove filter">
+                                <i class="fas fa-times text-[10px]"></i>
+                            </a>
+                        @endif
+                    </span>
+                @endforeach
+                <a href="{{ route('obligations.index') }}" class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 underline ml-1">
+                    Clear all
+                </a>
+            </div>
+        @endif
     </div>
-    
+
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-2 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-                <!-- Left: Action Button -->
-                @can('create obligations')
+
+            @can('create obligations')
+            <div class="mb-4">
                 <button onclick="openCreateModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                     <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
                     {{ __('Create Obligation') }}
                 </button>
-                @else
-                <div></div>
-                @endcan
-                <!-- Right: Total Records and Search Input -->
-                <div class="flex items-center space-x-4">
-                    <!-- Export Button -->
-                    <button type="button" id="exportObligationsBtn" onclick="exportObligationsToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-6 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors">
-                        <i id="exportObligationsIcon" class="fas fa-file-excel text-lg mr-2 -ml-1 w-4 h-4"></i>
-                        <span id="exportObligationsLabel">Export to Excel</span>
-                    </button>
-                    <!-- Total Records -->
-                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
-                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
-                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
-                    </div>
+            </div>
+            @endcan
+
+            <!-- Sort pills (left) and Export / Search / Total Records (right), all inline -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
+                    @php
+                        $sortPill = function ($key, $label) use ($sortBy, $sortOrder) {
+                            $isActive = $sortBy == $key;
+                            $nextOrder = $isActive && $sortOrder == 'asc' ? 'desc' : 'asc';
+                            $url = route('obligations.index', array_merge(request()->except('page'), ['sort_by' => $key, 'sort_order' => $nextOrder]));
+                            $classes = $isActive
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
+                            $icon = $isActive ? '<i class="fas fa-arrow-' . ($sortOrder == 'asc' ? 'up' : 'down') . ' text-[10px]"></i>' : '';
+                            return '<a href="' . $url . '" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ' . $classes . '">' . e($label) . ' ' . $icon . '</a>';
+                        };
+                    @endphp
+                    {!! $sortPill('office_allotment_class', 'Office & Class') !!}
+                    {!! $sortPill('obr_no', 'OBR No.') !!}
+                    {!! $sortPill('obr_date', 'OBR Date') !!}
+                    {!! $sortPill('obr_type', 'OBR Type') !!}
+                    {!! $sortPill('particulars', 'Particulars') !!}
+                    {!! $sortPill('obr_amount', 'Obligation') !!}
+                    {!! $sortPill('po_amount', 'Purchase Order') !!}
+                    @hasanyrole('Obligation|Administrator|Developer')
+                        {!! $sortPill('remarks', 'Remarks') !!}
+                    @endhasanyrole
+                    @hasanyrole('Disbursement|Administrator|Developer|Obligation')
+                        {!! $sortPill('dv_amount', 'Disbursement') !!}
+                        {!! $sortPill('balance', 'Balance') !!}
+                        {!! $sortPill('payment_remarks', 'Payment Remarks') !!}
+                    @endhasanyrole
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
                     <!-- Search Section -->
-                    <form id="searchForm" method="GET" action="{{ route('obligations.index') }}" class="flex items-center space-x-2">
+                    <form id="searchForm" method="GET" action="{{ route('obligations.index') }}" class="flex flex-wrap items-center gap-2">
                         <!-- Hidden inputs to preserve filters -->
                         <input type="hidden" name="year1" value="{{ $selectedYear }}">
                         <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
@@ -239,8 +338,19 @@
                         <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
                         <input type="hidden" name="sort_by" value="{{ $sortBy }}">
                         <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
-                        
-                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+
+                        <!-- Total Records -->
+                        <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
+                            <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                            <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                            <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                        </div>
+                        <!-- Export Button -->
+                        <button type="button" id="exportObligationsBtn" onclick="exportObligationsToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors whitespace-nowrap">
+                            <i id="exportObligationsIcon" class="fas fa-file-excel mr-1"></i>
+                            <span id="exportObligationsLabel">Export to Excel</span>
+                        </button>
+                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-36 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">All Columns</option>
                             <option value="obr_no" {{ request('search_column') == 'obr_no' ? 'selected' : '' }}>OBR No.</option>
                             <option value="obr_date" {{ request('search_column') == 'obr_date' ? 'selected' : '' }}>OBR Date</option>
@@ -251,305 +361,123 @@
                             <option value="processed_by" {{ request('search_column') == 'processed_by' ? 'selected' : '' }}>Processed By</option>
                             <option value="remarks" {{ request('search_column') == 'remarks' ? 'selected' : '' }}>Remarks</option>
                         </x-form.select>
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for obligations" class="border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white w-80" />
-                        <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for obligations" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-48 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                        <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                             <i class="fas fa-search"></i>
                         </button>
                     </form>
                 </div>
             </div>
 
-            <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
-                <div class="max-h-[560px] overflow-y-auto">
-                    <table id="obligationsTable" class="mb-20 min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
-                        <thead id="obligationTableHead"
-                            class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
-                            <tr>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'office_allotment_class', 'sort_order' => $sortBy == 'office_allotment_class' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Office & Class
-                                        @if($sortBy == 'office_allotment_class')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_no', 'sort_order' => $sortBy == 'obr_no' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        OBR No.
-                                        @if($sortBy == 'obr_no')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_date', 'sort_order' => $sortBy == 'obr_date' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        OBR Date
-                                        @if($sortBy == 'obr_date')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_type', 'sort_order' => $sortBy == 'obr_type' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        OBR Type
-                                        @if($sortBy == 'obr_type')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'particulars', 'sort_order' => $sortBy == 'particulars' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Particulars
-                                        @if($sortBy == 'particulars')
-                                        {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'obr_amount', 'sort_order' => $sortBy == 'obr_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Obligation
-                                        @if($sortBy == 'obr_amount')
-                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'po_amount', 'sort_order' => $sortBy == 'po_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Purchase Order
-                                        @if($sortBy == 'po_amount')
-                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                @hasanyrole('Obligation|Administrator|Developer')
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'remarks', 'sort_order' => $sortBy == 'remarks' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Remarks
-                                        @if($sortBy == 'remarks')
-                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                @endhasanyrole
-                                @hasanyrole('Disbursement|Administrator|Developer|Obligation')
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'dv_amount', 'sort_order' => $sortBy == 'dv_amount' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Disbursement
-                                        @if($sortBy == 'dv_amount')
-                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'balance', 'sort_order' => $sortBy == 'balance' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Balance
-                                        @if($sortBy == 'balance')
-                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    <a href="{{ route('obligations.index', ['sort_by' => 'payment_remarks', 'sort_order' => $sortBy == 'payment_remarks' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
-                                        Payment Remarks
-                                        @if($sortBy == 'payment_remarks')
-                                            {{ $sortOrder == 'asc' ? '▲' : '▼' }}
-                                        @endif
-                                    </a>
-                                </th>
-                                @endhasanyrole
-                                <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    Files
-                                </th>
-                                <!-- <th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
-                                    Actions
-                                </th> -->
-                            </tr>
-                        </thead>
+            @php
+                // Precompute derived values once per obligation so both the
+                // card view and the table view below can reuse them without
+                // duplicating the same computation logic in two loops.
+                $obligationComputed = [];
+                foreach ($obligations as $obligation) {
+                    $officeAbbr = $obligation->officeAllotmentClass->offices->office_abbreviation ?? '-';
+                    $allotmentClass = $obligation->officeAllotmentClass->allotmentClass->class ?? '-';
+                    $poAmount = $obligation->purchaseOrders->sum('po_amount');
+                    $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
+                    $obligationAmount = $obligation->obr_amount ?? 0;
+                    $balance = $obligation->obr_amount - $disbursementAmount;
+                    $fileCount = $obligation->files()->count();
 
-                        <tbody>
-                            @forelse ($obligations as $obligation)
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer relative"
-                                ondblclick="openModal({{ $obligation->id }})"
-                                oncontextmenu="showObligationContextMenu(event, this)"
-                                data-obligation='@json($obligation)'
-                                data-obligation-id="{{ $obligation->id }}"
-                                data-obligation-obr="{{ $obligation->obr_no }}"
-                                data-obligation-payment-remarks="{{ $obligation->payment_remarks }}"
-                                data-obligation-office="{{ $obligation->officeAllotmentClass->offices->office_abbreviation }}"
-                                data-obligation-class="{{ $obligation->officeAllotmentClass->allotmentClass->class }}"
-                                data-obligation-amount="{{ $obligation->obr_amount }}"
-                            >
-                                <td class="font-semibold px-1 py-2">{{ $obligation->officeAllotmentClass->offices->office_abbreviation }} - {{ $obligation->officeAllotmentClass->allotmentClass->class }}</td>
-                                <td class="font-semibold text-left px-1 py-2">{{ $obligation->obr_no }}</td>
-                                <td class="text-left px-1 py-2">{{ $obligation->obr_date }}</td>
-                                <td class="text-left px-1 py-2">{{ $obligation->obr_type }}</td>
-                                <td class="text-left px-1 py-2 max-w-sm">{{ $obligation->particulars }}</td>
+                    $disbursementAmountStr = number_format((float) (is_numeric($disbursementAmount) ? $disbursementAmount : 0), 2, '.', '');
+                    $obligationAmountStr = number_format((float) (is_numeric($obligationAmount) ? $obligationAmount : 0), 2, '.', '');
+                    $isEqual = bccomp($disbursementAmountStr, $obligationAmountStr, 2) === 0;
+                    $isLower = $disbursementAmount < $obligationAmount && $disbursementAmount > 0;
+                    $isOBRZero = $obligationAmount == 0;
 
-                                <td class="px-1 py-2 text-right obligation-amount">
-                                    <div class="relative inline-block group">
-                                        @if ($obligation->obr_amount == 0.00)
-                                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 px-2 py-1 rounded font-semibold">Cancelled</span>
-                                        @elseif ($obligation->obligationAdjustments->isNotEmpty())
-                                            @unlessrole('Disbursement')
-                                                <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
-                                                    type="button"
-                                                    class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 hover:underline rounded font-semibold">
-                                                    {{ number_format($obligation->obr_amount, 2) }}
-                                                </button>
-                                                <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                    Add Obligation Adjustment
-                                                </span>
-                                            @else
-                                                <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold">
-                                                    {{ number_format($obligation->obr_amount, 2) }}
-                                                </span>
-                                            @endunlessrole
-                                        @else
-                                            @unlessrole('Disbursement')
-                                                <button onclick="openCreateObligationAdjustmentModal({{ $obligation->id }})"
-                                                    type="button"
-                                                    class="font-semibold text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
-                                                    {{ number_format($obligation->obr_amount, 2) }}
-                                                </button>
-                                                <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                    Add Obligation Adjustment
-                                                </span>
-                                            @else
-                                                <span class="font-semibold text-gray-700 dark:text-gray-400 px-2 py-1">
-                                                    {{ number_format($obligation->obr_amount, 2) }}
-                                                </span>
-                                            @endunlessrole
-                                        @endif
-                                    </div>
-                                </td>
+                    $searchText = strtolower(collect([
+                        $officeAbbr, $allotmentClass, $obligation->obr_no, $obligation->obr_date,
+                        $obligation->obr_type, $obligation->particulars, $obligation->remarks,
+                        $obligation->payment_remarks,
+                    ])->implode(' '));
 
-                                <td class="px-1 py-2 text-right po-amount">
-                                    @php $poAmount = $obligation->purchaseOrders->sum('po_amount'); @endphp
-                                    @if ($obligation->obr_type === 'Purchase Request')
-                                        <div class="relative inline-block group">
-                                            @if ($poAmount > 0)
-                                                @unlessrole('Disbursement')
-                                                    <button onclick="openCreatePOModal({{ $obligation->id }})"
-                                                        type="button"
-                                                        class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold hover:underline">
-                                                        {{ number_format($poAmount, 2) }}
-                                                    </button>
-                                                    <!-- Tooltip -->
-                                                    <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                        Add Purchase Order
-                                                    </span>
-                                                @else
-                                                    <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold">
-                                                        {{ number_format($poAmount, 2) }}
-                                                    </span>
-                                                @endunlessrole
-                                            @else
-                                                @unlessrole('Disbursement')
-                                                    <button onclick="openCreatePOModal({{ $obligation->id }})"
-                                                        type="button"
-                                                        class="font-semibold text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
-                                                        {{ number_format($poAmount, 2) }}
-                                                    </button>
-                                                    <!-- Tooltip -->
-                                                    <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                                        Add Purchase Order
-                                                    </span>
-                                                @else
-                                                    <span class="font-semibold text-blue-700 dark:text-blue-400 px-2 py-1">
-                                                        {{ number_format($poAmount, 2) }}
-                                                    </span>
-                                                @endunlessrole
-                                            @endif
-                                        </div>
-                                    @else
-                                        N/A
-                                    @endif
-                                </td>
-                                @hasanyrole('Obligation|Administrator|Developer')
-                                <td class="px-1 py-2 text-center max-w-48">{{ $obligation->remarks ? : '-' }}</td>
-                                @endhasanyrole
+                    $obligationComputed[$obligation->id] = compact(
+                        'officeAbbr', 'allotmentClass', 'poAmount', 'disbursementAmount',
+                        'obligationAmount', 'balance', 'fileCount', 'isEqual', 'isLower',
+                        'isOBRZero', 'searchText'
+                    );
+                }
+            @endphp
 
-                                @hasanyrole('Disbursement|Administrator|Developer|Obligation')
-                                <td class="px-1 py-2 text-right dv-amount">
-                                @php
-                                    $disbursementAmount = $obligation->disbursements->sum('disbursement_amount') ?? 0;
-                                    $obligationAmount = $obligation->obr_amount ?? 0;
+            <!-- View toggle: Card / List -->
+            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+                <button type="button" id="tableViewBtn" onclick="setObligationsView('table')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-table-list"></i> List View
+                </button>
+                <button type="button" id="cardViewBtn" onclick="setObligationsView('card')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-grip"></i> Card View
+                </button>
+            </div>
 
-                                    $disbursementAmountStr = number_format((float) (is_numeric($disbursementAmount) ? $disbursementAmount : 0), 2, '.', '');
-                                    $obligationAmountStr = number_format((float) (is_numeric($obligationAmount) ? $obligationAmount : 0), 2, '.', '');
+            <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->
+            <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md mb-3 bg-gray-50 dark:bg-gray-900">
+                <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                No obligations match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
+                <button type="button" onclick="clearObligationSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                    Clear search
+                </button>
+            </div>
 
-                                    $isEqual = bccomp($disbursementAmountStr, $obligationAmountStr, 2) === 0;
-                                    $isLower = $disbursementAmount < $obligationAmount && $disbursementAmount > 0;
-                                    $isZero = $disbursementAmount == 0;
-                                    $isOBRZero = $obligationAmount == 0;
-                                @endphp
+            <!-- Obligation Cards -->
+            <div id="obligationsCardView">
+            <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="obligationsContainer">
+                    @forelse ($obligations as $obligation)
+                        @php
+                            $c = $obligationComputed[$obligation->id];
+                            $officeAbbr = $c['officeAbbr'];
+                            $allotmentClass = $c['allotmentClass'];
+                            $poAmount = $c['poAmount'];
+                            $disbursementAmount = $c['disbursementAmount'];
+                            $obligationAmount = $c['obligationAmount'];
+                            $balance = $c['balance'];
+                            $fileCount = $c['fileCount'];
+                            $isEqual = $c['isEqual'];
+                            $isLower = $c['isLower'];
+                            $isOBRZero = $c['isOBRZero'];
+                            $searchText = $c['searchText'];
+                        @endphp
+                        <div class="obligation-item obligation-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
+                             ondblclick="openModal({{ $obligation->id }})"
+                             oncontextmenu="showObligationContextMenu(event, this)"
+                             data-obligation='@json($obligation)'
+                             data-obligation-id="{{ $obligation->id }}"
+                             data-obligation-obr="{{ $obligation->obr_no }}"
+                             data-obligation-payment-remarks="{{ $obligation->payment_remarks }}"
+                             data-obligation-office="{{ $officeAbbr }}"
+                             data-obligation-class="{{ $allotmentClass }}"
+                             data-obligation-amount="{{ $obligation->obr_amount }}"
+                             data-obr-date="{{ $obligation->obr_date }}"
+                             data-obr-type="{{ $obligation->obr_type }}"
+                             data-particulars="{{ $obligation->particulars }}"
+                             data-remarks-text="{{ $obligation->remarks }}"
+                             data-obr-amount="{{ $obligationAmount }}"
+                             data-po-amount="{{ $obligation->obr_type === 'Purchase Request' ? $poAmount : 0 }}"
+                             data-dv-amount="{{ $disbursementAmount }}"
+                             data-balance="{{ $balance }}"
+                             data-file-count="{{ $fileCount }}"
+                             data-search-text="{{ $searchText }}">
 
-                                @if ($obligation->obr_type !== 'Purchase Request')
-                                <div class="relative inline-block group">
-                                        <button onclick="openCreateDisbursementModal({{ $obligation->id }})"
-                                            type="button"
-                                            class="hover:underline px-2 py-1
-                                                @if ($isOBRZero)
-                                                    font-semibold text-gray-700 dark:text-gray-400
-                                                @elseif ($isEqual)
-                                                    bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold
-                                                @elseif ($isLower)
-                                                    bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 font-semibold
-                                                @elseif ($isZero)
-                                                    font-semibold text-gray-700 dark:text-gray-400
-                                                @else
-                                                    font-semibold text-gray-700 dark:text-gray-400
-                                                @endif
-                                            ">
-                                            {{ number_format($disbursementAmount, 2) }}
-                                        </button>
-
-                                        <!-- Tooltip -->
-                                        <span class="absolute right-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block 
-                                                    bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
-                                            Add Disbursement
-                                        </span>
+                            <!-- Card Header -->
+                            <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                    <span class="font-bold text-blue-700 dark:text-blue-300">
+                                        <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $obligation->obr_no }}
+                                    </span>
+                                    <span class="text-gray-600 dark:text-gray-300">
+                                        <i class="far fa-calendar mr-1"></i>{{ $obligation->obr_date }}
+                                    </span>
+                                    <span class="px-2 py-1 rounded font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                                        {{ $obligation->obr_type }}
+                                    </span>
                                 </div>
-                                @else
-                                    <span class="text-gray-700 dark:text-gray-400 px-2 py-1">{{ number_format($disbursementAmount, 2) }}</span>
-                                @endif
-                            </td>
-
-                            <td class="px-1 py-2 text-right balance">
-                                @php
-                                    $balance = $obligation->obr_amount - $disbursementAmount;
-                                @endphp
-                                <div class="relative inline-block group">
-                                    @if ($obligationAmount == 0)
-                                        <span class="text-gray-700 dark:text-gray-400 px-2 py-1">
-                                            {{ number_format($balance, 2) }}
-                                        </span>
-                                    @elseif ($balance > 0)
-                                        <span class="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-400 font-semibold px-2 py-1">
-                                            {{ number_format($balance, 2) }}
-                                        </span>
-                                    @elseif ($balance < 0)
-                                        <span class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-semibold px-2 py-1">
-                                            {{ number_format($balance, 2) }}
-                                        </span>
-                                    @else
-                                        <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold px-2 py-1">
-                                            {{ number_format($balance, 2) }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="px-1 py-2 text-center max-w-48 payment-remarks">
-                                <div class="relative inline-block group">
-                                    {{ $obligation->payment_remarks ? $obligation->payment_remarks : '-' }}
-                                </div>
-                            </td>
-                            @endhasanyrole
-                            <td class="px-1 py-2 text-center">
-                                @php
-                                    $fileCount = $obligation->files()->count();
-                                @endphp
-                                <button onclick="openObligationFilesModal({{ $obligation->id }}, '{{ $obligation->obr_no }}')" 
+                                <button onclick="event.stopPropagation(); openObligationFilesModal({{ $obligation->id }}, '{{ $obligation->obr_no }}')"
                                     class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
                                     @if($fileCount > 0)
                                         bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
@@ -560,70 +488,407 @@
                                     <i class="fas fa-file"></i>
                                     <span>{{ $fileCount }}</span>
                                 </button>
-                            </td>
-                            </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="10" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
-                                        No Obligations found
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                    <!-- Sticky footer table for totals -->
-                    <div id="obligationTableFooter" class="sticky bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t-2 border-b-2 border-gray-700 dark:border-gray-600 z-10">
-                        <table class="min-w-full text-sm text-center text-gray-600 bg-gray-200 dark:bg-gray-900 dark:text-gray-300">
-                            <tbody>
-                                <tr class="bg-gray-200 dark:bg-gray-900 font-bold">
-                                    <td class="text-right px-4 py-3">Total Obligation:</td>
-                                    <td class="text-left px-4 py-3 text-green-700 dark:text-green-300 font-semibold" id="footerTotalObligationAmount">0.00</td>
-                                    <td class="text-right px-4 py-3">Total Purchase Order:</td>
-                                    <td class="text-left px-4 py-3 text-blue-700 dark:text-blue-300 font-semibold" id="footerTotalPOAmount">0.00</td>
-                                    @hasanyrole('Disbursement|Administrator|Developer')
-                                    <td class="text-right px-4 py-3">Total Disbursement:</td>
-                                    <td class="text-left px-4 py-3 text-orange-700 dark:text-orange-300 font-semibold" id="footerTotalDisbursementAmount">0.00</td>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="px-3 py-3">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 mb-2">
+                                    <div class="col-span-2">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Office & Class</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $officeAbbr }} - {{ $allotmentClass }}</div>
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-2">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Particulars</div>
+                                        <div class="text-gray-600 dark:text-gray-300 break-words">{{ $obligation->particulars }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Amounts row -->
+                                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 py-2 border-t border-gray-100 dark:border-gray-700">
+                                    <div class="obligation-amount">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Obligation</div>
+                                        @if ($obligation->obr_amount == 0.00)
+                                            <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 px-2 py-1 rounded font-bold text-sm">Cancelled</span>
+                                        @elseif ($obligation->obligationAdjustments->isNotEmpty())
+                                            @unlessrole('Disbursement')
+                                                <button onclick="event.stopPropagation(); openCreateObligationAdjustmentModal({{ $obligation->id }})" type="button"
+                                                    class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 hover:underline rounded font-bold text-sm tabular-nums">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </button>
+                                            @else
+                                                <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-bold text-sm tabular-nums">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </span>
+                                            @endunlessrole
+                                        @else
+                                            @unlessrole('Disbursement')
+                                                <button onclick="event.stopPropagation(); openCreateObligationAdjustmentModal({{ $obligation->id }})" type="button"
+                                                    class="font-bold text-sm tabular-nums text-gray-700 dark:text-gray-300 hover:underline px-2 py-1">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </button>
+                                            @else
+                                                <span class="font-bold text-sm tabular-nums text-gray-700 dark:text-gray-300 px-2 py-1">
+                                                    {{ number_format($obligation->obr_amount, 2) }}
+                                                </span>
+                                            @endunlessrole
+                                        @endif
+                                    </div>
+
+                                    <div class="po-amount">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Purchase Order</div>
+                                        @if ($obligation->obr_type === 'Purchase Request')
+                                            @if ($poAmount > 0)
+                                                @unlessrole('Disbursement')
+                                                    <button onclick="event.stopPropagation(); openCreatePOModal({{ $obligation->id }})" type="button"
+                                                        class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-bold text-sm tabular-nums hover:underline">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </button>
+                                                @else
+                                                    <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-bold text-sm tabular-nums">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </span>
+                                                @endunlessrole
+                                            @else
+                                                @unlessrole('Disbursement')
+                                                    <button onclick="event.stopPropagation(); openCreatePOModal({{ $obligation->id }})" type="button"
+                                                        class="font-bold text-sm tabular-nums text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </button>
+                                                @else
+                                                    <span class="font-bold text-sm tabular-nums text-blue-700 dark:text-blue-400 px-2 py-1">
+                                                        {{ number_format($poAmount, 2) }}
+                                                    </span>
+                                                @endunlessrole
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500 px-2 py-1">N/A</span>
+                                        @endif
+                                    </div>
+
+                                    @hasanyrole('Disbursement|Administrator|Developer|Obligation')
+                                        <div class="dv-amount">
+                                            <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Disbursement</div>
+                                            @if ($obligation->obr_type !== 'Purchase Request')
+                                                <button onclick="event.stopPropagation(); openCreateDisbursementModal({{ $obligation->id }})" type="button"
+                                                    class="hover:underline px-2 py-1 font-bold text-sm tabular-nums
+                                                        @if ($isOBRZero)
+                                                            text-gray-700 dark:text-gray-300
+                                                        @elseif ($isEqual)
+                                                            bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 rounded
+                                                        @elseif ($isLower)
+                                                            bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 rounded
+                                                        @else
+                                                            text-gray-700 dark:text-gray-300
+                                                        @endif
+                                                    ">
+                                                    {{ number_format($disbursementAmount, 2) }}
+                                                </button>
+                                            @else
+                                                <span class="text-gray-700 dark:text-gray-300 px-2 py-1 font-bold text-sm tabular-nums">{{ number_format($disbursementAmount, 2) }}</span>
+                                            @endif
+                                        </div>
+
+                                        <div class="balance">
+                                            <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Balance</div>
+                                            @if ($obligationAmount == 0)
+                                                <span class="text-gray-700 dark:text-gray-300 px-2 py-1 font-bold text-sm tabular-nums">{{ number_format($balance, 2) }}</span>
+                                            @elseif ($balance > 0)
+                                                <span class="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-400 font-bold text-sm tabular-nums px-2 py-1 rounded">{{ number_format($balance, 2) }}</span>
+                                            @elseif ($balance < 0)
+                                                <span class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-bold text-sm tabular-nums px-2 py-1 rounded">{{ number_format($balance, 2) }}</span>
+                                            @else
+                                                <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-bold text-sm tabular-nums px-2 py-1 rounded">{{ number_format($balance, 2) }}</span>
+                                            @endif
+                                        </div>
                                     @endhasanyrole
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                </div>
+
+                                @hasanyrole('Obligation|Administrator|Developer')
+                                    @if($obligation->remarks)
+                                        <div class="pt-1 border-t border-gray-100 dark:border-gray-700">
+                                            <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Remarks</div>
+                                            <div class="text-gray-600 dark:text-gray-300 break-words">{{ $obligation->remarks }}</div>
+                                        </div>
+                                    @endif
+                                @endhasanyrole
+
+                                @hasanyrole('Disbursement|Administrator|Developer|Obligation')
+                                    @if($obligation->payment_remarks)
+                                        <div class="pt-1 border-t border-gray-100 dark:border-gray-700 payment-remarks">
+                                            <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Payment Remarks</div>
+                                            <div class="text-gray-600 dark:text-gray-300 break-words">{{ $obligation->payment_remarks }}</div>
+                                        </div>
+                                    @endif
+                                @endhasanyrole
+                            </div>
+                        </div>
+                    @empty
+                        <div class="px-3 py-10 text-center text-gray-500 dark:text-gray-400 italic">
+                            No Obligations found
+                        </div>
+                    @endforelse
                 </div>
 
-                <!-- Obligation Details Panel -->
-                    <div id="obligationDetailsPanel" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-md px-4 pb-4 pt-2">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
-                                <span id="detailObrNo" class="text-blue-600 dark:text-blue-400"></span>
-                                <span id="detailParticulars" class="text-gray-700 dark:text-gray-300 text-xs font-normal"></span>
-                            </h3>
-                            <button onclick="closeObligationDetails()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
+                <!-- Totals Footer -->
+                <div id="obligationTableFooter" class="bg-gray-200 dark:bg-gray-900 border-t-2 border-gray-700 dark:border-gray-600 px-3 py-3">
+                    <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm font-bold text-gray-700 dark:text-gray-200">
+                        <div>Total Obligation:
+                            <span id="footerTotalObligationAmount" class="text-green-700 dark:text-green-300 tabular-nums ml-1">0.00</span>
                         </div>
+                        <div>Total Purchase Order:
+                            <span id="footerTotalPOAmount" class="text-blue-700 dark:text-blue-300 tabular-nums ml-1">0.00</span>
+                        </div>
+                        @hasanyrole('Disbursement|Administrator|Developer')
+                        <div>Total Disbursement:
+                            <span id="footerTotalDisbursementAmount" class="text-orange-700 dark:text-orange-300 tabular-nums ml-1">0.00</span>
+                        </div>
+                        @endhasanyrole
+                    </div>
+                </div>
+            </div>
+            </div>
+            <!-- /#obligationsCardView -->
 
-                        <!-- Details Table -->
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
+            <!-- Obligation List (table) View -->
+            <div id="obligationsTableView" class="hidden">
+                <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <div class="max-h-[720px] overflow-y-auto" id="obligationsTableContainer">
+                            <table id="obligationsTable" class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
+                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
                                     <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Program</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Account Code</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Description</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Original Obligation</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjustment</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjusted Obligation</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Purchase Order</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Disbursement</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR No.</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR Date</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR Type</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Particulars</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Obligation</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Purchase Order</th>
+                                        @hasanyrole('Obligation|Administrator|Developer')
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Remarks</th>
+                                        @endhasanyrole
+                                        @hasanyrole('Disbursement|Administrator|Developer|Obligation')
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Disbursement</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Balance</th>
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Payment Remarks</th>
+                                        @endhasanyrole
+                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Files</th>
                                     </tr>
                                 </thead>
-                                <tbody id="detailsTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    <!-- Populated by JavaScript -->
+                                <tbody>
+                                    @forelse ($obligations as $obligation)
+                                        @php
+                                            $c = $obligationComputed[$obligation->id];
+                                            $officeAbbr = $c['officeAbbr'];
+                                            $allotmentClass = $c['allotmentClass'];
+                                            $poAmount = $c['poAmount'];
+                                            $disbursementAmount = $c['disbursementAmount'];
+                                            $obligationAmount = $c['obligationAmount'];
+                                            $balance = $c['balance'];
+                                            $fileCount = $c['fileCount'];
+                                            $isEqual = $c['isEqual'];
+                                            $isLower = $c['isLower'];
+                                            $isOBRZero = $c['isOBRZero'];
+                                            $searchText = $c['searchText'];
+                                        @endphp
+                                        <tr class="obligation-item obligation-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                            ondblclick="openModal({{ $obligation->id }})"
+                                            oncontextmenu="showObligationContextMenu(event, this)"
+                                            data-obligation='@json($obligation)'
+                                            data-obligation-id="{{ $obligation->id }}"
+                                            data-obligation-obr="{{ $obligation->obr_no }}"
+                                            data-obligation-payment-remarks="{{ $obligation->payment_remarks }}"
+                                            data-obligation-office="{{ $officeAbbr }}"
+                                            data-obligation-class="{{ $allotmentClass }}"
+                                            data-obligation-amount="{{ $obligation->obr_amount }}"
+                                            data-obr-date="{{ $obligation->obr_date }}"
+                                            data-obr-type="{{ $obligation->obr_type }}"
+                                            data-particulars="{{ $obligation->particulars }}"
+                                            data-remarks-text="{{ $obligation->remarks }}"
+                                            data-obr-amount="{{ $obligationAmount }}"
+                                            data-po-amount="{{ $obligation->obr_type === 'Purchase Request' ? $poAmount : 0 }}"
+                                            data-dv-amount="{{ $disbursementAmount }}"
+                                            data-balance="{{ $balance }}"
+                                            data-file-count="{{ $fileCount }}"
+                                            data-search-text="{{ $searchText }}">
+                                            <td class="font-semibold px-1 py-2">{{ $officeAbbr }} - {{ $allotmentClass }}</td>
+                                            <td class="font-semibold text-left px-1 py-2">{{ $obligation->obr_no }}</td>
+                                            <td class="text-left px-1 py-2">{{ $obligation->obr_date }}</td>
+                                            <td class="text-left px-1 py-2">{{ $obligation->obr_type }}</td>
+                                            <td class="text-left px-1 py-2 max-w-sm">{{ $obligation->particulars }}</td>
+                                            <td class="px-1 py-2 text-right obligation-amount">
+                                                @if ($obligation->obr_amount == 0.00)
+                                                    <span class="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 px-2 py-1 rounded font-semibold">Cancelled</span>
+                                                @elseif ($obligation->obligationAdjustments->isNotEmpty())
+                                                    @unlessrole('Disbursement')
+                                                        <button onclick="event.stopPropagation(); openCreateObligationAdjustmentModal({{ $obligation->id }})" type="button"
+                                                            class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 hover:underline rounded font-semibold">
+                                                            {{ number_format($obligation->obr_amount, 2) }}
+                                                        </button>
+                                                    @else
+                                                        <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold">
+                                                            {{ number_format($obligation->obr_amount, 2) }}
+                                                        </span>
+                                                    @endunlessrole
+                                                @else
+                                                    @unlessrole('Disbursement')
+                                                        <button onclick="event.stopPropagation(); openCreateObligationAdjustmentModal({{ $obligation->id }})" type="button"
+                                                            class="font-semibold text-gray-700 dark:text-gray-400 hover:underline px-2 py-1">
+                                                            {{ number_format($obligation->obr_amount, 2) }}
+                                                        </button>
+                                                    @else
+                                                        <span class="font-semibold text-gray-700 dark:text-gray-400 px-2 py-1">
+                                                            {{ number_format($obligation->obr_amount, 2) }}
+                                                        </span>
+                                                    @endunlessrole
+                                                @endif
+                                            </td>
+                                            <td class="px-1 py-2 text-right po-amount">
+                                                @if ($obligation->obr_type === 'Purchase Request')
+                                                    @if ($poAmount > 0)
+                                                        @unlessrole('Disbursement')
+                                                            <button onclick="event.stopPropagation(); openCreatePOModal({{ $obligation->id }})" type="button"
+                                                                class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold hover:underline">
+                                                                {{ number_format($poAmount, 2) }}
+                                                            </button>
+                                                        @else
+                                                            <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 px-2 py-1 rounded font-semibold">
+                                                                {{ number_format($poAmount, 2) }}
+                                                            </span>
+                                                        @endunlessrole
+                                                    @else
+                                                        @unlessrole('Disbursement')
+                                                            <button onclick="event.stopPropagation(); openCreatePOModal({{ $obligation->id }})" type="button"
+                                                                class="font-semibold text-blue-700 dark:text-blue-400 hover:underline px-2 py-1">
+                                                                {{ number_format($poAmount, 2) }}
+                                                            </button>
+                                                        @else
+                                                            <span class="font-semibold text-blue-700 dark:text-blue-400 px-2 py-1">
+                                                                {{ number_format($poAmount, 2) }}
+                                                            </span>
+                                                        @endunlessrole
+                                                    @endif
+                                                @else
+                                                    <span class="text-gray-400 dark:text-gray-500">N/A</span>
+                                                @endif
+                                            </td>
+                                            @hasanyrole('Obligation|Administrator|Developer')
+                                            <td class="px-1 py-2 text-center max-w-48">{{ $obligation->remarks ?: '-' }}</td>
+                                            @endhasanyrole
+                                            @hasanyrole('Disbursement|Administrator|Developer|Obligation')
+                                            <td class="px-1 py-2 text-right dv-amount">
+                                                @if ($obligation->obr_type !== 'Purchase Request')
+                                                    <button onclick="event.stopPropagation(); openCreateDisbursementModal({{ $obligation->id }})" type="button"
+                                                        class="hover:underline px-2 py-1
+                                                            @if ($isOBRZero)
+                                                                font-semibold text-gray-700 dark:text-gray-400
+                                                            @elseif ($isEqual)
+                                                                bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold
+                                                            @elseif ($isLower)
+                                                                bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 font-semibold
+                                                            @else
+                                                                font-semibold text-gray-700 dark:text-gray-400
+                                                            @endif
+                                                        ">
+                                                        {{ number_format($disbursementAmount, 2) }}
+                                                    </button>
+                                                @else
+                                                    <span class="text-gray-700 dark:text-gray-400 px-2 py-1">{{ number_format($disbursementAmount, 2) }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-1 py-2 text-right balance">
+                                                @if ($obligationAmount == 0)
+                                                    <span class="text-gray-700 dark:text-gray-400 px-2 py-1">{{ number_format($balance, 2) }}</span>
+                                                @elseif ($balance > 0)
+                                                    <span class="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-400 font-semibold px-2 py-1">{{ number_format($balance, 2) }}</span>
+                                                @elseif ($balance < 0)
+                                                    <span class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400 font-semibold px-2 py-1">{{ number_format($balance, 2) }}</span>
+                                                @else
+                                                    <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400 font-semibold px-2 py-1">{{ number_format($balance, 2) }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-1 py-2 text-center max-w-48 payment-remarks">{{ $obligation->payment_remarks ?: '-' }}</td>
+                                            @endhasanyrole
+                                            <td class="px-1 py-2 text-center">
+                                                <button onclick="event.stopPropagation(); openObligationFilesModal({{ $obligation->id }}, '{{ $obligation->obr_no }}')"
+                                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
+                                                    @if($fileCount > 0)
+                                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
+                                                    @else
+                                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
+                                                    @endif"
+                                                    title="View files">
+                                                    <i class="fas fa-file"></i>
+                                                    <span>{{ $fileCount }}</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="12" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                                                No Obligations found
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
+                    <!-- Totals Footer -->
+                    <div class="bg-gray-200 dark:bg-gray-900 border-t-2 border-gray-700 dark:border-gray-600 px-3 py-3">
+                        <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm font-bold text-gray-700 dark:text-gray-200">
+                            <div>Total Obligation:
+                                <span id="footerTotalObligationAmountTable" class="text-green-700 dark:text-green-300 tabular-nums ml-1">0.00</span>
+                            </div>
+                            <div>Total Purchase Order:
+                                <span id="footerTotalPOAmountTable" class="text-blue-700 dark:text-blue-300 tabular-nums ml-1">0.00</span>
+                            </div>
+                            @hasanyrole('Disbursement|Administrator|Developer')
+                            <div>Total Disbursement:
+                                <span id="footerTotalDisbursementAmountTable" class="text-orange-700 dark:text-orange-300 tabular-nums ml-1">0.00</span>
+                            </div>
+                            @endhasanyrole
+                        </div>
+                    </div>
+                </div>
             </div>
+            <!-- /#obligationsTableView -->
+
+            <!-- Obligation Details Panel -->
+            <div id="obligationDetailsPanel" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-md px-4 pb-4 pt-2 mt-3">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        <span id="detailObrNo" class="text-blue-600 dark:text-blue-400"></span>
+                        <span id="detailParticulars" class="text-gray-700 dark:text-gray-300 text-xs font-normal"></span>
+                    </h3>
+                    <button onclick="closeObligationDetails()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Details Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Program</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Account Code</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Description</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Original Obligation</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjustment</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjusted Obligation</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Purchase Order</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Disbursement</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailsTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
                 @if ($perPage != 'all')
                 {{ $obligations->appends(request()->query())->links() }}
@@ -634,7 +899,7 @@
 
     <!-- Context Menu -->
     <div id="obligationContextMenu" 
-        class="fixed hidden w-48 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
+        class="fixed hidden w-48 max-w-[calc(100vw-16px)] bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg shadow-2xl z-50 dark:from-blue-900 dark:to-blue-800 dark:border-blue-600"
         style="display: none;">
         <button id="contextView"
                 class="w-full text-left block px-4 py-2 text-xs text-blue-900 hover:bg-blue-200 dark:text-blue-100 dark:hover:bg-blue-700 transition-colors duration-150">
@@ -714,14 +979,14 @@
             animation: scaleInUp 0.3s ease-out;
         }
 
-        /* Row highlight when context menu is open */
-        table tbody tr.context-menu-active {
-            background-color: rgba(59, 130, 246, 0.15);
+        /* Highlight when context menu is open (applies to both card and list/table views) */
+        .obligation-item.context-menu-active {
+            background-color: rgba(59, 130, 246, 0.1);
             transition: background-color 0.2s ease-in-out;
         }
 
-        .dark table tbody tr.context-menu-active {
-            background-color: rgba(59, 130, 246, 0.25);
+        .dark .obligation-item.context-menu-active {
+            background-color: rgba(59, 130, 246, 0.2);
         }
     </style>
 
@@ -793,74 +1058,118 @@
         });
     }
 
+    /**
+     * Card / List view toggle
+     */
+    function getActiveContainer() {
+        const cardView = document.getElementById('obligationsCardView');
+        return cardView.classList.contains('hidden')
+            ? document.getElementById('obligationsTableView')
+            : cardView;
+    }
+
+    function updateViewToggleButtons(view) {
+        const cardBtn = document.getElementById('cardViewBtn');
+        const tableBtn = document.getElementById('tableViewBtn');
+        const activeClasses = ['bg-white', 'dark:bg-gray-700', 'text-blue-700', 'dark:text-blue-300', 'shadow-sm'];
+        const inactiveClasses = ['text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200'];
+
+        [cardBtn, tableBtn].forEach(btn => btn.classList.remove(...activeClasses, ...inactiveClasses));
+
+        if (view === 'card') {
+            cardBtn.classList.add(...activeClasses);
+            tableBtn.classList.add(...inactiveClasses);
+        } else {
+            tableBtn.classList.add(...activeClasses);
+            cardBtn.classList.add(...inactiveClasses);
+        }
+    }
+
+    window.setObligationsView = function(view) {
+        const cardView = document.getElementById('obligationsCardView');
+        const tableView = document.getElementById('obligationsTableView');
+
+        if (view === 'table') {
+            cardView.classList.add('hidden');
+            tableView.classList.remove('hidden');
+        } else {
+            view = 'card';
+            tableView.classList.add('hidden');
+            cardView.classList.remove('hidden');
+        }
+
+        try {
+            localStorage.setItem('obligationsView', view);
+        } catch (e) {
+            // localStorage unavailable (private browsing, etc.) — view just won't persist
+        }
+
+        updateViewToggleButtons(view);
+
+        // Recompute totals/record count scoped to whichever view just became active
+        computeTableTotals();
+        updateTotalRecordsCount();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        let savedView = 'table';
+        try {
+            savedView = localStorage.getItem('obligationsView') || 'table';
+        } catch (e) {
+            // ignore
+        }
+        setObligationsView(savedView);
+    });
+
     const menu = document.getElementById('obligationContextMenu');
-    let scrollTimeout;
 
     (function() {
 
-    // Function to handle scroll events with debouncing
-    function handleScroll() {
-        if (scrollTimeout) {
-            clearTimeout(scrollTimeout);
-        }
-        scrollTimeout = setTimeout(hideObligationContextMenu, 150);
-    }
-
-    // showContextMenu receives the mouse event and the row element
-    window.showObligationContextMenu = function(event, row) {
+    // showContextMenu receives the mouse event and the card/row element
+    window.showObligationContextMenu = function(event, card) {
         event.preventDefault();
         event.stopPropagation();
 
         if (!menu) return;
 
-        // Remove highlight from previously selected row
-        document.querySelectorAll('table tbody tr.context-menu-active').forEach(r => {
+        // Remove highlight from previously selected item (either view)
+        document.querySelectorAll('.obligation-item.context-menu-active').forEach(r => {
             r.classList.remove('context-menu-active');
         });
         
-        // Highlight the current row
-        row.classList.add('context-menu-active');
-        window.currentObligationContextMenuRow = row;
+        // Highlight the current item
+        card.classList.add('context-menu-active');
+        window.currentObligationContextMenuRow = card;
 
-        // Get element positions
+        // The menu is position:fixed, so we work in raw viewport coordinates
+        // (clientX/clientY) and must NOT add page scroll offsets, or the menu
+        // drifts away from the cursor the further the page has been scrolled.
         const menuHeight = 400; // Approximate menu height
+        const menuWidth = 192; // w-48 = 12rem = 192px
         const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        const mouseX = event.clientX;
         const mouseY = event.clientY;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-        // Determine if menu should appear above or below the cursor
-        let top, verticalAlignment;
+        let top;
         const spaceBelow = viewportHeight - mouseY;
         const spaceAbove = mouseY;
 
         if (spaceBelow > menuHeight + 20) {
-            // Show below cursor, tight to cursor position
-            top = mouseY + scrollTop;
-            verticalAlignment = 'below';
+            top = mouseY;
         } else if (spaceAbove > menuHeight + 20) {
-            // Show above cursor, positioned lower so it's beside cursor
-            top = mouseY + scrollTop - menuHeight + 120;
-            verticalAlignment = 'above';
+            top = mouseY - menuHeight + 120;
         } else {
-            // Default to below
-            top = mouseY + scrollTop;
-            verticalAlignment = 'below';
+            top = viewportHeight - menuHeight - 8;
         }
+        top = Math.min(Math.max(top, 8), viewportHeight - 8);
 
-        // Calculate left position (tight to cursor, with right edge collision detection)
-        let left = event.clientX + scrollLeft + 2;
-        const menuWidth = 192; // w-48 = 12rem = 192px
-        const viewportWidth = window.innerWidth;
-        
-        // Check if menu goes off screen to the right
-        if (left + menuWidth > viewportWidth + scrollLeft) {
-            left = event.clientX + scrollLeft - menuWidth - 2;
+        let left = mouseX + 2;
+        if (left + menuWidth > viewportWidth) {
+            left = mouseX - menuWidth - 2;
         }
-        
-        // Ensure menu doesn't go off screen to the left
-        if (left < scrollLeft) {
-            left = scrollLeft + 2;
+        if (left < 8) {
+            left = 8;
         }
 
         // Position menu
@@ -871,7 +1180,7 @@
         menu.classList.remove('hidden');
 
         // Get obligation data and set up menu items
-        const obligation = row.dataset.obligation ? JSON.parse(row.dataset.obligation) : null;
+        const obligation = card.dataset.obligation ? JSON.parse(card.dataset.obligation) : null;
         if (obligation) {
             // View button
             const viewBtn = menu.querySelector('#contextView');
@@ -953,11 +1262,11 @@
                 deleteBtn.onclick = () => {
                     hideObligationContextMenu();
                     openDeleteModal(
-                        row.dataset.obligationId,
-                        row.dataset.obligationObr,
-                        row.dataset.obligationOffice,
-                        row.dataset.obligationClass,
-                        row.dataset.obligationAmount
+                        card.dataset.obligationId,
+                        card.dataset.obligationObr,
+                        card.dataset.obligationOffice,
+                        card.dataset.obligationClass,
+                        card.dataset.obligationAmount
                     );
                 };
             }
@@ -986,9 +1295,14 @@
             document.addEventListener('click', hideObligationContextMenu);
             window.addEventListener('resize', hideObligationContextMenu);
             window.addEventListener('scroll', hideObligationContextMenu, { passive: true });
-            
-            // Add scroll listener to container
-            container.addEventListener('scroll', hideObligationContextMenu, { passive: true });
+
+            // Add scroll listeners to both scrollable containers (card view + table view)
+            ['obligationsContainer', 'obligationsTableContainer'].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.addEventListener('scroll', hideObligationContextMenu, { passive: true });
+                }
+            });
         }, 30);
     };
 
@@ -1003,27 +1317,18 @@
             window.currentObligationContextMenuRow = null;
         }
         
-        // Clear any existing scroll timeout
-        if (scrollTimeout) {
-            clearTimeout(scrollTimeout);
-        }
-        
         // Clean up event listeners
         document.removeEventListener('click', hideObligationContextMenu);
         window.removeEventListener('resize', hideObligationContextMenu);
-        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('scroll', hideObligationContextMenu);
         
-        // Clean up horizontal scroll container listener
-        const container = document.querySelector('.overflow-x-auto');
-        if (container) {
-            container.removeEventListener('scroll', handleScroll);
-        }
-
-        // Clean up vertical scroll container listener
-        const scrollableContainer = document.querySelector('.max-h-\\[720px\\].overflow-y-auto');
-        if (scrollableContainer) {
-            scrollableContainer.removeEventListener('scroll', handleScroll);
-        }
+        // Clean up scroll container listeners
+        ['obligationsContainer', 'obligationsTableContainer'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                container.removeEventListener('scroll', hideObligationContextMenu);
+            }
+        });
     }
 
     // Hide on Escape key
@@ -1033,29 +1338,24 @@
 
     // Initialize scroll event listeners
     document.addEventListener('DOMContentLoaded', () => {
-        // Handle horizontal scroll container
-        const container = document.querySelector('.overflow-x-auto');
-        if (container) {
-            container.addEventListener('scroll', hideObligationContextMenu, { passive: true });
-        }
-
-        // Handle vertical scroll container
-        const scrollableContainer = document.querySelector('.max-h-\\[720px\\].overflow-y-auto');
-        if (scrollableContainer) {
-            scrollableContainer.addEventListener('scroll', hideObligationContextMenu, { passive: true });
-        }
+        ['obligationsContainer', 'obligationsTableContainer'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                container.addEventListener('scroll', hideObligationContextMenu, { passive: true });
+            }
+        });
     });
 })();
 
     /**
-     * Update total records count based on visible rows
+     * Update total records count based on visible items in the active view
      */
     function updateTotalRecordsCount() {
-        const rows = document.querySelectorAll('#obligationsTable tbody tr');
+        const items = getActiveContainer().querySelectorAll('.obligation-item');
         let visibleCount = 0;
 
-        rows.forEach(row => {
-            if (row.offsetParent !== null && row.dataset.obligationId) {
+        items.forEach(item => {
+            if (item.style.display !== 'none' && item.dataset.obligationId) {
                 visibleCount++;
             }
         });
@@ -1185,75 +1485,46 @@
         container.innerHTML = html;
     }
 
-    // Compute totals for visible rows
+    /**
+     * Compute totals for the visible items in the active view (reading
+     * precomputed numeric data attributes rather than parsing formatted/
+     * displayed text), then mirror the result into both views' footer
+     * elements so switching views never shows a stale figure.
+     */
     function computeTableTotals() {
         let totalObligation = 0;
         let totalPO = 0;
         let totalDisbursement = 0;
-        const table = document.getElementById('obligationsTable');
-        const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            if (row.style.display === 'none') return;
-            // Obligation Amount
-            let obligationCell = row.querySelector('.obligation-amount');
-            let poCell = row.querySelector('.po-amount');
-            let disbursementCell = row.querySelector('.dv-amount');
-            // Get the value, stripping formatting if needed
-            let obligationVal = 0;
-            if (obligationCell) {
-                let span = obligationCell.querySelector('button');
-                let text = span ? span.textContent : obligationCell.textContent;
-                text = text.replace(/[^\d.-]/g, '');
-                obligationVal = parseFloat(text) || 0;
-            }
-            let poVal = 0;
-            if (poCell) {
-                let span = poCell.querySelector('button');
-                let text = span ? span.textContent : poCell.textContent;
-                text = text.replace(/[^\d.-]/g, '');
-                poVal = parseFloat(text) || 0;
-            }
-            let disbursementVal = 0;
-            if (disbursementCell) {
-                let span = disbursementCell.querySelector('button');
-                let text = span ? span.textContent : disbursementCell.textContent;
-                text = text.replace(/[^\d.-]/g, '');
-                disbursementVal = parseFloat(text) || 0;
-            }
-            totalObligation += obligationVal;
-            totalPO += poVal;
-            totalDisbursement += disbursementVal;
+
+        getActiveContainer().querySelectorAll('.obligation-item').forEach(item => {
+            if (item.style.display === 'none') return;
+            totalObligation += parseFloat(item.dataset.obrAmount) || 0;
+            totalPO += parseFloat(item.dataset.poAmount) || 0;
+            totalDisbursement += parseFloat(item.dataset.dvAmount) || 0;
         });
-        // Update sticky footer totals only
-        const footerObligation = document.getElementById('footerTotalObligationAmount');
-        const footerPO = document.getElementById('footerTotalPOAmount');
-        const footerDisbursement = document.getElementById('footerTotalDisbursementAmount');
-        if (footerObligation) footerObligation.textContent = totalObligation.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+
+        const format = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        ['footerTotalObligationAmount', 'footerTotalObligationAmountTable'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = format(totalObligation);
         });
-        if (footerPO) footerPO.textContent = totalPO.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+        ['footerTotalPOAmount', 'footerTotalPOAmountTable'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = format(totalPO);
         });
-        if (footerDisbursement) footerDisbursement.textContent = totalDisbursement.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+        ['footerTotalDisbursementAmount', 'footerTotalDisbursementAmountTable'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = format(totalDisbursement);
         });
     }
 
     // Initialize all event handlers
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize table totals
+        // Initialize card totals
         computeTableTotals();
         updateTotalRecordsCount();
-        
-        // Initialize search handling
-        document.getElementById('searchInput').addEventListener('input', function() {
-            computeTableTotals();
-            updateTotalRecordsCount();
-        });
-        
+
         // Initialize context menu handling
         document.addEventListener('click', function(e) {
             const contextMenu = document.getElementById('obligationContextMenu');
@@ -1263,57 +1534,78 @@
             }
         });
 
-        // Prevent default context menu on the table
-        document.querySelector('.overflow-x-auto').addEventListener('contextmenu', function(e) {
-            if (!e.target.closest('[oncontextmenu]')) {
-                e.preventDefault();
+        // Prevent default browser context menu inside the card list
+        const cardsContainer = document.getElementById('obligationsContainer');
+        if (cardsContainer) {
+            cardsContainer.addEventListener('contextmenu', function(e) {
+                if (!e.target.closest('[oncontextmenu]')) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+
+    /**
+     * Filter obligation cards/rows based on the search input. Filters items
+     * in BOTH views (not just the active one) so that switching views keeps
+     * whatever search is currently applied instead of resetting it.
+     */
+    function filterTable() {
+        const input = document.getElementById("searchInput");
+        const filter = input.value.toLowerCase().trim();
+        const items = document.querySelectorAll('.obligation-item');
+        let visibleCount = 0;
+        let firstVisibleId = null;
+
+        items.forEach(item => {
+            const searchText = item.dataset.searchText || item.textContent.toLowerCase();
+            if (searchText.includes(filter)) {
+                item.style.display = '';
+                visibleCount++;
+                if (firstVisibleId === null) {
+                    firstVisibleId = item.dataset.obligationId;
+                }
+            } else {
+                item.style.display = 'none';
             }
         });
-    });
-    // If you have other filters, add their event listeners here to call computeTableTotals
 
-    // If you use pagination or AJAX, call computeTableTotals after table updates
-    function filterTable() {
-        // Declare variables
-        var input, filter, table, tr, td, i, j, txtValue;
-        input = document.getElementById("searchInput");
-        filter = input.value.toLowerCase();
-        table = document.getElementById("obligationsTable");
-        tr = table.getElementsByTagName("tr");
-
-        let firstVisibleRowId = null;
-
-        // Loop through all table rows, and hide those who don't match the search query
-        for (i = 1; i < tr.length; i++) {
-            tr[i].style.display = "none";
-            td = tr[i].getElementsByTagName("td");
-            for (j = 0; j < td.length; j++) {
-                if (td[j]) {
-                    txtValue = td[j].textContent || td[j].innerText;
-                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                        // Store the first visible row ID
-                        if (firstVisibleRowId === null) {
-                            firstVisibleRowId = tr[i].dataset.obligationId;
-                        }
-                        break;
-                    }
-                }
+        // Show a "no results" message when a search query matches nothing
+        const noResultsMsg = document.getElementById('noSearchResultsMsg');
+        const noResultsQuery = document.getElementById('noSearchResultsQuery');
+        if (noResultsMsg) {
+            if (filter.length > 0 && visibleCount === 0 && items.length > 0) {
+                if (noResultsQuery) noResultsQuery.textContent = `"${input.value.trim()}"`;
+                noResultsMsg.classList.remove('hidden');
+            } else {
+                noResultsMsg.classList.add('hidden');
             }
         }
 
-        // Auto-display the details of the first visible row after filtering, or hide if no results
-        if (firstVisibleRowId) {
-            displayObligationDetails(firstVisibleRowId);
+        // Auto-display the details of the first visible item after filtering, or hide if no results
+        if (firstVisibleId) {
+            displayObligationDetails(firstVisibleId);
         } else {
-            // Hide the panel if no data is found
             closeObligationDetails();
         }
 
+        updateTotalRecordsCount();
         computeTableTotals();
     }
 
-    // Add event listener for input event to filter table as you type
+    /**
+     * Clear the search box (used by the active-filter chip and the no-results message)
+     */
+    function clearObligationSearchFilter() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            filterTable();
+            searchInput.focus();
+        }
+    }
+
+    // Add event listener for input event to filter cards as you type
     document.getElementById('searchInput').addEventListener('input', filterTable);
 
 
@@ -2080,16 +2372,16 @@ function openCreatePOModal(obligationId) {
 
     // Display Obligation Details Panel
     function displayObligationDetails(obligationId) {
-        // Remove highlight from any previously highlighted row
-        const previouslyHighlighted = document.querySelector('tr.obligation-row-highlighted');
+        // Remove highlight from any previously highlighted card
+        const previouslyHighlighted = document.querySelector('.obligation-row-highlighted');
         if (previouslyHighlighted) {
             previouslyHighlighted.classList.remove('obligation-row-highlighted');
         }
 
-        // Add highlight to the current row
-        const currentRow = document.querySelector(`tr[data-obligation-id="${obligationId}"]`);
-        if (currentRow) {
-            currentRow.classList.add('obligation-row-highlighted');
+        // Add highlight to the current card
+        const currentCard = document.querySelector(`.obligation-card[data-obligation-id="${obligationId}"]`);
+        if (currentCard) {
+            currentCard.classList.add('obligation-row-highlighted');
         }
 
         // Build URL with date range parameters if they exist
@@ -2175,18 +2467,18 @@ function openCreatePOModal(obligationId) {
     function closeObligationDetails() {
         document.getElementById('obligationDetailsPanel').classList.add('hidden');
         
-        // Remove highlight from the row when closing panel
-        const highlightedRow = document.querySelector('tr.obligation-row-highlighted');
-        if (highlightedRow) {
-            highlightedRow.classList.remove('obligation-row-highlighted');
+        // Remove highlight from the card when closing panel
+        const highlightedCard = document.querySelector('.obligation-row-highlighted');
+        if (highlightedCard) {
+            highlightedCard.classList.remove('obligation-row-highlighted');
         }
     }
 
-    // Add click listeners to obligation rows (left click)
+    // Add click listeners to obligation cards/rows (left click), in both views
     document.addEventListener('DOMContentLoaded', function() {
-        const rows = document.querySelectorAll('tbody tr[data-obligation-id]');
-        rows.forEach(row => {
-            row.addEventListener('click', function(e) {
+        const items = document.querySelectorAll('.obligation-item[data-obligation-id]');
+        items.forEach(item => {
+            item.addEventListener('click', function(e) {
                 // Don't trigger on button clicks or double-click
                 if (e.target.closest('button') || e.detail === 2) {
                     return;
@@ -2198,9 +2490,10 @@ function openCreatePOModal(obligationId) {
             });
         });
 
-        // Auto-select and display the first obligation's details
-        if (rows.length > 0) {
-            const firstObligationId = rows[0].dataset.obligationId;
+        // Auto-select and display the first obligation's details (from whichever view is active)
+        const activeItems = getActiveContainer().querySelectorAll('.obligation-item[data-obligation-id]');
+        if (activeItems.length > 0) {
+            const firstObligationId = activeItems[0].dataset.obligationId;
             if (firstObligationId) {
                 displayObligationDetails(firstObligationId);
             }
@@ -2264,7 +2557,11 @@ function openCreatePOModal(obligationId) {
     }
 
     /**
-     * Export filtered obligations data to Excel XLSX
+     * Export filtered obligations data to Excel.
+     * Reads directly from each visible card's data attributes (numeric
+     * amounts already computed server-side) rather than scraping
+     * formatted table-cell text — simpler and avoids re-parsing
+     * "Cancelled"/"N/A" placeholder strings back into numbers.
      */
     async function exportObligationsToExcel() {
         const button = document.getElementById('exportObligationsBtn');
@@ -2281,54 +2578,49 @@ function openCreatePOModal(obligationId) {
         button.classList.add('opacity-60', 'pointer-events-none');
 
         try {
-            const table = document.getElementById('obligationsTable');
-            const allRows = Array.from(table.querySelectorAll('tbody tr'))
-                .filter(row => row.style.display !== 'none');
+            const allCards = Array.from(document.querySelectorAll('#obligationsContainer .obligation-card'))
+                .filter(card => card.style.display !== 'none');
 
-            const headers = [];
-            table.querySelectorAll('thead th').forEach(th => headers.push(th.textContent.trim()));
+            const hasDisbursementCols = document.getElementById('footerTotalDisbursementAmount') !== null;
+
+            const headers = ['Office & Class', 'OBR No.', 'OBR Date', 'OBR Type', 'Particulars', 'Obligation', 'Purchase Order', 'Remarks'];
+            if (hasDisbursementCols) {
+                headers.push('Disbursement', 'Balance', 'Payment Remarks');
+            }
+            headers.push('Files');
 
             const data = [headers];
 
-            function getAmountValue(td) {
-                const amountEl = td.querySelector('button, span');
-                const raw = (amountEl ? amountEl.textContent : td.textContent).trim();
-
-                if (/^cancelled$/i.test(raw) || /^n\/a$/i.test(raw)) {
-                    return 0;
-                }
-
-                const num = parseFloat(raw.replace(/[^\d.-]/g, ''));
-                return isNaN(num) ? raw : num;
-            }
-
-            function extractRow(row) {
-                const rowData = [];
-                row.querySelectorAll('td').forEach(td => {
-                    if (
-                        td.classList.contains('obligation-amount') ||
-                        td.classList.contains('po-amount') ||
-                        td.classList.contains('dv-amount') ||
-                        td.classList.contains('balance')
-                    ) {
-                        rowData.push(getAmountValue(td));
-                    } else {
-                        rowData.push(td.textContent.trim());
-                    }
-                });
-                return rowData;
-            }
-
             // Process in chunks, yielding to the browser between each one so the
             // tab stays responsive and repaints the progress label — a plain
-            // synchronous loop over thousands of rows would freeze the page for
+            // synchronous loop over thousands of cards would freeze the page for
             // its entire duration with no visual feedback in between.
             const CHUNK_SIZE = 500;
-            const total = allRows.length;
+            const total = allCards.length;
 
             for (let i = 0; i < total; i += CHUNK_SIZE) {
-                const chunk = allRows.slice(i, i + CHUNK_SIZE);
-                chunk.forEach(row => data.push(extractRow(row)));
+                const chunk = allCards.slice(i, i + CHUNK_SIZE);
+                chunk.forEach(card => {
+                    const row = [
+                        `${card.dataset.obligationOffice} - ${card.dataset.obligationClass}`,
+                        card.dataset.obligationObr || '',
+                        card.dataset.obrDate || '',
+                        card.dataset.obrType || '',
+                        card.dataset.particulars || '',
+                        parseFloat(card.dataset.obrAmount) || 0,
+                        parseFloat(card.dataset.poAmount) || 0,
+                        card.dataset.remarksText || '',
+                    ];
+                    if (hasDisbursementCols) {
+                        row.push(
+                            parseFloat(card.dataset.dvAmount) || 0,
+                            parseFloat(card.dataset.balance) || 0,
+                            card.dataset.obligationPaymentRemarks || ''
+                        );
+                    }
+                    row.push(card.dataset.fileCount || '0');
+                    data.push(row);
+                });
 
                 const processed = Math.min(i + CHUNK_SIZE, total);
                 const percent = Math.round((processed / total) * 100);
@@ -2348,7 +2640,7 @@ function openCreatePOModal(obligationId) {
             const colWidths = headers.map(() => 15);
             ws['!cols'] = colWidths.map(w => ({ wch: w }));
 
-            const formattedColumnNames = ['Obligation', 'Disbursement', 'Balance'];
+            const formattedColumnNames = ['Obligation', 'Purchase Order', 'Disbursement', 'Balance'];
             const numberFormat = '#,##0.00';
 
             formattedColumnNames.forEach(colName => {
@@ -2400,11 +2692,12 @@ function openCreatePOModal(obligationId) {
     }
 
     .obligation-row-highlighted {
-        background-color: #bfdbfe !important;
+        outline: 2px solid #3b82f6;
+        outline-offset: -1px;
     }
 
     .dark .obligation-row-highlighted {
-        background-color: #1e40af !important;
+        outline-color: #60a5fa;
     }
 
     @keyframes slideInRight {

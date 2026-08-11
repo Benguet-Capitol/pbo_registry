@@ -294,37 +294,76 @@
                 </div>
             </div>
 
+            <!-- View toggle: Card / List -->
+            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+                <button type="button" id="poListViewBtn" onclick="setPurchaseOrdersView('table')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-table-list"></i> List View
+                </button>
+                <button type="button" id="poCardViewBtn" onclick="setPurchaseOrdersView('card')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-grip"></i> Card View
+                </button>
+            </div>
+
+            <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->
+            <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md mb-3 bg-gray-50 dark:bg-gray-900">
+                <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                No purchase orders match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
+                <button type="button" onclick="clearPurchaseOrderSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                    Clear search
+                </button>
+            </div>
+
+            @php
+                // Precompute derived values once per PO so both the card view
+                // and the table view below can reuse them.
+                $poComputed = [];
+                foreach ($purchaseOrders as $purchaseOrder) {
+                    $officeClassLabel = (optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-') . ' - ' . (optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-');
+                    $obligationAmount = $purchaseOrder->obligation->obligationAmounts->where('id', $purchaseOrder->obligation_amounts_id)->first();
+                    $program = $obligationAmount?->appropriation?->programs ?? '-';
+                    $accountCode = $obligationAmount?->account_code ?? '-';
+                    $description = $obligationAmount?->appropriation?->description ?? '-';
+                    $fileCount = \App\Models\PurchaseOrderFile::where('po_number', $purchaseOrder->po_number)->count();
+                    $poAmount = (float)($purchaseOrder->po_amount ?? 0);
+                    $disbursementAmount = (float)($purchaseOrder->disbursement_amount ?? 0);
+                    $disbursedPct = $poAmount > 0 ? min(100, round(($disbursementAmount / $poAmount) * 100)) : 0;
+
+                    $searchText = strtolower(collect([
+                        $officeClassLabel,
+                        $purchaseOrder->obligation->obr_no ?? '',
+                        $purchaseOrder->obligation->particulars ?? '',
+                        $program, $accountCode, $description,
+                        $purchaseOrder->po_number, $purchaseOrder->po_date, $purchaseOrder->pr_no,
+                        $purchaseOrder->supplier, $purchaseOrder->delivery_period, $purchaseOrder->po_remarks,
+                    ])->implode(' '));
+
+                    $poComputed[$purchaseOrder->id] = compact(
+                        'officeClassLabel', 'program', 'accountCode', 'description',
+                        'fileCount', 'poAmount', 'disbursementAmount', 'disbursedPct', 'searchText'
+                    );
+                }
+            @endphp
+
             <!-- PO Cards -->
+            <div id="purchaseOrdersCardView">
             <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                 <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="purchaseOrdersContainer">
                     @forelse($purchaseOrders as $purchaseOrder)
                         @php
-                            $officeClassLabel = (optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-') . ' - ' . (optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-');
-                            $obligationAmount = $purchaseOrder->obligation->obligationAmounts->where('id', $purchaseOrder->obligation_amounts_id)->first();
-                            $program = $obligationAmount?->appropriation?->programs ?? '-';
-                            $accountCode = $obligationAmount?->account_code ?? '-';
-                            $description = $obligationAmount?->appropriation?->description ?? '-';
-                            $fileCount = \App\Models\PurchaseOrderFile::where('po_number', $purchaseOrder->po_number)->count();
-                            $poAmount = (float)($purchaseOrder->po_amount ?? 0);
-                            $disbursementAmount = (float)($purchaseOrder->disbursement_amount ?? 0);
-                            $disbursedPct = $poAmount > 0 ? min(100, round(($disbursementAmount / $poAmount) * 100)) : 0;
-
-                            $searchText = strtolower(collect([
-                                $officeClassLabel,
-                                $purchaseOrder->obligation->obr_no ?? '',
-                                $purchaseOrder->obligation->particulars ?? '',
-                                $program,
-                                $accountCode,
-                                $description,
-                                $purchaseOrder->po_number,
-                                $purchaseOrder->po_date,
-                                $purchaseOrder->pr_no,
-                                $purchaseOrder->supplier,
-                                $purchaseOrder->delivery_period,
-                                $purchaseOrder->po_remarks,
-                            ])->implode(' '));
+                            $pc = $poComputed[$purchaseOrder->id];
+                            $officeClassLabel = $pc['officeClassLabel'];
+                            $program = $pc['program'];
+                            $accountCode = $pc['accountCode'];
+                            $description = $pc['description'];
+                            $fileCount = $pc['fileCount'];
+                            $poAmount = $pc['poAmount'];
+                            $disbursementAmount = $pc['disbursementAmount'];
+                            $disbursedPct = $pc['disbursedPct'];
+                            $searchText = $pc['searchText'];
                         @endphp
-                        <div class="po-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
+                        <div class="po-item po-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
                              oncontextmenu="showPurchaseOrderContextMenu(event, this)"
                              data-po='@json($purchaseOrder)'
                              data-po-id="{{ $purchaseOrder->id }}"
@@ -347,28 +386,28 @@
                                     <span class="font-bold text-blue-700 dark:text-blue-300">
                                         <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $purchaseOrder->po_number }}
                                     </span>
-                                    <span class="text-gray-600 dark:text-gray-300">
+                                    <span class="text-gray-700 dark:text-gray-300">
                                         <i class="far fa-calendar mr-1"></i>{{ $purchaseOrder->po_date ?? '-' }}
                                     </span>
-                                    <span class="text-gray-600 dark:text-gray-300">
-                                        <span class="font-semibold">OBR:</span> {{ $purchaseOrder->obligation->obr_no ?? '-' }}
+                                    <span class="text-gray-700 dark:text-gray-300">
+                                        <span class="font-semibold">OBR No:</span> {{ $purchaseOrder->obligation->obr_no ?? '-' }}
                                     </span>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     @role('Developer|Administrator|Obligation|Disbursement')
                                     <button type="button" onclick="event.stopPropagation(); openPurchaseOrderFilesModal('{{ $purchaseOrder->po_number }}')"
-                                        class="text-green-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
+                                        class="text-green-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900">
                                         <i class="fas fa-file"></i>
                                         <span>{{ $fileCount }}</span>
                                     </button>
 
                                     <button type="button" onclick="event.stopPropagation(); displayObligationDetailsModal({{ $purchaseOrder->obligation_id }})"
-                                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                                        <i class="fas fa-eye"></i><span>View</span>
+                                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                        <i class="fas fa-eye"></i><span>Obligation Details</span>
                                     </button>
 
                                     <button type="button" onclick="event.stopPropagation(); openEditPurchaseOrderModal(JSON.parse(this.closest('.po-card').dataset.po))"
-                                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                        class="text-amber-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900">
                                         <i class="fas fa-edit"></i><span>Edit</span>
                                     </button>
                                     @endrole
@@ -376,8 +415,8 @@
                                     @role('Developer|Administrator|Disbursement')
                                     @can('create disbursement')
                                     <button type="button" onclick="event.stopPropagation(); openCreateDisbursementModal({{ $purchaseOrder->obligation_id }}, {{ $purchaseOrder->id }})"
-                                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-[11px] px-2.5 py-1 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                                        <i class="fas fa-file-medical-alt"></i><span>DV</span>
+                                        class="text-indigo-600 inline-flex leading-4 tracking-wider items-center gap-1 hover:text-white border border-indigo-600 hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-indigo-500 dark:text-indigo-500 dark:hover:text-white dark:hover:bg-indigo-600 dark:focus:ring-indigo-900">
+                                        <i class="fas fa-plus-circle"></i><span>Add DV</span>
                                     </button>
                                     @endcan
                                     @endrole
@@ -396,11 +435,11 @@
                                 </div>
                                 <div>
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">PR Number</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->pr_no ?? '-' }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $purchaseOrder->pr_no ?? '-' }}</div>
                                 </div>
                                 <div>
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Delivery Period</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->delivery_period ?? '-' }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $purchaseOrder->delivery_period ?? '-' }}</div>
                                 </div>
                                 <div>
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Account Code</div>
@@ -408,20 +447,20 @@
                                 </div>
                                 <div class="col-span-2">
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Program</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $program }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $program }}</div>
                                 </div>
                                 <div class="col-span-2 sm:col-span-4">
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Description</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $description }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $description }}</div>
                                 </div>
                                 <div class="col-span-2 sm:col-span-4">
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Particulars</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->obligation->particulars ?? '-' }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $purchaseOrder->obligation->particulars ?? '-' }}</div>
                                 </div>
                                 @if($purchaseOrder->po_remarks)
                                     <div class="col-span-2 sm:col-span-4 pt-1 border-t border-gray-100 dark:border-gray-700">
                                         <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Remarks</div>
-                                        <div class="text-gray-600 dark:text-gray-300 break-words">{{ $purchaseOrder->po_remarks }}</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $purchaseOrder->po_remarks }}</div>
                                     </div>
                                 @endif
                             </div>
@@ -460,15 +499,6 @@
                             @endif
                         </div>
                     @endforelse
-
-                    <!-- Shown by JS when a search query matches no visible cards -->
-                    <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
-                        No purchase orders match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
-                        <button type="button" onclick="clearPurchaseOrderSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
-                            Clear search
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Totals Footer -->
@@ -479,6 +509,97 @@
                     </span>
                 </div>
             </div>
+            </div>
+            <!-- /#purchaseOrdersCardView -->
+
+            <!-- List View (flat table) -->
+            <div id="purchaseOrdersTableView" class="hidden">
+                <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <div class="max-h-[720px] overflow-y-auto" id="purchaseOrdersTableContainer">
+                            <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
+                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PO Number</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PO Date</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR No.</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Supplier</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PR Number</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Delivery Period</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Account Code</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PO Amount</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Disbursed</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Remarks</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Files</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($purchaseOrders as $purchaseOrder)
+                                        @php
+                                            $pc = $poComputed[$purchaseOrder->id];
+                                        @endphp
+                                        <tr class="po-item po-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                            oncontextmenu="showPurchaseOrderContextMenu(event, this)"
+                                            data-po='@json($purchaseOrder)'
+                                            data-po-id="{{ $purchaseOrder->id }}"
+                                            data-po-number="{{ $purchaseOrder->po_number }}"
+                                            data-obligation-id="{{ $purchaseOrder->obligation_id }}"
+                                            data-po-amount="{{ $pc['poAmount'] }}"
+                                            data-disbursement-amount="{{ $pc['disbursementAmount'] }}"
+                                            data-office-class="{{ $pc['officeClassLabel'] }}"
+                                            data-obr-no="{{ $purchaseOrder->obligation->obr_no ?? '-' }}"
+                                            data-particulars="{{ $purchaseOrder->obligation->particulars ?? '-' }}"
+                                            data-program="{{ $pc['program'] }}"
+                                            data-account-code="{{ $pc['accountCode'] }}"
+                                            data-description="{{ $pc['description'] }}"
+                                            data-file-count="{{ $pc['fileCount'] }}"
+                                            data-search-text="{{ $pc['searchText'] }}">
+                                            <td class="font-bold text-blue-700 dark:text-blue-300 px-2 py-2">{{ $purchaseOrder->po_number }}</td>
+                                            <td class="px-2 py-2">{{ $purchaseOrder->po_date ?? '-' }}</td>
+                                            <td class="px-2 py-2">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
+                                            <td class="text-left px-2 py-2">{{ $pc['officeClassLabel'] }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
+                                            <td class="px-2 py-2">{{ $purchaseOrder->pr_no ?? '-' }}</td>
+                                            <td class="px-2 py-2">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
+                                            <td class="font-semibold px-2 py-2">{{ $pc['accountCode'] }}</td>
+                                            <td class="px-2 py-2 text-right font-bold tabular-nums text-blue-700 dark:text-blue-300">{{ number_format($pc['poAmount'], 2) }}</td>
+                                            <td class="px-2 py-2 text-right font-bold tabular-nums {{ $pc['disbursementAmount'] > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500' }}">
+                                                {{ $pc['disbursementAmount'] > 0 ? number_format($pc['disbursementAmount'], 2) : '-' }}
+                                            </td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $purchaseOrder->po_remarks ?? '-' }}</td>
+                                            <td class="px-2 py-2">
+                                                <button onclick="event.stopPropagation(); openPurchaseOrderFilesModal('{{ $purchaseOrder->po_number }}')"
+                                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
+                                                    @if($pc['fileCount'] > 0)
+                                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
+                                                    @else
+                                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
+                                                    @endif"
+                                                    title="View files">
+                                                    <i class="fas fa-file"></i>
+                                                    <span>{{ $pc['fileCount'] }}</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="12" class="px-3 py-10 text-center text-gray-500 dark:text-gray-400">No purchase orders found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Totals Footer -->
+                    <div class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600 text-center text-sm px-3 py-3">
+                        Total Purchase Order Amount:
+                        <span id="totalPOAmountFooterTable" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">0.00</span>
+                    </div>
+                </div>
+            </div>
+            <!-- /#purchaseOrdersTableView -->
         </div>
     </div>
 
@@ -526,40 +647,47 @@
 
         /**
          * Recompute the Total Purchase Order Amount footer from each visible
-         * card's data-po-amount attribute.
+         * item's data-po-amount attribute, for whichever view is active,
+         * mirrored into both views' footer elements.
          */
         function updatePurchaseOrdersFooterTotal() {
+            const isTableView = !document.getElementById('purchaseOrdersTableView').classList.contains('hidden');
+            const items = isTableView
+                ? document.querySelectorAll('.po-row')
+                : document.querySelectorAll('.po-card');
+
             let totalPO = 0;
-            document.querySelectorAll('#purchaseOrdersContainer .po-card').forEach(card => {
-                if (card.style.display === 'none') return;
-                totalPO += parseFloat(card.dataset.poAmount) || 0;
+            items.forEach(item => {
+                if (item.style.display === 'none') return;
+                totalPO += parseFloat(item.dataset.poAmount) || 0;
             });
-            document.getElementById('totalPOAmountFooter').textContent = totalPO.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            // Always show the footer
+
+            const formatted = totalPO.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            ['totalPOAmountFooter', 'totalPOAmountFooterTable'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatted;
+            });
+            // Always show the card-view footer
             document.getElementById('purchaseOrdersFooter').style.display = '';
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            updatePurchaseOrdersFooterTotal();
-            updateTotalRecordsCount();
-        });
-
         /**
-         * Filter PO cards based on the search input
+         * Filter PO cards/rows based on the search input (works on whichever
+         * view element set is passed in)
          */
-        function filterTable() {
+        function filterPurchaseOrderItems(selector) {
             const input = document.getElementById("searchInput");
             const filter = input.value.toLowerCase().trim();
-            const cards = document.querySelectorAll('#purchaseOrdersContainer .po-card');
+            const items = document.querySelectorAll(selector);
             let visibleCount = 0;
 
-            cards.forEach(card => {
-                const searchText = card.dataset.searchText || card.textContent.toLowerCase();
+            items.forEach(item => {
+                const searchText = item.dataset.searchText || item.textContent.toLowerCase();
                 if (searchText.includes(filter)) {
-                    card.style.display = '';
+                    item.style.display = '';
                     visibleCount++;
                 } else {
-                    card.style.display = 'none';
+                    item.style.display = 'none';
                 }
             });
 
@@ -567,7 +695,7 @@
             const noResultsMsg = document.getElementById('noSearchResultsMsg');
             const noResultsQuery = document.getElementById('noSearchResultsQuery');
             if (noResultsMsg) {
-                if (filter.length > 0 && visibleCount === 0 && cards.length > 0) {
+                if (filter.length > 0 && visibleCount === 0 && items.length > 0) {
                     if (noResultsQuery) noResultsQuery.textContent = `"${input.value.trim()}"`;
                     noResultsMsg.classList.remove('hidden');
                 } else {
@@ -576,6 +704,15 @@
             }
 
             updateTotalRecordsCount();
+            updatePurchaseOrdersFooterTotal();
+        }
+
+        /**
+         * Filter whichever view is currently active
+         */
+        function filterTable() {
+            const isTableView = !document.getElementById('purchaseOrdersTableView').classList.contains('hidden');
+            filterPurchaseOrderItems(isTableView ? '.po-row' : '.po-card');
         }
 
         /**
@@ -586,21 +723,24 @@
             if (searchInput) {
                 searchInput.value = '';
                 filterTable();
-                updatePurchaseOrdersFooterTotal();
                 searchInput.focus();
             }
         }
 
         /**
-         * Update total records count based on visible cards (counted per po_number)
+         * Update total records count based on visible items in the active view
+         * (counted per po_number)
          */
         function updateTotalRecordsCount() {
-            const cards = document.querySelectorAll('#purchaseOrdersContainer .po-card');
+            const isTableView = !document.getElementById('purchaseOrdersTableView').classList.contains('hidden');
+            const items = isTableView
+                ? document.querySelectorAll('.po-row')
+                : document.querySelectorAll('.po-card');
             let poNumbers = new Set();
 
-            cards.forEach(card => {
-                if (card.style.display !== 'none' && card.dataset.poNumber) {
-                    poNumbers.add(card.dataset.poNumber);
+            items.forEach(item => {
+                if (item.style.display !== 'none' && item.dataset.poNumber) {
+                    poNumbers.add(item.dataset.poNumber);
                 }
             });
 
@@ -609,6 +749,59 @@
                 totalRecordsElement.textContent = poNumbers.size;
             }
         }
+
+        /**
+         * Card / List view toggle
+         */
+        function updatePurchaseOrdersViewButtons(view) {
+            const cardBtn = document.getElementById('poCardViewBtn');
+            const listBtn = document.getElementById('poListViewBtn');
+            const activeClasses = ['bg-white', 'dark:bg-gray-700', 'text-blue-700', 'dark:text-blue-300', 'shadow-sm'];
+            const inactiveClasses = ['text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200'];
+
+            [cardBtn, listBtn].forEach(btn => btn.classList.remove(...activeClasses, ...inactiveClasses));
+
+            if (view === 'table') {
+                listBtn.classList.add(...activeClasses);
+                cardBtn.classList.add(...inactiveClasses);
+            } else {
+                cardBtn.classList.add(...activeClasses);
+                listBtn.classList.add(...inactiveClasses);
+            }
+        }
+
+        window.setPurchaseOrdersView = function(view) {
+            const cardView = document.getElementById('purchaseOrdersCardView');
+            const tableView = document.getElementById('purchaseOrdersTableView');
+
+            if (view === 'table') {
+                cardView.classList.add('hidden');
+                tableView.classList.remove('hidden');
+            } else {
+                view = 'card';
+                tableView.classList.add('hidden');
+                cardView.classList.remove('hidden');
+            }
+
+            try {
+                localStorage.setItem('purchaseOrdersView', view);
+            } catch (e) {
+                // localStorage unavailable — view just won't persist
+            }
+
+            updatePurchaseOrdersViewButtons(view);
+            filterTable();
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let savedView = 'table';
+            try {
+                savedView = localStorage.getItem('purchaseOrdersView') || 'table';
+            } catch (e) {
+                // ignore
+            }
+            setPurchaseOrdersView(savedView);
+        });
 
         // Add event listener for input event to filter cards as you type
         document.getElementById('searchInput').addEventListener('input', function() {
@@ -624,7 +817,7 @@
             event.stopPropagation();
             
             // Remove highlight from previously selected card
-            document.querySelectorAll('.po-card.context-menu-active').forEach(r => {
+            document.querySelectorAll('.po-item.context-menu-active').forEach(r => {
                 r.classList.remove('context-menu-active');
             });
             
@@ -719,11 +912,13 @@
                 window.addEventListener('resize', hidePurchaseOrderContextMenu);
                 window.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
 
-                // Add scroll listener to the scrollable card container
-                const container = document.getElementById('purchaseOrdersContainer');
-                if (container) {
-                    container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
-                }
+                // Add scroll listeners to both scrollable containers
+                ['purchaseOrdersContainer', 'purchaseOrdersTableContainer'].forEach(id => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
+                    }
+                });
             }, 30);
         };
 
@@ -743,11 +938,13 @@
             window.removeEventListener('resize', hidePurchaseOrderContextMenu);
             window.removeEventListener('scroll', hidePurchaseOrderContextMenu);
             
-            // Clean up container listener
-            const container = document.getElementById('purchaseOrdersContainer');
-            if (container) {
-                container.removeEventListener('scroll', hidePurchaseOrderContextMenu);
-            }
+            // Clean up container listeners
+            ['purchaseOrdersContainer', 'purchaseOrdersTableContainer'].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.removeEventListener('scroll', hidePurchaseOrderContextMenu);
+                }
+            });
         }
 
         // Hide on Escape key
@@ -757,10 +954,12 @@
 
         // Initialize scroll event listeners
         document.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('purchaseOrdersContainer');
-            if (container) {
-                container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
-            }
+            ['purchaseOrdersContainer', 'purchaseOrdersTableContainer'].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.addEventListener('scroll', hidePurchaseOrderContextMenu, { passive: true });
+                }
+            });
         });
 
         /* Modal Create Disbursement */
@@ -1733,13 +1932,13 @@
         animation: slideOutRight 0.3s ease-out;
     }
 
-    /* Card highlight when context menu is open */
-    .po-card.context-menu-active {
+    /* Highlight when context menu is open (card or list/table view) */
+    .po-item.context-menu-active {
         background-color: rgba(59, 130, 246, 0.1);
         transition: background-color 0.2s ease-in-out;
     }
 
-    .dark .po-card.context-menu-active {
+    .dark .po-item.context-menu-active {
         background-color: rgba(59, 130, 246, 0.2);
     }
 </style>

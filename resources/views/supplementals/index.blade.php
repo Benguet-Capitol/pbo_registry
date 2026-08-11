@@ -379,7 +379,7 @@
                             </div>
                             <div>
                                 <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Account Code</div>
-                                <div class="font-medium text-gray-700 dark:text-gray-200 break-words">{{ $supplemental->appropriation->account_code ?? '-' }}</div>
+                                <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $supplemental->appropriation->account_code ?? '-' }}</div>
                             </div>
                             <div>
                                 <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Amount</div>
@@ -387,15 +387,15 @@
                             </div>
                             <div class="col-span-2">
                                 <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Program</div>
-                                <div class="text-gray-600 dark:text-gray-300 break-words">{{ $supplemental->appropriation->programs ?? '-' }}</div>
+                                <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $supplemental->appropriation->programs ?? '-' }}</div>
                             </div>
                             <div class="col-span-2">
                                 <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Description</div>
-                                <div class="text-gray-600 dark:text-gray-300 break-words">{{ $supplemental->appropriation->description ?? '-' }}</div>
+                                <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $supplemental->appropriation->description ?? '-' }}</div>
                             </div>
                             <div class="col-span-2 sm:col-span-4">
                                 <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Basis</div>
-                                <div class="font-medium text-gray-700 dark:text-gray-200 break-words">{{ $supplemental->basis ?? '-' }}</div>
+                                <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $supplemental->basis ?? '-' }}</div>
                             </div>
                         </div>
 
@@ -404,28 +404,50 @@
                         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-t border-gray-200 dark:border-gray-700 text-[11px] {{ $isQuarterBalanced ? 'bg-gray-50 dark:bg-gray-900/40' : 'bg-amber-50 dark:bg-amber-950/20' }}">
                             <span class="text-gray-400 dark:text-gray-500">
                                 <span class="uppercase tracking-wide text-[10px]">1st Qtr</span>
-                                <span class="font-semibold text-gray-600 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter1 ?? '-' }}</span>
+                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter1 ?? '-' }}</span>
                             </span>
                             <span class="text-gray-400 dark:text-gray-500">
                                 <span class="uppercase tracking-wide text-[10px]">2nd Qtr</span>
-                                <span class="font-semibold text-gray-600 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter2 ?? '-' }}</span>
+                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter2 ?? '-' }}</span>
                             </span>
                             <span class="text-gray-400 dark:text-gray-500">
                                 <span class="uppercase tracking-wide text-[10px]">3rd Qtr</span>
-                                <span class="font-semibold text-gray-600 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter3 ?? '-' }}</span>
+                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter3 ?? '-' }}</span>
                             </span>
                             <span class="text-gray-400 dark:text-gray-500">
                                 <span class="uppercase tracking-wide text-[10px]">4th Qtr</span>
-                                <span class="font-semibold text-gray-600 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter4 ?? '-' }}</span>
+                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter4 ?? '-' }}</span>
                             </span>
                             <span class="ml-auto text-gray-400 dark:text-gray-500">
                                 <span class="uppercase tracking-wide text-[10px]">Qtr Total</span>
-                                <span class="font-bold tabular-nums ml-1 {{ $isQuarterBalanced ? 'text-gray-600 dark:text-gray-300' : 'text-amber-700 dark:text-amber-400' }}">
+                                <span class="font-bold tabular-nums ml-1 {{ $isQuarterBalanced ? 'text-gray-700 dark:text-gray-300' : 'text-amber-700 dark:text-amber-400' }}">
                                     {{ number_format($quarterSum, 2) }}
                                 </span>
                             </span>
                         </div>
                         @endif
+
+                        <!-- Card Footer: Actions (mirrors the right-click context menu, always visible) -->
+                        <div class="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                            @can('edit supplementals')
+                                <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'edit')" type="button" title="Edit"
+                                    class="text-amber-600 inline-flex items-center gap-1 hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-colors ml-auto">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            @endcan
+
+                            @can('delete supplementals')
+                                <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'delete')" type="button" title="Delete This Entry"
+                                    class="text-red-600 inline-flex items-center gap-1 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900 transition-colors">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+
+                                <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'bulkDelete')" type="button" title="Delete All Related"
+                                    class="text-orange-600 inline-flex items-center gap-1 hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900 transition-colors">
+                                    <i class="fas fa-trash-alt"></i> Delete All
+                                </button>
+                            @endcan
+                        </div>
                     </div>
                 @empty
                     <div class="px-3 py-6 text-center text-gray-500 dark:text-gray-400">
@@ -756,6 +778,42 @@
                 }
             });
         }, 30);
+    };
+
+    /**
+     * Dispatches a Card View footer action button to the same functions the
+     * right-click context menu already uses, so both stay in sync with a
+     * single implementation per action.
+     */
+    window.triggerSupplementalCardAction = function(button, action) {
+        const card = button.closest('.supplemental-item');
+        if (!card) return;
+        const supplemental = card.dataset.supplemental ? JSON.parse(card.dataset.supplemental) : null;
+        if (!supplemental) return;
+
+        switch (action) {
+            case 'files':
+                openSupplementalFilesModal(supplemental.supplemental_no);
+                break;
+            case 'edit':
+                openEditSupplementalModal(supplemental);
+                break;
+            case 'delete':
+                openDeleteSupplementalModal(
+                    supplemental.id,
+                    supplemental.supplemental_no,
+                    supplemental.type,
+                    supplemental.amount,
+                    supplemental.appropriations_id
+                );
+                break;
+            case 'bulkDelete':
+                openBulkDeleteSupplementalModal(
+                    supplemental.supplemental_no,
+                    supplemental.id
+                );
+                break;
+        }
     };
 
     function hideSupplementalContextMenu() {

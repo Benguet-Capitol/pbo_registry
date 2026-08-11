@@ -375,11 +375,31 @@
                                         </div>
                                         <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-gray-500 dark:text-gray-400">
                                             <span class="text-gray-500 dark:text-gray-500">Account Code:</span>
-                                            <span class="font-medium text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->account_code ?? '-' }}</span>
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $realignment->appropriation->account_code ?? '-' }}</span>
                                             <span class="text-gray-500 dark:text-gray-500">Program:</span>
-                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->programs ?? '-' }}</span>
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $realignment->appropriation->programs ?? '-' }}</span>
                                             <span class="text-gray-500 dark:text-gray-500">Description:</span>
-                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->description ?? '-' }}</span>
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $realignment->appropriation->description ?? '-' }}</span>
+                                        </div>
+
+                                        <!-- Entry Actions (mirrors the right-click context menu, always visible) -->
+                                        <div class="flex flex-wrap items-center gap-1.5 pt-2 mt-1.5 border-t border-blue-200 dark:border-blue-800">
+                                            @can('edit realignments')
+                                                <button onclick="event.stopPropagation(); triggerRealignmentEntryAction(this, 'edit')" type="button" title="Edit"
+                                                    class="text-amber-600 inline-flex items-center gap-1 hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-colors ml-auto">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            @endcan
+                                            @can('delete realignments')
+                                                <button onclick="event.stopPropagation(); triggerRealignmentEntryAction(this, 'delete')" type="button" title="Delete This Entry"
+                                                    class="text-red-600 inline-flex items-center gap-1 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900 transition-colors">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                                <button onclick="event.stopPropagation(); triggerRealignmentEntryAction(this, 'bulkDelete')" type="button" title="Delete All Related"
+                                                    class="text-orange-600 inline-flex items-center gap-1 hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900 transition-colors">
+                                                    <i class="fas fa-trash-alt"></i> Delete All
+                                                </button>
+                                            @endcan
                                         </div>
                                     </div>
                                 @empty
@@ -419,11 +439,31 @@
                                         </div>
                                         <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-gray-500 dark:text-gray-400">
                                             <span class="text-gray-500 dark:text-gray-500">Account Code:</span>
-                                            <span class="font-medium text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->account_code ?? '-' }}</span>
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $realignment->appropriation->account_code ?? '-' }}</span>
                                             <span class="text-gray-500 dark:text-gray-500">Program:</span>
-                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->programs ?? '-' }}</span>
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $realignment->appropriation->programs ?? '-' }}</span>
                                             <span class="text-gray-500 dark:text-gray-500">Description:</span>
-                                            <span class="text-gray-600 dark:text-gray-300 break-words">{{ $realignment->appropriation->description ?? '-' }}</span>
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $realignment->appropriation->description ?? '-' }}</span>
+                                        </div>
+
+                                        <!-- Entry Actions (mirrors the right-click context menu, always visible) -->
+                                        <div class="flex flex-wrap items-center gap-1.5 pt-2 mt-1.5 border-t border-green-200 dark:border-green-800">
+                                            @can('edit realignments')
+                                                <button onclick="event.stopPropagation(); triggerRealignmentEntryAction(this, 'edit')" type="button" title="Edit"
+                                                    class="text-amber-600 inline-flex items-center gap-1 hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-colors ml-auto">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            @endcan
+                                            @can('delete realignments')
+                                                <button onclick="event.stopPropagation(); triggerRealignmentEntryAction(this, 'delete')" type="button" title="Delete This Entry"
+                                                    class="text-red-600 inline-flex items-center gap-1 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900 transition-colors">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                                <button onclick="event.stopPropagation(); triggerRealignmentEntryAction(this, 'bulkDelete')" type="button" title="Delete All Related"
+                                                    class="text-orange-600 inline-flex items-center gap-1 hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900 transition-colors">
+                                                    <i class="fas fa-trash-alt"></i> Delete All
+                                                </button>
+                                            @endcan
                                         </div>
                                     </div>
                                 @empty
@@ -744,6 +784,42 @@
                 }
             });
         }, 30);
+    };
+
+    /**
+     * Dispatches an entry's inline action button to the same functions the
+     * right-click context menu already uses, so both stay in sync with a
+     * single implementation per action.
+     */
+    window.triggerRealignmentEntryAction = function(button, action) {
+        const entry = button.closest('.realignment-entry');
+        if (!entry) return;
+        const realignment = entry.dataset.realignment ? JSON.parse(entry.dataset.realignment) : null;
+        if (!realignment) return;
+
+        switch (action) {
+            case 'files':
+                openRealignmentFilesModal(realignment.realignment_no);
+                break;
+            case 'edit':
+                openEditRealignmentModal(realignment);
+                break;
+            case 'delete':
+                openDeleteRealignmentModal(
+                    realignment.id,
+                    realignment.realignment_no,
+                    realignment.type,
+                    realignment.amount,
+                    realignment.appropriations_id
+                );
+                break;
+            case 'bulkDelete':
+                openBulkDeleteRealignmentModal(
+                    realignment.realignment_no,
+                    realignment.id
+                );
+                break;
+        }
     };
 
     function hideRealignmentContextMenu() {

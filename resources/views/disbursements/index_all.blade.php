@@ -243,38 +243,75 @@
                 </div>
             </div>
 
+            <!-- View toggle: Card / List -->
+            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+                <button type="button" id="dvListViewBtn" onclick="setDisbursementsView('table')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-table-list"></i> List View
+                </button>
+                <button type="button" id="dvCardViewBtn" onclick="setDisbursementsView('card')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                    <i class="fas fa-grip"></i> Card View
+                </button>
+            </div>
+
+            <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->
+            <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md mb-3 bg-gray-50 dark:bg-gray-900">
+                <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                No disbursements match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
+                <button type="button" onclick="clearDisbursementSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                    Clear search
+                </button>
+            </div>
+
+            @php
+                // Precompute derived values once per disbursement so both the
+                // card view and the table view below can reuse them.
+                $dvComputed = [];
+                foreach ($disbursements as $disbursement) {
+                    $officeClassLabel = (optional($disbursement->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-') . ' - ' . (optional($disbursement->obligation->officeAllotmentClass->allotmentClass)->class ?? '-');
+                    $program = $disbursement->obligationAmount?->appropriation?->programs ?? '-';
+                    $accountCode = $disbursement->obligationAmount?->appropriation?->account_code ?? '-';
+                    $description = $disbursement->obligationAmount?->appropriation?->description ?? '-';
+                    $dvAmount = (float)($disbursement->disbursement_amount ?? 0);
+                    $status = $disbursement->status ?? '';
+
+                    $statusBadge = $status === 'Full Payment'
+                        ? ['bg' => 'bg-green-100 dark:bg-green-900', 'text' => 'text-green-700 dark:text-green-300']
+                        : ($status === 'Partial Payment'
+                            ? ['bg' => 'bg-blue-100 dark:bg-blue-900', 'text' => 'text-blue-700 dark:text-blue-300']
+                            : ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-600 dark:text-gray-300']);
+
+                    $searchText = strtolower(collect([
+                        $officeClassLabel, $disbursement->obligation->obr_no ?? '', $disbursement->obligation->particulars ?? '',
+                        $disbursement->dv_no, $disbursement->disbursement_date, $program, $accountCode, $description,
+                        $status, $disbursement->remarks,
+                    ])->implode(' '));
+
+                    $dvComputed[$disbursement->id] = compact(
+                        'officeClassLabel', 'program', 'accountCode', 'description',
+                        'dvAmount', 'status', 'statusBadge', 'searchText'
+                    );
+                }
+            @endphp
+
             <!-- Disbursement Cards -->
+            <div id="disbursementsCardView">
             <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                 <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="disbursementsContainer">
                     @forelse($disbursements as $disbursement)
                         @php
-                            $officeClassLabel = (optional($disbursement->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-') . ' - ' . (optional($disbursement->obligation->officeAllotmentClass->allotmentClass)->class ?? '-');
-                            $program = $disbursement->obligationAmount?->appropriation?->programs ?? '-';
-                            $accountCode = $disbursement->obligationAmount?->appropriation?->account_code ?? '-';
-                            $description = $disbursement->obligationAmount?->appropriation?->description ?? '-';
-                            $dvAmount = (float)($disbursement->disbursement_amount ?? 0);
-                            $status = $disbursement->status ?? '';
-
-                            $statusBadge = $status === 'Full Payment'
-                                ? ['bg' => 'bg-green-100 dark:bg-green-900', 'text' => 'text-green-700 dark:text-green-300']
-                                : ($status === 'Partial Payment'
-                                    ? ['bg' => 'bg-blue-100 dark:bg-blue-900', 'text' => 'text-blue-700 dark:text-blue-300']
-                                    : ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-600 dark:text-gray-300']);
-
-                            $searchText = strtolower(collect([
-                                $officeClassLabel,
-                                $disbursement->obligation->obr_no ?? '',
-                                $disbursement->obligation->particulars ?? '',
-                                $disbursement->dv_no,
-                                $disbursement->disbursement_date,
-                                $program,
-                                $accountCode,
-                                $description,
-                                $status,
-                                $disbursement->remarks,
-                            ])->implode(' '));
+                            $dc = $dvComputed[$disbursement->id];
+                            $officeClassLabel = $dc['officeClassLabel'];
+                            $program = $dc['program'];
+                            $accountCode = $dc['accountCode'];
+                            $description = $dc['description'];
+                            $dvAmount = $dc['dvAmount'];
+                            $status = $dc['status'];
+                            $statusBadge = $dc['statusBadge'];
+                            $searchText = $dc['searchText'];
                         @endphp
-                        <div class="dv-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
+                        <div class="dv-item dv-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
                              oncontextmenu="showDisbursementContextMenu(event, this)"
                              data-dv-no="{{ $disbursement->dv_no }}"
                              data-dv-date="{{ $disbursement->disbursement_date ?? '-' }}"
@@ -296,16 +333,22 @@
                                     <span class="font-bold text-green-700 dark:text-green-300">
                                         <i class="fas fa-hashtag mr-1 text-green-500"></i>{{ $disbursement->dv_no }}
                                     </span>
-                                    <span class="text-gray-600 dark:text-gray-300">
+                                    <span class="font-semibold text-gray-700 dark:text-gray-300">
                                         <i class="far fa-calendar mr-1"></i>{{ $disbursement->disbursement_date ?? '-' }}
                                     </span>
-                                    <span class="text-gray-600 dark:text-gray-300">
+                                    <span class="font-semibold text-gray-700 dark:text-gray-300">
                                         <span class="font-semibold">OBR:</span> {{ $disbursement->obligation->obr_no ?? '-' }}
                                     </span>
                                 </div>
+                                <div>
                                 <span class="px-2 py-1 rounded font-semibold {{ $statusBadge['bg'] }} {{ $statusBadge['text'] }}">
                                     {{ $status ? ucfirst($status) : '-' }}
                                 </span>
+                                <button type="button" onclick="event.stopPropagation(); displayObligationDetailsModal({{ $disbursement->obligation_id }})"
+                                    class="text-blue-600 inline-flex leading-4 tracking-wider items-center ml-1 gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                                    <i class="fas fa-eye"></i><span>View</span>
+                                </button>
+                                </div>
                             </div>
 
                             <!-- Card Body -->
@@ -324,20 +367,20 @@
                                 </div>
                                 <div class="col-span-2">
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Program</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $program }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $program }}</div>
                                 </div>
                                 <div class="col-span-2">
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Description</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $description }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $description }}</div>
                                 </div>
                                 <div class="col-span-2 sm:col-span-4">
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Particulars</div>
-                                    <div class="text-gray-600 dark:text-gray-300 break-words">{{ $disbursement->obligation->particulars ?? '-' }}</div>
+                                    <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $disbursement->obligation->particulars ?? '-' }}</div>
                                 </div>
                                 @if($disbursement->remarks)
                                     <div class="col-span-2 sm:col-span-4 pt-1 border-t border-gray-100 dark:border-gray-700">
                                         <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Remarks</div>
-                                        <div class="text-gray-600 dark:text-gray-300 break-words">{{ $disbursement->remarks }}</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $disbursement->remarks }}</div>
                                     </div>
                                 @endif
                             </div>
@@ -353,15 +396,6 @@
                             @endif
                         </div>
                     @endforelse
-
-                    <!-- Shown by JS when a search query matches no visible cards -->
-                    <div id="noSearchResultsMsg" class="hidden px-3 py-10 text-center text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-magnifying-glass text-2xl mb-2 block text-gray-300 dark:text-gray-600"></i>
-                        No disbursements match <span id="noSearchResultsQuery" class="font-semibold text-gray-700 dark:text-gray-300"></span>
-                        <button type="button" onclick="clearDisbursementSearchFilter()" class="block mx-auto mt-2 text-xs text-blue-600 hover:underline dark:text-blue-400">
-                            Clear search
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Totals Footer -->
@@ -372,6 +406,80 @@
                     </span>
                 </div>
             </div>
+            </div>
+            <!-- /#disbursementsCardView -->
+
+            <!-- List View (flat table) -->
+            <div id="disbursementsTableView" class="hidden">
+                <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <div class="max-h-[720px] overflow-y-auto" id="disbursementsTableContainer">
+                            <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
+                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">DV No.</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">DV Date</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR No.</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Status</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Account Code</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Program</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Description</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">DV Amount</th>
+                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($disbursements as $disbursement)
+                                        @php
+                                            $dc = $dvComputed[$disbursement->id];
+                                        @endphp
+                                        <tr class="dv-item dv-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                            oncontextmenu="showDisbursementContextMenu(event, this)"
+                                            data-dv-no="{{ $disbursement->dv_no }}"
+                                            data-dv-date="{{ $disbursement->disbursement_date ?? '-' }}"
+                                            data-obligation-id="{{ $disbursement->obligation_id }}"
+                                            data-dv-amount="{{ $dc['dvAmount'] }}"
+                                            data-office-class="{{ $dc['officeClassLabel'] }}"
+                                            data-obr-no="{{ $disbursement->obligation->obr_no ?? '-' }}"
+                                            data-particulars="{{ $disbursement->obligation->particulars ?? '-' }}"
+                                            data-program="{{ $dc['program'] }}"
+                                            data-account-code="{{ $dc['accountCode'] }}"
+                                            data-description="{{ $dc['description'] }}"
+                                            data-status="{{ $dc['status'] }}"
+                                            data-remarks="{{ $disbursement->remarks ?? '-' }}"
+                                            data-search-text="{{ $dc['searchText'] }}">
+                                            <td class="font-bold text-green-700 dark:text-green-300 px-2 py-2">{{ $disbursement->dv_no }}</td>
+                                            <td class="px-2 py-2">{{ $disbursement->disbursement_date ?? '-' }}</td>
+                                            <td class="px-2 py-2">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
+                                            <td class="text-left px-2 py-2">{{ $dc['officeClassLabel'] }}</td>
+                                            <td class="px-2 py-2">
+                                                <span class="px-2 py-1 rounded font-semibold {{ $dc['statusBadge']['bg'] }} {{ $dc['statusBadge']['text'] }}">{{ $dc['status'] ? ucfirst($dc['status']) : '-' }}</span>
+                                            </td>
+                                            <td class="font-semibold px-2 py-2">{{ $dc['accountCode'] }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $dc['program'] }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $dc['description'] }}</td>
+                                            <td class="px-2 py-2 text-right font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{{ number_format($dc['dvAmount'], 2) }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs">{{ $disbursement->remarks ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="10" class="px-3 py-10 text-center text-gray-500 dark:text-gray-400">No disbursements found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Totals Footer -->
+                    <div class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600 text-center text-sm px-3 py-3">
+                        Total DV / Check Amount:
+                        <span id="totalDVAmountFooterTable" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-bold text-base tabular-nums ml-2">0.00</span>
+                    </div>
+                </div>
+            </div>
+            <!-- /#disbursementsTableView -->
         </div>
     </div>
 
@@ -391,40 +499,47 @@
 <script>
     /**
      * Recompute the Total DV / Check Amount footer from each visible
-     * card's data-dv-amount attribute.
+     * item's data-dv-amount attribute, for whichever view is active,
+     * mirrored into both views' footer elements.
      */
     function updateDisbursementFooterTotal() {
+        const isTableView = !document.getElementById('disbursementsTableView').classList.contains('hidden');
+        const items = isTableView
+            ? document.querySelectorAll('.dv-row')
+            : document.querySelectorAll('.dv-card');
+
         let totalDV = 0;
-        document.querySelectorAll('#disbursementsContainer .dv-card').forEach(card => {
-            if (card.style.display === 'none') return;
-            totalDV += parseFloat(card.dataset.dvAmount) || 0;
+        items.forEach(item => {
+            if (item.style.display === 'none') return;
+            totalDV += parseFloat(item.dataset.dvAmount) || 0;
         });
-        document.getElementById('totalDVAmountFooter').textContent = totalDV.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        // Always show the footer
+
+        const formatted = totalDV.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        ['totalDVAmountFooter', 'totalDVAmountFooterTable'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = formatted;
+        });
+        // Always show the card-view footer
         document.getElementById('disbursementsFooter').style.display = '';
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        updateDisbursementFooterTotal();
-        updateTotalRecordsCount();
-    });
-
     /**
-     * Filter DV cards based on the search input
+     * Filter DV cards/rows based on the search input (whichever view is active)
      */
     function filterTable() {
+        const isTableView = !document.getElementById('disbursementsTableView').classList.contains('hidden');
         const input = document.getElementById("searchInput");
         const filter = input.value.toLowerCase().trim();
-        const cards = document.querySelectorAll('#disbursementsContainer .dv-card');
+        const items = document.querySelectorAll(isTableView ? '.dv-row' : '.dv-card');
         let visibleCount = 0;
 
-        cards.forEach(card => {
-            const searchText = card.dataset.searchText || card.textContent.toLowerCase();
+        items.forEach(item => {
+            const searchText = item.dataset.searchText || item.textContent.toLowerCase();
             if (searchText.includes(filter)) {
-                card.style.display = '';
+                item.style.display = '';
                 visibleCount++;
             } else {
-                card.style.display = 'none';
+                item.style.display = 'none';
             }
         });
 
@@ -432,7 +547,7 @@
         const noResultsMsg = document.getElementById('noSearchResultsMsg');
         const noResultsQuery = document.getElementById('noSearchResultsQuery');
         if (noResultsMsg) {
-            if (filter.length > 0 && visibleCount === 0 && cards.length > 0) {
+            if (filter.length > 0 && visibleCount === 0 && items.length > 0) {
                 if (noResultsQuery) noResultsQuery.textContent = `"${input.value.trim()}"`;
                 noResultsMsg.classList.remove('hidden');
             } else {
@@ -441,6 +556,7 @@
         }
 
         updateTotalRecordsCount();
+        updateDisbursementFooterTotal();
     }
 
     /**
@@ -451,21 +567,22 @@
         if (searchInput) {
             searchInput.value = '';
             filterTable();
-            updateDisbursementFooterTotal();
             searchInput.focus();
         }
     }
 
     /**
-     * Update total records count based on visible cards (counted per dv_no)
+     * Update total records count based on visible items in the active view
+     * (counted per dv_no)
      */
     function updateTotalRecordsCount() {
-        const cards = document.querySelectorAll('#disbursementsContainer .dv-card');
+        const isTableView = !document.getElementById('disbursementsTableView').classList.contains('hidden');
+        const items = document.querySelectorAll(isTableView ? '.dv-row' : '.dv-card');
         let dvNumbers = new Set();
 
-        cards.forEach(card => {
-            if (card.style.display !== 'none' && card.dataset.dvNo) {
-                dvNumbers.add(card.dataset.dvNo);
+        items.forEach(item => {
+            if (item.style.display !== 'none' && item.dataset.dvNo) {
+                dvNumbers.add(item.dataset.dvNo);
             }
         });
 
@@ -475,10 +592,62 @@
         }
     }
 
-    // Add event listener for input event to filter cards as you type
+    /**
+     * Card / List view toggle
+     */
+    function updateDisbursementsViewButtons(view) {
+        const cardBtn = document.getElementById('dvCardViewBtn');
+        const listBtn = document.getElementById('dvListViewBtn');
+        const activeClasses = ['bg-white', 'dark:bg-gray-700', 'text-blue-700', 'dark:text-blue-300', 'shadow-sm'];
+        const inactiveClasses = ['text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200'];
+
+        [cardBtn, listBtn].forEach(btn => btn.classList.remove(...activeClasses, ...inactiveClasses));
+
+        if (view === 'table') {
+            listBtn.classList.add(...activeClasses);
+            cardBtn.classList.add(...inactiveClasses);
+        } else {
+            cardBtn.classList.add(...activeClasses);
+            listBtn.classList.add(...inactiveClasses);
+        }
+    }
+
+    window.setDisbursementsView = function(view) {
+        const cardView = document.getElementById('disbursementsCardView');
+        const tableView = document.getElementById('disbursementsTableView');
+
+        if (view === 'table') {
+            cardView.classList.add('hidden');
+            tableView.classList.remove('hidden');
+        } else {
+            view = 'card';
+            tableView.classList.add('hidden');
+            cardView.classList.remove('hidden');
+        }
+
+        try {
+            localStorage.setItem('disbursementsView', view);
+        } catch (e) {
+            // localStorage unavailable — view just won't persist
+        }
+
+        updateDisbursementsViewButtons(view);
+        filterTable();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        let savedView = 'table';
+        try {
+            savedView = localStorage.getItem('disbursementsView') || 'table';
+        } catch (e) {
+            // ignore
+        }
+        setDisbursementsView(savedView);
+    });
+
+    // Add event listener for input event to filter items as you type
     document.getElementById('searchInput').addEventListener('input', function() {
         filterTable();
-        updateDisbursementFooterTotal();
     });
 
     /**
@@ -545,7 +714,7 @@
         event.stopPropagation();
         
         // Remove highlight from previously selected card
-        document.querySelectorAll('.dv-card.context-menu-active').forEach(r => {
+        document.querySelectorAll('.dv-item.context-menu-active').forEach(r => {
             r.classList.remove('context-menu-active');
         });
         
@@ -612,11 +781,13 @@
             window.addEventListener('resize', hideDisbursementContextMenu);
             window.addEventListener('scroll', hideDisbursementContextMenu, { passive: true });
 
-            // Add scroll listener to the scrollable card container
-            const container = document.getElementById('disbursementsContainer');
-            if (container) {
-                container.addEventListener('scroll', hideDisbursementContextMenu, { passive: true });
-            }
+            // Add scroll listeners to both scrollable containers
+            ['disbursementsContainer', 'disbursementsTableContainer'].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.addEventListener('scroll', hideDisbursementContextMenu, { passive: true });
+                }
+            });
         }, 30);
     };
 
@@ -636,11 +807,13 @@
         window.removeEventListener('resize', hideDisbursementContextMenu);
         window.removeEventListener('scroll', hideDisbursementContextMenu);
         
-        // Clean up container listener
-        const container = document.getElementById('disbursementsContainer');
-        if (container) {
-            container.removeEventListener('scroll', hideDisbursementContextMenu);
-        }
+        // Clean up container listeners
+        ['disbursementsContainer', 'disbursementsTableContainer'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                container.removeEventListener('scroll', hideDisbursementContextMenu);
+            }
+        });
     }
 
     // Hide on Escape key
@@ -660,20 +833,21 @@
         ];
         const data = [headers];
 
-        document.querySelectorAll('#disbursementsContainer .dv-card').forEach(card => {
-            if (card.style.display === 'none') return;
+        const isTableView = !document.getElementById('disbursementsTableView').classList.contains('hidden');
+        document.querySelectorAll(isTableView ? '.dv-row' : '.dv-card').forEach(item => {
+            if (item.style.display === 'none') return;
             data.push([
-                card.dataset.officeClass || '',
-                card.dataset.obrNo || '',
-                card.dataset.particulars || '',
-                card.dataset.dvNo || '',
-                card.dataset.dvDate || '',
-                card.dataset.program || '',
-                card.dataset.accountCode || '',
-                card.dataset.description || '',
-                card.dataset.status || '',
-                card.dataset.dvAmount || '0',
-                card.dataset.remarks || '',
+                item.dataset.officeClass || '',
+                item.dataset.obrNo || '',
+                item.dataset.particulars || '',
+                item.dataset.dvNo || '',
+                item.dataset.dvDate || '',
+                item.dataset.program || '',
+                item.dataset.accountCode || '',
+                item.dataset.description || '',
+                item.dataset.status || '',
+                item.dataset.dvAmount || '0',
+                item.dataset.remarks || '',
             ]);
         });
 
@@ -1074,13 +1248,13 @@
         animation: slideOutRight 0.3s ease-out;
     }
 
-    /* Card highlight when context menu is open */
-    .dv-card.context-menu-active {
+    /* Highlight when context menu is open (card or list/table view) */
+    .dv-item.context-menu-active {
         background-color: rgba(59, 130, 246, 0.1);
         transition: background-color 0.2s ease-in-out;
     }
 
-    .dark .dv-card.context-menu-active {
+    .dark .dv-item.context-menu-active {
         background-color: rgba(59, 130, 246, 0.2);
     }
 </style>

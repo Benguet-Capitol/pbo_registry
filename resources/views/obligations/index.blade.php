@@ -339,17 +339,6 @@
                         <input type="hidden" name="sort_by" value="{{ $sortBy }}">
                         <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
 
-                        <!-- Total Records -->
-                        <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
-                            <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
-                            <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                            <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
-                        </div>
-                        <!-- Export Button -->
-                        <button type="button" id="exportObligationsBtn" onclick="exportObligationsToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors whitespace-nowrap">
-                            <i id="exportObligationsIcon" class="fas fa-file-excel mr-1"></i>
-                            <span id="exportObligationsLabel">Export to Excel</span>
-                        </button>
                         <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-36 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="">All Columns</option>
                             <option value="obr_no" {{ request('search_column') == 'obr_no' ? 'selected' : '' }}>OBR No.</option>
@@ -366,6 +355,19 @@
                             <i class="fas fa-search"></i>
                         </button>
                     </form>
+
+                    <!-- Export Button -->
+                    <button type="button" id="exportObligationsBtn" onclick="exportObligationsToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors whitespace-nowrap">
+                        <i id="exportObligationsIcon" class="fas fa-file-excel mr-1"></i>
+                        <span id="exportObligationsLabel">Export to Excel</span>
+                    </button>
+
+                    <!-- Total Records -->
+                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
+                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -470,7 +472,7 @@
                                     <span class="font-bold text-blue-700 dark:text-blue-300">
                                         <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $obligation->obr_no }}
                                     </span>
-                                    <span class="text-gray-600 dark:text-gray-300">
+                                    <span class="font-semibold text-gray-600 dark:text-gray-300">
                                         <i class="far fa-calendar mr-1"></i>{{ $obligation->obr_date }}
                                     </span>
                                     <span class="px-2 py-1 rounded font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
@@ -499,7 +501,7 @@
                                     </div>
                                     <div class="col-span-2 sm:col-span-2">
                                         <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Particulars</div>
-                                        <div class="text-gray-600 dark:text-gray-300 break-words">{{ $obligation->particulars }}</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $obligation->particulars }}</div>
                                     </div>
                                 </div>
 
@@ -607,7 +609,7 @@
                                     @if($obligation->remarks)
                                         <div class="pt-1 border-t border-gray-100 dark:border-gray-700">
                                             <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Remarks</div>
-                                            <div class="text-gray-600 dark:text-gray-300 break-words">{{ $obligation->remarks }}</div>
+                                            <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $obligation->remarks }}</div>
                                         </div>
                                     @endif
                                 @endhasanyrole
@@ -616,10 +618,102 @@
                                     @if($obligation->payment_remarks)
                                         <div class="pt-1 border-t border-gray-100 dark:border-gray-700 payment-remarks">
                                             <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Payment Remarks</div>
-                                            <div class="text-gray-600 dark:text-gray-300 break-words">{{ $obligation->payment_remarks }}</div>
+                                            <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $obligation->payment_remarks }}</div>
                                         </div>
                                     @endif
                                 @endhasanyrole
+                            </div>
+
+                            <!-- Card Footer: Actions (mirrors the right-click context menu, always visible) -->
+                            <div class="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                                <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'view')" type="button" title="View Details"
+                                    class="text-blue-600 inline-flex items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-colors">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+
+                                @can('view obligation adjustments')
+                                    <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'adjustments')" type="button" title="Adjustments"
+                                        class="text-gray-600 inline-flex items-center gap-1 hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-gray-500 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-colors">
+                                        <i class="fas fa-file-edit"></i> Adjustments
+                                    </button>
+                                @endcan
+
+                                @can('view purchase orders')
+                                    @if($obligation->obr_type === 'Purchase Request')
+                                        <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'purchaseOrders')" type="button" title="Purchase Order"
+                                            class="text-purple-600 inline-flex items-center gap-1 hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-colors">
+                                            <i class="fas fa-file-invoice"></i> PO
+                                        </button>
+                                    @endif
+                                @endcan
+
+                                @can('view disbursement')
+                                    <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'disbursement')" type="button" title="Disbursement"
+                                        class="text-indigo-600 inline-flex items-center gap-1 hover:text-white border border-indigo-600 hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-indigo-500 dark:text-indigo-500 dark:hover:text-white dark:hover:bg-indigo-600 dark:focus:ring-indigo-900 transition-colors">
+                                        <i class="fas fa-file-medical-alt"></i> Disbursement
+                                    </button>
+                                @endcan
+
+                                @hasanyrole('Disbursement|Administrator|Developer')
+                                    <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'paymentRemarks')" type="button" title="Payment Remarks"
+                                        class="text-gray-600 inline-flex items-center gap-1 hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-gray-500 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-colors">
+                                        <i class="fas fa-comment-dollar"></i> Payment Remarks
+                                    </button>
+                                @endhasanyrole
+
+                                <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'history')" type="button" title="Status/History"
+                                    class="text-gray-600 inline-flex items-center gap-1 hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-gray-500 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-colors">
+                                    <i class="fas fa-history"></i> History
+                                </button>
+
+                                @can('cancel obligations')
+                                    <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'cancel')" type="button" title="Cancellation"
+                                        class="text-orange-600 inline-flex items-center gap-1 hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900 transition-colors">
+                                        <i class="fas fa-window-close"></i> Cancel
+                                    </button>
+                                @endcan
+
+                                <!-- Right-aligned group: Add Adjustment / Add PO / Add Disbursement, Edit, Delete -->
+                                <div class="flex flex-wrap items-center gap-1.5 ml-auto">
+                                    @unlessrole('Disbursement')
+                                        @if($obligation->obr_amount != 0)
+                                            <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'addAdjustment')" type="button" title="Add Adjustment"
+                                                class="text-teal-600 inline-flex items-center gap-1 hover:text-white border border-teal-600 hover:bg-teal-600 focus:ring-4 focus:outline-none focus:ring-teal-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-teal-500 dark:text-teal-500 dark:hover:text-white dark:hover:bg-teal-600 dark:focus:ring-teal-900 transition-colors">
+                                                <i class="fas fa-plus-circle"></i> Add Adjustment
+                                            </button>
+                                        @endif
+
+                                        @if($obligation->obr_type === 'Purchase Request')
+                                            <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'addPurchaseOrder')" type="button" title="Add Purchase Order"
+                                                class="text-purple-600 inline-flex items-center gap-1 hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-colors">
+                                                <i class="fas fa-plus-circle"></i> Add PO
+                                            </button>
+                                        @endif
+                                    @endunlessrole
+
+                                    @hasanyrole('Disbursement|Administrator|Developer|Obligation')
+                                        @if($obligation->obr_type !== 'Purchase Request')
+                                            <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'addDisbursement')" type="button" title="Add Disbursement"
+                                                class="text-indigo-600 inline-flex items-center gap-1 hover:text-white border border-indigo-600 hover:bg-indigo-600 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-indigo-500 dark:text-indigo-500 dark:hover:text-white dark:hover:bg-indigo-600 dark:focus:ring-indigo-900 transition-colors">
+                                                <i class="fas fa-plus-circle"></i> Add DV
+                                            </button>
+                                        @endif
+                                    @endhasanyrole
+
+                                    @can('edit obligations')
+                                        <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'edit')" type="button" title="Edit"
+                                            class="text-amber-600 inline-flex items-center gap-1 hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-colors">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                    @endcan
+
+                                    @can('delete obligations')
+                                        <button onclick="event.stopPropagation(); triggerObligationCardAction(this, 'delete')" type="button" title="Delete"
+                                            class="text-red-600 inline-flex items-center gap-1 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900 transition-colors">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    @endcan
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -1084,6 +1178,63 @@
             cardBtn.classList.add(...inactiveClasses);
         }
     }
+
+    /**
+     * Dispatches a Card View footer action button to the same functions the
+     * right-click context menu already uses, so both stay in sync with a
+     * single implementation per action.
+     */
+    window.triggerObligationCardAction = function(button, action) {
+        const card = button.closest('.obligation-item');
+        if (!card) return;
+        const obligation = card.dataset.obligation ? JSON.parse(card.dataset.obligation) : null;
+        if (!obligation) return;
+
+        switch (action) {
+            case 'view':
+                openModal(obligation.id);
+                break;
+            case 'addAdjustment':
+                openCreateObligationAdjustmentModal(obligation.id);
+                break;
+            case 'addPurchaseOrder':
+                openCreatePOModal(obligation.id);
+                break;
+            case 'addDisbursement':
+                openCreateDisbursementModal(obligation.id);
+                break;
+            case 'edit':
+                openEditObligationsModal(obligation);
+                break;
+            case 'cancel':
+                openCancellationModal(obligation.id, obligation);
+                break;
+            case 'paymentRemarks':
+                openPaymentRemarksModal(obligation.id, obligation.obr_no, obligation.payment_remarks || '');
+                break;
+            case 'history':
+                openObligationHistoryModal(obligation);
+                break;
+            case 'delete':
+                openDeleteModal(
+                    card.dataset.obligationId,
+                    card.dataset.obligationObr,
+                    card.dataset.obligationOffice,
+                    card.dataset.obligationClass,
+                    card.dataset.obligationAmount
+                );
+                break;
+            case 'adjustments':
+                window.location.href = `/obligation_adjustments?obligation_id=${obligation.id}`;
+                break;
+            case 'purchaseOrders':
+                window.location.href = `/purchase_orders?obligation_id=${obligation.id}`;
+                break;
+            case 'disbursement':
+                window.location.href = `/disbursements?obligation_id=${obligation.id}`;
+                break;
+        }
+    };
 
     window.setObligationsView = function(view) {
         const cardView = document.getElementById('obligationsCardView');
@@ -2692,11 +2843,13 @@ function openCreatePOModal(obligationId) {
     }
 
     .obligation-row-highlighted {
+        background-color: #dbeafe;
         outline: 2px solid #3b82f6;
         outline-offset: -1px;
     }
 
     .dark .obligation-row-highlighted {
+        background-color: #1e2f4d;
         outline-color: #60a5fa;
     }
 

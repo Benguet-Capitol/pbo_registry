@@ -222,69 +222,67 @@
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-2 dark:bg-gray-800">
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
             <div class="flex flex-col gap-3 lg:flex-row lg:justify-between lg:items-center mb-4">
-                <!-- Left: Action Button -->
-                <div class="flex-shrink-0">
-                    <button onclick="openCreateCOSListModal()" class="text-blue-600 inline-flex items-center justify-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center w-full lg:w-auto dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                        <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
-                        {{ __('Add Contract of Service') }}
-                    </button>
-                </div>
-                <!-- Right: Import/Export, Total Records and Search Input -->
-                <div class="flex flex-col gap-2 w-full lg:w-auto">
-                    <div class="flex flex-wrap items-center gap-2 justify-between lg:justify-end">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <!-- Import from Excel Button -->
-                            @if(request()->filled('office_allotment_class_filter') && request()->filled('appropriation_filter'))
-                                <button type="button" onclick="openImportModal()" class="text-purple-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-colors whitespace-nowrap">
-                                    <i class="fas fa-file-import mr-1"></i>
-                                    {{ __('Import') }}
-                                </button>
-                            @endif
-                            <!-- Export to Excel Button -->
-                            @if(request()->filled('office_allotment_class_filter'))
-                                <button type="button"
-                                id="exportBtn"
-                                data-url="{{ route('cos_lists.export', request()->only(['year1', 'office_allotment_class_filter', 'appropriation_filter'])) }}"
-                                onclick="handleExportClick(this)"
-                                class="text-green-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors whitespace-nowrap">
-                                    <i id="exportBtnIcon" class="fas fa-file-excel mr-1"></i>
-                                    <span id="exportBtnLabel">{{ __('Export') }}</span>
-                                </button>
-                            @endif
-                        </div>
-                        <!-- Total Records -->
-                        <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
-                            <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
-                            <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                            <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $cosList->total() ?? count($cosList) }}</span>
-                        </div>
-                    </div>
-                    <!-- Search Section -->
-                    <form id="searchForm" method="GET" action="{{ route('cos_lists.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
-                        <!-- Hidden inputs to preserve filters -->
-                        <input type="hidden" name="year1" value="{{ request('year1', date('Y')) }}">
-                        <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
-                        <input type="hidden" name="appropriation_filter" value="{{ request('appropriation_filter') }}">
-                        <input type="hidden" name="per_page" value="{{ request('per_page', '10') }}">
-
-                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full sm:w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="">All Columns</option>
-                            <option value="employee_name" {{ request('search_column') == 'employee_name' ? 'selected' : '' }}>Employee Name</option>
-                            <option value="position_title" {{ request('search_column') == 'position_title' ? 'selected' : '' }}>Position Title</option>
-                            <option value="salary_grade" {{ request('search_column') == 'salary_grade' ? 'selected' : '' }}>Salary Grade</option>
-                            <option value="period" {{ request('search_column') == 'period' ? 'selected' : '' }}>Period</option>
-                            <option value="monthly_rate" {{ request('search_column') == 'monthly_rate' ? 'selected' : '' }}>Monthly Rate</option>
-                            <option value="total_amount" {{ request('search_column') == 'total_amount' ? 'selected' : '' }}>Total Amount</option>
-                        </x-form.select>
-                        <div class="flex items-center gap-2 flex-1">
-                            <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for Contract of Services" class="border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white w-full" />
-                            <button type="submit" class="flex-shrink-0 text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <!-- Left: Action Button -->
+            <div class="flex-shrink-0">
+                <button onclick="openCreateCOSListModal()" class="text-blue-600 inline-flex items-center justify-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center w-full lg:w-auto dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                    <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
+                    {{ __('Add Contract of Service') }}
+                </button>
             </div>
+
+            <!-- Right: Import/Export, Total Records, Search — all in one row -->
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
+                <!-- Import from Excel Button -->
+                @if(request()->filled('office_allotment_class_filter') && request()->filled('appropriation_filter'))
+                    <button type="button" onclick="openImportModal()" class="text-purple-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-colors whitespace-nowrap">
+                        <i class="fas fa-file-import mr-1"></i>
+                        {{ __('Import') }}
+                    </button>
+                @endif
+
+                <!-- Export to Excel Button -->
+                @if(request()->filled('office_allotment_class_filter'))
+                    <button type="button"
+                    id="exportBtn"
+                    data-url="{{ route('cos_lists.export', request()->only(['year1', 'office_allotment_class_filter', 'appropriation_filter'])) }}"
+                    onclick="handleExportClick(this)"
+                    class="text-green-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors whitespace-nowrap">
+                        <i id="exportBtnIcon" class="fas fa-file-excel mr-1"></i>
+                        <span id="exportBtnLabel">{{ __('Export') }}</span>
+                    </button>
+                @endif
+
+                <!-- Total Records -->
+                <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
+                    <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                    <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $cosList->total() ?? count($cosList) }}</span>
+                </div>
+
+                <!-- Search Section -->
+                <form id="searchForm" method="GET" action="{{ route('cos_lists.index') }}" class="flex items-center gap-2 flex-1 min-w-[240px] lg:flex-initial">
+                    <!-- Hidden inputs to preserve filters -->
+                    <input type="hidden" name="year1" value="{{ request('year1', date('Y')) }}">
+                    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+                    <input type="hidden" name="appropriation_filter" value="{{ request('appropriation_filter') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page', '10') }}">
+
+                    <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-32 sm:w-40 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Columns</option>
+                        <option value="employee_name" {{ request('search_column') == 'employee_name' ? 'selected' : '' }}>Employee Name</option>
+                        <option value="position_title" {{ request('search_column') == 'position_title' ? 'selected' : '' }}>Position Title</option>
+                        <option value="salary_grade" {{ request('search_column') == 'salary_grade' ? 'selected' : '' }}>Salary Grade</option>
+                        <option value="period" {{ request('search_column') == 'period' ? 'selected' : '' }}>Period</option>
+                        <option value="monthly_rate" {{ request('search_column') == 'monthly_rate' ? 'selected' : '' }}>Monthly Rate</option>
+                        <option value="total_amount" {{ request('search_column') == 'total_amount' ? 'selected' : '' }}>Total Amount</option>
+                    </x-form.select>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for Contract of Services" class="border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 min-w-0 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    <button type="submit" class="flex-shrink-0 text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
 
             <!-- COS Cards -->
             <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">

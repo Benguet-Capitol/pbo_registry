@@ -77,10 +77,32 @@ class RealignmentController extends Controller
             ->orderBy('office', 'asc')
             ->get();
 
-        $office_allotment_classes = DB::table('office_allotment_classes')
+        // Used by the CREATE modal 
+        $office_allotment_classes_for_create = DB::table('office_allotment_classes')
             ->select('id', 'office_abbreviation', 'class', 'fund')
-            ->where('year', $currentYear)
+            ->where('year', $selectedYear)
             ->get();
+
+        // Used by the EDIT modal 
+        $office_allotment_classes_for_edit = DB::table('office_allotment_classes')
+            ->select('id', 'office_abbreviation', 'class', 'fund')
+            ->get();
+
+        $officeAllotmentClassesJs = collect($office_allotment_classes_for_create)->map(function ($oac) {
+            return [
+                'id' => $oac->id,
+                'name' => ($oac->office_abbreviation ?? '') . ' - ' . ($oac->class ?? ''),
+                'fund' => $oac->fund ?? 'General Fund',
+            ];
+        })->values();
+
+        $officeAllotmentClassesAllJs = collect($office_allotment_classes_for_edit)->map(function ($oac) {
+            return [
+                'id' => $oac->id,
+                'name' => ($oac->office_abbreviation ?? '') . ' - ' . ($oac->class ?? ''),
+                'fund' => $oac->fund ?? 'General Fund',
+            ];
+        })->values();
 
         // --- Optimized Appropriations Computation ---
         $currentMonth = now()->month;
@@ -126,14 +148,6 @@ class RealignmentController extends Controller
         });
 
         // --- Prepare Data for JS (same variables preserved) ---
-        $officeAllotmentClassesJs = collect($office_allotment_classes)->map(function ($oac) {
-            return [
-                'id' => $oac->id,
-                'name' => ($oac->office_abbreviation ?? '') . ' - ' . ($oac->class ?? ''),
-                'fund' => $oac->fund ?? 'General Fund',
-            ];
-        })->values();
-
         $appropriationsJs = collect($appropriations)->map(function ($app) {
             return [
                 'id' => $app->id,
@@ -195,7 +209,7 @@ class RealignmentController extends Controller
             'availableYears',
             'selectedYear',
             'officeAllotmentClasses',
-            'office_allotment_classes',
+            'officeAllotmentClassesAllJs',
             'appropriations',
             'officeAllotmentClassesJs',
             'appropriationsJs',

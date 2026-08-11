@@ -132,6 +132,7 @@
                                                                 placeholder="{{ __('Account Code') }}"
                                                                 class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
                                                                 oninput="editFilterAccountCodes(this, 'source')"
+                                                                onfocus="editFilterAccountCodes(this, 'source')"
                                                                 autocomplete="off" />
                                                             <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="SourceAccountCodeDropdown">
                                                                 <!-- Suggestions will appear here -->
@@ -250,6 +251,7 @@
                                                                 placeholder="{{ __('Account Code') }}"
                                                                 class="block w-full dark:bg-gray-800 dark:text-gray-200 text-left text-xs"
                                                                 oninput="editFilterAccountCodes(this, 'recipient')"
+                                                                onfocus="editFilterAccountCodes(this, 'recipient')"
                                                                 autocomplete="off" />
                                                             <div class="absolute w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50" id="RecipientAccountCodeDropdown">
                                                                 <!-- Suggestions will appear here -->
@@ -339,6 +341,11 @@
 
 <script>
 
+    // Unfiltered, all-years list — separate from the `officeAllotmentClasses` const
+    // declared in the Create modal, which is intentionally scoped to the currently
+    // selected year. This modal needs to resolve records from ANY year.
+    const officeAllotmentClassesAll = @json($officeAllotmentClassesAllJs);
+
     function openEditRealignmentModal(realignment) {
         closeAllDropdowns(); // Close any open dropdowns
         // Populate the modal fields with the realignment data
@@ -353,7 +360,7 @@
         document.getElementById('edit_basis').value = realignment.basis;
         
         // Get the office_allotment_class object by ID and display its office_abbreviation - class
-        let sourceOAC = officeAllotmentClasses.find(
+        let sourceOAC = officeAllotmentClassesAll.find(
             oac => String(oac.id) === String(realignment.office_allotment_classes_id)
         );
         if (sourceOAC) {
@@ -364,7 +371,7 @@
             document.getElementById('edit_source_office_allotment_class_id').value = '';
         }
 
-        let recipientOAC = officeAllotmentClasses.find(
+        let recipientOAC = officeAllotmentClassesAll.find(
             oac => String(oac.id) === String(realignment.office_allotment_classes_id)
         );
         if (recipientOAC) {
@@ -552,7 +559,7 @@
             hiddenId.value = '';
             return;
         }
-        let matches = officeAllotmentClasses.filter(oac =>
+        let matches = officeAllotmentClassesAll.filter(oac =>
             (oac.name || '').toLowerCase().includes(val)
         );
         if (matches.length === 0) {
@@ -591,24 +598,44 @@
     }
 
     // --- Account Code Dropdown Logic (for edit modal, both source and recipient) ---
+    // Only shows appropriations that belong to the currently-selected Office & Allotment Class
     function editFilterAccountCodes(input, type) {
+        let officeIdField = (type === 'source')
+            ? 'edit_source_office_allotment_class_id'
+            : 'edit_recipient_office_allotment_class_id';
+        let officeId = document.getElementById(officeIdField).value;
+
         let dropdownId = (type === 'source') ? 'SourceAccountCodeDropdown' : 'RecipientAccountCodeDropdown';
         let dropdown = input.parentElement.parentElement.querySelector('#' + dropdownId);
         dropdown.innerHTML = '';
-        const val = input.value.trim().toLowerCase();
-        if (!val) {
-            dropdown.classList.add('hidden');
+
+        // Require an Office & Allotment Class to be picked first
+        if (!officeId) {
+            dropdown.innerHTML = '<div class="p-2 text-xs text-gray-500 dark:text-gray-400">Select an Office and Allotment Class first.</div>';
+            dropdown.classList.remove('hidden');
             return;
         }
-        let matches = appropriations.filter(app =>
-            (app.account_code || '').toLowerCase().includes(val) ||
-            (app.description || '').toLowerCase().includes(val) ||
-            (app.program || '').toLowerCase().includes(val)
+
+        // Restrict candidate list to appropriations under the selected office/class
+        let officeAppropriations = appropriations.filter(app =>
+            String(app.office_allotment_class_id) === String(officeId)
         );
+
+        const val = input.value.trim().toLowerCase();
+        let matches = val
+            ? officeAppropriations.filter(app =>
+                (app.account_code || '').toLowerCase().includes(val) ||
+                (app.description || '').toLowerCase().includes(val) ||
+                (app.programs || app.program || '').toLowerCase().includes(val)
+            )
+            : officeAppropriations; // show everything under this office when the field is empty (e.g. on focus)
+
         if (matches.length === 0) {
-            dropdown.classList.add('hidden');
+            dropdown.innerHTML = '<div class="p-2 text-xs text-gray-500 dark:text-gray-400">No accounts found for this office.</div>';
+            dropdown.classList.remove('hidden');
             return;
         }
+
         matches.forEach(item => {
             let option = document.createElement('div');
             option.className = 'p-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer text-xs border-b border-gray-300 dark:border-gray-700';

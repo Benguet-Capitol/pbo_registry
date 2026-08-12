@@ -111,18 +111,13 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
     Route::patch('/roles/{role}/toggle-restriction', [RoleController::class, 'toggleRestriction'])->name('roles.toggle-restriction');
 
     // Appropriation Routes
-    Route::get('appropriations/account-codes', [AppropriationController::class, 'getAccountCodes'])
-        ->name('appropriations.accountCodes');
-    Route::get('appropriations/allotment-class-info', [AppropriationController::class, 'getAllotmentClassInfo'])
-        ->name('appropriations.getAllotmentClassInfo');
-    Route::get('appropriations/by-office-allotment-class', [AppropriationController::class, 'getByOfficeAllotmentClass'])
-        ->name('appropriations.getByOfficeAllotmentClass');
-    Route::get('appropriations/last-year', [AppropriationController::class, 'getLastYearappropriations'])
-        ->name('appropriations.getLastYear');
-    Route::post('appropriations/store-from-last-year', [AppropriationController::class, 'storeFromLastYear'])
-        ->name('appropriations.storeFromLastYear');
-    Route::post('appropriations/import', [AppropriationController::class, 'import'])
-        ->name('appropriations.import');
+    Route::get('appropriations/account-codes', [AppropriationController::class, 'getAccountCodes'])->name('appropriations.accountCodes');
+    Route::get('appropriations/allotment-class-info', [AppropriationController::class, 'getAllotmentClassInfo'])->name('appropriations.getAllotmentClassInfo');
+    Route::get('appropriations/by-office-allotment-class', [AppropriationController::class, 'getByOfficeAllotmentClass'])->name('appropriations.getByOfficeAllotmentClass');
+    Route::get('appropriations/last-year', [AppropriationController::class, 'getLastYearappropriations'])->name('appropriations.getLastYear');
+    Route::post('appropriations/store-from-last-year', [AppropriationController::class, 'storeFromLastYear'])->name('appropriations.storeFromLastYear');
+    Route::post('appropriations/import', [AppropriationController::class, 'import'])->name('appropriations.import');
+    Route::post('/appropriations/bulk-destroy', [AppropriationController::class, 'bulkDestroy'])->name('appropriations.bulk-destroy');
     Route::resource('appropriations', AppropriationController::class);
 
     // Get Fund

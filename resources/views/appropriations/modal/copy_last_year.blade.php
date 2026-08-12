@@ -105,8 +105,8 @@
                 <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>Add Row
             </button>
             <div class="flex gap-3">
-                <button type="button" onclick="if(!isSubmittingCopyLastYear) submitCopyLastYearForm(); else return false;" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
-                    <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i>Save All
+                <button type="button" id="saveAllBtn" onclick="if(!isSubmittingCopyLastYear) submitCopyLastYearForm(); else return false;" class="text-purple-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <i class="fas fa-save text-xl mr-1 -ml-1 w-5 h-5"></i><span id="saveAllLabel">Save All</span>
                 </button>
                 <button type="button" onclick="closeCopyLastYearModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                     <i class="fas fa-times text-xl mr-1 -ml-1 w-5 h-5"></i>Cancel
@@ -122,19 +122,33 @@ let rowCounter = 0;
 let allocationClassType = null;
 let autocompleteTimeout = null;
 let isSubmittingCopyLastYear = false;
+let hasUnsavedChanges = false;
 
 function openCopyLastYearModal() {
     const officeAllotmentClassId = document.querySelector('[name="office_allotment_class_id"]')?.value || new URLSearchParams(window.location.search).get('office_allotment_class_id');
-    
+
     if (!officeAllotmentClassId) {
         alert('Please select an office allotment class');
         return;
     }
 
-    // Fetch allotment class info to determine visibility
+    const modal = document.getElementById('copyLastYearModal');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        const box = modal.querySelector('div.hidden');
+        if (box) box.classList.remove('hidden');
+    }, 10);
+    document.getElementById('loadingIndicator').classList.remove('hidden');
+    document.getElementById('tableContainer').classList.add('hidden');
+    document.getElementById('noDataMessage').classList.add('hidden');
+
+    hasUnsavedChanges = false;
+
+    // Fetch allotment class info first so column visibility (Project No / CCO Year)
+    // is correct the moment rows are rendered, instead of racing the last-year fetch.
     const allotmentUrl = new URL(`/appropriations/allotment-class-info?office_allotment_class_id=${officeAllotmentClassId}`, window.location.origin).href;
     console.log('Fetching allotment class info from:', allotmentUrl);
-    
+
     fetch(allotmentUrl, {
         method: 'GET',
         credentials: 'include',
@@ -149,7 +163,6 @@ function openCopyLastYearModal() {
                     throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
                 });
             }
-            // Trim whitespace and parse JSON
             return response.text().then(text => {
                 text = text.trim();
                 return JSON.parse(text);
@@ -163,23 +176,19 @@ function openCopyLastYearModal() {
                 console.log('Allotment class:', allocationClassType);
             }
         })
-        .catch(error => console.error('Error fetching allotment class:', error));
-
-    const modal = document.getElementById('copyLastYearModal');
-    modal.style.display = 'flex';
-    setTimeout(() => {
-        const box = modal.querySelector('div.hidden');
-        if (box) box.classList.remove('hidden');
-    }, 10);
-    document.getElementById('loadingIndicator').classList.remove('hidden');
-    document.getElementById('tableContainer').classList.add('hidden');
-    document.getElementById('noDataMessage').classList.add('hidden');
-    
-    fetchLastYearappropriations(officeAllotmentClassId);
+        .catch(error => console.error('Error fetching allotment class:', error))
+        .finally(() => {
+            fetchLastYearappropriations(officeAllotmentClassId);
+        });
 }
 
 function closeCopyLastYearModal() {
+    if (hasUnsavedChanges && !confirm('You have unsaved changes. Close without saving?')) {
+        return;
+    }
+
     isSubmittingCopyLastYear = false;
+    hasUnsavedChanges = false;
     const modal = document.getElementById('copyLastYearModal');
     const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div');
     if (box) {
@@ -197,24 +206,23 @@ function closeCopyLastYearModal() {
 function fetchLastYearappropriations(officeAllotmentClassId) {
     const url = `/appropriations/last-year?office_allotment_class_id=${officeAllotmentClassId}`;
     console.log('Fetching from URL:', url);
-    
+
     fetch(url)
         .then(response => {
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers.get('content-type'));
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 throw new Error(`Expected JSON response, got: ${contentType}`);
             }
-            
+
             return response.text().then(text => {
                 console.log('Raw response:', text.substring(0, 200));
-                // Trim whitespace that may be prepended by the server
                 text = text.trim();
                 if (!text) {
                     throw new Error('Empty response from server');
@@ -225,11 +233,11 @@ function fetchLastYearappropriations(officeAllotmentClassId) {
         .then(data => {
             console.log('Parsed data:', data);
             document.getElementById('loadingIndicator').classList.add('hidden');
-            
+
             if (data.error) {
                 throw new Error(data.error);
             }
-            
+
             if (data.data && data.data.length > 0) {
                 lastYearAppropriatationsData = data.data;
                 populateTableRows(data.data);
@@ -256,59 +264,53 @@ function populateTableRows(appropriations) {
     appropriations.forEach((app, index) => {
         addTableRow(app, index);
     });
-    
+
     toggleCCOColumns();
     attachInputListeners();
     updateTotals();
+    hasUnsavedChanges = false;
 }
 
 function toggleCCOColumns() {
     const classType = allocationClassType?.toUpperCase() || '';
-    
-    // Determine visibility based on allotment class
+
     let showProjectLocation = true;
     let showProjectNo = false;
     let showCcoYear = false;
-    
+
     if (classType === 'PS') {
-        // PS: Hide all three columns
         showProjectLocation = false;
         showProjectNo = false;
         showCcoYear = false;
     } else if (classType === 'MOOE' || classType === 'CO') {
-        // MOOE: Show Project Location and Project No, hide and CCO Year
         showProjectLocation = true;
         showProjectNo = true;
         showCcoYear = false;
     } else if (classType === 'CCO') {
-        // CCO: Show all columns
         showProjectLocation = true;
         showProjectNo = true;
         showCcoYear = true;
     }
-    
-    // Toggle header visibility
+
     document.getElementById('projectLocationHeader').classList.toggle('hidden', !showProjectLocation);
     document.getElementById('projectNoHeader').classList.toggle('hidden', !showProjectNo);
     document.getElementById('ccoYearHeader').classList.toggle('hidden', !showCcoYear);
-    
-    // Toggle footer visibility
+
     document.getElementById('projectLocationFooter').classList.toggle('hidden', !showProjectLocation);
     document.getElementById('projectNoFooter').classList.toggle('hidden', !showProjectNo);
     document.getElementById('ccoYearFooter').classList.toggle('hidden', !showCcoYear);
-    
-    // Toggle data cell visibility
+
     const rows = document.querySelectorAll('#appropriationsTableBody tr');
     rows.forEach(row => {
         const projectLocationCells = row.querySelectorAll('td:nth-child(5)');
         const projectNoCells = row.querySelectorAll('td:nth-child(6)');
         const ccoYearCells = row.querySelectorAll('td:nth-child(7)');
-        
+
         projectLocationCells.forEach(cell => cell.classList.toggle('hidden', !showProjectLocation));
         projectNoCells.forEach(cell => cell.classList.toggle('hidden', !showProjectNo));
         ccoYearCells.forEach(cell => cell.classList.toggle('hidden', !showCcoYear));
     });
-    
+
     console.log('Column visibility updated:', { showProjectLocation, showProjectNo, showCcoYear, classType });
 }
 
@@ -320,7 +322,7 @@ function addTableRow(data = null, index = null) {
     const row = document.createElement('tr');
     row.id = rowId;
     row.className = 'border-b border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 align-top';
-    
+
     row.innerHTML = `
         <td class="border-y border-gray-300 dark:border-gray-600 px-3 py-2">
             <textarea name="appropriations[${rowId}][programs]" rows="3" class="w-full px-2 py-1 border border-gray-300 rounded text-xs resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">${data?.programs || ''}</textarea>
@@ -378,20 +380,28 @@ function addTableRow(data = null, index = null) {
     toggleCCOColumns();
 }
 
+// Attaches listeners only to inputs that don't already have them, preventing
+// duplicate handlers (and duplicate autocomplete fetches) as rows accumulate.
 function attachInputListeners() {
     const tbody = document.getElementById('appropriationsTableBody');
-    const inputs = tbody.querySelectorAll('input[type="number"]');
-    const accountCodeInputs = tbody.querySelectorAll('input[name*="[account_code]"]');
-    
-    inputs.forEach(input => {
+
+    tbody.querySelectorAll('input[type="number"]:not([data-listener-attached])').forEach(input => {
         input.addEventListener('input', updateTotals);
         input.addEventListener('change', updateTotals);
+        input.dataset.listenerAttached = 'true';
     });
 
-    accountCodeInputs.forEach(input => {
+    tbody.querySelectorAll('input[name*="[account_code]"]:not([data-listener-attached])').forEach(input => {
         input.addEventListener('input', handleAccountCodeInput);
         input.addEventListener('blur', hideAutocompleteDropdown);
+        input.addEventListener('keydown', handleAccountCodeKeydown);
+        input.dataset.listenerAttached = 'true';
     });
+
+    if (!tbody.dataset.changeTrackerAttached) {
+        tbody.addEventListener('input', () => { hasUnsavedChanges = true; });
+        tbody.dataset.changeTrackerAttached = 'true';
+    }
 }
 
 function handleAccountCodeInput(event) {
@@ -410,7 +420,6 @@ function handleAccountCodeInput(event) {
     }
 
     autocompleteTimeout = setTimeout(() => {
-        // Build the fetch URL with search and class parameters
         let fetchUrl = `/appropriations/account-codes?search=${encodeURIComponent(value)}`;
         if (allocationClassType) {
             fetchUrl += `&class=${encodeURIComponent(allocationClassType)}`;
@@ -418,7 +427,7 @@ function handleAccountCodeInput(event) {
         console.log('About to fetch from:', fetchUrl);
         console.log('Full URL would be:', new URL(fetchUrl, window.location.origin).href);
         console.log('Filter by class:', allocationClassType);
-        
+
         fetch(new URL(fetchUrl, window.location.origin).href, {
             method: 'GET',
             credentials: 'include',
@@ -434,16 +443,14 @@ function handleAccountCodeInput(event) {
                         throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
                     });
                 }
-                
-                // Clone the response to read it as text and then parse as JSON
+
                 return response.clone().text().then(text => {
                     console.log('Raw response text:', text.substring(0, 500));
                     console.log('Response text length:', text.length);
                     console.log('Response text as JSON:', JSON.stringify(text));
-                    
-                    // Trim whitespace that may be prepended by the server
+
                     text = text.trim();
-                    
+
                     if (!text || text === '') {
                         throw new Error('Empty response from server');
                     }
@@ -468,6 +475,10 @@ function handleAccountCodeInput(event) {
                         option.className = 'px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-xs border-b border-gray-200 dark:border-gray-600 dark:text-gray-200';
                         option.innerHTML = `<strong>${item.code}</strong> - ${item.description}`;
                         option.addEventListener('click', () => selectAccountCode(rowId, item));
+                        option.addEventListener('mouseenter', () => {
+                            dropdown.querySelectorAll('.autocomplete-active').forEach(o => o.classList.remove('autocomplete-active'));
+                            option.classList.add('autocomplete-active');
+                        });
                         dropdown.appendChild(option);
                     });
                     dropdown.classList.remove('hidden');
@@ -483,20 +494,54 @@ function handleAccountCodeInput(event) {
     }, 100);
 }
 
+// Arrow-key / Enter / Escape navigation for the account-code autocomplete dropdown.
+function handleAccountCodeKeydown(event) {
+    const input = event.target;
+    const dropdown = input.parentElement.querySelector('.autocomplete-dropdown');
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+
+    const options = Array.from(dropdown.children);
+    if (!options.length) return;
+
+    let activeIndex = options.findIndex(opt => opt.classList.contains('autocomplete-active'));
+
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        activeIndex = (activeIndex + 1) % options.length;
+        options.forEach(opt => opt.classList.remove('autocomplete-active'));
+        options[activeIndex].classList.add('autocomplete-active');
+        options[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        activeIndex = activeIndex <= 0 ? options.length - 1 : activeIndex - 1;
+        options.forEach(opt => opt.classList.remove('autocomplete-active'));
+        options[activeIndex].classList.add('autocomplete-active');
+        options[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (event.key === 'Enter') {
+        if (activeIndex >= 0) {
+            event.preventDefault();
+            options[activeIndex].click();
+        }
+    } else if (event.key === 'Escape') {
+        dropdown.classList.add('hidden');
+    }
+}
+
 function selectAccountCode(rowId, account) {
     const row = document.getElementById(rowId);
     if (!row) return;
-    
+
     const accountCodeInput = row.querySelector('.account-code-input');
     const descriptionInput = row.querySelector('textarea[name*="[description]"]');
     const dropdown = accountCodeInput.parentElement.querySelector('.autocomplete-dropdown');
-    
+
     accountCodeInput.value = account.code;
     if (descriptionInput) {
         descriptionInput.value = account.description;
     }
-    
+
     dropdown.classList.add('hidden');
+    hasUnsavedChanges = true;
 }
 
 function hideAutocompleteDropdown(event) {
@@ -550,46 +595,45 @@ function addNewRow() {
     addTableRow();
     attachInputListeners();
     updateTotals();
+    hasUnsavedChanges = true;
 }
 
 function deleteRow(rowId) {
-    const allRows = document.querySelectorAll('#appropriationsTableBody tr:not([data-error-row="true"])');
-    
-    // Prevent deleting if it's the last row
+    const allRows = document.querySelectorAll('#appropriationsTableBody tr');
+
     if (allRows.length <= 1) {
-        // Show error message instead of alert
         const errorContainer = document.getElementById('validationErrors');
         const errorList = document.getElementById('errorList');
         errorList.innerHTML = '';
-        
+
         const errorMsg = document.createElement('li');
         errorMsg.textContent = 'You must keep at least 1 row. Cannot delete the last row.';
         errorList.appendChild(errorMsg);
-        
+
         errorContainer.classList.remove('hidden');
         errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
     }
-    
+
     const row = document.getElementById(rowId);
     if (row) {
         row.remove();
         updateTotals();
+        hasUnsavedChanges = true;
     }
 }
 
 function insertRowAfter(rowId) {
     const currentRow = document.getElementById(rowId);
     if (!currentRow) return;
-    
-    // Create new row
+
     const newRowId = `row-${rowCounter}`;
     rowCounter++;
-    
+
     const newRow = document.createElement('tr');
     newRow.id = newRowId;
     newRow.className = 'border-b border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 align-top';
-    
+
     newRow.innerHTML = `
         <td class="border-y border-gray-300 dark:border-gray-600 px-3 py-2">
             <textarea name="appropriations[${newRowId}][programs]" rows="3" class="w-full px-2 py-1 border border-gray-300 rounded text-xs resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"></textarea>
@@ -642,32 +686,27 @@ function insertRowAfter(rowId) {
             </div>
         </td>
     `;
-    
-    // Insert after the current row
+
     currentRow.insertAdjacentElement('afterend', newRow);
-    
-    // Apply column visibility to new row
+
     toggleCCOColumns();
-    
-    // Attach listeners to the new row's inputs
     attachInputListeners();
     updateTotals();
+    hasUnsavedChanges = true;
 }
 
 function submitCopyLastYearForm() {
     if (isSubmittingCopyLastYear) return false;
-    
-    // Clear previous errors from all rows
-    document.querySelectorAll('[data-error-row="true"]').forEach(row => row.remove());
-    
+
+    document.querySelectorAll('#appropriationsTableBody tr.row-error').forEach(row => row.classList.remove('row-error'));
+
     const errorContainer = document.getElementById('validationErrors');
     const errorList = document.getElementById('errorList');
     errorList.innerHTML = '';
     errorContainer.classList.add('hidden');
 
-    const rows = document.querySelectorAll('#appropriationsTableBody tr:not([data-error-row="true"])');
-    
-    // Check if there's at least 1 row
+    const rows = document.querySelectorAll('#appropriationsTableBody tr');
+
     if (rows.length === 0) {
         const errorMsg = document.createElement('li');
         errorMsg.textContent = 'You must have at least 1 row of appropriation data';
@@ -678,18 +717,17 @@ function submitCopyLastYearForm() {
     }
 
     let isValid = true;
-    let hasErrors = false;
+    let firstErrorRow = null;
+    const seenAccountCodes = new Map();
 
-    rows.forEach(row => {
+    rows.forEach((row, index) => {
+        const rowNum = index + 1;
         const rowErrors = [];
-        
-        // Get required fields
+
         const accountCodeInput = row.querySelector('input[name*="[account_code]"]');
         const descriptionInput = row.querySelector('textarea[name*="[description]"]');
         const fppCodeInput = row.querySelector('input[name*="[fpp_code]"]');
         const appropriationInput = row.querySelector('input[name*="[appropriation]"]');
-        
-        // Get quarter inputs
         const quarter1Input = row.querySelector('input[name*="[quarter1]"]');
         const quarter2Input = row.querySelector('input[name*="[quarter2]"]');
         const quarter3Input = row.querySelector('input[name*="[quarter3]"]');
@@ -699,14 +737,13 @@ function submitCopyLastYearForm() {
         const description = descriptionInput?.value.trim() || '';
         const fppCode = fppCodeInput?.value.trim() || '';
         const appropriation = parseFloat(appropriationInput?.value || 0);
-        
+
         const quarter1 = parseFloat(quarter1Input?.value || 0);
         const quarter2 = parseFloat(quarter2Input?.value || 0);
         const quarter3 = parseFloat(quarter3Input?.value || 0);
         const quarter4 = parseFloat(quarter4Input?.value || 0);
         const quarterSum = quarter1 + quarter2 + quarter3 + quarter4;
 
-        // Validate required fields
         if (!accountCode) {
             rowErrors.push('Account Code is required');
         }
@@ -720,65 +757,51 @@ function submitCopyLastYearForm() {
             rowErrors.push('Appropriation is required and must be greater than 0');
         }
 
-        // Validate quarters sum equals appropriation
         if (appropriation > 0 && Math.abs(quarterSum - appropriation) > 0.01) {
             rowErrors.push(`Sum of quarters (${quarterSum.toFixed(2)}) must equal Appropriation (${appropriation.toFixed(2)})`);
         }
 
-        // If there are errors in this row, display them
+        if (accountCode) {
+            const key = accountCode.toLowerCase();
+            if (seenAccountCodes.has(key)) {
+                rowErrors.push(`Duplicate Account Code — already used in Row ${seenAccountCodes.get(key)}`);
+            } else {
+                seenAccountCodes.set(key, rowNum);
+            }
+        }
+
         if (rowErrors.length > 0) {
-            hasErrors = true;
             isValid = false;
-            
-            // Add error row after the data row
-            const errorRow = document.createElement('tr');
-            errorRow.setAttribute('data-error-row', 'true');
-            errorRow.className = 'bg-red-50 dark:bg-red-900 border-b-2 border-red-300 dark:border-red-700';
-            
-            const errorCell = document.createElement('td');
-            errorCell.colSpan = '100';
-            errorCell.className = 'px-3 py-2';
-            
-            const errorContent = document.createElement('div');
-            errorContent.className = 'flex items-start gap-2';
-            
-            const errorIcon = document.createElement('i');
-            errorIcon.className = 'fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-1 flex-shrink-0';
-            
-            const errorList = document.createElement('ul');
-            errorList.className = 'list-disc list-inside text-red-700 dark:text-red-300 text-xs space-y-1';
-            
+            row.classList.add('row-error');
+            if (!firstErrorRow) firstErrorRow = row;
+
             rowErrors.forEach(error => {
                 const li = document.createElement('li');
-                li.textContent = error;
+                li.textContent = `Row ${rowNum}: ${error}`;
                 errorList.appendChild(li);
             });
-            
-            errorContent.appendChild(errorIcon);
-            errorContent.appendChild(errorList);
-            errorCell.appendChild(errorContent);
-            errorRow.appendChild(errorCell);
-            
-            row.parentNode.insertBefore(errorRow, row.nextSibling);
         }
     });
 
     if (!isValid) {
-        // Show summary message
-        const summaryLi = document.createElement('li');
-        summaryLi.innerHTML = '<strong>Please review the highlighted rows above for specific errors.</strong>';
-        errorList.appendChild(summaryLi);
         errorContainer.classList.remove('hidden');
-        
-        // Scroll to first error
-        const firstErrorRow = document.querySelector('[data-error-row="true"]');
         if (firstErrorRow) {
             firstErrorRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         return;
     }
 
+    if (!confirm(`You're about to create ${rows.length} account(s) for this year. Continue?`)) {
+        return;
+    }
+
     isSubmittingCopyLastYear = true;
+    hasUnsavedChanges = false;
+
+    const saveBtn = document.getElementById('saveAllBtn');
+    const saveLabel = document.getElementById('saveAllLabel');
+    if (saveBtn) saveBtn.disabled = true;
+    if (saveLabel) saveLabel.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Saving...';
 
     const form = document.createElement('form');
     form.method = 'POST';
@@ -788,11 +811,9 @@ function submitCopyLastYearForm() {
     const officeAllotmentClassId = document.querySelector('[name="office_allotment_class_id"]')?.value || new URLSearchParams(window.location.search).get('office_allotment_class_id');
     form.innerHTML += '<input type="hidden" name="office_allotment_class_id" value="' + officeAllotmentClassId + '">';
 
-    const allRows = document.querySelectorAll('#appropriationsTableBody tr:not([data-error-row="true"])');
     let rowIndex = 0;
 
-    allRows.forEach(row => {
-        // Collect both input and textarea elements
+    rows.forEach(row => {
         const inputs = row.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const name = input.getAttribute('name');
@@ -809,7 +830,6 @@ function submitCopyLastYearForm() {
 
     document.body.appendChild(form);
     form.submit();
-    document.body.removeChild(form);
 }
 </script>
 
@@ -826,5 +846,22 @@ function submitCopyLastYearForm() {
     }
     .animate-scaleInUp {
         animation: scaleInUp 0.3s ease-out;
+    }
+
+    /* Row-level validation error highlighting (replaces inserted error rows) */
+    #appropriationsTableBody tr.row-error {
+        background-color: rgba(239, 68, 68, 0.08);
+        box-shadow: inset 4px 0 0 0 rgb(220, 38, 38);
+    }
+    .dark #appropriationsTableBody tr.row-error {
+        background-color: rgba(239, 68, 68, 0.15);
+    }
+
+    /* Keyboard-navigation highlight for the account-code autocomplete */
+    .autocomplete-dropdown .autocomplete-active {
+        background-color: rgba(147, 51, 234, 0.15);
+    }
+    .dark .autocomplete-dropdown .autocomplete-active {
+        background-color: rgba(147, 51, 234, 0.3);
     }
 </style>

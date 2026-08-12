@@ -291,33 +291,41 @@
                         <div class="cos-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-all"
                              data-cos="{{ json_encode($cos->only(['id','office_allotment_class_id','appropriation_id','employee_id','employee_name','position_title','salary_grade','from_date','to_date','monthly_rate','annual_rate','remarks','basis'])) }}">
 
-                            <!-- Card Header: Employee identity -->
-                            <div class="flex flex-wrap justify-between items-start gap-3 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-bold text-sm text-gray-800 dark:text-gray-100 {{ $cos->employee_name === 'Vacant' ? 'text-blue-700 dark:text-blue-400' : '' }} break-words">
-                                            {{ $cos->employee_name }}
-                                        </span>
-                                        @if($cos->employee_name === 'Vacant')
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                                                Vacant
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="text-gray-600 dark:text-gray-300 mt-0.5 break-words">{{ $cos->position_title }}</div>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
-                                    <span class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold whitespace-nowrap">
-                                        <i class="fas fa-building mr-1 text-gray-400"></i>{{ $cos->officeAllotmentClass->offices->office_abbreviation ?? '-' }}
+                           <!-- Card Header: Employee identity -->
+                            <div class="flex flex-wrap justify-between items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <!-- Office badge - first thing seen, left side -->
+                                    <span class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-blue-700">
+                                        <i class="fas fa-building text-[10px] opacity-80"></i>
+                                        {{ $cos->officeAllotmentClass->offices->office_abbreviation ?? '-' }}
                                     </span>
-                                    @if($cos->salary_grade)
-                                        <span class="px-2 py-1 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold whitespace-nowrap">
-                                            SG {{ $cos->salary_grade }}
-                                        </span>
-                                    @endif
+
+                                    <!-- Vertical divider -->
+                                    <div class="hidden sm:block w-px h-8 bg-gray-300 dark:bg-gray-700 flex-shrink-0"></div>
+
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="font-bold text-sm text-gray-800 dark:text-gray-100 {{ $cos->employee_name === 'Vacant' ? 'text-blue-700 dark:text-blue-400' : '' }} break-words">
+                                                {{ $cos->employee_name }}
+                                            </span>
+                                            @if($cos->employee_name === 'Vacant')
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                                                    Vacant
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            <span class="text-gray-500 dark:text-gray-400 text-[11px] break-words">{{ $cos->position_title }}</span>
+                                            @if($cos->salary_grade)
+                                                <span class="flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold text-[10px] whitespace-nowrap">
+                                                    SG {{ $cos->salary_grade }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
+                            
                             <!-- Card Body: Details -->
                             <div class="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
                                 <div>

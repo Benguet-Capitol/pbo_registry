@@ -104,18 +104,39 @@
             </div>
             @can('import appropriations')
             <div class="flex flex-col justify-center items-center bg-white p-2 rounded-lg dark:bg-gray-800">
-                <form id="importAppropriationsForm" action="{{ route('appropriations.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col space-y-3">
+                <form id="importAppropriationsForm" action="{{ route('appropriations.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col space-y-3 w-full" onsubmit="return handleImportSubmit(event)">
                     @csrf
                     <label for="file-upload" class="block text-xs dark:text-gray-200 font-semibold text-center">
                         {{ __('Import Accounts') }}
                     </label>
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2 justify-center">
                         <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
                         <input type="file" name="file" id="file-upload" accept=".xlsx,.xls,.csv" required class="form-control border border-gray-300 rounded-lg px-6 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
-                        <button type="submit" onclick="if(!isSubmittingImportAppropriations) { isSubmittingImportAppropriations = true; } else { return false; }" class="text-blue-600 inline-flex items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                            {{ __('Import') }}
+                        <button type="submit" id="importSubmitBtn" class="text-blue-600 inline-flex items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity duration-200">
+                            <span id="importSubmitLabel">{{ __('Import') }}</span>
                         </button>
                     </div>
+
+                    {{-- Client-side validation message (file missing / wrong type / empty) --}}
+                    <div id="importClientError" class="hidden text-xs text-red-700 bg-red-50 border border-red-300 rounded-lg px-3 py-2 max-w-md dark:bg-red-900 dark:border-red-700 dark:text-red-200">
+                        <i class="fas fa-exclamation-circle mr-1"></i><span id="importClientErrorText"></span>
+                    </div>
+
+                    {{-- Server-side validation errors (required file, mimes, office_allotment_class_id) — was previously silent --}}
+                    @if ($errors->any() && old('_form') !== 'importAppropriationsForm')
+                    @endif
+                    @if ($errors->has('file') || $errors->has('office_allotment_class_id'))
+                    <div class="text-xs text-red-700 bg-red-50 border border-red-300 rounded-lg px-3 py-2 max-w-md dark:bg-red-900 dark:border-red-700 dark:text-red-200">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        @foreach ($errors->get('file') as $message)
+                            {{ $message }}<br>
+                        @endforeach
+                        @foreach ($errors->get('office_allotment_class_id') as $message)
+                            {{ $message }}<br>
+                        @endforeach
+                    </div>
+                    @endif
+
                     <div class="mt-2 flex justify-center">
                         <a href="{{ asset('storage/sample/Accounts.xlsx') }}" download class="text-xs text-gray-600 dark:text-gray-300 hover:underline">
                             📄 Download Sample Format (Excel)
@@ -170,12 +191,32 @@
                     </div>
                 </div>
             </div>
-
+            @can('delete appropriations')
+            <div id="bulkActionBar" class="hidden items-center justify-between px-4 py-2 mb-3 bg-red-50 dark:bg-red-900/40 border border-red-300 dark:border-red-700 rounded-lg text-xs animate-slideInDown">
+                <div class="flex items-center gap-2 text-red-800 dark:text-red-200 font-semibold">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="bulkSelectedCount">0</span> account(s) selected
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="clearBulkSelection()" class="text-gray-600 dark:text-gray-300 hover:underline px-3 py-1.5">
+                        Clear
+                    </button>
+                    <button type="button" id="bulkDeleteBtn" onclick="submitBulkDelete()" class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-4 py-1.5 inline-flex items-center gap-1 dark:focus:ring-red-800 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <i class="fas fa-trash"></i><span id="bulkDeleteLabel">Delete Selected</span>
+                    </button>
+                </div>
+            </div>
+            @endcan
             <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-md">
             <div class="max-h-[720px] overflow-y-auto">
             <table id="appropriationsTable" class="table-auto text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10 transition-colors duration-200">
                     <tr>
+                        @can('delete appropriations')
+                        <th class="px-3 py-3 border-gray-300 dark:border-gray-700">
+                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
+                        @endcan
                         <th class="px-4 py-3 border-gray-300 leading-4 tracking-wider dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
                             <a href="{{ route('appropriations.index', array_merge(request()->query(), ['sort_by' => 'programs', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 dark:text-gray-200">
                                 <span>Programs</span>
@@ -323,6 +364,11 @@
                             data-appropriation-desc="{{ $appropriation->description }}"
                         @endif
                     >
+                        @can('delete appropriations')
+                        <td class="px-3 py-2 border-b border-gray-300" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="row-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ $appropriation->id }}" data-code="{{ $appropriation->account_code }}" data-desc="{{ $appropriation->description }}" onchange="updateBulkBar()">
+                        </td>
+                        @endcan
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->programs }}</td>
                         <td class="font-semibold px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->account_code }}</td>
                         <td class="px-2 py-2 border-b border-gray-300 dark:text-gray-300 transition-colors duration-200">{{ $appropriation->description }}</td>
@@ -341,11 +387,11 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="12" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
+                        <td colspan="{{ auth()->user()->can('delete appropriations') ? 13 : 12 }}" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">
                             No Accounts found
                         </td>
                     </tr>
-                @endforelse
+                    @endforelse
                 </tbody>
             </table>
             </div>
@@ -381,9 +427,54 @@
     @include('appropriations.modal.delete')
     @include('appropriations.modal.edit')
     @include('appropriations.modal.copy_last_year')
+    @include('appropriations.modal.bulk_delete')
 
     <script>
         let isSubmittingImportAppropriations = false;
+
+        function handleImportSubmit(event) {
+            if (isSubmittingImportAppropriations) {
+                event.preventDefault();
+                return false;
+            }
+
+            const errorBox = document.getElementById('importClientError');
+            const errorText = document.getElementById('importClientErrorText');
+            errorBox.classList.add('hidden');
+
+            const fileInput = document.getElementById('file-upload');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                errorText.textContent = 'Please select a file to import.';
+                errorBox.classList.remove('hidden');
+                event.preventDefault();
+                return false;
+            }
+
+            const allowedExtensions = ['xlsx', 'xls', 'csv'];
+            const extension = file.name.split('.').pop().toLowerCase();
+
+            if (!allowedExtensions.includes(extension)) {
+                errorText.textContent = `"${file.name}" is not a supported file type. Please upload a .xlsx, .xls, or .csv file.`;
+                errorBox.classList.remove('hidden');
+                event.preventDefault();
+                return false;
+            }
+
+            if (file.size === 0) {
+                errorText.textContent = `"${file.name}" appears to be empty.`;
+                errorBox.classList.remove('hidden');
+                event.preventDefault();
+                return false;
+            }
+
+            isSubmittingImportAppropriations = true;
+            document.getElementById('importSubmitBtn').disabled = true;
+            document.getElementById('importSubmitLabel').innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Importing...';
+
+            return true;
+        }
 
         function filterTable() {
         // Declare variables
@@ -408,6 +499,9 @@
                     }
                 }
             }
+
+            document.getElementById('totalRecordsCount').textContent = visibleCount;
+            updateBulkBar(); // keep select-all indeterminate state accurate after filtering
         }
         
         // Update total records count
@@ -504,6 +598,98 @@ function hideAppropriationContextMenu(event) {
         }
         document.removeEventListener('click', hideAppropriationContextMenu);
     }
+}
+
+let isSubmittingBulkDelete = false;
+let pendingBulkDeleteCheckboxes = null;
+
+function toggleSelectAll(checkbox) {
+    document.querySelectorAll('#appropriationsTable tbody .row-checkbox').forEach(cb => {
+        // Skip rows hidden by the client-side text filter
+        const row = cb.closest('tr');
+        if (row.style.display !== 'none') {
+            cb.checked = checkbox.checked;
+        }
+    });
+    updateBulkBar();
+}
+
+function clearBulkSelection() {
+    document.querySelectorAll('#appropriationsTable tbody .row-checkbox').forEach(cb => cb.checked = false);
+    const selectAll = document.getElementById('selectAllCheckbox');
+    if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+    updateBulkBar();
+}
+
+function updateBulkBar() {
+    const checked = document.querySelectorAll('#appropriationsTable tbody .row-checkbox:checked');
+    const bar = document.getElementById('bulkActionBar');
+    const countLabel = document.getElementById('bulkSelectedCount');
+    const selectAll = document.getElementById('selectAllCheckbox');
+
+    if (!bar) return;
+
+    if (checked.length > 0) {
+        bar.classList.remove('hidden');
+        bar.classList.add('flex');
+    } else {
+        bar.classList.add('hidden');
+        bar.classList.remove('flex');
+    }
+    countLabel.textContent = checked.length;
+
+    if (selectAll) {
+        const visibleCheckboxes = Array.from(document.querySelectorAll('#appropriationsTable tbody .row-checkbox'))
+            .filter(cb => cb.closest('tr').style.display !== 'none');
+        selectAll.checked = visibleCheckboxes.length > 0 && checked.length === visibleCheckboxes.length;
+        selectAll.indeterminate = checked.length > 0 && checked.length < visibleCheckboxes.length;
+    }
+}
+
+function submitBulkDelete() {
+    if (isSubmittingBulkDelete) return;
+
+    const checked = document.querySelectorAll('#appropriationsTable tbody .row-checkbox:checked');
+    if (checked.length === 0) return;
+
+    pendingBulkDeleteCheckboxes = checked;
+    openBulkDeleteModal(checked);
+}
+
+function confirmBulkDelete() {
+    if (isSubmittingBulkDelete || !pendingBulkDeleteCheckboxes) return;
+
+    isSubmittingBulkDelete = true;
+    const confirmBtn = document.getElementById('bulkDeleteConfirmBtn');
+    const confirmLabel = document.getElementById('bulkDeleteConfirmLabel');
+    confirmBtn.disabled = true;
+    confirmLabel.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Deleting...';
+
+    const btn = document.getElementById('bulkDeleteBtn');
+    const label = document.getElementById('bulkDeleteLabel');
+    if (btn) btn.disabled = true;
+    if (label) label.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Deleting...';
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route("appropriations.bulk-destroy") }}';
+    form.innerHTML = '<input type="hidden" name="_token" value="' + document.querySelector('meta[name="csrf-token"]').content + '">';
+
+    const officeAllotmentClassId = new URLSearchParams(window.location.search).get('office_allotment_class_id');
+    if (officeAllotmentClassId) {
+        form.innerHTML += '<input type="hidden" name="office_allotment_class_id" value="' + officeAllotmentClassId + '">';
+    }
+
+    pendingBulkDeleteCheckboxes.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids[]';
+        input.value = cb.value;
+        form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
 }
 
 

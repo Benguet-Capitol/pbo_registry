@@ -456,6 +456,87 @@ class AppropriationController extends Controller
         }
     }
 
+    /**
+     * Delete multiple appropriations at once, skipping any that have
+     * obligations, realignments, or supplementals attached (same guard as destroy()).
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:appropriations,id',
+        ]);
+
+        $officeAllotmentClassId = $request->input('office_allotment_class_id');
+
+        $deletedCount = 0;
+        $deletedTotal = 0;
+        $blocked = [];
+
+        try {
+            $appropriations = Appropriation::whereIn('id', $validated['ids'])->get();
+
+            foreach ($appropriations as $appropriation) {
+                $accountCode = $appropriation->account_code;
+                $description = $appropriation->description;
+
+                $obligationsCount = ObligationAmount::where('appropriation_id', $appropriation->id)
+                    ->distinct('obligation_id')
+                    ->count('obligation_id');
+
+                if ($obligationsCount > 0) {
+                    $blocked[] = "<strong>{$accountCode} - {$description}</strong>: has <strong>{$obligationsCount}</strong> obligation(s) associated with it";
+                    continue;
+                }
+
+                $realignmentsCount = Realignment::where('appropriations_id', $appropriation->id)->count();
+
+                if ($realignmentsCount > 0) {
+                    $blocked[] = "<strong>{$accountCode} - {$description}</strong>: has <strong>{$realignmentsCount}</strong> realignment(s) associated with it";
+                    continue;
+                }
+
+                $supplementalsCount = Supplemental::where('appropriations_id', $appropriation->id)->count();
+
+                if ($supplementalsCount > 0) {
+                    $blocked[] = "<strong>{$accountCode} - {$description}</strong>: has <strong>{$supplementalsCount}</strong> supplemental/reversion(s) associated with it";
+                    continue;
+                }
+
+                $deletedTotal += $appropriation->appropriation;
+                $appropriation->delete();
+                $deletedCount++;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error bulk deleting appropriations: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'ids' => $validated['ids'] ?? null,
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'An error occurred while deleting the accounts. Please try again.');
+        }
+
+        $params = $this->indexParams($request, $officeAllotmentClassId);
+
+        if ($deletedCount === 0) {
+            return redirect(route('appropriations.index', $params))
+                ->with('error',
+                    '<strong>No accounts were deleted.</strong> Please delete the related obligations, realignments, or supplementals first before removing these account(s):<br>' .
+                    implode('<br>', $blocked)
+                );
+        }
+
+        $message = '<strong>' . $deletedCount . ' account(s)</strong> totaling <strong>' . number_format($deletedTotal, 2) . '</strong> deleted successfully!';
+
+        if (count($blocked) > 0) {
+            $message .= '<br><br><strong>' . count($blocked) . ' account(s) could not be deleted</strong> and were skipped:<br>' . implode('<br>', $blocked);
+        }
+
+        return redirect(route('appropriations.index', $params))
+            ->with(count($blocked) > 0 ? 'error' : 'status', $message);
+    }
+
     public function import(Request $request)
     {
         $request->validate([

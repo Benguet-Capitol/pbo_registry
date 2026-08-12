@@ -64,7 +64,7 @@ class ProgramController extends Controller
 
         $program = Program::create($request->all());
 
-        return redirect()->route('programs.index')
+        return redirect()->back()
             ->with('status', 'Program / Project / Activity: <strong>' . $program->program . '</strong> created successfully.');
     }
 
@@ -97,7 +97,7 @@ class ProgramController extends Controller
             'program' => $validated['edit_program'],
         ]);
 
-        return redirect()->route('programs.index')
+        return redirect()->back()
             ->with('status', 'Program / Project / Activity: <strong>' . $program->program . '</strong> has been updated successfully.');
     }
 
@@ -108,7 +108,7 @@ class ProgramController extends Controller
     {
         $program->delete();
 
-        return redirect()->route('programs.index')
+        return redirect()->back()
             ->with('status', 'Program / Project / Activity: <strong>' . $program->program . '</strong> has been deleted successfully.');
     }
 }

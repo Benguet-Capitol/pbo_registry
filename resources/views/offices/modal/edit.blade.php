@@ -176,6 +176,31 @@
                                 </x-form.input-with-icon-wrapper>
                                 <span id="editresponsibilityCodeError" class="text-red-500 text-xs"></span>
                             </div>
+
+                            <!-- PPA Code -->
+                            <div class="space-y-2">
+                                <x-form.label
+                                    for="ppa_code"
+                                    :value="__('PPA Code')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
+
+                                <x-form.input-with-icon-wrapper>
+                                    <x-slot name="icon">
+                                        <i class="fas fa-code"></i>
+                                    </x-slot>
+
+                                    <x-form.input
+                                        withicon
+                                        id="edit_ppa_code"
+                                        class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
+                                        type="text"
+                                        name="edit_ppa_code"
+                                        :value="old('ppa_code')"
+                                        autofocus
+                                        autocomplete="off"
+                                        placeholder="{{ __('PPA Code') }}" />
+                                </x-form.input-with-icon-wrapper>
+                                <span id="editppaCodeError" class="text-red-500 text-xs"></span>
+                            </div>
                         </div>
 
                         <!-- Branch -->
@@ -250,6 +275,7 @@
             document.getElementById('edit_fund'),
             document.getElementById('edit_fpp_code'),
             document.getElementById('edit_responsibility_code'),
+            document.getElementById('edit_ppa_code'),
             document.getElementById('edit_branch')
         ];
         fields.forEach(field => {
@@ -274,6 +300,7 @@
         document.getElementById('edit_fund').value = office.fund;
         document.getElementById('edit_fpp_code').value = office.fpp_code;
         document.getElementById('edit_responsibility_code').value = office.responsibility_code;
+        document.getElementById('edit_ppa_code').value = office.ppa_code;
         document.getElementById('edit_branch').value = office.branch;
         
         const modal = document.getElementById('editOfficeModal');

@@ -174,6 +174,31 @@
                                 </x-form.input-with-icon-wrapper>
                                 <span id="responsibilityCodeError" class="text-red-500 text-xs"></span>
                             </div>
+
+                            <!-- PPA Code -->
+                            <div class="space-y-2">
+                                <x-form.label
+                                    for="ppa_code"
+                                    :value="__('PPA Code')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
+
+                                <x-form.input-with-icon-wrapper>
+                                    <x-slot name="icon">
+                                        <i class="fas fa-code"></i>
+                                    </x-slot>
+
+                                    <x-form.input
+                                        withicon
+                                        id="ppa_code"
+                                        class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200"
+                                        type="text"
+                                        name="ppa_code"
+                                        :value="old('ppa_code')"
+                                        autofocus
+                                        autocomplete="off"
+                                        placeholder="{{ __('PPA Code') }}" />
+                                </x-form.input-with-icon-wrapper>
+                                <span id="ppaCodeError" class="text-red-500 text-xs"></span>
+                            </div>
                         </div>
 
                         <!-- Branch -->

@@ -53,7 +53,7 @@ class SectorController extends Controller
 
         $sector = Sector::create($validated);
 
-        return redirect()->route('sectors.index')->with('status', 'Sector: <strong>' . $sector->sector . '</strong> with Sector Code: <strong>' . $sector->sector_code . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'Sector: <strong>' . $sector->sector . '</strong> with Sector Code: <strong>' . $sector->sector_code . '</strong> has been created successfully!');
     }
 
     public function update(Request $request, Sector $sector): RedirectResponse
@@ -70,13 +70,13 @@ class SectorController extends Controller
             'code' => $validated['edit_code']
         ]);
 
-        return redirect()->route('sectors.index')->with('status', 'Sector: <strong>' . $sector->sector . '</strong> with Sector Code: <strong>' . $sector->sector_code . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'Sector: <strong>' . $sector->sector . '</strong> with Sector Code: <strong>' . $sector->sector_code . '</strong> has been updated successfully!');
     }
 
     public function destroy(Sector $sector): RedirectResponse
     {
         $sector->delete();
 
-        return redirect()->route('sectors.index')->with('status', 'Sector: <strong>' . $sector->sector . '</strong> with Sector Code: <strong>' . $sector->sector_code . '</strong> has been deleted successfully!');
+        return redirect()->back()->with('status', 'Sector: <strong>' . $sector->sector . '</strong> with Sector Code: <strong>' . $sector->sector_code . '</strong> has been deleted successfully!');
     }
 }

@@ -18,6 +18,7 @@ class Office extends Model
         'fund',
         'fpp_code',
         'responsibility_code',
+        'ppa_code',
         'mfo_services',
         'branch',
     ];

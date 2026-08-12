@@ -50,7 +50,7 @@ class FundSourceController extends Controller
 
         $fund_source = FundSource::create($validated);
 
-        return redirect()->route('fund_sources.index')->with('status', 'Fund Source: <strong>' . $fund_source->source . '</strong> with Category: <strong>' . $fund_source->category . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'Fund Source: <strong>' . $fund_source->source . '</strong> with Category: <strong>' . $fund_source->category . '</strong> has been created successfully!');
     }
 
     public function update(Request $request, FundSource $fund_source): RedirectResponse
@@ -65,13 +65,13 @@ class FundSourceController extends Controller
             'source' => $validated['edit_source']
         ]);
 
-        return redirect()->route('fund_sources.index')->with('status', 'Fund Source: <strong>' . $fund_source->source . '</strong> with Category: <strong>' . $fund_source->category . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'Fund Source: <strong>' . $fund_source->source . '</strong> with Category: <strong>' . $fund_source->category . '</strong> has been updated successfully!');
     }
     
     public function destroy(FundSource $fund_source): RedirectResponse
     {
         $fund_source->delete();
 
-        return redirect()->route('fund_sources.index')->with('status', 'Fund Source: <strong>' . $fund_source->source . '</strong> with Category: <strong>' . $fund_source->category . '</strong> has been deleted successfully!');
+        return redirect()->back()->with('status', 'Fund Source: <strong>' . $fund_source->source . '</strong> with Category: <strong>' . $fund_source->category . '</strong> has been deleted successfully!');
     }
 }

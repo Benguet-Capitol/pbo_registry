@@ -60,7 +60,7 @@ class FundController extends Controller
 
         $fund = Fund::create($validated);
 
-        return redirect()->route('funds.index')->with('status', 'Fund: <strong>' . $fund->fund . '</strong> with Fund Code: <strong>' . $fund->fund_code . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'Fund: <strong>' . $fund->fund . '</strong> with Fund Code: <strong>' . $fund->fund_code . '</strong> has been created successfully!');
     }
 
     public function update(Request $request, Fund $fund): RedirectResponse
@@ -77,7 +77,7 @@ class FundController extends Controller
             'fund_code' => $validated['edit_fund_code']
         ]);
 
-        return redirect()->route('funds.index')->with('status', 'Fund: <strong>' . $fund->fund . '</strong> with Fund Code: <strong>' . $fund->fund_code . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'Fund: <strong>' . $fund->fund . '</strong> with Fund Code: <strong>' . $fund->fund_code . '</strong> has been updated successfully!');
     }
 
     public function destroy(Request $request, Fund $fund): RedirectResponse

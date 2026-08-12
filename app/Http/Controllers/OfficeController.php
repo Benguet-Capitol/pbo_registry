@@ -28,6 +28,7 @@ class OfficeController extends Controller
                     ->orWhere('fund', 'like', "%{$search}%")
                     ->orWhere('fpp_code', 'like', "%{$search}%")
                     ->orWhere('responsibility_code', 'like', "%{$search}%")
+                    ->orWhere('ppa_code', 'like', "%{$search}%")
                     ->orWhere('mfo_services', 'like', "%{$search}%")
                     ->orWhere('branch', 'like', "%{$search}%");
             });
@@ -63,6 +64,7 @@ class OfficeController extends Controller
             'fund' => 'required|string|max:255',
             'fpp_code' => 'nullable|string|max:255',
             'responsibility_code' => 'nullable|string|max:255',
+            'ppa_code' => 'nullable|string|max:255',
             'branch' => 'required|string|max:255',
         ]);
 
@@ -73,10 +75,11 @@ class OfficeController extends Controller
             'fund' => $validated['fund'],
             'fpp_code' => $validated['fpp_code'],
             'responsibility_code' => $validated['responsibility_code'],
+            'ppa_code' => $validated['ppa_code'],
             'branch' => $validated['branch'],
         ]);
 
-        return redirect(route('offices.index'))->with('status', 'Office <strong>' . $validated['office_name'] . '</strong> with abbreviation <strong>' . $validated['office_abbreviation'] . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'Office <strong>' . $validated['office_name'] . '</strong> with abbreviation <strong>' . $validated['office_abbreviation'] . '</strong> has been created successfully!');
     }
 
     public function edit(Office $office): View
@@ -104,6 +107,7 @@ class OfficeController extends Controller
             'edit_fund' => 'required|string|max:255',
             'edit_fpp_code' => 'nullable|string|max:255',
             'edit_responsibility_code' => 'nullable|string|max:255',
+            'edit_ppa_code' => 'nullable|string|max:255',
             'edit_branch' => 'required|string|max:255',
         ]);
 
@@ -114,16 +118,17 @@ class OfficeController extends Controller
             'fund' => $validated['edit_fund'],
             'fpp_code' => $validated['edit_fpp_code'],
             'responsibility_code' => $validated['edit_responsibility_code'],
+            'ppa_code' => $validated['edit_ppa_code'],
             'branch' => $validated['edit_branch'],
         ]);
 
-        return redirect()->route('offices.index')->with('status', 'Office <strong>' . $validated['edit_office_name'] . '</strong> with abbreviation <strong>' . $validated['edit_office_abbreviation'] . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'Office <strong>' . $validated['edit_office_name'] . '</strong> with abbreviation <strong>' . $validated['edit_office_abbreviation'] . '</strong> has been updated successfully!');
     }
 
     public function destroy(Office $office): RedirectResponse
     {
         $office->delete();
 
-        return redirect()->route('offices.index')->with('status', 'Office <strong>' . $office->office_name . '</strong> with abbreviation <strong>' . $office->office_abbreviation . '</strong> has been deleted successfully!');
+        return redirect()->back()->with('status', 'Office <strong>' . $office->office_name . '</strong> with abbreviation <strong>' . $office->office_abbreviation . '</strong> has been deleted successfully!');
     }
 }

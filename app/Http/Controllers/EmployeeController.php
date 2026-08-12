@@ -89,7 +89,7 @@ class EmployeeController extends Controller
         $employee->load('officeRelation');
         $officeAbbr = $employee->office_abbreviation;
 
-        return redirect(route('employees.index'))->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been created successfully!');
     }
 
     public function edit(Employee $employee): View
@@ -129,7 +129,7 @@ class EmployeeController extends Controller
         $employee->load('officeRelation');
         $officeAbbr = $employee->office_abbreviation;
 
-        return redirect()->route('employees.index')->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'Employee <strong>' . $employee->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been updated successfully!');
     }
 
     public function destroy(Request $request, Employee $employee): RedirectResponse

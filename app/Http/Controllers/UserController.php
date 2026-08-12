@@ -104,7 +104,7 @@ class UserController extends Controller
         $user->load('officeRelation');
         $officeAbbr = $user->office_abbreviation;
 
-        return redirect(route('users.index'))->with('status', 'User <strong>' . $user->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'User <strong>' . $user->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been created successfully!');
     }
 
     /**
@@ -148,7 +148,7 @@ class UserController extends Controller
         $user->load('officeRelation');
         $officeAbbr = $user->office_abbreviation;
 
-        return redirect()->route('users.index')->with('status', 'User <strong>' . $user->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'User <strong>' . $user->name . '</strong> from <strong>' . $officeAbbr . '</strong> has been updated successfully!');
     }
 
     public function destroy(User $user): RedirectResponse
@@ -160,23 +160,23 @@ class UserController extends Controller
 
         // Check if user has activity logs
         if ($user->activityLogs()->exists()) {
-            return redirect()->route('users.index')->with('error', 'Cannot delete user <strong>' . $userName . '</strong> from <strong>' . $officeAbbr . '</strong> because they have associated activity logs. Please archive or reassign the logs first.');
+            return redirect()->back()->with('error', 'Cannot delete user <strong>' . $userName . '</strong> from <strong>' . $officeAbbr . '</strong> because they have associated activity logs. Please archive or reassign the logs first.');
         }
 
         $user->delete();
 
-        return redirect()->route('users.index')->with('status', 'User <strong>' . $userName . '</strong> from <strong>' . $officeAbbr . '</strong> has been deleted successfully!');
+        return redirect()->back()->with('status', 'User <strong>' . $userName . '</strong> from <strong>' . $officeAbbr . '</strong> has been deleted successfully!');
     }
 
     public function toggleRestriction(User $user): RedirectResponse
     {
         if (auth()->id() === $user->id) {
-            return redirect()->route('users.index')
+            return redirect()->back()
                 ->with('error', 'You cannot restrict your own account.');
         }
 
         if (in_array($user->usertype, \App\Models\Role::EXEMPT_FROM_RESTRICTION)) {
-            return redirect()->route('users.index')
+            return redirect()->back()
                 ->with('error', 'Users with the <strong>' . $user->usertype . '</strong> role cannot be restricted.');
         }
 
@@ -186,7 +186,7 @@ class UserController extends Controller
         $officeAbbr = $user->office_abbreviation;
         $status = $user->is_restricted ? 'restricted' : 'active';
 
-        return redirect()->route('users.index')
+        return redirect()->back()
             ->with('status', 'User <strong>' . $user->name . '</strong> from <strong>' . $officeAbbr . '</strong> is now <strong>' . $status . '</strong>.');
     }
 }

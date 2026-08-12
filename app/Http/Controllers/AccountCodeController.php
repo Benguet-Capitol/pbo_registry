@@ -62,7 +62,7 @@ class AccountCodeController extends Controller
 
         $account_code = AccountCode::create($validated);
 
-        return redirect()->route('account_codes.index')->with('status', 'Account Code <strong>' . $account_code->code . '</strong> with description <strong>' . $account_code->description . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'Account Code <strong>' . $account_code->code . '</strong> with description <strong>' . $account_code->description . '</strong> has been created successfully!');
     }
 
     public function edit(AccountCode $account_code): View
@@ -93,7 +93,7 @@ class AccountCodeController extends Controller
             'class' => $validated['edit_class']
         ]);
 
-        return redirect()->route('account_codes.index')->with('status', 'Account Code <strong>' . $account_code->code . '</strong> with description <strong>' . $account_code->description . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'Account Code <strong>' . $account_code->code . '</strong> with description <strong>' . $account_code->description . '</strong> has been updated successfully!');
     }
 
     public function destroy(Request $request, AccountCode $account_code): RedirectResponse

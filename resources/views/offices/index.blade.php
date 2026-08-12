@@ -122,6 +122,14 @@
                             </a>
                         </th>
                         <th class="px-3 py-3  border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                            <a href="{{ route('offices.index', ['sort_by' => 'ppa_code', 'sort_order' => $sortBy == 'ppa_code' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
+                                PPA Code
+                                @if($sortBy == 'ppa_code')
+                                {{ $sortOrder == 'asc' ? '▲' : '▼' }}
+                                @endif
+                            </a>
+                        </th>
+                        <th class="px-3 py-3  border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">
                             <a href="{{ route('offices.index', ['sort_by' => 'branch', 'sort_order' => $sortBy == 'branch' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                 Branch
                                 @if($sortBy == 'branch')
@@ -140,6 +148,7 @@
                         <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office->fund }}</td>
                         <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office->fpp_code }}</td>
                         <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office->responsibility_code }}</td>
+                        <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office->ppa_code }}</td>
                         <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $office->branch }}</td>
                         <td class="px-3 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
                         @canany(['edit offices', 'delete offices'])

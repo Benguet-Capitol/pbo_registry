@@ -62,7 +62,7 @@ class AllotmentClassController extends Controller
 
         AllotmentClass::create($validated);
 
-        return redirect()->route('allotment_classes.index')->with('status', 'Allotment Class <strong>' . $validated['description'] . '</strong> with category <strong>' . $validated['category'] . '</strong> has been created successfully!');
+        return redirect()->back()->with('status', 'Allotment Class <strong>' . $validated['description'] . '</strong> with category <strong>' . $validated['category'] . '</strong> has been created successfully!');
     }
 
     public function update(Request $request, AllotmentClass $allotment_class): RedirectResponse
@@ -79,7 +79,7 @@ class AllotmentClassController extends Controller
             'category' => $validated['edit_category']
         ]);
 
-        return redirect()->route('allotment_classes.index')->with('status', 'Allotment Class <strong>' . $validated['edit_description'] . '</strong> with category <strong>' . $validated['edit_category'] . '</strong> has been updated successfully!');
+        return redirect()->back()->with('status', 'Allotment Class <strong>' . $validated['edit_description'] . '</strong> with category <strong>' . $validated['edit_category'] . '</strong> has been updated successfully!');
     }
 
     public function destroy(Request $request, AllotmentClass $allotment_class): RedirectResponse

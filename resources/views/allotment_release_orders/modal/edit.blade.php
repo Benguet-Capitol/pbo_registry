@@ -63,6 +63,9 @@
         document.getElementById('edit_lce_signatory_auto').value = aro.provincial_governor
             ? aro.provincial_governor.name
             : '';
+        // See onGovernorTitleChange(): needed to restore the id if the user
+        // toggles the designation to "Acting Provincial Governor" and back.
+        document.getElementById('edit_lce_signatory_auto').dataset.employeeId = aro.provincial_governor_id || '';
         document.getElementById('edit_lce_signatory_manual').value = aro.provincial_governor_name || '';
         AroForm.onGovernorTitleChange('edit');
 

@@ -114,6 +114,9 @@
             this.el(prefix, 'office_allotment_class').value = item.name;
             this.el(prefix, 'office_allotment_classes_id').value = item.id;
             this.el(prefix, 'office_allotment_class_dropdown').classList.add('hidden');
+            // Reset so loadAccountCodes() re-populates it with the newly selected
+            // office's PPA code instead of keeping a previously selected office's value.
+            this.el(prefix, 'ppa_code').value = '';
             this.loadAccountCodes(prefix);
             this.previewAroNo(prefix);
         },
@@ -196,6 +199,10 @@
                 // checkedAmount back on top, that would double count this row's own amount.
                 const balance = itemBalance;
                 const isExhausted = balance <= 0;
+                // Distinguish "nothing left because it's all already been released"
+                // from "nothing left because this account code was never given an
+                // appropriation" (e.g. a code created solely as a realignment target).
+                const hasNoAppropriation = itemAuthorized <= 0;
                 // Default to the remaining balance (not the full authorized amount) so
                 // the user works with what's actually still available by default.
                 const authorizedValue = isChecked ? checkedAmount : Math.min(itemAuthorized, balance);
@@ -236,7 +243,7 @@
                     <td class="px-2 py-1 text-xs">${item.account_code}</td>
                     <td class="px-2 py-1 text-xs">${item.description || ''}</td>
                     <td class="px-2 py-1 text-xs text-right ${isExhausted ? 'text-red-600 dark:text-red-400 font-semibold' : ''}" title="${item.already_committed > 0 ? 'Already committed to other ARO(s): ' + Number(item.already_committed).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}">
-                        ${isExhausted ? 'Fully released' : Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        ${hasNoAppropriation ? 'No appropriation available' : (isExhausted ? 'Fully released' : Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 }))}
                     </td>
                     <td class="px-1 py-1">
                         <input type="text" class="aro-authorized-input block w-full text-xs text-right border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 rounded"
@@ -409,6 +416,12 @@
                         lceIdField.value = data.default_governor.id;
                         lceAutoField.value = data.default_governor.name;
                     }
+                    // Remember the auto-resolved employee id so it can be restored if the
+                    // user switches the designation away to "Acting Provincial Governor"
+                    // (which blanks lce_signatory_id) and then back to "Provincial Governor".
+                    if (data.default_governor) {
+                        lceAutoField.dataset.employeeId = data.default_governor.id;
+                    }
                     this.onGovernorTitleChange(prefix);
                 });
         },
@@ -416,12 +429,19 @@
         onGovernorTitleChange(prefix) {
             const title = this.el(prefix, 'lce_designation').value;
             const isProvincialGovernor = title === 'Provincial Governor';
-            this.el(prefix, 'lce_signatory_auto').style.display = isProvincialGovernor ? '' : 'none';
+            const autoField = this.el(prefix, 'lce_signatory_auto');
+            const idField = this.el(prefix, 'lce_signatory_id');
+            autoField.style.display = isProvincialGovernor ? '' : 'none';
             this.el(prefix, 'lce_signatory_manual').style.display = isProvincialGovernor ? 'none' : '';
             if (isProvincialGovernor) {
                 this.el(prefix, 'lce_signatory_manual').value = '';
+                // Restore the auto-resolved employee id if switching away to "Acting
+                // Provincial Governor" earlier blanked it out.
+                if (!idField.value && autoField.dataset.employeeId) {
+                    idField.value = autoField.dataset.employeeId;
+                }
             } else {
-                this.el(prefix, 'lce_signatory_id').value = '';
+                idField.value = '';
             }
         },
 

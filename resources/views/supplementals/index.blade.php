@@ -280,173 +280,204 @@
                     // Cached per-record values so the List View below doesn't need to recompute them
                     $supplementalFileCounts = [];
                     $supplementalBalanced = [];
+                    // Group by supplemental_no so all lines belonging to the same
+                    // Supplemental Budget / Reversion document render as one card.
+                    $groupedSupplementals = $supplementals->groupBy('supplemental_no');
                 @endphp
 
-                @forelse($supplementals as $supplemental)
+                @forelse($groupedSupplementals as $groupNo => $groupItems)
                     @php
-                        $amount = isset($supplemental->amount) ? (float)$supplemental->amount : 0;
-                        $type = trim($supplemental->type ?? '');
+                        $groupFirst = $groupItems->first();
+                        $groupType = trim($groupFirst->type ?? '');
+                        $groupFileCount = \App\Models\SupplementalFile::where('supplemental_no', $groupNo)->count();
+                        $groupAmountTotal = 0;
 
-                        if ($type === 'Supplemental') {
-                            $totalSupplemental += $amount;
-                        } elseif ($type === 'Reversion') {
-                            $totalReversion += $amount;
-                        }
-
-                        $fileCount = \App\Models\SupplementalFile::where('supplemental_no', $supplemental->supplemental_no)->count();
-
-                        $quarterSum = (float)($supplemental->quarter1 ?? 0)
-                            + (float)($supplemental->quarter2 ?? 0)
-                            + (float)($supplemental->quarter3 ?? 0)
-                            + (float)($supplemental->quarter4 ?? 0);
-                        $quarterDiff = round($amount - $quarterSum, 2);
-                        $isQuarterBalanced = abs($quarterDiff) < 0.01;
-                        $supplementalFileCounts[$supplemental->id] = $fileCount;
-                        $supplementalBalanced[$supplemental->id] = $isQuarterBalanced;
-
-                        $typeAccent = $type === 'Supplemental'
+                        $groupTypeAccent = $groupType === 'Supplemental'
                             ? ['cardBorder' => 'border-emerald-300 dark:border-emerald-700', 'border' => 'border-emerald-500', 'badgeBg' => 'bg-emerald-100 dark:bg-emerald-900/50', 'badgeText' => 'text-emerald-700 dark:text-emerald-300', 'amount' => 'text-emerald-700 dark:text-emerald-400']
-                            : ($type === 'Reversion'
+                            : ($groupType === 'Reversion'
                                 ? ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-red-500', 'badgeBg' => 'bg-red-100 dark:bg-red-900/50', 'badgeText' => 'text-red-700 dark:text-red-300', 'amount' => 'text-red-700 dark:text-red-400']
                                 : ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-gray-400', 'badgeBg' => 'bg-gray-100 dark:bg-gray-700', 'badgeText' => 'text-gray-700 dark:text-gray-300', 'amount' => 'text-gray-700 dark:text-gray-300']);
-
-                        $searchText = strtolower(collect([
-                            $supplemental->supplemental_no,
-                            $supplemental->supplemental_date,
-                            $type,
-                            $supplemental->basis,
-                            $supplemental->officeAllotmentClass->office_abbreviation ?? '',
-                            $supplemental->officeAllotmentClass->class ?? '',
-                            $supplemental->appropriation->programs ?? '',
-                            $supplemental->appropriation->account_code ?? '',
-                            $supplemental->appropriation->description ?? '',
-                        ])->implode(' '));
                     @endphp
-                    <div class="supplemental-item supplemental-card bg-white dark:bg-gray-800 border {{ $typeAccent['cardBorder'] }} border-l-4 {{ $typeAccent['border'] }} rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
-                         oncontextmenu="showSupplementalContextMenu(event, this)"
-                         data-supplemental='@json($supplemental)'
-                         data-supplemental-no="{{ $supplemental->supplemental_no }}"
-                         data-type="{{ $type }}"
-                         data-amount="{{ $amount }}"
-                         data-search-text="{{ $searchText }}">
+                    <div class="supplemental-group bg-white dark:bg-gray-800 border {{ $groupTypeAccent['cardBorder'] }} border-l-4 {{ $groupTypeAccent['border'] }} rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow"
+                         data-supplemental-no="{{ $groupNo }}">
 
-                        <!-- Card Header -->
+                        <!-- Group Header (shared by every line under this Supplemental No.) -->
                         <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
                                 <span class="font-bold text-gray-800 dark:text-gray-100">
-                                    <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $supplemental->supplemental_no }}
+                                    <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $groupNo }}
                                 </span>
                                 <span class="text-gray-600 dark:text-gray-300">
-                                    <i class="far fa-calendar mr-1"></i>{{ $supplemental->supplemental_date }}
+                                    <i class="far fa-calendar mr-1"></i>{{ $groupFirst->supplemental_date }}
                                 </span>
-                                <span class="px-2 py-1 rounded font-semibold {{ $typeAccent['badgeBg'] }} {{ $typeAccent['badgeText'] }}">
-                                    {{ $type ? ucfirst($type) : '-' }}
+                                <span class="px-2 py-1 rounded font-semibold {{ $groupTypeAccent['badgeBg'] }} {{ $groupTypeAccent['badgeText'] }}">
+                                    {{ $groupType ? ucfirst($groupType) : '-' }}
+                                </span>
+                                <span class="text-gray-500 dark:text-gray-400 text-[11px]">
+                                    <i class="fas fa-layer-group mr-1"></i>{{ $groupItems->count() }} {{ $groupItems->count() == 1 ? 'line' : 'lines' }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-2">
-                                @if ($type !== 'Reversion')
-                                    @if ($isQuarterBalanced)
-                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" title="Quarterly breakdown matches the amount">
-                                            <i class="fas fa-check-circle"></i>Balanced
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" title="Quarterly breakdown ({{ number_format($quarterSum, 2) }}) does not match the amount ({{ number_format($amount, 2) }})">
-                                            <i class="fas fa-triangle-exclamation"></i>Mismatch
-                                        </span>
-                                    @endif
-                                @endif
-                                <button onclick="openSupplementalFilesModal('{{ $supplemental->supplemental_no }}')"
+                                <button onclick="openSupplementalFilesModal('{{ $groupNo }}')"
                                     class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
-                                    @if($fileCount > 0)
+                                    @if($groupFileCount > 0)
                                         bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
                                     @else
                                         bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
                                     @endif"
                                     title="View files">
                                     <i class="fas fa-file"></i>
-                                    <span>{{ $fileCount }}</span>
+                                    <span>{{ $groupFileCount }}</span>
                                 </button>
+                                @can('delete supplementals')
+                                    <button onclick="openBulkDeleteSupplementalModal('{{ $groupNo }}', {{ $groupFirst->id }})" type="button" title="Delete All Related"
+                                        class="text-orange-600 inline-flex items-center gap-1 hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-xs px-2 py-1 dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900 transition-colors">
+                                        <i class="fas fa-trash-alt"></i> Delete All
+                                    </button>
+                                @endcan
                             </div>
                         </div>
 
-                        <!-- Card Body -->
-                        <div class="px-3 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
-                            <div class="col-span-2">
-                                <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Office & Class</div>
-                                <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">
-                                    {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
+                        <!-- Group Lines: one row per Appropriation covered by this Supplemental No. -->
+                        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach($groupItems as $supplemental)
+                            @php
+                                $amount = isset($supplemental->amount) ? (float)$supplemental->amount : 0;
+                                $type = trim($supplemental->type ?? '');
+
+                                if ($type === 'Supplemental') {
+                                    $totalSupplemental += $amount;
+                                } elseif ($type === 'Reversion') {
+                                    $totalReversion += $amount;
+                                }
+                                $groupAmountTotal += $amount;
+
+                                $fileCount = $groupFileCount;
+
+                                $quarterSum = (float)($supplemental->quarter1 ?? 0)
+                                    + (float)($supplemental->quarter2 ?? 0)
+                                    + (float)($supplemental->quarter3 ?? 0)
+                                    + (float)($supplemental->quarter4 ?? 0);
+                                $quarterDiff = round($amount - $quarterSum, 2);
+                                $isQuarterBalanced = abs($quarterDiff) < 0.01;
+                                $supplementalFileCounts[$supplemental->id] = $fileCount;
+                                $supplementalBalanced[$supplemental->id] = $isQuarterBalanced;
+
+                                $searchText = strtolower(collect([
+                                    $supplemental->supplemental_no,
+                                    $supplemental->supplemental_date,
+                                    $type,
+                                    $supplemental->basis,
+                                    $supplemental->officeAllotmentClass->office_abbreviation ?? '',
+                                    $supplemental->officeAllotmentClass->class ?? '',
+                                    $supplemental->appropriation->programs ?? '',
+                                    $supplemental->appropriation->account_code ?? '',
+                                    $supplemental->appropriation->description ?? '',
+                                ])->implode(' '));
+                            @endphp
+                            <div class="supplemental-item supplemental-card px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors cursor-pointer"
+                                 oncontextmenu="showSupplementalContextMenu(event, this)"
+                                 data-supplemental='@json($supplemental)'
+                                 data-supplemental-no="{{ $supplemental->supplemental_no }}"
+                                 data-type="{{ $type }}"
+                                 data-amount="{{ $amount }}"
+                                 data-search-text="{{ $searchText }}">
+
+                                <!-- Line Header -->
+                                <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                        <span class="font-semibold text-gray-700 dark:text-gray-200">
+                                            <i class="fas fa-code mr-1 text-blue-400"></i>{{ $supplemental->appropriation->account_code ?? '-' }}
+                                        </span>
+                                        @if ($type !== 'Reversion')
+                                            @if ($isQuarterBalanced)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" title="Quarterly breakdown matches the amount">
+                                                    <i class="fas fa-check-circle"></i>Balanced
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" title="Quarterly breakdown ({{ number_format($quarterSum, 2) }}) does not match the amount ({{ number_format($amount, 2) }})">
+                                                    <i class="fas fa-triangle-exclamation"></i>Mismatch
+                                                </span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        @can('edit supplementals')
+                                            <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'edit')" type="button" title="Edit"
+                                                class="text-amber-600 inline-flex items-center gap-1 hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-colors">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                        @endcan
+                                        @can('delete supplementals')
+                                            <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'delete')" type="button" title="Delete This Entry"
+                                                class="text-red-600 inline-flex items-center gap-1 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900 transition-colors">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        @endcan
+                                    </div>
                                 </div>
+
+                                <!-- Line Body -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
+                                    <div class="col-span-2">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Office & Class</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">
+                                            {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Amount</div>
+                                        <div class="font-bold text-sm tabular-nums {{ $groupTypeAccent['amount'] }}">{{ number_format($amount, 2) }}</div>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Program</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $supplemental->appropriation->programs ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Description</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $supplemental->appropriation->description ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-4">
+                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Basis</div>
+                                        <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $supplemental->basis ?? '-' }}</div>
+                                    </div>
+                                </div>
+
+                                @if ($type !== 'Reversion')
+                                <!-- Quarterly breakdown (inline) — Reversions don't use quarterly allocation -->
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 pt-1.5 border-t border-gray-200 dark:border-gray-700 text-[11px]">
+                                    <span class="text-gray-400 dark:text-gray-500">
+                                        <span class="uppercase tracking-wide text-[10px]">1st Qtr</span>
+                                        <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter1 ?? '-' }}</span>
+                                    </span>
+                                    <span class="text-gray-400 dark:text-gray-500">
+                                        <span class="uppercase tracking-wide text-[10px]">2nd Qtr</span>
+                                        <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter2 ?? '-' }}</span>
+                                    </span>
+                                    <span class="text-gray-400 dark:text-gray-500">
+                                        <span class="uppercase tracking-wide text-[10px]">3rd Qtr</span>
+                                        <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter3 ?? '-' }}</span>
+                                    </span>
+                                    <span class="text-gray-400 dark:text-gray-500">
+                                        <span class="uppercase tracking-wide text-[10px]">4th Qtr</span>
+                                        <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter4 ?? '-' }}</span>
+                                    </span>
+                                    <span class="ml-auto text-gray-400 dark:text-gray-500">
+                                        <span class="uppercase tracking-wide text-[10px]">Qtr Total</span>
+                                        <span class="font-bold tabular-nums ml-1 {{ $isQuarterBalanced ? 'text-gray-700 dark:text-gray-300' : 'text-amber-700 dark:text-amber-400' }}">
+                                            {{ number_format($quarterSum, 2) }}
+                                        </span>
+                                    </span>
+                                </div>
+                                @endif
                             </div>
-                            <div>
-                                <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Account Code</div>
-                                <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $supplemental->appropriation->account_code ?? '-' }}</div>
-                            </div>
-                            <div>
-                                <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Amount</div>
-                                <div class="font-bold text-sm tabular-nums {{ $typeAccent['amount'] }}">{{ number_format($amount, 2) }}</div>
-                            </div>
-                            <div class="col-span-2">
-                                <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Program</div>
-                                <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $supplemental->appropriation->programs ?? '-' }}</div>
-                            </div>
-                            <div class="col-span-2">
-                                <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Description</div>
-                                <div class="font-semibold text-gray-700 dark:text-gray-300 break-words">{{ $supplemental->appropriation->description ?? '-' }}</div>
-                            </div>
-                            <div class="col-span-2 sm:col-span-4">
-                                <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Basis</div>
-                                <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $supplemental->basis ?? '-' }}</div>
-                            </div>
+                        @endforeach
                         </div>
 
-                        @if ($type !== 'Reversion')
-                        <!-- Quarterly breakdown (inline) — Reversions don't use quarterly allocation -->
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-t border-gray-200 dark:border-gray-700 text-[11px] {{ $isQuarterBalanced ? 'bg-gray-50 dark:bg-gray-900/40' : 'bg-amber-50 dark:bg-amber-950/20' }}">
-                            <span class="text-gray-400 dark:text-gray-500">
-                                <span class="uppercase tracking-wide text-[10px]">1st Qtr</span>
-                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter1 ?? '-' }}</span>
-                            </span>
-                            <span class="text-gray-400 dark:text-gray-500">
-                                <span class="uppercase tracking-wide text-[10px]">2nd Qtr</span>
-                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter2 ?? '-' }}</span>
-                            </span>
-                            <span class="text-gray-400 dark:text-gray-500">
-                                <span class="uppercase tracking-wide text-[10px]">3rd Qtr</span>
-                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter3 ?? '-' }}</span>
-                            </span>
-                            <span class="text-gray-400 dark:text-gray-500">
-                                <span class="uppercase tracking-wide text-[10px]">4th Qtr</span>
-                                <span class="font-semibold text-gray-700 dark:text-gray-300 tabular-nums ml-1">{{ $supplemental->quarter4 ?? '-' }}</span>
-                            </span>
-                            <span class="ml-auto text-gray-400 dark:text-gray-500">
-                                <span class="uppercase tracking-wide text-[10px]">Qtr Total</span>
-                                <span class="font-bold tabular-nums ml-1 {{ $isQuarterBalanced ? 'text-gray-700 dark:text-gray-300' : 'text-amber-700 dark:text-amber-400' }}">
-                                    {{ number_format($quarterSum, 2) }}
-                                </span>
-                            </span>
-                        </div>
-                        @endif
-
-                        <!-- Card Footer: Actions (mirrors the right-click context menu, always visible) -->
-                        <div class="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
-                            @can('edit supplementals')
-                                <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'edit')" type="button" title="Edit"
-                                    class="text-amber-600 inline-flex items-center gap-1 hover:text-white border border-amber-600 hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-amber-500 dark:text-amber-500 dark:hover:text-white dark:hover:bg-amber-600 dark:focus:ring-amber-900 transition-colors ml-auto">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            @endcan
-
-                            @can('delete supplementals')
-                                <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'delete')" type="button" title="Delete This Entry"
-                                    class="text-red-600 inline-flex items-center gap-1 hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900 transition-colors">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-
-                                <button onclick="event.stopPropagation(); triggerSupplementalCardAction(this, 'bulkDelete')" type="button" title="Delete All Related"
-                                    class="text-orange-600 inline-flex items-center gap-1 hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900 transition-colors">
-                                    <i class="fas fa-trash-alt"></i> Delete All
-                                </button>
-                            @endcan
+                        <!-- Group Total (sum of all lines under this Supplemental No.) -->
+                        <div class="px-3 py-1.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 text-right text-[11px]">
+                            <span class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mr-1">Group Total</span>
+                            <span class="font-bold tabular-nums {{ $groupTypeAccent['amount'] }}">{{ number_format($groupAmountTotal, 2) }}</span>
                         </div>
                     </div>
                 @empty
@@ -851,15 +882,23 @@
         const cards = document.querySelectorAll('.supplemental-card');
         const lowerSearch = searchValue.toLowerCase().trim();
         let visibleCount = 0;
+        const visibleGroups = new Set();
 
         cards.forEach(card => {
             const searchText = card.dataset.searchText || card.textContent.toLowerCase();
             if (searchText.includes(lowerSearch)) {
                 card.style.display = '';
                 visibleCount++;
+                if (card.dataset.supplementalNo) visibleGroups.add(card.dataset.supplementalNo);
             } else {
                 card.style.display = 'none';
             }
+        });
+
+        // A group card (one per Supplemental No.) stays visible only while at
+        // least one of its lines matches the search.
+        document.querySelectorAll('.supplemental-group').forEach(group => {
+            group.style.display = visibleGroups.has(group.dataset.supplementalNo) ? '' : 'none';
         });
 
         updateSupplementalsNoResultsMessage(lowerSearch, visibleCount, cards.length, searchValue);

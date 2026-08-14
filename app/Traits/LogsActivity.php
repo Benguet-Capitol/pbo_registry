@@ -5,7 +5,7 @@ namespace App\Traits;
 use App\Services\ActivityLogger;
 use Illuminate\Support\Str;
 
-trait LogsActivity 
+trait LogsActivity
 {
     protected $originalState;
 
@@ -108,15 +108,18 @@ trait LogsActivity
                 case 'CosList':
                     $description = static::getCosListDescription($model, $action, $changes);
                     break;
+                case 'AllotmentReleaseOrder':
+                    $description = static::getAllotmentReleaseOrderDescription($model, $action, $changes);
+                    break;
                 default:
                     $description = static::getDefaultDescription($model, $action, $changes);
             }
 
             ActivityLogger::log($description, $action, null);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error logging activity: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error logging activity: '.$e->getMessage());
         }
-        
+
     }
 
     /**
@@ -130,54 +133,54 @@ trait LogsActivity
                 'officeAllotmentClass.offices',
                 'officeAllotmentClass.allotmentClass',
                 'obligationAmounts',
-                'obligationAdjustments'
+                'obligationAdjustments',
             ]);
 
             $office = optional($obligation->officeAllotmentClass->offices)->office_abbreviation ?? 'Unknown Office';
             $allotmentClass = optional($obligation->officeAllotmentClass->allotmentClass)->class ?? 'Unknown Class';
 
-            $totalObrAmount = (float)($obligation->obligationAmounts->sum('obr_amount') ?? 0);
-            $totalAdjustments = (float)($obligation->obligationAdjustments->sum('adjustment_amount') ?? 0);
+            $totalObrAmount = (float) ($obligation->obligationAmounts->sum('obr_amount') ?? 0);
+            $totalAdjustments = (float) ($obligation->obligationAdjustments->sum('adjustment_amount') ?? 0);
             $totalAfterAdjustments = $totalObrAmount + $totalAdjustments;
 
             $baseDetails = "OBR# {$obligation->obr_no} under {$office} - {$allotmentClass}";
-            $amountDetails = "Previous Total: ₱" . number_format($totalObrAmount, 2) . ", Adjustments: ₱" . number_format($totalAdjustments, 2) . ", Net: ₱" . number_format($totalAfterAdjustments, 2);
+            $amountDetails = 'Previous Total: ₱'.number_format($totalObrAmount, 2).', Adjustments: ₱'.number_format($totalAdjustments, 2).', Net: ₱'.number_format($totalAfterAdjustments, 2);
             $remarksPart = $remarks !== '' ? " Remarks: {$remarks}" : '';
 
             $description = "Cancellation of Obligation ({$baseDetails}). {$amountDetails}.{$remarksPart}";
 
             ActivityLogger::log($description, 'delete', null);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error logging obligation cancellation: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error logging obligation cancellation: '.$e->getMessage());
         }
     }
 
     protected static function formatChanges($model, array $changes): string
     {
         $formattedChanges = [];
-        
-        // Using $model->getOriginal() is the safe way to access the original data 
+
+        // Using $model->getOriginal() is the safe way to access the original data
         // stored by the 'updating' event, regardless of trait property access.
-        $originalState = $model->getOriginal() ?? []; 
+        $originalState = $model->getOriginal() ?? [];
 
         foreach ($changes as $attribute => $newValue) {
             // Skip keys that aren't user-facing or helpful for logging
             if (in_array($attribute, ['created_at', 'updated_at', 'deleted_at'])) {
                 continue;
             }
-            
+
             // Get the old value from the stored original state
             $oldValue = array_key_exists($attribute, $originalState) ? $originalState[$attribute] : 'N/A';
-            
+
             // Special handling for office field - convert ID to abbreviation
             if ($attribute === 'office') {
                 $oldValue = static::getOfficeAbbreviation($oldValue);
                 $newValue = static::getOfficeAbbreviation($newValue);
             }
-            
+
             // Format for readability (using snake_case to Title Case)
             $attributeName = Str::title(Str::replace('_', ' ', Str::snake($attribute)));
-            
+
             // Simple string comparison for log, or use number_format if dealing with currency/numeric fields
             if (is_numeric($oldValue) && is_numeric($newValue) && $attribute !== 'office') {
                 $oldValue = is_null($oldValue) ? 'null' : number_format($oldValue, 2);
@@ -195,8 +198,8 @@ trait LogsActivity
 
     /**
      * Get office abbreviation from office ID
-     * 
-     * @param mixed $officeId
+     *
+     * @param  mixed  $officeId
      * @return string
      */
     protected static function getOfficeAbbreviation($officeId)
@@ -204,12 +207,14 @@ trait LogsActivity
         if (is_null($officeId) || $officeId === 'N/A') {
             return 'Not Assigned';
         }
-        
+
         try {
             $office = \App\Models\Office::find($officeId);
+
             return $office ? $office->office_abbreviation : "ID: {$officeId}";
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error getting office abbreviation: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error getting office abbreviation: '.$e->getMessage());
+
             return "ID: {$officeId}";
         }
     }
@@ -219,9 +224,9 @@ trait LogsActivity
         try {
             // Eager load the relationships
             $model->load([
-                'officeAllotmentClass.offices', 
+                'officeAllotmentClass.offices',
                 'officeAllotmentClass.allotmentClass',
-                'obligationAmounts.appropriation'
+                'obligationAmounts.appropriation',
             ]);
 
             // Get office and class details
@@ -229,118 +234,123 @@ trait LogsActivity
             $allotmentClass = optional($model->officeAllotmentClass->allotmentClass)->class ?? 'Unknown Class';
 
             // Get account codes and descriptions (NO AMOUNT INCLUDED, as requested)
-            $accountDetails = $model->obligationAmounts->map(function($amount) {
+            $accountDetails = $model->obligationAmounts->map(function ($amount) {
                 $code = optional($amount->appropriation)->account_code ?? 'Unknown Code';
                 $desc = optional($amount->appropriation)->description ?? 'Unknown Description';
+
                 return "{$code} - {$desc}";
             })->implode(', ');
-            
+
             $baseDetails = "OBR# {$model->obr_no} for {$office} - {$allotmentClass} under Account Code(s): {$accountDetails}";
 
             switch ($action) {
                 case 'create':
                     return "Created new Obligation ({$baseDetails})";
-                    
+
                 case 'update':
                     $baseDescription = "Updated Obligation ({$baseDetails}).";
-                    
+
                     // 1. Log actual parent attribute changes (e.g., obr_no, date, etc.)
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
-                    
+
                     // 2. FALLBACK: If $changes is empty, assume related models (like ObligationAmount) were updated.
                     // This logs a general message using the current account codes.
                     if ($model->obligationAmounts->isNotEmpty()) {
                         return "{$baseDescription} Obligation amount details were modified. Account codes: [{$accountDetails}]";
                     }
-                    
+
                     // 3. Final Fallback (If no changes at all)
                     return $baseDescription;
 
                 case 'delete':
                     return "Deleted Obligation ({$baseDetails})";
-                    
+
                 default:
                     return "Obligation ({$baseDetails}) action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getObligationDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getObligationDescription: '.$e->getMessage());
+
             return "Obligation action: {$action}";
         }
     }
 
     protected static function getObligationAmountDescription($model, $action, $changes = [])
-{
-    try {
-        // Only handle update actions
-        if ($action !== 'update') {
-            return null;
-        }
+    {
+        try {
+            // Only handle update actions
+            if ($action !== 'update') {
+                return null;
+            }
 
-        // Eager load relationships
-        $model->load([
-            'obligation.officeAllotmentClass.offices',
-            'obligation.officeAllotmentClass.allotmentClass',
-            'appropriation'
-        ]);
+            // Eager load relationships
+            $model->load([
+                'obligation.officeAllotmentClass.offices',
+                'obligation.officeAllotmentClass.allotmentClass',
+                'appropriation',
+            ]);
 
-        $obligation = $model->obligation;
-        
-        // Get Obligation details
-        $obrNo = $obligation->obr_no ?? 'Unknown OBR';
-        $obrDate = $obligation->obr_date ?? 'Unknown Date';
-        $obrType = $obligation->obr_type ?? 'Unknown Type';
-        $office = optional($obligation->officeAllotmentClass->offices)->office_abbreviation ?? 'Unknown Office';
-        $allotmentClass = optional($obligation->officeAllotmentClass->allotmentClass)->class ?? 'Unknown Class';
-        $particulars = $obligation->particulars ?? 'No particulars';
-        
-        // Get account code details
-        $accountCode = optional($model->appropriation)->account_code ?? 'Unknown Code';
-        $description = optional($model->appropriation)->description ?? 'Unknown Description';
-        
-        // Build the base obligation details
-        $obligationDetails = "OBR# {$obrNo} dated {$obrDate} ({$obrType}) for {$office} - {$allotmentClass}";
-        
-        // Track changes
-        $changedFields = [];
-        
-        if (isset($changes['obr_amount'])) {
-            $oldAmount = $model->getOriginal('obr_amount') ?? 0;
-            $newAmount = $changes['obr_amount'];
-            $changedFields[] = "Amount: ₱" . number_format($oldAmount, 2) . " to ₱" . number_format($newAmount, 2);
+            $obligation = $model->obligation;
+
+            // Get Obligation details
+            $obrNo = $obligation->obr_no ?? 'Unknown OBR';
+            $obrDate = $obligation->obr_date ?? 'Unknown Date';
+            $obrType = $obligation->obr_type ?? 'Unknown Type';
+            $office = optional($obligation->officeAllotmentClass->offices)->office_abbreviation ?? 'Unknown Office';
+            $allotmentClass = optional($obligation->officeAllotmentClass->allotmentClass)->class ?? 'Unknown Class';
+            $particulars = $obligation->particulars ?? 'No particulars';
+
+            // Get account code details
+            $accountCode = optional($model->appropriation)->account_code ?? 'Unknown Code';
+            $description = optional($model->appropriation)->description ?? 'Unknown Description';
+
+            // Build the base obligation details
+            $obligationDetails = "OBR# {$obrNo} dated {$obrDate} ({$obrType}) for {$office} - {$allotmentClass}";
+
+            // Track changes
+            $changedFields = [];
+
+            if (isset($changes['obr_amount'])) {
+                $oldAmount = $model->getOriginal('obr_amount') ?? 0;
+                $newAmount = $changes['obr_amount'];
+                $changedFields[] = 'Amount: ₱'.number_format($oldAmount, 2).' to ₱'.number_format($newAmount, 2);
+            }
+
+            if (isset($changes['account_code'])) {
+                $oldCode = $model->getOriginal('account_code') ?? 'N/A';
+                $newCode = $changes['account_code'];
+                $changedFields[] = "Account Code: {$oldCode} to {$newCode}";
+            }
+
+            if (! empty($changedFields)) {
+                $changeLog = implode('; ', $changedFields);
+
+                return "Updated obligation amount for {$obligationDetails}, Account Code: {$accountCode} - {$description}. Changes: [{$changeLog}]";
+            }
+
+            return "Updated obligation amount for {$obligationDetails}, Account Code: {$accountCode} - {$description}";
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error in getObligationAmountDescription: '.$e->getMessage());
+
+            return 'Obligation amount updated';
         }
-        
-        if (isset($changes['account_code'])) {
-            $oldCode = $model->getOriginal('account_code') ?? 'N/A';
-            $newCode = $changes['account_code'];
-            $changedFields[] = "Account Code: {$oldCode} to {$newCode}";
-        }
-        
-        if (!empty($changedFields)) {
-            $changeLog = implode('; ', $changedFields);
-            return "Updated obligation amount for {$obligationDetails}, Account Code: {$accountCode} - {$description}. Changes: [{$changeLog}]";
-        }
-        
-        return "Updated obligation amount for {$obligationDetails}, Account Code: {$accountCode} - {$description}";
-        
-    } catch (\Exception $e) {
-        \Illuminate\Support\Facades\Log::error('Error in getObligationAmountDescription: ' . $e->getMessage());
-        return "Obligation amount updated";
     }
-}
 
     // --- PurchaseOrder ---
     protected static function getPurchaseOrderDescription($model, $action, $changes = [])
     {
         try {
             $model->load([
-                'obligation.officeAllotmentClass.offices', 
+                'obligation.officeAllotmentClass.offices',
                 'obligation.officeAllotmentClass.allotmentClass',
-                'obligationAmount.appropriation'
+                'obligationAmount.appropriation',
             ]);
-            
+
             $office = optional($model->obligation->officeAllotmentClass)->offices->office_abbreviation ?? 'Unknown Office';
             $allotmentClass = optional($model->obligation->officeAllotmentClass)->allotmentClass->class ?? 'Unknown Class';
             $accountCode = optional($model->obligationAmount->appropriation)->account_code ?? 'Unknown Code';
@@ -352,10 +362,12 @@ trait LogsActivity
                     return "Created new Purchase Order for {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated Purchase Order for {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted Purchase Order for {$baseDetails}";
@@ -363,7 +375,8 @@ trait LogsActivity
                     return "Purchase Order action: {$action}";
             }
         } catch (\Exception $e) {
-             \Illuminate\Support\Facades\Log::error('Error in getPurchaseOrderDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getPurchaseOrderDescription: '.$e->getMessage());
+
             return "Purchase Order action: {$action}";
         }
     }
@@ -373,11 +386,11 @@ trait LogsActivity
     {
         try {
             $model->load([
-                'obligation.officeAllotmentClass.offices', 
+                'obligation.officeAllotmentClass.offices',
                 'obligation.officeAllotmentClass.allotmentClass',
-                'obligationAmount.appropriation'
+                'obligationAmount.appropriation',
             ]);
-            
+
             $office = optional($model->obligation->officeAllotmentClass)->offices->office_abbreviation ?? 'Unknown Office';
             $allotmentClass = optional($model->obligation->officeAllotmentClass)->allotmentClass->class ?? 'Unknown Class';
             $accountCode = optional($model->obligationAmount->appropriation)->account_code ?? 'Unknown Code';
@@ -389,10 +402,12 @@ trait LogsActivity
                     return "Created new Disbursement ({$baseDetails})";
                 case 'update':
                     $baseDescription = "Updated Disbursement ({$baseDetails}).";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted Disbursement ({$baseDetails})";
@@ -400,7 +415,8 @@ trait LogsActivity
                     return "Disbursement ({$baseDetails}) action: {$action}";
             }
         } catch (\Exception $e) {
-             \Illuminate\Support\Facades\Log::error('Error in getDisbursementDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getDisbursementDescription: '.$e->getMessage());
+
             return "Disbursement action: {$action}";
         }
     }
@@ -410,33 +426,33 @@ trait LogsActivity
     {
         try {
             $model->load([
-                'obligation.officeAllotmentClass.offices', 
+                'obligation.officeAllotmentClass.offices',
                 'obligation.officeAllotmentClass.allotmentClass',
                 'obligationAmount.appropriation',
                 'obligation.obligationAmounts',
-                'obligation.obligationAdjustments'
+                'obligation.obligationAdjustments',
             ]);
-            
+
             // Ensure we always return a non-empty description for logging
-            
+
             $office = optional($model->obligation->officeAllotmentClass)->offices->office_abbreviation ?? 'Unknown Office';
             $allotmentClass = optional($model->obligation->officeAllotmentClass)->allotmentClass->class ?? 'Unknown Class';
             $accountCode = optional($model->obligationAmount->appropriation)->account_code ?? 'Unknown Code';
             $description = optional($model->obligationAmount->appropriation)->description ?? 'Unknown Description';
-            
+
             // Calculate total OBR amount
             $totalObrAmount = optional($model->obligation)->obligationAmounts->sum('obr_amount') ?? 0;
-            
+
             // Calculate total adjustment amount
             $totalAdjustmentAmount = optional($model->obligation)->obligationAdjustments->sum('adjustment_amount') ?? 0;
-            
+
             // Calculate adjusted amount (totalObrAmount - totalAdjustmentAmount)
             $adjustedAmount = $totalObrAmount + $totalAdjustmentAmount;
-            
+
             // Determine adjustment type based on adjusted amount
             $isCancellation = abs($adjustedAmount) == 0; // Adjusted amount is zero
             $adjustmentType = $isCancellation ? 'Cancellation' : ($model->adjustment_amount >= 0 ? 'Addition' : 'Deduction');
-            
+
             $baseDetails = "OBR# {$model->obligation->obr_no} under {$office} - {$allotmentClass}, Account Code: {$accountCode} - {$description}";
 
             switch ($action) {
@@ -444,10 +460,12 @@ trait LogsActivity
                     return "Created new Obligation Adjustment ({$adjustmentType}) for {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated Obligation Adjustment ({$adjustmentType}) for {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted Obligation Adjustment ({$adjustmentType}) for {$baseDetails}";
@@ -455,7 +473,8 @@ trait LogsActivity
                     return "Obligation Adjustment for OBR# {$model->obligation->obr_no} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getObligationAdjustmentDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getObligationAdjustmentDescription: '.$e->getMessage());
+
             return "OBR Adjustment action: {$action}";
         }
     }
@@ -465,7 +484,7 @@ trait LogsActivity
     {
         try {
             $model->load(['offices', 'allotmentClass']);
-            
+
             $office = optional($model->offices)->office_abbreviation ?? 'Unknown Office';
             $allotmentClass = optional($model->allotmentClass)->class ?? 'Unknown Class';
             $appropriationAmount = number_format($model->appropriation_amount, 2);
@@ -476,10 +495,12 @@ trait LogsActivity
                     return "Created new Office Allotment Class: {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated Office Allotment Class: {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted Office Allotment Class: {$baseDetails}";
@@ -487,7 +508,8 @@ trait LogsActivity
                     return "Office Allotment Class action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getOfficeAllotmentClassDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getOfficeAllotmentClassDescription: '.$e->getMessage());
+
             return "Office Allotment Class action: {$action}";
         }
     }
@@ -498,9 +520,9 @@ trait LogsActivity
         try {
             $model->load([
                 'officeAllotmentClass.offices',
-                'officeAllotmentClass.allotmentClass'
+                'officeAllotmentClass.allotmentClass',
             ]);
-            
+
             $accountCode = $model->account_code ?? 'Unknown Code';
             $description = $model->description ?? 'Unknown Description';
 
@@ -514,10 +536,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -525,7 +549,8 @@ trait LogsActivity
                     return "Account {$accountCode} - {$description} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getAppropriationDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getAppropriationDescription: '.$e->getMessage());
+
             return "Account action: {$action}";
         }
     }
@@ -537,7 +562,7 @@ trait LogsActivity
             $model->load([
                 'appropriation',
                 'officeAllotmentClass.offices',
-                'officeAllotmentClass.allotmentClass'
+                'officeAllotmentClass.allotmentClass',
             ]);
 
             // Get office and allotment class details
@@ -553,7 +578,7 @@ trait LogsActivity
             $accountCode = optional($model->appropriation)->account_code ?? 'Unknown Code';
             $description = optional($model->appropriation)->description ?? 'Unknown Description';
             $details = "{$accountCode} - {$description}";
-            
+
             $baseDetails = "Realignment No. {$realignmentNo} ({$type}) under {$officeDetails}: {$details}";
 
             switch ($action) {
@@ -561,10 +586,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -572,11 +599,12 @@ trait LogsActivity
                     return "Realignment No. {$realignmentNo} ({$type}) under {$officeDetails} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getRealignmentDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getRealignmentDescription: '.$e->getMessage());
+
             return "Realignment action: {$action}";
         }
     }
-    
+
     // --- Supplemental ---
     protected static function getSupplementalDescription($model, $action, $changes = [])
     {
@@ -584,7 +612,7 @@ trait LogsActivity
             $model->load([
                 'appropriation',
                 'officeAllotmentClass.offices',
-                'officeAllotmentClass.allotmentClass'
+                'officeAllotmentClass.allotmentClass',
             ]);
 
             // Get office and allotment class details
@@ -608,10 +636,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -619,7 +649,8 @@ trait LogsActivity
                     return "Supplemental No. {$supplementalNo} under {$officeDetails} ({$type}) action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getSupplementalDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getSupplementalDescription: '.$e->getMessage());
+
             return "Supplemental action: {$action}";
         }
     }
@@ -631,16 +662,18 @@ trait LogsActivity
             $model->load(['allotmentClass']);
             $class = optional($model->allotmentClass)->description ?? 'Unknown Class';
             $baseDetails = "Account Code {$model->code} - {$model->description} under {$class}";
-            
+
             switch ($action) {
                 case 'create':
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -648,7 +681,8 @@ trait LogsActivity
                     return "Account Code {$model->code} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getAccountCodeDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getAccountCodeDescription: '.$e->getMessage());
+
             return "Account Code action: {$action}";
         }
     }
@@ -664,10 +698,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -675,7 +711,8 @@ trait LogsActivity
                     return "Allotment Class {$model->class} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getAllotmentClassDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getAllotmentClassDescription: '.$e->getMessage());
+
             return "Allotment Class action: {$action}";
         }
     }
@@ -691,10 +728,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -702,7 +741,8 @@ trait LogsActivity
                     return "Fund {$model->fund} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getFundDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getFundDescription: '.$e->getMessage());
+
             return "Fund action: {$action}";
         }
     }
@@ -718,10 +758,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -729,7 +771,8 @@ trait LogsActivity
                     return "Fund Source {$model->source} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getFundSourceDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getFundSourceDescription: '.$e->getMessage());
+
             return "Fund Source action: {$action}";
         }
     }
@@ -745,10 +788,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -756,7 +801,8 @@ trait LogsActivity
                     return "Office {$model->office_abbreviation} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getOfficeDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getOfficeDescription: '.$e->getMessage());
+
             return "Office action: {$action}";
         }
     }
@@ -772,10 +818,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -783,7 +831,8 @@ trait LogsActivity
                     return "Program action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getProgramDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getProgramDescription: '.$e->getMessage());
+
             return "Program action: {$action}";
         }
     }
@@ -799,10 +848,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -810,7 +861,8 @@ trait LogsActivity
                     return "Sector action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getSectorDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getSectorDescription: '.$e->getMessage());
+
             return "Sector action: {$action}";
         }
     }
@@ -822,26 +874,28 @@ trait LogsActivity
             $roles = $model->getRoleNames()->implode(', ');
             $userInfo = "{$model->name} ({$model->username})";
             $userType = ucfirst($model->usertype ?? 'Standard');
-            
+
             // Load office relationship if not already loaded
-            if (!$model->relationLoaded('officeRelation')) {
+            if (! $model->relationLoaded('officeRelation')) {
                 $model->load('officeRelation');
             }
-            
+
             // Get office abbreviation, fallback to 'Not Assigned' if null
             $office = $model->office_abbreviation ?? 'Not Assigned';
-            
-            $baseDetails = "User: {$userInfo} - Type: {$userType}, Office: {$office}" . ($roles ? ", Roles: {$roles}" : "");
-            
+
+            $baseDetails = "User: {$userInfo} - Type: {$userType}, Office: {$office}".($roles ? ", Roles: {$roles}" : '');
+
             switch ($action) {
                 case 'create':
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted User: {$userInfo} - Type: {$userType}, Office: {$office}";
@@ -849,7 +903,8 @@ trait LogsActivity
                     return "User {$userInfo} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getUserDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getUserDescription: '.$e->getMessage());
+
             return "User action: {$action}";
         }
     }
@@ -862,24 +917,26 @@ trait LogsActivity
             $designation = $model->designation ?? 'No Designation';
 
             // Load office relationship if not already loaded
-            if (!$model->relationLoaded('officeRelation')) {
+            if (! $model->relationLoaded('officeRelation')) {
                 $model->load('officeRelation');
             }
-            
+
             // Get office abbreviation, fallback to 'Not Assigned' if null
             $office = $model->office_abbreviation ?? 'Not Assigned';
-            
+
             $baseDetails = "Employee: {$employeeInfo} - {$designation} at {$office}";
-            
+
             switch ($action) {
                 case 'create':
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -887,7 +944,8 @@ trait LogsActivity
                     return "Employee {$employeeInfo} action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getEmployeeDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getEmployeeDescription: '.$e->getMessage());
+
             return "Employee action: {$action}";
         }
     }
@@ -903,10 +961,12 @@ trait LogsActivity
                     return "Created new {$baseDetails}";
                 case 'update':
                     $baseDescription = "Updated {$baseDetails}.";
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $changedFields = static::formatChanges($model, $changes);
+
                         return "{$baseDescription} Changes: [{$changedFields}]";
                     }
+
                     return $baseDescription;
                 case 'delete':
                     return "Deleted {$baseDetails}";
@@ -914,8 +974,46 @@ trait LogsActivity
                     return "Contract of Service action: {$action}";
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error in getCosListDescription: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error in getCosListDescription: '.$e->getMessage());
+
             return "Contract of Service action: {$action}";
+        }
+    }
+
+    // --- AllotmentReleaseOrder ---
+    protected static function getAllotmentReleaseOrderDescription($model, $action, $changes = [])
+    {
+        try {
+            $model->load(['officeAllotmentClass.offices', 'officeAllotmentClass.allotmentClass']);
+
+            $office = optional($model->officeAllotmentClass->offices)->office_abbreviation ?? 'Unknown Office';
+            $allotmentClassCode = optional($model->officeAllotmentClass->allotmentClass)->class;
+            $allotmentClassDescription = optional($model->officeAllotmentClass->allotmentClass)->description;
+            $allotmentClass = \App\Models\AllotmentReleaseOrder::displayClassLabel($allotmentClassCode, $allotmentClassDescription);
+
+            $baseDetails = "ARO No. {$model->aro_no} for {$office} - {$allotmentClass} ({$model->fund_source})";
+
+            switch ($action) {
+                case 'create':
+                    return "Created new Allotment Release Order ({$baseDetails})";
+                case 'update':
+                    $baseDescription = "Updated Allotment Release Order ({$baseDetails}).";
+                    if (! empty($changes)) {
+                        $changedFields = static::formatChanges($model, $changes);
+
+                        return "{$baseDescription} Changes: [{$changedFields}]";
+                    }
+
+                    return $baseDescription;
+                case 'delete':
+                    return "Deleted Allotment Release Order ({$baseDetails})";
+                default:
+                    return "Allotment Release Order ({$baseDetails}) action: {$action}";
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error in getAllotmentReleaseOrderDescription: '.$e->getMessage());
+
+            return "Allotment Release Order action: {$action}";
         }
     }
 
@@ -925,18 +1023,20 @@ trait LogsActivity
         $modelName = class_basename($model);
         $modelName = Str::title(Str::snake($modelName, ' '));
         $identifier = $model->id;
-        
+
         $baseDetails = "{$modelName}: {$identifier}";
-        
+
         switch ($action) {
             case 'create':
                 return "Created new {$baseDetails}";
             case 'update':
                 $baseDescription = "Updated {$baseDetails}.";
-                if (!empty($changes)) {
+                if (! empty($changes)) {
                     $changedFields = static::formatChanges($model, $changes);
+
                     return "{$baseDescription} Changes: [{$changedFields}]";
                 }
+
                 return $baseDescription;
             case 'delete':
                 return "Deleted {$baseDetails}";
@@ -952,23 +1052,23 @@ trait LogsActivity
     {
         try {
             $filterDetails = '';
-            if (!empty($filters)) {
+            if (! empty($filters)) {
                 $filterParts = [];
                 foreach ($filters as $key => $value) {
                     if ($value !== null && $value !== '') {
                         $filterParts[] = "{$key}: {$value}";
                     }
                 }
-                if (!empty($filterParts)) {
-                    $filterDetails = " with filters [" . implode(', ', $filterParts) . "]";
+                if (! empty($filterParts)) {
+                    $filterDetails = ' with filters ['.implode(', ', $filterParts).']';
                 }
             }
 
             $description = "Generated Excel Report: {$reportName} ({$fileName}){$filterDetails}";
-            
+
             ActivityLogger::log($description, 'export', null);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error logging excel report generation: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error logging excel report generation: '.$e->getMessage());
         }
     }
 }

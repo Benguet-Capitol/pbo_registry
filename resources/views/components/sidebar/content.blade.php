@@ -156,6 +156,15 @@
     </div>
 
     <x-sidebar.link
+        title="ARO"
+        href="{{ route('allotment_release_orders.index') }}"
+        :isActive="request()->routeIs('allotment_release_orders.*')">
+        <x-slot name="icon">
+            <i class="fas fa-folder-open text-base flex-shrink-0 dark:text-gray-100"></i>
+        </x-slot>
+    </x-sidebar.link>
+
+    <x-sidebar.link
         title="RAO"
         href="{{ route('rao.index') }}"
         :isActive="request()->routeIs('rao.index')">
@@ -383,6 +392,15 @@
         class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 px-3 pt-4 pb-2 mt-2 border-b-2 border-blue-200 dark:border-blue-900">
         Reports / Summaries
     </div>
+
+    <x-sidebar.link
+        title="ARO"
+        href="{{ route('allotment_release_orders.index') }}"
+        :isActive="request()->routeIs('allotment_release_orders.*')">
+        <x-slot name="icon">
+            <i class="fas fa-folder-open text-base flex-shrink-0 dark:text-gray-100"></i>
+        </x-slot>
+    </x-sidebar.link>
 
     <x-sidebar.link
         title="RAO"

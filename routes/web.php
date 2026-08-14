@@ -1,47 +1,47 @@
 <?php
 
-use App\Http\Controllers\OfficeController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\ActivityLogController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AccountCodeController;
 use App\Http\Controllers\AccountsSummaryController;
-use App\Http\Controllers\AppropriationController;
-use App\Http\Controllers\ObligationAdjustmentController;
-use App\Http\Controllers\OfficeAllotmentClassController;
-use App\Http\Controllers\ObligationController;
-use App\Http\Controllers\CosListController;
-use App\Http\Controllers\ObligationFileController;
-use App\Http\Controllers\RealignmentFileController;
-use App\Http\Controllers\SupplementalFileController;
-use App\Http\Controllers\PurchaseOrderController;
-use App\Http\Controllers\PurchaseOrderFileController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AllotmentClassController;
-use App\Http\Controllers\FundController;
-use App\Http\Controllers\FundSourceController;
-use App\Http\Controllers\SectorController;
-use App\Http\Controllers\ProgramController;
-use App\Http\Controllers\RealignmentController;
-use App\Http\Controllers\SupplementalController;
-use App\Http\Controllers\SAAOBController;
-use App\Http\Controllers\SAAOBFundSectorController;
-use App\Models\Office;
-use Illuminate\Http\Request;
+use App\Http\Controllers\AllotmentReleaseOrderController;
+use App\Http\Controllers\AppropriationController;
+use App\Http\Controllers\CosListController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisbursementController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\FundController;
+use App\Http\Controllers\FundSourceController;
+use App\Http\Controllers\NDDController;
+use App\Http\Controllers\ObligationAdjustmentController;
+use App\Http\Controllers\ObligationController;
+use App\Http\Controllers\ObligationFileController;
+use App\Http\Controllers\OfficeAllotmentClassController;
+use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseOrderFileController;
 use App\Http\Controllers\RAOController;
-use App\Http\Controllers\SAAOBFundSourceController;
+use App\Http\Controllers\RealignmentController;
+use App\Http\Controllers\RealignmentFileController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SAAOBCOController;
+use App\Http\Controllers\SAAOBController;
+use App\Http\Controllers\SAAOBFundSectorController;
+use App\Http\Controllers\SAAOBFundSourceController;
 use App\Http\Controllers\SAAOBGFCurrentController;
 use App\Http\Controllers\SAAOBGFCurrentSummaryController;
-use App\Http\Controllers\SAAODBOfficeController;
 use App\Http\Controllers\SAAODBAllFundsController;
 use App\Http\Controllers\SAAODBGFController;
-use App\Http\Controllers\NDDController;
-use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\SAAODBOfficeController;
+use App\Http\Controllers\SectorController;
+use App\Http\Controllers\SupplementalController;
+use App\Http\Controllers\SupplementalFileController;
+use App\Http\Controllers\UserController;
+use App\Models\Office;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,7 +53,7 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::middleware(['auth'])->group(function() {
+Route::middleware(['auth'])->group(function () {
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/data', [ActivityLogController::class, 'data'])->name('activity-logs.data');
 });
@@ -71,13 +71,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/accounts/{id}', [DashboardController::class, 'accounts'])->name('dashboard.accounts');
 
-    //Obligation Routes for the dashboard
+    // Obligation Routes for the dashboard
     Route::get('/api/obligations/by-office-allotment-class/{classId}', [ObligationController::class, 'getByOfficeAllotmentClass'])->name('obligations.api.byOfficeAllotmentClass');
     Route::get('/api/obligations/by-appropriation/{appropriationId}', [ObligationController::class, 'getByAppropriation'])->name('obligations.api.byAppropriation');
 
     // SAAOB by Office-Current Report Routes
     Route::get('saaob/export-excel', [SAAOBController::class, 'exportExcel'])->name('saaob.exportExcel');
-    
+
 });
 
 // ------------------------------------------------------------------
@@ -123,12 +123,13 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
     // Get Fund
     Route::get('/get-fund/{office_id}', function ($office_id) {
         $office = Office::find($office_id);
+
         return response()->json([
             'fund' => $office ? $office->fund : '',
             'fpp_code' => $office ? $office->fpp_code : '',
             'responsibility_code' => $office ? $office->responsibility_code : '',
             'sub_office' => $office ? $office->sub_office : '',
-            'office_abbreviation' => $office ? $office->office_abbreviation : ''
+            'office_abbreviation' => $office ? $office->office_abbreviation : '',
         ]);
     });
     // Get Office Allotment Classes
@@ -219,7 +220,7 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
 
     // SAAOB by Office-Current Report Routes
     Route::get('/saaob', [SAAOBController::class, 'index'])->name('saaob.index');
-    
+
     // SAAOB by Office-Continuing Report Routes
     Route::get('/saaobco', [SAAOBCOController::class, 'index'])->name('saaobco.index');
     Route::get('saaobco/export-excel', [SAAOBCOController::class, 'exportExcel'])->name('saaobco.exportExcel');
@@ -247,6 +248,13 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
     // RAO Report Routes
     Route::get('/rao', [RAOController::class, 'index'])->name('rao.index');
     Route::get('rao/export-excel', [RAOController::class, 'exportExcel'])->name('rao.exportExcel');
+    // Allotment Release Order Routes
+    Route::get('/allotment-release-orders-get-appropriations', [AllotmentReleaseOrderController::class, 'getAppropriationsByClass'])->name('allotment_release_orders.getAppropriations');
+    Route::get('/allotment-release-orders-preview-no', [AllotmentReleaseOrderController::class, 'previewAroNo'])->name('allotment_release_orders.previewNo');
+    Route::get('/allotment-release-orders-signatories', [AllotmentReleaseOrderController::class, 'getSignatories'])->name('allotment_release_orders.signatories');
+    Route::get('/allotment-release-orders/{allotment_release_order}/preview', [AllotmentReleaseOrderController::class, 'preview'])->name('allotment_release_orders.preview');
+    Route::get('/allotment-release-orders/{allotment_release_order}/export-excel', [AllotmentReleaseOrderController::class, 'exportExcel'])->name('allotment_release_orders.exportExcel');
+    Route::resource('allotment-release-orders', AllotmentReleaseOrderController::class)->names('allotment_release_orders');
     // Accounts Summary Report Routes
     Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');
     Route::get('summaryaccounts/export-excel', [AccountsSummaryController::class, 'exportExcel'])->name('summaryaccounts.exportExcel');
@@ -276,4 +284,4 @@ Route::get('/buttons/text-icon', function () {
     return view('buttons-showcase.text-icon');
 })->middleware(['auth'])->name('buttons.text-icon');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

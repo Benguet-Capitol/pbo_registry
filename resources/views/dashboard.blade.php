@@ -10,7 +10,7 @@
 
     <x-slot name="header">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 class="text-xl font-semibold leading-tight break-words">
+            <h2 class="min-w-0 text-lg sm:text-xl font-semibold leading-snug sm:leading-tight break-words">
                 Dashboard | Current Balances
 
                 @php
@@ -41,7 +41,7 @@
 
             <!-- Right: Breadcrumb Navigation -->
             @if(isset($breadcrumb))
-            <nav class="text-xs text-gray-600 dark:text-gray-300" aria-label="Breadcrumb">
+            <nav class="text-xs text-gray-600 dark:text-gray-300 shrink-0" aria-label="Breadcrumb">
                 <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse flex-wrap">
                     @foreach ($breadcrumb as $index => $item)
                     <li>
@@ -500,11 +500,14 @@
                     @endrole
                 </div>
             </div>
+            <div class="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 mb-2 sm:hidden">
+                <i class="fas fa-arrows-left-right"></i> Swipe left/right to see more columns. The first column stays pinned.
+            </div>
             <div class="overflow-auto max-h-[60vh] sm:max-h-[720px] rounded-lg border border-gray-300 dark:border-gray-700">
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
-                            <th class="px-2 py-2 w-[70px] text-center">View Details</th>
+                            <th class="sticky left-0 z-20 px-2 py-2 w-[70px] text-center bg-gray-200 dark:bg-gray-900 border-r-2 border-gray-400 dark:border-gray-600">View Details</th>
                             <th class="px-2 py-2 w-[100px] text-center">Office</th>
                             <th class="px-2 py-2 w-[120px] text-center">Allotment Class</th>
                             @role('Disbursement|Administrator|Developer|Obligation')
@@ -536,7 +539,7 @@
                     <tbody>
                         @forelse ($officeAllotmentClasses as $class)
                         <tr 
-                            class="bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                            class="group bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                             ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}{{ $dateFilterQuery ? '?'.$dateFilterQuery : '' }}'"
                             data-class-id="{{ $class->id }}"
                             data-year="{{ $selectedYear }}"
@@ -557,14 +560,14 @@
                             data-disbursements-to-obligations="{{ $class->disbursements_to_obligations }}"
                             data-disbursements-to-appropriations="{{ $class->disbursements_to_appropriations }}"
                         >
-                            <td class="px-1 py-2 text-center">
+                            <td class="sticky left-0 z-[1] px-1 py-2 text-center bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-600 border-r-2 border-gray-300 dark:border-gray-600">
                                 <div class="relative inline-block text-left">
                                     <!-- Dropdown Button -->
                                     <button onclick="toggleDropdown(this)"
                                         class="relative text-xs group px-2 py-1.5">
                                         <span class="fas fa-forward"></span>
                                         <!-- Tooltip -->
-                                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-20">
+                                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded px-2 py-1 whitespace-normal break-words max-w-[45vw] sm:max-w-[220px] z-20">
                                             {{ $class->offices->office_abbreviation ?? 'No Office' }} - {{ $class->allotmentClass->description ?? 'No Class' }}
                                         </span>
                                     </button>
@@ -614,7 +617,7 @@
                                         <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->appropriation_accomplishment, 2) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                    <div class="edge-tooltip absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                                         <div class="font-semibold">Appropriation Utilization</div>
                                         <div>{{ number_format($class->appropriation_accomplishment, 2) }}%</div>
                                         <div class="text-[10px] text-gray-300">{{ number_format($class->obligations_sum, 2) }} / {{ number_format($class->authorized_appropriations, 2) }}</div>
@@ -634,7 +637,7 @@
                                         <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->allotment_accomplishment, 2) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                    <div class="edge-tooltip absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                                         <div class="font-semibold">Allotments Utilization</div>
                                         <div>{{ number_format($class->allotment_accomplishment, 2) }}%</div>
                                         <div class="text-[10px] text-gray-300">{{ number_format($class->obligations_sum, 2) }} / {{ number_format($class->allotments_sum, 2) }}</div>
@@ -656,7 +659,7 @@
                                         <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->disbursements_to_obligations, 2) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                    <div class="edge-tooltip absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                                         <div class="font-semibold">Disbursements / Obligations</div>
                                         <div>{{ number_format($class->disbursements_to_obligations, 2) }}%</div>
                                         <div class="text-[10px] text-gray-300">{{ number_format($class->disbursements_sum, 2) }} / {{ number_format($class->obligations_sum, 2) }}</div>
@@ -675,7 +678,7 @@
                                         <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[9px] font-semibold whitespace-nowrap pointer-events-none">{{ number_format($class->disbursements_to_appropriations, 2) }}%</span>
                                     </div>
                                     <!-- Tooltip -->
-                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                    <div class="edge-tooltip absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                                         <div class="font-semibold">Disbursements / Appropriations</div>
                                         <div>{{ number_format($class->disbursements_to_appropriations, 2) }}%</div>
                                         <div class="text-[10px] text-gray-300">{{ number_format($class->disbursements_sum, 2) }} / {{ number_format($class->authorized_appropriations, 2) }}</div>
@@ -867,7 +870,7 @@
                 </div>
                 
                 <!-- Tooltip -->
-                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                <div class="edge-tooltip absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                     <div class="font-semibold">Appropriation Utilization</div>
                     <div class="text-indigo-300">{{ number_format($totalAuthorizedAppropriationsAccomplishment, 2) }}%</div>
                     <div class="text-gray-300 text-[10px] mt-1">Obligations: <span class="card-tooltip-obligations">{{ number_format($totalObligations, 2) }}</span></div>
@@ -921,7 +924,7 @@
                 </div>
                 
                 <!-- Tooltip -->
-                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                <div class="edge-tooltip absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                     <div class="font-semibold">Allotments Utilization</div>
                     <div class="text-teal-300">{{ number_format($allotmentAccomplishment, 2) }}%</div>
                     <div class="text-gray-300 text-[10px] mt-1">Obligations: <span class="card-tooltip-obligations-allot">{{ number_format($totalObligations, 2) }}</span></div>
@@ -989,7 +992,7 @@
                 </div>
                 
                 <!-- Tooltip -->
-                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                <div class="edge-tooltip absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                     <div class="font-semibold">Disbursements / Obligations</div>
                     <div class="text-lime-300">{{ number_format($totalDisbursementsToObligations, 2) }}%</div>
                     <div class="text-gray-300 text-[10px] mt-1">Disbursements: <span class="card-tooltip-disbursements-ob">{{ number_format($totalDisbursements, 2) }}</span></div>
@@ -1030,7 +1033,7 @@
                 </div>
                 
                 <!-- Tooltip -->
-                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                <div class="edge-tooltip absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                     <div class="font-semibold">Disbursements / Appropriations</div>
                     <div class="text-amber-300">{{ number_format($totalDisbursementsToAppropriations, 2) }}%</div>
                     <div class="text-gray-300 text-[10px] mt-1">Disbursements: <span class="card-tooltip-disbursements-ap">{{ number_format($totalDisbursements, 2) }}</span></div>
@@ -3141,6 +3144,7 @@
         const tooltip = element.querySelector('.tooltip-box');
         if (tooltip) {
             tooltip.style.display = 'block';
+            clampTooltipToViewport(tooltip);
         }
     }
 
@@ -3148,8 +3152,37 @@
         const tooltip = element.querySelector('.tooltip-box');
         if (tooltip) {
             tooltip.style.display = 'none';
+            tooltip.style.transform = '';
         }
     }
+
+    // Nudges a horizontally-centered tooltip back into the viewport on narrow screens
+    // instead of letting it run off the left/right edge.
+    function clampTooltipToViewport(tooltip) {
+        tooltip.style.transform = 'translateX(-50%)';
+        requestAnimationFrame(function () {
+            const rect = tooltip.getBoundingClientRect();
+            const margin = 8;
+            if (rect.left < margin) {
+                tooltip.style.transform = `translateX(calc(-50% + ${margin - rect.left}px))`;
+            } else if (rect.right > window.innerWidth - margin) {
+                tooltip.style.transform = `translateX(calc(-50% - ${rect.right - (window.innerWidth - margin)}px))`;
+            }
+        });
+    }
+
+    // Same edge-clamping behavior for the CSS group-hover tooltips (progress bar
+    // and card utilization tooltips) marked with the .edge-tooltip class.
+    document.querySelectorAll('.edge-tooltip').forEach(function (tip) {
+        const trigger = tip.parentElement;
+        if (!trigger) return;
+        trigger.addEventListener('mouseenter', function () {
+            clampTooltipToViewport(tip);
+        });
+        trigger.addEventListener('mouseleave', function () {
+            tip.style.transform = '';
+        });
+    });
 
     // Fixed color palette with hover colors
     const fixedColorAssignments = {
@@ -3748,15 +3781,18 @@
 
     // Add heatmap toggle button to the page
     function addHeatmapToggle() {
-        const buttonContainer = document.getElementById('tableActionButtons');
-        if (buttonContainer && !document.getElementById('heatmapToggle')) {
+        const tableHeader = document.querySelector('.bg-white.overflow-hidden.shadow-sm.sm\\:rounded-lg.mt-4.mb-4 .flex.justify-between.items-center.mb-4');
+        if (tableHeader && !document.getElementById('heatmapToggle')) {
+            // Allow the header row to wrap on small screens instead of overflowing
+            tableHeader.classList.add('flex-wrap', 'gap-2');
+
             const toggleButton = document.createElement('button');
             toggleButton.id = 'heatmapToggle';
             toggleButton.onclick = toggleHeatmap;
-            toggleButton.className = 'text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none';
+            toggleButton.className = 'text-blue-600 inline-flex leading-4 tracking-wider items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none w-full sm:w-auto mt-2 sm:mt-0';
             toggleButton.innerHTML = '🎨 Enable Heatmap';
 
-            buttonContainer.appendChild(toggleButton);
+            tableHeader.appendChild(toggleButton);
         }
     }
 

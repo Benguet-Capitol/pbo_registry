@@ -29,8 +29,15 @@
     </div>
 </div>
 
-<div class="mt-3 text-xs text-center space-y-0.5">
-    <div>ARO No: {{ $aro->aro_no }}</div>
-    <div>Date of Issue: {{ $aro->date_of_issue->format('F j, Y') }}</div>
-    <div>Page {{ $totalPages }} of {{ $totalPages }} Page{{ $totalPages > 1 ? 's' : '' }}</div>
+<div class="mt-3 text-xs grid grid-cols-3 items-start">
+    <div></div>
+    <div class="text-center space-y-0.5">
+        <div>ARO No: {{ $aro->aro_no }}</div>
+        <div>Date of Issue: {{ $aro->date_of_issue->format('F j, Y') }}</div>
+        <div>Page {{ $totalPages }} of {{ $totalPages }} Page{{ $totalPages > 1 ? 's' : '' }}</div>
+    </div>
+    <div class="text-[10px] text-right text-gray-500 space-y-0.5">
+        <div>Generated on: {{ now()->format('F j, Y g:i A') }}</div>
+        <div class="font-semibold">PBO|Registry</div>
+    </div>
 </div>

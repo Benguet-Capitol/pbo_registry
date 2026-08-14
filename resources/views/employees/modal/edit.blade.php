@@ -53,12 +53,11 @@
                                 <x-form.input
                                     withicon
                                     id="edit_name"
-                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 bg-gray-50"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600"
                                     type="text"
                                     name="edit_name"
                                     autocomplete="off"
-                                    placeholder="{{ __('Auto-filled') }}"
-                                    readonly
+                                    placeholder="{{ __('Auto-filled or type manually') }}"
                                 />
                             </x-form.input-with-icon-wrapper>
                             <span class="text-red-500 text-xs error-message" id="edit_error_name"></span>
@@ -72,12 +71,11 @@
                                 <x-form.input
                                     withicon
                                     id="edit_designation"
-                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 bg-gray-50"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600"
                                     type="text"
                                     name="edit_designation"
                                     autocomplete="off"
-                                    placeholder="{{ __('Auto-filled') }}"
-                                    readonly
+                                    placeholder="{{ __('Auto-filled or type manually') }}"
                                 />
                             </x-form.input-with-icon-wrapper>
                             <span class="text-red-500 text-xs error-message" id="edit_error_designation"></span>

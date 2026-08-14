@@ -59,12 +59,11 @@
                                 <x-form.input
                                     withicon
                                     id="name"
-                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 bg-gray-50"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600"
                                     type="text"
                                     name="name"
-                                    placeholder="{{ __('Auto-filled') }}"
-                                    autocomplete="off"
-                                    readonly />
+                                    placeholder="{{ __('Auto-filled or type manually') }}"
+                                    autocomplete="off" />
                             </x-form.input-with-icon-wrapper>
                             <span id="nameError" class="text-red-500 text-xs"></span>
                         </div>
@@ -79,12 +78,11 @@
                                 <x-form.input
                                     withicon
                                     id="designation"
-                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 bg-gray-50"
+                                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600"
                                     type="text"
                                     name="designation"
-                                    placeholder="{{ __('Auto-filled') }}"
-                                    autocomplete="off"
-                                    readonly />
+                                    placeholder="{{ __('Auto-filled or type manually') }}"
+                                    autocomplete="off" />
                             </x-form.input-with-icon-wrapper>
                             <span id="designationError" class="text-red-500 text-xs"></span>
                         </div>

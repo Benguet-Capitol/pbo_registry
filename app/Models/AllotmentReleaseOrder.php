@@ -31,6 +31,21 @@ class AllotmentReleaseOrder extends Model
     ];
 
     /**
+     * Carbon's default JSON serialization converts date/datetime attributes to
+     * UTC — for a plain `date` cast like date_of_issue (always midnight in the
+     * app's Asia/Manila timezone), that shifts it 8 hours back into the
+     * *previous* calendar day (e.g. 2026-08-13 00:00 +08:00 -> 2026-08-12T16:00Z).
+     * openEditAroModal() in the ARO index/edit views reads this JSON directly
+     * (@json($aro)) and takes the first 10 characters as the edit form's date
+     * input value, so that UTC shift silently pre-filled the wrong day. Keeping
+     * the app timezone instead of converting to UTC here fixes it at the source.
+     */
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d\TH:i:s.u');
+    }
+
+    /**
      * CO is displayed as "Capital Expenditures" everywhere on the ARO report
      * (title line, print/export headers, card badges) instead of the
      * allotment_classes.description value ("Capital Outlay"); PS/MOOE keep
@@ -40,6 +55,21 @@ class AllotmentReleaseOrder extends Model
     public static function displayClassLabel(?string $classCode, ?string $description = null): string
     {
         return $classCode === 'CO' ? 'Capital Expenditures' : (string) ($description ?? $classCode);
+    }
+
+    /**
+     * The physical LBE form varies by Allotment Class: MOOE uses Form No. 1A,
+     * Financial Expenses uses Form No. 1B, Capital Outlay/Capital Expenditures
+     * uses Form No. 1C, and everything else (PS, etc.) uses the base Form No. 1.
+     */
+    public static function lbeFormNumber(?string $classCode): string
+    {
+        return match ($classCode) {
+            'MOOE' => 'LBE Form No. 1A',
+            'FE' => 'LBE Form No. 1B',
+            'CO' => 'LBE Form No. 1C',
+            default => 'LBE Form No. 1',
+        };
     }
 
     public function officeAllotmentClass()
@@ -83,16 +113,48 @@ class AllotmentReleaseOrder extends Model
      *
      * @return array<int, array{ppa_code: string, rows: \Illuminate\Support\Collection, subtotal: array<string, float>}>
      */
+    /**
+     * True when this ARO's office belongs to the Special Education Fund —
+     * such an ARO consolidates account codes across every SEF office sharing
+     * the same Allotment Class/year (see AllotmentReleaseOrderController's
+     * getAppropriationsByClass()), the same way the SAAOB report does.
+     * Requires officeAllotmentClass.offices to be eager-loaded.
+     */
+    public function isSefConsolidated(): bool
+    {
+        return optional(optional($this->officeAllotmentClass)->offices)->fund === 'Special Education Fund';
+    }
+
+    /**
+     * Groups items into Subtotal blocks: when an item has a Program, the
+     * Subtotal boundary follows the Program (a PPA Code shared by multiple
+     * Programs — e.g. "Local Youth Development" then "SOFAD" both under the
+     * same code — gets one Subtotal per Program, not one for the whole PPA
+     * Code). Items with no Program fall back to grouping by PPA Code alone,
+     * same as before. Consecutive runs are what matters here (not just the
+     * key) — two non-adjacent runs that happen to share a key are kept apart
+     * so a group's rows always render together on the printed form.
+     *
+     * For SEF-consolidated AROs, each item's (denormalized) office_label also
+     * forces a group boundary — otherwise two different SEF offices sharing
+     * the same PPA Code (a real possibility, since PPA Codes aren't unique
+     * per office) would wrongly merge into one Subtotal.
+     */
     public function groupedItems(): array
     {
+        $isSefConsolidated = $this->isSefConsolidated();
         $groups = [];
+        $lastKey = null;
 
         foreach ($this->items as $item) {
             $ppaCode = $item->ppa_code ?: '';
+            $officeLabel = $isSefConsolidated ? ($item->office_label ?: '') : null;
+            $key = ($officeLabel ?? '').'||'.($item->programs ? $ppaCode.'||'.$item->programs : $ppaCode.'||__no_program__');
 
-            if (! isset($groups[$ppaCode])) {
-                $groups[$ppaCode] = [
+            if ($key !== $lastKey) {
+                $groups[] = [
                     'ppa_code' => $ppaCode,
+                    'office_label' => $officeLabel,
                     'rows' => collect(),
                     'subtotal' => [
                         'authorized_appropriation' => 0.0,
@@ -102,15 +164,18 @@ class AllotmentReleaseOrder extends Model
                     ],
                 ];
             }
+            $lastKey = $key;
 
-            $groups[$ppaCode]['rows']->push($item);
-            $groups[$ppaCode]['subtotal']['authorized_appropriation'] += (float) $item->authorized_appropriation;
-            $groups[$ppaCode]['subtotal']['for_later_release'] += (float) $item->for_later_release;
-            $groups[$ppaCode]['subtotal']['previously_released_amount'] += (float) $item->previously_released_amount;
-            $groups[$ppaCode]['subtotal']['this_release'] += (float) $item->this_release;
+            $group = &$groups[array_key_last($groups)];
+            $group['rows']->push($item);
+            $group['subtotal']['authorized_appropriation'] += (float) $item->authorized_appropriation;
+            $group['subtotal']['for_later_release'] += (float) $item->for_later_release;
+            $group['subtotal']['previously_released_amount'] += (float) $item->previously_released_amount;
+            $group['subtotal']['this_release'] += (float) $item->this_release;
+            unset($group);
         }
 
-        return array_values($groups);
+        return $groups;
     }
 
     /**
@@ -150,8 +215,14 @@ class AllotmentReleaseOrder extends Model
         };
 
         $units = [];
+        $lastOfficeLabel = null;
 
         foreach ($this->groupedItems() as $group) {
+            if ($group['office_label'] !== null && $group['office_label'] !== $lastOfficeLabel) {
+                $units[] = ['type' => 'office', 'text' => $group['office_label'], 'lines' => $estimateLines($group['office_label'], 120)];
+                $lastOfficeLabel = $group['office_label'];
+            }
+
             $lastProgram = null;
 
             foreach ($group['rows'] as $item) {

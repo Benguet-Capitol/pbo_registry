@@ -176,7 +176,13 @@
                     </thead>
                     <tbody>
                         @foreach ($pageUnits as $unit)
-                            @if ($unit['type'] === 'program')
+                            @if ($unit['type'] === 'office')
+                                {{-- SEF-consolidated ARO: bold header marking a new office's account codes --}}
+                                <tr class="bg-gray-200">
+                                    <td class="border border-black px-2 py-1"></td>
+                                    <td class="border border-black px-2 py-1 font-bold uppercase" colspan="6">{{ $unit['text'] }}</td>
+                                </tr>
+                            @elseif ($unit['type'] === 'program')
                                 <tr>
                                     <td class="border border-black px-2 py-1"></td>
                                     <td class="border border-black px-2 py-1 font-bold" colspan="6">{{ $unit['text'] }}</td>

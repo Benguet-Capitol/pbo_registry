@@ -13,6 +13,12 @@
     // returns the column value in that case, never the relation, so getRelation()
     // must be used explicitly here to reach the eager-loaded Fund model.
     $fundCode = optional($aro->officeAllotmentClass->getRelation('fund'))->fund_code;
+    $lbeFormNumber = AllotmentReleaseOrder::lbeFormNumber(optional($allotmentClass)->class);
+    // A SEF-consolidated ARO spans every Special Education Fund office for this
+    // Allotment Class, so the single-office name no longer applies here.
+    $departmentOfficeLabel = $aro->isSefConsolidated()
+        ? 'SPECIAL EDUCATION FUND'
+        : strtoupper($office->office_name ?? $office->office_abbreviation);
 
     // Same row-level pagination the Preview/Print view uses (see
     // AllotmentReleaseOrder::paginatedPrintUnits()), so the Excel sheet's page
@@ -51,7 +57,7 @@
         </tr>
 
         <tr>
-            <td colspan="5" style="text-align: left; font-size: 9px;">LBE Form No. 1</td>
+            <td colspan="5" style="text-align: left; font-size: 9px;">{{ $lbeFormNumber }}</td>
             <td colspan="2" style="text-align: left; font-size: 9px;">{{ $aro->fund_source === 'Annual Budget' ? '■' : '□' }} Annual Budget</td>
         </tr>
         <tr>
@@ -75,7 +81,7 @@
             @endif
         </tr>
         <tr>
-            <td colspan="7" style="text-align: left; font-size: 11px;">Department/Office: {{ strtoupper($office->office_name ?? $office->office_abbreviation) }}</td>
+            <td colspan="7" style="text-align: left; font-size: 11px;">Department/Office: {{ $departmentOfficeLabel }}</td>
         </tr>
         <tr>
             <td colspan="7" style="text-align: left; font-size: 11px;">Purpose:</td>
@@ -102,7 +108,13 @@
         </tr>
 
         @foreach ($pageUnits as $unit)
-            @if ($unit['type'] === 'program')
+            @if ($unit['type'] === 'office')
+                {{-- SEF-consolidated ARO: bold header marking a new office's account codes --}}
+                <tr style="background-color: #e5e7eb;">
+                    <td style="border: 1px solid #000; padding: 4px;"></td>
+                    <td colspan="6" style="border: 1px solid #000; padding: 4px; font-weight: bold; text-transform: uppercase;">{{ strtoupper($unit['text']) }}</td>
+                </tr>
+            @elseif ($unit['type'] === 'program')
                 <tr>
                     <td style="border: 1px solid #000; padding: 4px;"></td>
                     <td colspan="6" style="border: 1px solid #000; padding: 4px; font-weight: bold;">{{ $unit['text'] }}</td>
@@ -177,7 +189,7 @@
             <td style="display:none;">{{ $pageBreakMarker }}</td>
         </tr>
         <tr>
-            <td colspan="5" style="text-align: left; font-size: 9px;">LBE Form No. 1</td>
+            <td colspan="5" style="text-align: left; font-size: 9px;">{{ $lbeFormNumber }}</td>
             <td colspan="2" style="text-align: left; font-size: 9px;">{{ $aro->fund_source === 'Annual Budget' ? '■' : '□' }} Annual Budget</td>
         </tr>
         <tr>
@@ -201,7 +213,7 @@
             @endif
         </tr>
         <tr>
-            <td colspan="7" style="text-align: left; font-size: 11px;">Department/Office: {{ strtoupper($office->office_name ?? $office->office_abbreviation) }}</td>
+            <td colspan="7" style="text-align: left; font-size: 11px;">Department/Office: {{ $departmentOfficeLabel }}</td>
         </tr>
         <tr>
             <td colspan="7" style="text-align: left; font-size: 11px;">Purpose:</td>

@@ -214,17 +214,15 @@
                     @endphp
                     <div class="bg-white dark:bg-gray-800 border {{ $fundSourceClasses['cardBorder'] }} rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow">
                         <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 {{ $fundSourceClasses['headerBg'] }}">
-                            <span class="font-bold {{ $fundSourceClasses['aroText'] }}">
-                                <i class="fas fa-hashtag mr-1 {{ $fundSourceClasses['aroIcon'] }}"></i>{{ $aro->aro_no }}
+                            <span class="flex items-center gap-2 font-bold {{ $fundSourceClasses['aroText'] }}">
+                                <span class="flex items-center gap-1"><i class="fas fa-building {{ $fundSourceClasses['aroIcon'] }}"></i>{{ $officeAbbr }}</span>
+                                <span class="text-gray-300 dark:text-gray-600">|</span>
+                                <span class="flex items-center gap-1"><i class="fas fa-hashtag {{ $fundSourceClasses['aroIcon'] }}"></i>{{ $aro->aro_no }}</span>
                             </span>
                             <span class="px-2 py-1 rounded font-semibold {{ $fundSourceClasses['badge'] }}">{{ $aro->fund_source }}</span>
                         </div>
                         <div class="px-3 py-3">
                             <div class="grid grid-cols-2 gap-x-4 gap-y-2 mb-2">
-                                <div>
-                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Office</div>
-                                    <div class="font-semibold text-gray-700 dark:text-gray-200">{{ $officeAbbr }}</div>
-                                </div>
                                 <div>
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Allotment Class</div>
                                     <div class="font-semibold text-gray-700 dark:text-gray-200">{{ $classLabel }}</div>

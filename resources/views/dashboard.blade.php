@@ -1560,6 +1560,19 @@
 
             if (!isOpen) {
                 dropdown.classList.remove('hidden'); // open only if it wasn't already open
+
+                // This button's sticky first-column <td> normally sits at z-[1] so every
+                // row's sticky cell stacks consistently — but that traps the dropdown menu
+                // (which lives inside it) below any LATER row's sticky cell, since z-index
+                // only competes within the same DOM order at equal values. Temporarily raise
+                // just this cell above the others while its menu is open, mirroring how the
+                // right-click context menu (a top-level, non-nested element) is never subject
+                // to this at all.
+                const stickyCell = button.closest('td.sticky');
+                if (stickyCell) {
+                    stickyCell.classList.remove('z-[1]');
+                    stickyCell.classList.add('z-40');
+                }
             }
         }
 
@@ -1607,6 +1620,13 @@
                     const dropdowns = document.querySelectorAll('.dropdown-menu');
                     dropdowns.forEach(dropdown => {
                         dropdown.classList.add('hidden');
+                    });
+
+                    // Reset every sticky first-column cell back to its normal stacking
+                    // level (see toggleDropdown()) now that no dropdown is open.
+                    document.querySelectorAll('#dashboardTable td.sticky.z-40').forEach(cell => {
+                        cell.classList.remove('z-40');
+                        cell.classList.add('z-[1]');
                     });
                 }
 

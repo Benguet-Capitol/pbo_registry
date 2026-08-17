@@ -11,10 +11,16 @@
     // returns the column value in that case, never the relation, so getRelation()
     // must be used explicitly here to reach the eager-loaded Fund model.
     $fundCode = optional($aro->officeAllotmentClass->getRelation('fund'))->fund_code;
+    $lbeFormNumber = \App\Models\AllotmentReleaseOrder::lbeFormNumber(optional($aro->officeAllotmentClass->allotmentClass)->class);
+    // A SEF-consolidated ARO spans every Special Education Fund office for this
+    // Allotment Class, so the single-office name no longer applies here.
+    $departmentOfficeLabel = $aro->isSefConsolidated()
+        ? 'SPECIAL EDUCATION FUND'
+        : strtoupper($office->office_name ?? $office->office_abbreviation);
 @endphp
 {{-- Repeated at the top of every printed page (Preview) so the form header stays "stuck" across pages --}}
 <div class="flex justify-between items-start mb-2">
-    <div class="text-xs">LBE Form No. 1</div>
+    <div class="text-xs">{{ $lbeFormNumber }}</div>
     <div class="text-[10px] space-y-0.5">
         <div class="flex items-center gap-1.5">
             <span style="{{ $checkboxStyle($aro->fund_source === 'Annual Budget') }}"></span>
@@ -39,7 +45,7 @@
 <div class="flex justify-between items-start text-sm mt-4">
     <div class="space-y-1">
         <div><span>Local Government Unit:</span> BENGUET</div>
-        <div><span>Department/Office:</span> {{ strtoupper($office->office_name ?? $office->office_abbreviation) }}</div>
+        <div><span>Department/Office:</span> {{ $departmentOfficeLabel }}</div>
         <div><span>Purpose:</span></div>
     </div>
     @if ($fundCode)

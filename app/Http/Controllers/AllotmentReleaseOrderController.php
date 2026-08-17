@@ -332,86 +332,127 @@ class AllotmentReleaseOrderController extends Controller
 
         $officeAllotmentClassId = $request->office_allotment_classes_id;
         $excludeAroId = $request->integer('aro_id') ?: null;
+        $fundSource = $request->fund_source;
 
-        $office = OfficeAllotmentClass::with('offices')->find($officeAllotmentClassId);
+        $office = OfficeAllotmentClass::with(['offices', 'allotmentClass'])->find($officeAllotmentClassId);
         $ppaCode = optional($office->offices)->ppa_code;
 
-        if ($request->fund_source === 'Supplemental Budget') {
-            $supplementalsQuery = Supplemental::with('appropriation')
-                ->where('office_allotment_classes_id', $officeAllotmentClassId)
-                ->where('type', 'Supplemental');
+        // A Special Education Fund office consolidates every SEF office sharing the
+        // same Allotment Class/year into one ARO, the same way the SAAOB report
+        // does — each office's rows are tagged with office_label so the Preview/
+        // Export can group them under their own header (see groupedItems()).
+        $isSefConsolidated = optional($office->offices)->fund === 'Special Education Fund';
+        $targetOffices = $isSefConsolidated
+            ? $this->sefOfficeAllotmentClasses($office)
+            : collect([$office]);
 
-            if ($request->filled('supplemental_no')) {
-                // "Supplemental No." on the ARO form matches the Supplementals
-                // module's "SB No." field (basis_no — the Sanggunian/Board
-                // Resolution reference number), not the auto-generated
-                // supplemental_no tracking code.
-                $supplementalsQuery->where('basis_no', $request->supplemental_no);
+        if ($fundSource === 'Supplemental Budget') {
+            $items = collect();
+
+            foreach ($targetOffices as $targetOffice) {
+                $supplementalsQuery = Supplemental::with('appropriation')
+                    ->where('office_allotment_classes_id', $targetOffice->id)
+                    ->where('type', 'Supplemental');
+
+                if ($request->filled('supplemental_no')) {
+                    // "Supplemental No." on the ARO form matches the Supplementals
+                    // module's "SB No." field (basis_no — the Sanggunian/Board
+                    // Resolution reference number), not the auto-generated
+                    // supplemental_no tracking code.
+                    $supplementalsQuery->where('basis_no', $request->supplemental_no);
+                }
+
+                // Before a specific SB No. is typed, list every account code that has
+                // *any* supplemental for this office/class (one row per account, most
+                // recent batch), so the table isn't empty while the user is still
+                // filling in the number they don't already have memorized.
+                $supplementals = $supplementalsQuery->orderByDesc('supplemental_date')->get()
+                    ->filter(fn ($s) => $s->appropriation)
+                    ->unique('appropriations_id')
+                    ->values();
+
+                $officeLabel = $isSefConsolidated ? optional($targetOffice->offices)->office_name : null;
+
+                $items = $items->merge($supplementals->map(function ($supplemental) use ($excludeAroId, $officeLabel) {
+                    $authorizedAppropriation = (float) $supplemental->amount;
+                    $alreadyCommitted = $this->alreadyCommittedForAppropriation($supplemental->appropriation->id, 'Supplemental Budget', $excludeAroId);
+
+                    return [
+                        'appropriation_id' => $supplemental->appropriation->id,
+                        'account_code' => $supplemental->appropriation->account_code,
+                        'description' => $supplemental->appropriation->description,
+                        'programs' => $supplemental->appropriation->programs,
+                        'office_label' => $officeLabel,
+                        'authorized_appropriation' => $authorizedAppropriation,
+                        'quarter1' => (float) $supplemental->quarter1,
+                        'quarter2' => (float) $supplemental->quarter2,
+                        'quarter3' => (float) $supplemental->quarter3,
+                        'quarter4' => (float) $supplemental->quarter4,
+                        'already_committed' => $alreadyCommitted,
+                        'balance' => max(0, $authorizedAppropriation - $alreadyCommitted),
+                    ];
+                }));
             }
 
-            // Before a specific SB No. is typed, list every account code that has
-            // *any* supplemental for this office/class (one row per account, most
-            // recent batch), so the table isn't empty while the user is still
-            // filling in the number they don't already have memorized.
-            $supplementals = $supplementalsQuery->orderByDesc('supplemental_date')->get()
-                ->filter(fn ($s) => $s->appropriation)
-                ->unique('appropriations_id')
-                ->values();
-
-            $items = $supplementals->map(function ($supplemental) use ($excludeAroId) {
-                $authorizedAppropriation = (float) $supplemental->amount;
-                $alreadyCommitted = $this->alreadyCommittedForAppropriation($supplemental->appropriation->id, 'Supplemental Budget', $excludeAroId);
-
-                return [
-                    'appropriation_id' => $supplemental->appropriation->id,
-                    'account_code' => $supplemental->appropriation->account_code,
-                    'description' => $supplemental->appropriation->description,
-                    'programs' => $supplemental->appropriation->programs,
-                    'authorized_appropriation' => $authorizedAppropriation,
-                    'quarter1' => (float) $supplemental->quarter1,
-                    'quarter2' => (float) $supplemental->quarter2,
-                    'quarter3' => (float) $supplemental->quarter3,
-                    'quarter4' => (float) $supplemental->quarter4,
-                    'already_committed' => $alreadyCommitted,
-                    'balance' => max(0, $authorizedAppropriation - $alreadyCommitted),
-                ];
-            })->values();
-
             return response()->json([
-                'items' => $items,
+                'items' => $items->values(),
                 'ppa_code' => $ppaCode,
+                'is_sef_consolidated' => $isSefConsolidated,
             ]);
         }
 
-        $appropriations = $this->sortAppropriations(
-            Appropriation::where('office_allotment_class_id', $officeAllotmentClassId)->get()
-        );
+        $items = collect();
 
-        $fundSource = $request->fund_source;
+        foreach ($targetOffices as $targetOffice) {
+            $appropriations = $this->sortAppropriations(
+                Appropriation::where('office_allotment_class_id', $targetOffice->id)->get()
+            );
 
-        $items = $appropriations->map(function ($appropriation) use ($excludeAroId, $fundSource) {
-            $authorizedAppropriation = (float) $appropriation->appropriation;
-            $alreadyCommitted = $this->alreadyCommittedForAppropriation($appropriation->id, $fundSource, $excludeAroId);
+            $officeLabel = $isSefConsolidated ? optional($targetOffice->offices)->office_name : null;
 
-            return [
-                'appropriation_id' => $appropriation->id,
-                'account_code' => $appropriation->account_code,
-                'description' => $appropriation->description,
-                'programs' => $appropriation->programs,
-                'authorized_appropriation' => $authorizedAppropriation,
-                'quarter1' => (float) $appropriation->quarter1,
-                'quarter2' => (float) $appropriation->quarter2,
-                'quarter3' => (float) $appropriation->quarter3,
-                'quarter4' => (float) $appropriation->quarter4,
-                'already_committed' => $alreadyCommitted,
-                'balance' => max(0, $authorizedAppropriation - $alreadyCommitted),
-            ];
-        })->values();
+            $items = $items->merge($appropriations->map(function ($appropriation) use ($excludeAroId, $fundSource, $officeLabel) {
+                $authorizedAppropriation = (float) $appropriation->appropriation;
+                $alreadyCommitted = $this->alreadyCommittedForAppropriation($appropriation->id, $fundSource, $excludeAroId);
+
+                return [
+                    'appropriation_id' => $appropriation->id,
+                    'account_code' => $appropriation->account_code,
+                    'description' => $appropriation->description,
+                    'programs' => $appropriation->programs,
+                    'office_label' => $officeLabel,
+                    'authorized_appropriation' => $authorizedAppropriation,
+                    'quarter1' => (float) $appropriation->quarter1,
+                    'quarter2' => (float) $appropriation->quarter2,
+                    'quarter3' => (float) $appropriation->quarter3,
+                    'quarter4' => (float) $appropriation->quarter4,
+                    'already_committed' => $alreadyCommitted,
+                    'balance' => max(0, $authorizedAppropriation - $alreadyCommitted),
+                ];
+            }));
+        }
 
         return response()->json([
-            'items' => $items,
+            'items' => $items->values(),
             'ppa_code' => $ppaCode,
+            'is_sef_consolidated' => $isSefConsolidated,
         ]);
+    }
+
+    /**
+     * Every OfficeAllotmentClass (with the same Allotment Class code and year
+     * as $office) whose office belongs to the Special Education Fund —
+     * ordered by office name so the consolidated Account Codes list groups
+     * consistently. Includes $office itself.
+     */
+    private function sefOfficeAllotmentClasses(OfficeAllotmentClass $office)
+    {
+        return OfficeAllotmentClass::with('offices')
+            ->where('year', $office->year)
+            ->whereHas('allotmentClass', fn ($q) => $q->where('class', optional($office->allotmentClass)->class))
+            ->whereHas('offices', fn ($q) => $q->where('fund', 'Special Education Fund'))
+            ->get()
+            ->sortBy(fn ($oac) => optional($oac->offices)->office_name)
+            ->values();
     }
 
     /**
@@ -517,15 +558,22 @@ class AllotmentReleaseOrderController extends Controller
         $quarter = $this->currentQuarter($dateOfIssue);
 
         foreach ($validated['appropriation_id'] as $index => $appropriationId) {
-            $appropriation = Appropriation::findOrFail($appropriationId);
+            $appropriation = Appropriation::with('officeAllotmentClass.offices')->findOrFail($appropriationId);
             $authorizedAppropriation = (float) ($validated['authorized_appropriation'][$index] ?? 0);
 
+            // Use the appropriation's OWN office/allotment class here, not the ARO's
+            // anchor office_allotment_classes_id — for a SEF-consolidated ARO, a
+            // checked row's appropriation can belong to a *different* SEF office than
+            // the one the user picked to open the ARO, and this Supplemental lookup
+            // must still resolve against that row's real office to find its amount.
             $sourceRecord = $validated['fund_source'] === 'Supplemental Budget'
                 ? Supplemental::where('appropriations_id', $appropriationId)
-                    ->where('office_allotment_classes_id', $validated['office_allotment_classes_id'])
+                    ->where('office_allotment_classes_id', $appropriation->office_allotment_class_id)
                     ->where('basis_no', $validated['supplemental_no'])
                     ->first()
                 : $appropriation;
+
+            $officeLabel = optional($appropriation->officeAllotmentClass->offices)->office_name;
 
             // Guard against two AROs releasing the same money: this row's
             // authorized amount can't exceed what's left after every other
@@ -568,6 +616,7 @@ class AllotmentReleaseOrderController extends Controller
                 'account_code' => $appropriation->account_code,
                 'ppa_description' => $appropriation->description,
                 'programs' => $appropriation->programs,
+                'office_label' => $officeLabel,
                 'authorized_appropriation' => $authorizedAppropriation,
                 'for_later_release' => $forLaterRelease,
                 'previously_released_amount' => $previouslyReleased,
@@ -645,7 +694,9 @@ class AllotmentReleaseOrderController extends Controller
     private function generateAroNo(int $officeAllotmentClassesId, Carbon $dateOfIssue, bool $lock = true): string
     {
         $officeAllotmentClass = OfficeAllotmentClass::with('allotmentClass')->findOrFail($officeAllotmentClassesId);
-        $classPrefix = optional($officeAllotmentClass->allotmentClass)->class ?? 'ARO';
+        $classCode = optional($officeAllotmentClass->allotmentClass)->class;
+        // Capital Outlay's ARO No. prefix reads "CapEx", not the raw "CO" class code.
+        $classPrefix = $classCode === 'CO' ? 'CapEx' : ($classCode ?? 'ARO');
 
         $year = (int) $dateOfIssue->format('Y');
         $month = $dateOfIssue->format('m');

@@ -183,6 +183,7 @@
             // PPA Code group unless the user overrides a row to start a new group.
             let lastPpaCode = this.el(prefix, 'ppa_code').value || '';
             let lastProgram = null;
+            let lastOffice = null;
 
             items.forEach(item => {
                 const isChecked = Object.prototype.hasOwnProperty.call(checkedAppropriationIds, item.appropriation_id);
@@ -206,6 +207,20 @@
                 // Default to the remaining balance (not the full authorized amount) so
                 // the user works with what's actually still available by default.
                 const authorizedValue = isChecked ? checkedAmount : Math.min(itemAuthorized, balance);
+
+                // SEF-consolidated selection: bold header marking a new office's
+                // account codes, mirroring the printed LBE Form No. 1 layout. A new
+                // office also resets the PPA Code default — otherwise its first row
+                // would silently inherit the PREVIOUS office's last-used PPA Code.
+                if (item.office_label && item.office_label !== lastOffice) {
+                    const officeRow = document.createElement('tr');
+                    officeRow.innerHTML = `<td colspan="8" class="px-2 py-1 text-xs font-bold uppercase bg-gray-200 dark:bg-gray-700">${item.office_label}</td>`;
+                    tbody.appendChild(officeRow);
+                    lastProgram = null;
+                    lastPpaCode = this.el(prefix, 'ppa_code').value || '';
+                }
+                lastOffice = item.office_label || null;
+
                 const rowPpaCode = isChecked && checkedData.ppa_code ? checkedData.ppa_code : lastPpaCode;
                 lastPpaCode = rowPpaCode;
 

@@ -36,11 +36,17 @@
 </form>
 
 <script>
+    // Older AROs were generated before the "CO" class prefix was renamed to
+    // "CapEx" — correct the display here rather than rewriting stored aro_no values.
+    function formatAroNoForDisplay(aroNo) {
+        return aroNo ? aroNo.replace(/^CO-/, 'CapEx-') : aroNo;
+    }
+
     function openEditAroModal(aro) {
         closeAllDropdowns();
 
         document.getElementById('editAroForm').action = `/allotment-release-orders/${aro.id}`;
-        document.getElementById('editAroNoLabel').textContent = aro.aro_no;
+        document.getElementById('editAroNoLabel').textContent = formatAroNoForDisplay(aro.aro_no);
         document.getElementById('edit_aro_id').value = aro.id;
         AroForm.clearAllErrors('edit');
 
@@ -52,7 +58,7 @@
         document.getElementById('edit_supplemental_no_wrapper').style.display = aro.fund_source === 'Supplemental Budget' ? '' : 'none';
         document.getElementById('edit_supplemental_no').value = aro.supplemental_no || '';
         document.getElementById('edit_ppa_code').value = aro.ppa_code || '';
-        document.getElementById('edit_aro_no_preview').value = aro.aro_no;
+        document.getElementById('edit_aro_no_preview').value = formatAroNoForDisplay(aro.aro_no);
         document.getElementById('edit_pbo_designation').value = aro.provincial_budget_officer_title;
         document.getElementById('edit_lce_designation').value = aro.provincial_governor_title;
 

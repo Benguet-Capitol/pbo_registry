@@ -200,6 +200,7 @@ class AllotmentReleaseOrderController extends Controller
                 $dateOfIssue = Carbon::parse($validated['date_of_issue']);
 
                 $allotmentReleaseOrder->update([
+                    'aro_no' => $this->normalizeAroNoPrefix($allotmentReleaseOrder->aro_no, $validated['office_allotment_classes_id']),
                     'date_of_issue' => $dateOfIssue,
                     'year' => $dateOfIssue->year,
                     'office_allotment_classes_id' => $validated['office_allotment_classes_id'],
@@ -715,5 +716,27 @@ class AllotmentReleaseOrderController extends Controller
         $nextSequence = str_pad((string) ($lastSequence + 1), 3, '0', STR_PAD_LEFT);
 
         return "{$classPrefix}-{$year}-{$month}-{$nextSequence}";
+    }
+
+    /**
+     * Fixes ARO Nos. that were generated before the CapEx prefix rule
+     * existed — e.g. CO-2026-08-004 for a Capital Outlay ARO gets corrected
+     * to CapEx-2026-08-004 on save, leaving the year/month/sequence intact.
+     */
+    private function normalizeAroNoPrefix(string $aroNo, int $officeAllotmentClassesId): string
+    {
+        $officeAllotmentClass = OfficeAllotmentClass::with('allotmentClass')->find($officeAllotmentClassesId);
+        $classCode = optional(optional($officeAllotmentClass)->allotmentClass)->class;
+        $expectedPrefix = $classCode === 'CO' ? 'CapEx' : ($classCode ?? 'ARO');
+
+        $segments = explode('-', $aroNo);
+
+        if (($segments[0] ?? null) === $classCode && $classCode !== $expectedPrefix) {
+            $segments[0] = $expectedPrefix;
+
+            return implode('-', $segments);
+        }
+
+        return $aroNo;
     }
 }

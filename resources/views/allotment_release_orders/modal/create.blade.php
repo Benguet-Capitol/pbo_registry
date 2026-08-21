@@ -2,6 +2,16 @@
 <form id="createAroForm" method="POST" action="{{ route('allotment_release_orders.store') }}">
     @csrf
     <input type="hidden" name="year1" value="{{ request('year1') }}">
+    {{-- Set (via the @include's params) when this modal is embedded on the
+         Appropriations or Supplementals index, so the Preview page's Back button
+         returns there — with every filter that page had active — instead of
+         always landing on the ARO index. return_query snapshots the embedding
+         page's own query string at render time (e.g. search/sort/per_page/
+         office filters), so Back restores the exact same filtered view rather
+         than just a bare index. See AllotmentReleaseOrderController::store()/
+         preview(). --}}
+    <input type="hidden" name="return_to" value="{{ $returnTo ?? '' }}">
+    <input type="hidden" name="return_query" value="{{ http_build_query(request()->query()) }}">
     <div id="createAroModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div class="relative w-full max-w-[95vw] xl:max-w-[1400px] mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal header -->
@@ -58,6 +68,11 @@
         getAppropriations: "{{ route('allotment_release_orders.getAppropriations') }}",
         previewNo: "{{ route('allotment_release_orders.previewNo') }}",
         signatories: "{{ route('allotment_release_orders.signatories') }}",
+        // Placeholder swapped for a real id by callers (e.g. the Supplementals
+        // index's "edit the existing ARO too?" prompt) that only know the ARO's
+        // id, not its full data, and need to fetch it before calling
+        // openEditAroModal() — see modal/edit.blade.php.
+        jsonTemplate: "{{ route('allotment_release_orders.json', ['allotment_release_order' => '__ARO_ID__']) }}",
     };
 
     const aroCsrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -132,6 +147,17 @@
             this.loadAccountCodes(prefix);
         },
 
+        /**
+         * Placeholder row shown in the Account Codes table while its data is
+         * being fetched — without this, the table just sits empty (or still
+         * shows the previous selection's rows) for however long the request
+         * takes, which reads as broken/unresponsive rather than loading.
+         */
+        showLoadingRow(prefix) {
+            this.el(prefix, 'items_tbody').innerHTML =
+                '<tr><td colspan="8" class="text-center text-xs text-gray-500 py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Loading account codes...</td></tr>';
+        },
+
         loadAccountCodes(prefix) {
             const officeAllotmentClassesId = this.el(prefix, 'office_allotment_classes_id').value;
             const fundSource = this.el(prefix, 'fund_source').value;
@@ -143,6 +169,8 @@
                 tbody.innerHTML = '';
                 return;
             }
+
+            this.showLoadingRow(prefix);
 
             const params = new URLSearchParams({
                 office_allotment_classes_id: officeAllotmentClassesId,

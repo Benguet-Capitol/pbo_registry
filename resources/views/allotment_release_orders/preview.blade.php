@@ -46,7 +46,7 @@
                     <option value="long" selected>Long (8.5&quot; x 13&quot;)</option>
                     <option value="legal">Legal (8.5&quot; x 14&quot;)</option>
                 </select>
-                <a href="{{ route('allotment_release_orders.index') }}" class="text-gray-600 inline-flex items-center justify-center gap-1 hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-gray-500 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-colors">
+                <a href="{{ $backUrl }}" class="text-gray-600 inline-flex items-center justify-center gap-1 hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-gray-500 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-colors">
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
                 <button type="button" onclick="window.print()" class="text-blue-600 inline-flex items-center justify-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-colors">

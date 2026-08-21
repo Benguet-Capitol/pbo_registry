@@ -317,11 +317,10 @@
         if (!employeeId) {
             document.getElementById('employeeIdError').innerText = 'Employee ID is required.';
             isValid = false;
-        } else if (!document.getElementById('employee_id_number').value) {
-            // No employee was selected from the dropdown — typed manually or not confirmed
-            document.getElementById('employeeIdError').innerText = 'Please select a valid Employee ID from the search results.';
-            isValid = false;
         } else {
+            // A dropdown match isn't required — the employee-lookup API is
+            // sometimes unreachable, and users still need to be able to enter
+            // every field by hand in that case.
             document.getElementById('employeeIdError').innerText = '';
         }
 
@@ -347,9 +346,11 @@
         }
 
         if (isValid) {
-            // Check uniqueness against existing DB records via fetch before submitting
-            const employeeIdNumber = document.getElementById('employee_id_number').value;
-            checkEmployeeIdUnique(employeeIdNumber, null, function(isUnique) {
+            // Check uniqueness against existing DB records via fetch before submitting —
+            // use whatever is actually in the Employee ID field, not the hidden
+            // employee_id_number (only set when a dropdown result was picked; empty
+            // whenever the ID was typed manually).
+            checkEmployeeIdUnique(employeeId, null, function(isUnique) {
                 if (!isUnique) {
                     document.getElementById('employeeIdError').innerText = 'The Employee ID already exists.';
                 } else {

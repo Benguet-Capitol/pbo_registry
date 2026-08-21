@@ -34,7 +34,7 @@
     @endif
 
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Accounts') }}
             </h3>
@@ -42,7 +42,7 @@
             <!-- Right: Breadcrumb Navigation -->
             @if(isset($breadcrumb))
             <nav class="text-xs text-gray-600 dark:text-gray-300" aria-label="Breadcrumb">
-                <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse">
+                <ol class="list-none p-0 flex flex-wrap items-center gap-x-1 gap-y-1 rtl:space-x-reverse">
                     @foreach ($breadcrumb as $index => $item)
                     <li>
                         @if (!empty($item['route']) && $index < count($breadcrumb) - 1)
@@ -66,8 +66,8 @@
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 dark:bg-gray-800">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-                <div>
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 gap-4">
+                <div class="flex flex-wrap gap-2">
                     @can('create account codes')
                     <button onclick="openCreateAccountCodeModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                         <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
@@ -75,11 +75,10 @@
                     </button>
                     @endcan
                 </div>
-                <div class="flex items-center">
-                    <div class="flex items-center">
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for accounts" class="border border-gray-300 w-[300px] rounded-lg px-4 py-2 mr-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                        <form method="GET" action="{{ route('account_codes.index') }}">
-                        <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for accounts" class="border border-gray-300 w-full sm:w-[300px] min-w-0 rounded-lg px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    <form method="GET" action="{{ route('account_codes.index') }}" class="w-full sm:w-auto">
+                        <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full sm:w-auto dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
                             <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
                             <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
@@ -87,8 +86,7 @@
                             <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
                         </x-form.select>
                         <button type="submit" class="hidden"></button>
-                        </form>
-                    </div>
+                    </form>
                 </div>
             </div>
             <table id="account_codesTable" class="text-center w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400 mb-6">

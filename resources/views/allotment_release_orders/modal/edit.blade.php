@@ -3,6 +3,14 @@
     @csrf
     @method('PUT')
     <input type="hidden" name="year1" value="{{ request('year1') }}">
+    {{-- Set (via the @include's params) when this modal is embedded on the
+         Supplementals index's "edit the existing ARO too?" prompt, so the
+         Preview page's Back button returns there — with every filter that
+         page had active — instead of always landing on the ARO index. See
+         AllotmentReleaseOrderController::update()/preview() and the matching
+         fields in modal/create.blade.php. --}}
+    <input type="hidden" name="return_to" value="{{ $returnTo ?? '' }}">
+    <input type="hidden" name="return_query" value="{{ http_build_query(request()->query()) }}">
     <div id="editAroModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div class="relative w-full max-w-[95vw] xl:max-w-[1400px] mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
             <!-- Modal header -->
@@ -96,6 +104,8 @@
 
         const params = new URLSearchParams({ office_allotment_classes_id: officeAllotmentClassesId, fund_source: fundSource, aro_id: aro.id });
         if (supplementalNo) params.set('supplemental_no', supplementalNo);
+
+        AroForm.showLoadingRow('edit');
 
         fetch(`${aroRoutes.getAppropriations}?${params.toString()}`)
             .then(r => r.json())

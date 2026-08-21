@@ -55,28 +55,28 @@
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 dark:bg-gray-800">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-                <div>
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 gap-4">
+                <div class="self-start">
                     <button onclick="openCreateDocumentModal()" class="text-blue-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
                         <i class="fas fa-cloud-upload-alt text-xl mr-3 -ml-1 w-5 h-5"></i>
                         {{ __('Upload Archive') }}
                     </button>
                 </div>
                 <!-- Right: Total Records, Search Input, and Per Page -->
-                <div class="flex items-center space-x-4">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     <!-- Total Records -->
-                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                    <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 shrink-0">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
                         <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $documents->total() }}</span>
                     </div>
                     <!-- Search Input -->
-                    <div class="flex items-center space-x-2 min-w-96">
+                    <div class="flex items-center gap-2 w-full sm:w-auto sm:min-w-96">
                         <i class="fas fa-search text-gray-400"></i>
-                        <input type="text" id="searchInput" autocomplete="off" placeholder="Search archives..." class="border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                        <input type="text" id="searchInput" autocomplete="off" placeholder="Search archives..." class="border border-gray-300 rounded-lg w-full min-w-0 px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                     </div>
                     <!-- Per Page Dropdown -->
-                    <div class="flex items-center space-x-2 min-w-fit">
+                    <div class="flex items-center gap-2 min-w-fit">
                         <label for="perPage" class="text-xs font-semibold text-gray-700 dark:text-gray-300">Per Page:</label>
                         <form method="GET" action="{{ route('documents.index') }}" class="inline" id="perPageForm">
                             @if(request('q'))

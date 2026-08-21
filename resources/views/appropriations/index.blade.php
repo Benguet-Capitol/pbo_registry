@@ -29,7 +29,7 @@
     @endif
 
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
             <!-- Left: Obligations Title -->
             <h3 class="font-semibold text-xl leading-tight dark:text-gray-200">
                 {{ __('Accounts') }} |
@@ -42,7 +42,7 @@
             <!-- Right: Breadcrumb Navigation -->
             @if(isset($breadcrumb))
             <nav class="text-xs text-gray-600 dark:text-gray-300" aria-label="Breadcrumb">
-                <ol class="list-none p-0 inline-flex items-center space-x-1 rtl:space-x-reverse">
+                <ol class="list-none p-0 flex flex-wrap items-center gap-x-1 gap-y-1 rtl:space-x-reverse">
                     @foreach ($breadcrumb as $index => $item)
                     <li>
                         @if (!empty($item['route']) && $index < count($breadcrumb) - 1)
@@ -109,9 +109,9 @@
                     <label for="file-upload" class="block text-xs dark:text-gray-200 font-semibold text-center">
                         {{ __('Import Accounts') }}
                     </label>
-                    <div class="flex items-center space-x-2 justify-center">
+                    <div class="flex flex-wrap items-center gap-2 justify-center">
                         <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
-                        <input type="file" name="file" id="file-upload" accept=".xlsx,.xls,.csv" required class="form-control border border-gray-300 rounded-lg px-6 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                        <input type="file" name="file" id="file-upload" accept=".xlsx,.xls,.csv" required class="form-control border border-gray-300 rounded-lg px-6 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 max-w-full">
                         <button type="submit" id="importSubmitBtn" class="text-blue-600 inline-flex items-center justify-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity duration-200">
                             <span id="importSubmitLabel">{{ __('Import') }}</span>
                         </button>
@@ -143,6 +143,27 @@
                         </a>
                     </div>
                 </form>
+
+                @if ($arosForOffice->isNotEmpty() || auth()->user()?->can('create appropriations'))
+                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 w-full flex flex-wrap justify-center gap-3">
+                    @can('create appropriations')
+                    <button type="button" onclick="openAroCreateModalForCurrentOffice()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-folder-open text-xl mr-2 -ml-1 w-5 h-5"></i>
+                        {{ __('Create Allotment Release Order') }}
+                    </button>
+                    @endcan
+                    {{-- Preview is read-only navigation, so unlike Create above it isn't
+                         gated behind 'create appropriations' — matches the ARO index's
+                         own Preview link and the Supplementals module's Preview buttons. --}}
+                    @if ($arosForOffice->isNotEmpty())
+                    <x-aro-preview-picker :aros="$arosForOffice" return-to="appropriations" uid="office-{{ $officeAllotmentClass->id }}"
+                        class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                        <i class="fas fa-eye text-xl mr-2 -ml-1 w-5 h-5"></i>
+                        {{ __('Preview Allotment Release Order') }}
+                    </x-aro-preview-picker>
+                    @endif
+                </div>
+                @endif
             </div>
             @endcan
         </div>
@@ -150,8 +171,8 @@
 
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-6 dark:bg-gray-800 transition-all duration-300 ease-in-out">
         <div class="p-6 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4 gap-4">
-                <div class="flex gap-3">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 gap-4">
+                <div class="flex flex-wrap gap-3">
                     @can('create appropriations')
                     <button onclick="openCreateAppropriationsModal()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
                         <i class="fas fa-plus text-xl mr-1 -ml-1 w-5 h-5"></i>
@@ -166,19 +187,19 @@
                     </button>
                     @endcan
                 </div>
-                <div class="flex items-center space-x-4">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     <!-- Total Records -->
-                    <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                    <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 shrink-0">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
                         <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
                     </div>
                     <!-- Search Input -->
-                    <div class="flex items-center text-xs gap-3 min-w-96">
-                        <i class="fas fa-search text-gray-400"></i>
+                    <div class="flex items-center text-xs gap-3 w-full sm:min-w-96 sm:w-auto">
+                        <i class="fas fa-search text-gray-400 shrink-0"></i>
                         <form method="GET" action="{{ route('appropriations.index') }}" class="flex items-center gap-2 w-full">
                             <input type="hidden" name="office_allotment_class_id" value="{{ request('office_allotment_class_id') }}">
-                            <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search accounts..." class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400" />
+                            <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search accounts..." class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs flex-1 min-w-0 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400" />
                             <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="form-control border border-gray-300 rounded-lg px-4 py-2 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:focus:ring-blue-400">
                                 <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
                                 <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
@@ -428,6 +449,27 @@
     @include('appropriations.modal.edit')
     @include('appropriations.modal.copy_last_year')
     @include('appropriations.modal.bulk_delete')
+
+    @can('create appropriations')
+    @if ($officeAllotmentClass)
+    @include('allotment_release_orders.modal.create', [
+        'officeAllotmentClassesForForm' => $officeAllotmentClassesForForm,
+        'returnTo' => 'appropriations',
+    ])
+    <script>
+        // Opens the (embedded) ARO create modal pre-scoped to the office/allotment
+        // class this Appropriations page is already showing, so the user stays on
+        // this page instead of being sent to the Allotment Release Orders index.
+        function openAroCreateModalForCurrentOffice() {
+            openCreateAroModal();
+            AroForm.selectOfficeAllotmentClass('create', {
+                id: '{{ $officeAllotmentClass->id }}',
+                name: '{{ addslashes(($officeAllotmentClass->offices->office_abbreviation ?? "N/A") . " - " . ($officeAllotmentClass->allotmentClass->class ?? "N/A")) }}',
+            });
+        }
+    </script>
+    @endif
+    @endcan
 
     <script>
         let isSubmittingImportAppropriations = false;

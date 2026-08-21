@@ -297,6 +297,11 @@
                             : ($groupType === 'Reversion'
                                 ? ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-red-500', 'badgeBg' => 'bg-red-100 dark:bg-red-900/50', 'badgeText' => 'text-red-700 dark:text-red-300', 'amount' => 'text-red-700 dark:text-red-400']
                                 : ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-gray-400', 'badgeBg' => 'bg-gray-100 dark:bg-gray-700', 'badgeText' => 'text-gray-700 dark:text-gray-300', 'amount' => 'text-gray-700 dark:text-gray-300']);
+                        // Every ARO tied to this batch's SB No., and whether any row in the
+                        // batch's amount no longer matches its ARO(s) (see
+                        // SupplementalController::buildExistingAroLookups()).
+                        $groupAros = $existingAroByBatch[$groupNo] ?? [];
+                        $groupAroStale = $staleAroByBatch[$groupNo] ?? false;
                     @endphp
                     <div class="supplemental-group bg-white dark:bg-gray-800 border {{ $groupTypeAccent['cardBorder'] }} border-l-4 {{ $groupTypeAccent['border'] }} rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow"
                          data-supplemental-no="{{ $groupNo }}">
@@ -329,6 +334,31 @@
                                     <i class="fas fa-file"></i>
                                     <span>{{ $groupFileCount }}</span>
                                 </button>
+                                @if ($groupType === 'Supplemental')
+                                    @if ($groupAros)
+                                        @if ($groupAroStale)
+                                            <span title="This batch's amount no longer matches its ARO — it may have been edited after the ARO was created." class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                                <i class="fas fa-triangle-exclamation"></i>
+                                            </span>
+                                        @endif
+                                        <x-aro-preview-picker :aros="$groupAros" return-to="supplementals" uid="batch-{{ $groupFirst->id }}"
+                                            onclick="event.stopPropagation();"
+                                            class="text-blue-600 inline-flex items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-2 py-1 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-colors">
+                                            <i class="fas fa-eye"></i> Preview ARO
+                                        </x-aro-preview-picker>
+                                    @else
+                                        @can('create appropriations')
+                                            <button type="button" onclick="event.stopPropagation(); fillAndOpenAroCreateModal({{ \Illuminate\Support\Js::from([
+                                                'officeAllotmentClassesId' => (string) $groupFirst->office_allotment_classes_id,
+                                                'supplementalNo' => $groupFirst->basis_no,
+                                                'dateOfIssue' => $groupFirst->supplemental_date,
+                                            ]) }})" title="Create ARO for this Supplemental"
+                                                class="text-green-600 inline-flex items-center gap-1 hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-2 py-1 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors">
+                                                <i class="fas fa-folder-open"></i> Create ARO
+                                            </button>
+                                        @endcan
+                                    @endif
+                                @endif
                                 @can('delete supplementals')
                                     <button onclick="openBulkDeleteSupplementalModal('{{ $groupNo }}', {{ $groupFirst->id }})" type="button" title="Delete All Related"
                                         class="text-orange-600 inline-flex items-center gap-1 hover:text-white border border-orange-600 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-xs px-2 py-1 dark:border-orange-500 dark:text-orange-500 dark:hover:text-white dark:hover:bg-orange-600 dark:focus:ring-orange-900 transition-colors">
@@ -545,6 +575,11 @@
                                                 + (float)($supplemental->quarter4 ?? 0);
                                             $rowFileCount = $supplementalFileCounts[$supplemental->id] ?? 0;
                                             $rowBalanced = $supplementalBalanced[$supplemental->id] ?? true;
+                                            // Every ARO already releasing this specific row, and whether its amount
+                                            // no longer matches (see SupplementalController::buildExistingAroLookups()).
+                                            $rowAroKey = "{$supplemental->appropriations_id}|{$supplemental->basis_no}";
+                                            $rowAros = $existingAroByRow[$rowAroKey] ?? [];
+                                            $rowAroStale = $staleAroByRow[$rowAroKey] ?? false;
                                             $rowSearchText = strtolower(collect([
                                                 $supplemental->supplemental_no,
                                                 $supplemental->supplemental_date,
@@ -602,17 +637,44 @@
                                                 @endif
                                             </td>
                                             <td class="px-2 py-2">
-                                                <button onclick="event.stopPropagation(); openSupplementalFilesModal('{{ $supplemental->supplemental_no }}')"
-                                                    class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
-                                                    @if($rowFileCount > 0)
-                                                        bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
-                                                    @else
-                                                        bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
-                                                    @endif"
-                                                    title="View files">
-                                                    <i class="fas fa-file"></i>
-                                                    <span>{{ $rowFileCount }}</span>
-                                                </button>
+                                                <div class="inline-flex items-center gap-1">
+                                                    @if ($rowType === 'Supplemental')
+                                                        @if ($rowAros)
+                                                            @if ($rowAroStale)
+                                                                <span title="This row's amount no longer matches its ARO — it may have been edited after the ARO was created." class="inline-flex items-center gap-1 px-2 py-1 rounded font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                                                    <i class="fas fa-triangle-exclamation"></i>
+                                                                </span>
+                                                            @endif
+                                                            <x-aro-preview-picker :aros="$rowAros" return-to="supplementals" uid="row-{{ $supplemental->id }}"
+                                                                onclick="event.stopPropagation();"
+                                                                class="text-blue-600 inline-flex items-center gap-1 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded transition-colors px-2 py-1">
+                                                                <i class="fas fa-eye"></i>
+                                                            </x-aro-preview-picker>
+                                                        @else
+                                                            @can('create appropriations')
+                                                                <button type="button" onclick="event.stopPropagation(); fillAndOpenAroCreateModal({{ \Illuminate\Support\Js::from([
+                                                                    'officeAllotmentClassesId' => (string) $supplemental->office_allotment_classes_id,
+                                                                    'supplementalNo' => $supplemental->basis_no,
+                                                                    'dateOfIssue' => $supplemental->supplemental_date,
+                                                                ]) }})" title="Create ARO for this Supplemental"
+                                                                    class="text-green-600 inline-flex items-center gap-1 hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded transition-colors px-2 py-1">
+                                                                    <i class="fas fa-folder-open"></i>
+                                                                </button>
+                                                            @endcan
+                                                        @endif
+                                                    @endif
+                                                    <button onclick="event.stopPropagation(); openSupplementalFilesModal('{{ $supplemental->supplemental_no }}')"
+                                                        class="inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
+                                                        @if($rowFileCount > 0)
+                                                            bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 font-semibold
+                                                        @else
+                                                            bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600
+                                                        @endif"
+                                                        title="View files">
+                                                        <i class="fas fa-file"></i>
+                                                        <span>{{ $rowFileCount }}</span>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
@@ -685,6 +747,206 @@
     @include('supplementals.modal.edit')
     @include('supplementals.modal.delete')
     @include('supplementals.modal.supplemental_files')
+
+    @can('create appropriations')
+    @include('allotment_release_orders.modal.create', [
+        'officeAllotmentClassesForForm' => $officeAllotmentClasses,
+        'returnTo' => 'supplementals',
+    ])
+    @include('allotment_release_orders.modal.edit', [
+        'returnTo' => 'supplementals',
+    ])
+
+    <!-- Prompt shown right after a NEW "Supplemental" batch is saved, asking
+         whether to create an ARO for it now (see the DOMContentLoaded handler
+         below). -->
+    <div id="supplementalAroPromptModal" style="display:none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 ease-out hidden animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
+            <div class="flex justify-between items-center px-6 py-4 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700">
+                <h2 class="text-base leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="fas fa-check-circle text-green-600 dark:text-green-400 mr-3 text-xl"></i>
+                    {{ __('Supplemental Created') }}
+                </h2>
+                <button type="button" onclick="closeSupplementalAroPromptModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-gray-700 dark:text-gray-200">
+                {{ __('Would you like to create an Allotment Release Order (ARO) to release this Supplemental now?') }}
+            </div>
+            <div class="flex justify-end items-center gap-3 p-4 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
+                <button type="button" onclick="closeSupplementalAroPromptModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    {{ __('Not Now') }}
+                </button>
+                <button type="button" onclick="openAroCreateModalFromPending()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-folder-open mr-1"></i> {{ __('Create ARO') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prompt shown after EDITING a "Supplemental" that already has an ARO,
+         asking whether to edit that ARO too (see the DOMContentLoaded handler
+         below). -->
+    <div id="supplementalEditAroPromptModal" style="display:none;" class="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 ease-out hidden animate-scaleInUp" style="animation: scaleInUp 0.3s ease-out;">
+            <div class="flex justify-between items-center px-6 py-4 border-b-2 rounded-t-xl dark:border-gray-600 border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700">
+                <h2 class="text-base leading-6 font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 mr-3 text-xl"></i>
+                    {{ __('Supplemental Updated') }}
+                </h2>
+                <button type="button" onclick="closeSupplementalEditAroPromptModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="px-6 py-5 text-sm text-gray-700 dark:text-gray-200">
+                {{ __('This Supplemental already has an Allotment Release Order. Would you like to edit that ARO as well, to match what just changed?') }}
+            </div>
+            <div class="flex justify-end items-center gap-3 p-4 border-t-2 border-gray-200 rounded-b-xl dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
+                <button type="button" onclick="closeSupplementalEditAroPromptModal()" class="text-gray-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-gray-600 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    {{ __('Not Now') }}
+                </button>
+                <button type="button" onclick="editPendingAro()" class="text-blue-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-6 py-2 text-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-edit mr-1"></i> {{ __('Edit ARO') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pendingAroPrefill = null;
+        let pendingExistingAroId = null;
+
+        function openSupplementalAroPromptModal() {
+            const modal = document.getElementById('supplementalAroPromptModal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                const box = modal.querySelector('div.hidden');
+                if (box) box.classList.remove('hidden');
+            }, 10);
+        }
+
+        function closeSupplementalAroPromptModal() {
+            const modal = document.getElementById('supplementalAroPromptModal');
+            const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div');
+            if (box) {
+                box.classList.add('hidden');
+                setTimeout(() => { modal.style.display = 'none'; }, 300);
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+
+        function openSupplementalEditAroPromptModal() {
+            const modal = document.getElementById('supplementalEditAroPromptModal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                const box = modal.querySelector('div.hidden');
+                if (box) box.classList.remove('hidden');
+            }, 10);
+        }
+
+        function closeSupplementalEditAroPromptModal() {
+            const modal = document.getElementById('supplementalEditAroPromptModal');
+            const box = modal.querySelector('div.hidden, div[style*="animation"]') || modal.querySelector('> div');
+            if (box) {
+                box.classList.add('hidden');
+                setTimeout(() => { modal.style.display = 'none'; }, 300);
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Pre-fills and opens the (embedded) ARO create modal from a Supplemental
+        // batch — office/allotment class, Fund Source = Supplemental Budget, SB
+        // No., and Date of Issue — so the user reviews/checks the account codes
+        // and creates the ARO without looking everything up again.
+        function fillAndOpenAroCreateModal(prefill) {
+            const item = aroOfficeAllotmentClasses.find(o => o.id === prefill.officeAllotmentClassesId);
+            if (!item) return;
+
+            openCreateAroModal();
+            AroForm.selectOfficeAllotmentClass('create', item);
+
+            const fundSourceField = document.getElementById('create_fund_source');
+            fundSourceField.value = 'Supplemental Budget';
+            AroForm.onFundSourceChange('create');
+
+            if (prefill.supplementalNo) {
+                document.getElementById('create_supplemental_no').value = prefill.supplementalNo;
+                AroForm.onSupplementalNoChange('create');
+            }
+
+            if (prefill.dateOfIssue) {
+                document.getElementById('create_date_of_issue').value = prefill.dateOfIssue;
+                AroForm.onDateOfIssueChange('create');
+            }
+        }
+
+        function openAroCreateModalFromPending() {
+            if (!pendingAroPrefill) return;
+            closeSupplementalAroPromptModal();
+            fillAndOpenAroCreateModal(pendingAroPrefill);
+        }
+
+        // Fetches the ARO flagged by the "edit that ARO too?" prompt and opens
+        // it in the (embedded) edit modal — same modal/JS the ARO index's own
+        // "Edit" button uses, just fed data from an AJAX call instead of having
+        // it already inlined server-side.
+        function editPendingAro() {
+            if (!pendingExistingAroId) return;
+            closeSupplementalEditAroPromptModal();
+
+            const url = aroRoutes.jsonTemplate.replace('__ARO_ID__', pendingExistingAroId);
+            fetch(url)
+                .then(r => r.json())
+                .then(aro => openEditAroModal(aro));
+        }
+
+        // SupplementalController::store()/update() redirect back here with these
+        // query params after a "Supplemental" batch is saved/edited (not shown
+        // for "Reversion" batches — no release applies there):
+        //   - open_aro_create=1: a brand-new batch was just created — ask first
+        //     (see the prompt above) before opening the ARO create modal.
+        //   - open_aro_create_direct=1: an existing batch was edited and has no
+        //     ARO yet — open the (pre-filled) create modal directly, no prompt.
+        //   - existing_aro_id=<id>: an existing batch was edited and already has
+        //     an ARO — ask whether to edit that ARO too.
+        document.addEventListener('DOMContentLoaded', function () {
+            const params = new URLSearchParams(window.location.search);
+            const openCreate = params.get('open_aro_create');
+            const openCreateDirect = params.get('open_aro_create_direct');
+            const existingAroId = params.get('existing_aro_id');
+
+            if (openCreate === '1') {
+                pendingAroPrefill = {
+                    officeAllotmentClassesId: params.get('aro_office_allotment_classes_id'),
+                    supplementalNo: params.get('aro_supplemental_no'),
+                    dateOfIssue: params.get('aro_date_of_issue'),
+                };
+                openSupplementalAroPromptModal();
+            } else if (openCreateDirect === '1') {
+                fillAndOpenAroCreateModal({
+                    officeAllotmentClassesId: params.get('aro_office_allotment_classes_id'),
+                    supplementalNo: params.get('aro_supplemental_no'),
+                    dateOfIssue: params.get('aro_date_of_issue'),
+                });
+            } else if (existingAroId) {
+                pendingExistingAroId = existingAroId;
+                openSupplementalEditAroPromptModal();
+            } else {
+                return;
+            }
+
+            // Clean the URL so refreshing the page doesn't repeat any of the above.
+            ['open_aro_create', 'open_aro_create_direct', 'existing_aro_id',
+                'aro_office_allotment_classes_id', 'aro_supplemental_no', 'aro_date_of_issue']
+                .forEach(key => params.delete(key));
+            const query = params.toString();
+            window.history.replaceState({}, '', window.location.pathname + (query ? '?' + query : ''));
+        });
+    </script>
+    @endcan
 
     </div>
 </x-app-layout>

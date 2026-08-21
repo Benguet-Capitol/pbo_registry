@@ -254,6 +254,7 @@ Route::middleware(['auth', 'role:Developer|Administrator|Obligation|Disbursement
     Route::get('/allotment-release-orders-signatories', [AllotmentReleaseOrderController::class, 'getSignatories'])->name('allotment_release_orders.signatories');
     Route::get('/allotment-release-orders/{allotment_release_order}/preview', [AllotmentReleaseOrderController::class, 'preview'])->name('allotment_release_orders.preview');
     Route::get('/allotment-release-orders/{allotment_release_order}/export-excel', [AllotmentReleaseOrderController::class, 'exportExcel'])->name('allotment_release_orders.exportExcel');
+    Route::get('/allotment-release-orders/{allotment_release_order}/json', [AllotmentReleaseOrderController::class, 'json'])->name('allotment_release_orders.json');
     Route::resource('allotment-release-orders', AllotmentReleaseOrderController::class)->names('allotment_release_orders');
     // Accounts Summary Report Routes
     Route::get('/summaryaccounts', [AccountsSummaryController::class, 'index'])->name('summaryaccounts.index');

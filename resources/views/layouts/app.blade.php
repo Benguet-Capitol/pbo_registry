@@ -37,7 +37,7 @@
 
             <!-- Page Wrapper -->
             <div
-                class="flex flex-col min-h-screen"
+                class="flex flex-col min-h-screen pb-20 md:pb-0"
                 :class="{
                     'lg:ml-64': isSidebarOpen,
                     'md:ml-16': !isSidebarOpen

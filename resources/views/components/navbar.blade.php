@@ -88,7 +88,7 @@
 
 <!-- Mobile bottom bar -->
 <div
-    class="fixed inset-x-0 bottom-0 flex items-center justify-between px-4 py-4 sm:px-6 transition-all duration-300 ease-in-out bg-gradient-to-t from-white to-gray-50 md:hidden dark:from-dark-eval-1 dark:to-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg dark:shadow-2xl"
+    class="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between px-4 py-3 sm:px-6 transition-all duration-300 ease-in-out bg-white md:hidden dark:bg-dark-eval-1 border-t border-gray-200 dark:border-gray-800 shadow-lg dark:shadow-2xl"
     :class="{
         'translate-y-full': scrollingDown,
         'translate-y-0': scrollingUp,
@@ -102,8 +102,8 @@
         <x-heroicon-o-search aria-hidden="true" class="w-6 h-6 transition-transform duration-300" />
     </x-button>
 
-    <a href="{{ route('dashboard') }}" class="transform transition-all duration-200 hover:scale-110 active:scale-95">
-        <x-application-logo aria-hidden="true" class="w-10 h-10" />
+    <a href="{{ route('dashboard') }}" class="flex items-center justify-center transform transition-all duration-200 hover:scale-110 active:scale-95">
+        <i class="fas fa-code-compare text-2xl leading-none text-gray-700 dark:text-white" aria-hidden="true"></i>
 
         <span class="sr-only">Dashboard</span>
     </a>

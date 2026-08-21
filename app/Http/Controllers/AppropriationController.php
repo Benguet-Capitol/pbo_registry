@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccountCode;
+use App\Models\AllotmentReleaseOrder;
 use App\Models\Appropriation;
 use App\Models\ObligationAmount;
 use App\Models\Program;
@@ -54,6 +55,8 @@ class AppropriationController extends Controller
         $officeName = null;
         $totalAppropriation = 0;
         $totalAllotment = 0;
+        $officeAllotmentClassesForForm = collect();
+        $arosForOffice = collect();
 
         if ($officeAllotmentClassId) {
             $officeAllotmentClass = OfficeAllotmentClass::with('allotmentClass', 'offices')->find($officeAllotmentClassId);
@@ -64,6 +67,34 @@ class AppropriationController extends Controller
                 ->sum('appropriation');
             $totalAllotment = Appropriation::where('office_allotment_class_id', $officeAllotmentClassId)
                 ->sum(DB::raw('COALESCE(quarter1,0) + COALESCE(quarter2,0) + COALESCE(quarter3,0) + COALESCE(quarter4,0)'));
+
+            // Feeds the embedded "Create ARO" modal's office/allotment class
+            // autocomplete — scoped to the same year as the account being viewed,
+            // matching AllotmentReleaseOrderController::index()'s own scoping.
+            $officeAllotmentClassesForForm = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
+                ->where('year', $officeAllotmentClass->year)
+                ->orderBy('office')
+                ->get();
+
+            // Drives the "Preview ARO" button beside "Create ARO" — every ARO
+            // covering this office/allotment class, most recent first, across
+            // every fund source (an office/class can have several AROs over
+            // time — the view offers a picker when there's more than one).
+            // Matched via items->appropriation rather than the ARO's own
+            // office_allotment_classes_id: a Special Education Fund ARO
+            // consolidates account codes across every SEF office sharing the
+            // same Allotment Class/year (see AllotmentReleaseOrderController::
+            // sefOfficeAllotmentClasses()), anchored at whichever one of those
+            // offices was picked when it was created — so an ARO covering an
+            // appropriation that actually belongs to this office/class can be
+            // anchored at a different (sibling) one.
+            $arosForOffice = AllotmentReleaseOrder::whereHas(
+                'items.appropriation',
+                fn ($q) => $q->where('office_allotment_class_id', $officeAllotmentClassId)
+            )
+                ->orderByDesc('date_of_issue')
+                ->orderByDesc('id')
+                ->get(['id', 'aro_no', 'date_of_issue']);
         }
         
         $query = Appropriation::query()->with(['officeAllotmentClass.allotmentClass']);
@@ -136,7 +167,7 @@ class AppropriationController extends Controller
             ['label' => 'Accounts']
         ];
 
-        return view('appropriations.index', compact('appropriations', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClass', 'allotmentClassDescription', 'officeName', 'account_codes', 'officeAllotmentClassId', 'totalAppropriation', 'breadcrumb', 'programs', 'totalAllotment', 'totalRecords'))->with('status', session('status'));
+        return view('appropriations.index', compact('appropriations', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClass', 'allotmentClassDescription', 'officeName', 'account_codes', 'officeAllotmentClassId', 'totalAppropriation', 'breadcrumb', 'programs', 'totalAllotment', 'totalRecords', 'officeAllotmentClassesForForm', 'arosForOffice'))->with('status', session('status'));
     }
 
     /**
@@ -304,6 +335,8 @@ class AppropriationController extends Controller
 
         Log::info('Validated data:', $validated);
 
+        // Individual creation deliberately does NOT auto-create an ARO. Use the
+        // "Create ARO" button on the index instead when releasing a one-off account.
         $appropriations = Appropriation::create([
             'office_allotment_class_id' => $validated['office_allotment_class_id'],
             'programs' => $validated['programs'],

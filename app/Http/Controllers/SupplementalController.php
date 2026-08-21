@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\AllotmentReleaseOrderItem;
 use App\Models\Supplemental;
 use App\Models\OfficeAllotmentClass;
 use App\Models\Appropriation;
 use App\Models\ObligationAmount;
 use App\Models\ObligationAdjustment;
 use App\Models\Realignment;
+use App\Services\AllotmentReleaseOrderService;
 use Illuminate\Http\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +19,13 @@ use Illuminate\Support\Facades\Log;
 
 class SupplementalController extends Controller
 {
+    private AllotmentReleaseOrderService $aroService;
+
+    public function __construct(AllotmentReleaseOrderService $aroService)
+    {
+        $this->aroService = $aroService;
+    }
+
     public function index(Request $request): View
 {
     $perPage = $request->input('per_page', 'all');
@@ -157,12 +166,127 @@ class SupplementalController extends Controller
 
     $totalRecords = $totalRecordsQuery->distinct('supplemental_no')->count('supplemental_no');
 
+    [$existingAroByRow, $existingAroByBatch, $staleAroByRow, $staleAroByBatch] = $this->buildExistingAroLookups($supplementals);
+
     return view('supplementals.index', compact(
         'supplementals', 'perPage', 'search', 'sortBy', 'sortOrder',
         'availableYears', 'selectedYear', 'officeAllotmentClasses',
-        'office_allotment_classes', 'appropriations', 'breadcrumb', 'supplementalsBulkDelete', 'totalRecords'
+        'office_allotment_classes', 'appropriations', 'breadcrumb', 'supplementalsBulkDelete', 'totalRecords',
+        'existingAroByRow', 'existingAroByBatch', 'staleAroByRow', 'staleAroByBatch'
     ));
 }
+
+    /**
+     * Looks up, in one batched query, which of the currently-listed
+     * "Supplemental" rows already have an ARO releasing them — lets the index
+     * view show a "Preview" button (list view: per row/account code; card
+     * view: per SB No. batch) instead of the user opening each one to find
+     * out. "Reversion" rows are skipped — no release ever applies to them.
+     *
+     * Row-level matching deliberately does NOT require the ARO's own
+     * office_allotment_classes_id to equal the row's — a Special Education
+     * Fund ARO consolidates account codes across every SEF office sharing the
+     * same Allotment Class/year (see getAppropriationsByClass()'s
+     * sefOfficeAllotmentClasses()), anchored at whichever one of those offices
+     * was picked when it was created, so the anchor can legitimately differ
+     * from this row's own office. appropriation_id already narrows to one
+     * specific account code, and requiring it to actually be an item on the
+     * ARO is definitive proof the money was released through it.
+     *
+     * A row/batch can have more than one matching ARO — e.g. two separate
+     * partial releases against the same appropriation under the same SB No.
+     * over time — so each entry is a list (most recent first), not a single
+     * ARO; the index view offers a picker via <x-aro-preview-picker> whenever
+     * a list has more than one.
+     *
+     * Also flags rows/batches whose current Supplemental amount no longer
+     * matches what their ARO(s) actually authorized — e.g. the Supplemental
+     * was edited and the linked ARO wasn't updated to match (the user picked
+     * "Not Now" on that prompt) — so the index can surface a "stale" warning
+     * instead of silently leaving the two out of sync with no visible sign.
+     *
+     * @return array{0: array<string, list<object{id:int, aro_no:string, date_of_issue:?\Carbon\Carbon}>>, 1: array<string, list<object{id:int, aro_no:string, date_of_issue:?\Carbon\Carbon}>>, 2: array<string, bool>, 3: array<string, bool>}
+     *         [0] byRow keyed by "appropriation_id|basis_no" (list view)
+     *         [1] byBatch keyed by the batch's own supplemental_no tracking code (card view)
+     *         [2] staleByRow — same keys as [0], true where the amounts don't match
+     *         [3] staleByBatch — same keys as [1], true if any row in that batch is stale
+     */
+    private function buildExistingAroLookups($supplementals): array
+    {
+        $rows = collect($supplementals)->filter(
+            fn ($s) => trim($s->type ?? '') === 'Supplemental' && $s->appropriations_id && $s->basis_no
+        );
+
+        if ($rows->isEmpty()) {
+            return [[], [], [], []];
+        }
+
+        $appropriationIds = $rows->pluck('appropriations_id')->unique()->values();
+
+        $matches = AllotmentReleaseOrderItem::query()
+            ->join('allotment_release_orders', 'allotment_release_orders.id', '=', 'allotment_release_order_items.allotment_release_order_id')
+            ->where('allotment_release_orders.fund_source', 'Supplemental Budget')
+            ->whereIn('allotment_release_order_items.appropriation_id', $appropriationIds)
+            ->orderByDesc('allotment_release_orders.date_of_issue')
+            ->orderByDesc('allotment_release_orders.id')
+            ->select([
+                'allotment_release_order_items.appropriation_id',
+                'allotment_release_order_items.authorized_appropriation',
+                'allotment_release_orders.id as aro_id',
+                'allotment_release_orders.aro_no',
+                'allotment_release_orders.date_of_issue',
+                'allotment_release_orders.supplemental_no',
+            ])
+            ->get();
+
+        $byRow = [];
+        $totalAuthorizedByRow = [];
+        foreach ($matches as $match) {
+            if ((string) $match->supplemental_no !== '') {
+                $key = "{$match->appropriation_id}|{$match->supplemental_no}";
+                $byRow[$key][] = (object) [
+                    'id' => $match->aro_id,
+                    'aro_no' => $match->aro_no,
+                    'date_of_issue' => $match->date_of_issue ? \Carbon\Carbon::parse($match->date_of_issue) : null,
+                ];
+                $totalAuthorizedByRow[$key] = ($totalAuthorizedByRow[$key] ?? 0) + (float) $match->authorized_appropriation;
+            }
+        }
+
+        // Batch-level (card view): union of every row's matches in the batch
+        // (a batch is every row sharing one supplemental_no tracking code,
+        // which — since update() keeps office_allotment_classes_id/basis_no in
+        // sync across all of a batch's rows — already correctly disambiguates
+        // two unrelated offices that happen to reuse the same literal SB No.
+        // text), deduped by ARO id since more than one row can point at the
+        // same ARO.
+        $byBatch = [];
+        $staleByRow = [];
+        $staleByBatch = [];
+        foreach ($rows as $row) {
+            $key = "{$row->appropriations_id}|{$row->basis_no}";
+            $rowMatches = $byRow[$key] ?? [];
+            if (! $rowMatches) {
+                continue;
+            }
+
+            $existing = $byBatch[$row->supplemental_no] ?? [];
+            $byBatch[$row->supplemental_no] = collect(array_merge($existing, $rowMatches))
+                ->unique('id')
+                ->sortByDesc(fn ($aro) => $aro->date_of_issue)
+                ->values()
+                ->all();
+
+            $rowAmount = (float) str_replace(',', '', (string) $row->amount);
+            $isStale = abs($rowAmount - ($totalAuthorizedByRow[$key] ?? 0)) > 0.005;
+            $staleByRow[$key] = $isStale;
+            if ($isStale) {
+                $staleByBatch[$row->supplemental_no] = true;
+            }
+        }
+
+        return [$byRow, $byBatch, $staleByRow, $staleByBatch];
+    }
 
     public function create(): View
     {
@@ -198,7 +322,6 @@ class SupplementalController extends Controller
             $programs = $request->input('programs', []);
             $account_codes = $request->input('account_code', []);
             $descriptions = $request->input('description', []);
-            $balances = $request->input('balance_from_allotment', []);
             $amounts = $request->input('amount_of_obligation', []);
             $quarters_1 = $request->input('quarter_1', []);
             $quarters_2 = $request->input('quarter_2', []);
@@ -233,8 +356,22 @@ class SupplementalController extends Controller
                 Supplemental::create($dataToInsert);
             }
 
-            return redirect()->route('supplementals.index', $request->only(['year1', 'office_allotment_class_filter', 'supplemental_type_filter', 'per_page', 'search']))
-            ->with('status', "<strong>{$validated['type']}</strong> No. <strong>{$validated['supplemental_no']}</strong> has been created successfully!");
+            $redirectParams = $request->only(['year1', 'office_allotment_class_filter', 'supplemental_type_filter', 'per_page', 'search']);
+
+            // A brand-new "Supplemental" batch (adds funds) can immediately be
+            // released via an ARO — deep-link into the (embedded) ARO create modal
+            // on this same index, pre-scoped/pre-filled from this batch, instead of
+            // making the user look everything up again. "Reversion" reduces funds
+            // instead, so no release applies there.
+            if ($validated['type'] === 'Supplemental') {
+                $redirectParams['open_aro_create'] = 1;
+                $redirectParams['aro_office_allotment_classes_id'] = $validated['office_allotment_class_id'];
+                $redirectParams['aro_supplemental_no'] = $validated['basis_no'] ?? '';
+                $redirectParams['aro_date_of_issue'] = $validated['supplemental_date'];
+            }
+
+            return redirect()->route('supplementals.index', $redirectParams)
+                ->with('status', "<strong>{$validated['type']}</strong> No. <strong>{$validated['supplemental_no']}</strong> has been created successfully!");
         } catch (\Exception $e) {
             Log::error('Error saving supplemental: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -309,7 +446,29 @@ class SupplementalController extends Controller
 
             DB::commit();
 
-            return redirect()->route('supplementals.index', $request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']))
+            $redirectParams = $request->only(['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page', 'search']);
+
+            // Editing a "Supplemental" (not "Reversion" — no release applies there)
+            // may affect an ARO already tied to it, or mean one still doesn't exist
+            // yet — either way, prompt on the index instead of silently leaving the
+            // ARO out of sync with what was just edited.
+            if ($validated['edit_type'] === 'Supplemental' && $appropriation) {
+                $existingAro = $this->aroService->findAroForSupplemental(
+                    $appropriation->id,
+                    $validated['edit_basis_no'] ?? null,
+                );
+
+                if ($existingAro) {
+                    $redirectParams['existing_aro_id'] = $existingAro->id;
+                } else {
+                    $redirectParams['open_aro_create_direct'] = 1;
+                    $redirectParams['aro_office_allotment_classes_id'] = $validated['edit_office_allotment_class_id'];
+                    $redirectParams['aro_supplemental_no'] = $validated['edit_basis_no'] ?? '';
+                    $redirectParams['aro_date_of_issue'] = $validated['edit_supplemental_date'];
+                }
+            }
+
+            return redirect()->route('supplementals.index', $redirectParams)
                 ->with('status', "<strong>{$validated['edit_type']}</strong> No. <strong>{$validated['edit_supplemental_no']}</strong> with Account Code: <strong>{$validated['edit_account_code']} - {$validated['edit_description']}</strong> has been updated successfully!");
 
         } catch (\Exception $e) {

@@ -10,6 +10,7 @@ use App\Models\Employee;
 use App\Models\Office;
 use App\Models\OfficeAllotmentClass;
 use App\Models\Supplemental;
+use App\Services\AllotmentReleaseOrderService;
 use App\Traits\LogsActivity;
 use App\Traits\SortsAppropriations;
 use Carbon\Carbon;
@@ -25,7 +26,14 @@ class AllotmentReleaseOrderController extends Controller
      * Office (id 12) that Provincial Budget Officer signatories are sourced from,
      * matching the existing convention used by RAOController.
      */
-    private const PBO_OFFICE_ID = '12';
+    private const PBO_OFFICE_ID = AllotmentReleaseOrderService::PBO_OFFICE_ID;
+
+    private AllotmentReleaseOrderService $aroService;
+
+    public function __construct(AllotmentReleaseOrderService $aroService)
+    {
+        $this->aroService = $aroService;
+    }
 
     public function index(Request $request)
     {
@@ -156,7 +164,7 @@ class AllotmentReleaseOrderController extends Controller
                 $dateOfIssue = Carbon::parse($validated['date_of_issue']);
 
                 $aro = AllotmentReleaseOrder::create([
-                    'aro_no' => $this->generateAroNo($validated['office_allotment_classes_id'], $dateOfIssue),
+                    'aro_no' => $this->aroService->generateAroNo($validated['office_allotment_classes_id'], $dateOfIssue),
                     'date_of_issue' => $dateOfIssue,
                     'year' => $dateOfIssue->year,
                     'office_allotment_classes_id' => $validated['office_allotment_classes_id'],
@@ -180,7 +188,10 @@ class AllotmentReleaseOrderController extends Controller
                 return $aro;
             });
 
-            return redirect()->route('allotment_release_orders.preview', $allotmentReleaseOrder)
+            return redirect()->route('allotment_release_orders.preview', array_merge(
+                ['allotment_release_order' => $allotmentReleaseOrder],
+                $this->returnParams($request)
+            ))
                 ->with('status', [
                     'type' => 'create',
                     'message' => 'Allotment Release Order: <strong>'.$allotmentReleaseOrder->aro_no.'</strong> has been created successfully.',
@@ -200,7 +211,7 @@ class AllotmentReleaseOrderController extends Controller
                 $dateOfIssue = Carbon::parse($validated['date_of_issue']);
 
                 $allotmentReleaseOrder->update([
-                    'aro_no' => $this->normalizeAroNoPrefix($allotmentReleaseOrder->aro_no, $validated['office_allotment_classes_id']),
+                    'aro_no' => $this->aroService->normalizeAroNoPrefix($allotmentReleaseOrder->aro_no, $validated['office_allotment_classes_id']),
                     'date_of_issue' => $dateOfIssue,
                     'year' => $dateOfIssue->year,
                     'office_allotment_classes_id' => $validated['office_allotment_classes_id'],
@@ -222,7 +233,10 @@ class AllotmentReleaseOrderController extends Controller
                 $this->saveItems($allotmentReleaseOrder, $validated);
             });
 
-            return redirect()->route('allotment_release_orders.preview', $allotmentReleaseOrder)
+            return redirect()->route('allotment_release_orders.preview', array_merge(
+                ['allotment_release_order' => $allotmentReleaseOrder],
+                $this->returnParams($request)
+            ))
                 ->with('status', [
                     'type' => 'update',
                     'message' => 'Allotment Release Order: <strong>'.$allotmentReleaseOrder->aro_no.'</strong> has been updated successfully.',
@@ -267,7 +281,7 @@ class AllotmentReleaseOrderController extends Controller
         }
     }
 
-    public function preview(AllotmentReleaseOrder $allotmentReleaseOrder)
+    public function preview(Request $request, AllotmentReleaseOrder $allotmentReleaseOrder)
     {
         $allotmentReleaseOrder->load([
             'officeAllotmentClass.offices',
@@ -278,9 +292,38 @@ class AllotmentReleaseOrderController extends Controller
             'provincialGovernor',
         ]);
 
+        // store() tags the redirect here with where the create form was opened
+        // from (Appropriations index, Supplementals index, or this module's own)
+        // plus that page's full query string at the time (return_query), so Back
+        // restores the exact same filtered view there instead of always landing
+        // on a bare ARO index — see store()'s $returnParams.
+        $returnTo = $request->query('return_to');
+
+        if (in_array($returnTo, ['appropriations', 'supplementals'], true)) {
+            parse_str((string) $request->query('return_query'), $returnQueryParams);
+            $backUrl = route($returnTo === 'appropriations' ? 'appropriations.index' : 'supplementals.index', $returnQueryParams);
+        } else {
+            $backUrl = route('allotment_release_orders.index');
+        }
+
         return view('allotment_release_orders.preview', [
             'aro' => $allotmentReleaseOrder,
+            'backUrl' => $backUrl,
         ]);
+    }
+
+    /**
+     * AJAX: this ARO's data in the same shape the ARO index's own "Edit"
+     * button inlines server-side (see openEditAroModal() in modal/edit.blade.php)
+     * — used when another page (e.g. the Supplementals index, prompting to
+     * edit an existing ARO tied to a just-edited Supplemental) needs to open
+     * the embedded edit modal for an ARO it doesn't already have loaded.
+     */
+    public function json(AllotmentReleaseOrder $allotmentReleaseOrder)
+    {
+        return response()->json(
+            $allotmentReleaseOrder->load(['items', 'provincialGovernor', 'provincialBudgetOfficer'])
+        );
     }
 
     public function exportExcel(Request $request, AllotmentReleaseOrder $allotmentReleaseOrder)
@@ -376,7 +419,7 @@ class AllotmentReleaseOrderController extends Controller
 
                 $items = $items->merge($supplementals->map(function ($supplemental) use ($excludeAroId, $officeLabel) {
                     $authorizedAppropriation = (float) $supplemental->amount;
-                    $alreadyCommitted = $this->alreadyCommittedForAppropriation($supplemental->appropriation->id, 'Supplemental Budget', $excludeAroId);
+                    $alreadyCommitted = $this->aroService->alreadyCommittedForAppropriation($supplemental->appropriation->id, 'Supplemental Budget', $excludeAroId, $supplemental->basis_no);
 
                     return [
                         'appropriation_id' => $supplemental->appropriation->id,
@@ -413,7 +456,7 @@ class AllotmentReleaseOrderController extends Controller
 
             $items = $items->merge($appropriations->map(function ($appropriation) use ($excludeAroId, $fundSource, $officeLabel) {
                 $authorizedAppropriation = (float) $appropriation->appropriation;
-                $alreadyCommitted = $this->alreadyCommittedForAppropriation($appropriation->id, $fundSource, $excludeAroId);
+                $alreadyCommitted = $this->aroService->alreadyCommittedForAppropriation($appropriation->id, $fundSource, $excludeAroId);
 
                 return [
                     'appropriation_id' => $appropriation->id,
@@ -468,7 +511,7 @@ class AllotmentReleaseOrderController extends Controller
         ]);
 
         return response()->json([
-            'aro_no' => $this->generateAroNo(
+            'aro_no' => $this->aroService->generateAroNo(
                 $request->office_allotment_classes_id,
                 Carbon::parse($request->date_of_issue),
                 lock: false
@@ -494,6 +537,26 @@ class AllotmentReleaseOrderController extends Controller
             'default_pbo' => $defaultPbo,
             'default_governor' => $defaultGovernor,
         ]);
+    }
+
+    /**
+     * The create/edit form (embedded on the Appropriations index's "Create ARO"
+     * button, the Supplementals index's post-save prompts, and this module's
+     * own) carries where it was opened from — plus that page's full query
+     * string at the time (return_query, snapshotted when the form was
+     * rendered) — so the redirect to Preview can send the Back button to that
+     * exact filtered view instead of always landing on a bare ARO index. See
+     * preview()'s use of this same 'return_to'/'return_query' pair, and the
+     * hidden fields in modal/create.blade.php and modal/edit.blade.php.
+     */
+    private function returnParams(Request $request): array
+    {
+        return in_array($request->input('return_to'), ['appropriations', 'supplementals'], true)
+            ? [
+                'return_to' => $request->input('return_to'),
+                'return_query' => $request->input('return_query'),
+            ]
+            : [];
     }
 
     private function validateAro(Request $request): array
@@ -544,199 +607,13 @@ class AllotmentReleaseOrderController extends Controller
     }
 
     /**
-     * Persist the checked account-code rows for an ARO, computing For Later
-     * Release / Previously Released Amount / This Release server-side —
-     * never trusting client-submitted computed values.
-     *
-     * Both store() and update() call this only after the ARO's own prior
-     * items (if any) have already been deleted/don't yet exist, so
-     * alreadyCommittedForAppropriation() here naturally reflects every
-     * *other* ARO's usage without needing to exclude this ARO's id.
+     * Persist the checked account-code rows for an ARO — thin wrapper kept so
+     * store()/update() below don't change; the computation itself now lives
+     * in AllotmentReleaseOrderService so AppropriationController and
+     * SupplementalController's auto-creation can reuse it too.
      */
     private function saveItems(AllotmentReleaseOrder $aro, array $validated): void
     {
-        $dateOfIssue = Carbon::parse($validated['date_of_issue']);
-        $quarter = $this->currentQuarter($dateOfIssue);
-
-        foreach ($validated['appropriation_id'] as $index => $appropriationId) {
-            $appropriation = Appropriation::with('officeAllotmentClass.offices')->findOrFail($appropriationId);
-            $authorizedAppropriation = (float) ($validated['authorized_appropriation'][$index] ?? 0);
-
-            // Use the appropriation's OWN office/allotment class here, not the ARO's
-            // anchor office_allotment_classes_id — for a SEF-consolidated ARO, a
-            // checked row's appropriation can belong to a *different* SEF office than
-            // the one the user picked to open the ARO, and this Supplemental lookup
-            // must still resolve against that row's real office to find its amount.
-            $sourceRecord = $validated['fund_source'] === 'Supplemental Budget'
-                ? Supplemental::where('appropriations_id', $appropriationId)
-                    ->where('office_allotment_classes_id', $appropriation->office_allotment_class_id)
-                    ->where('basis_no', $validated['supplemental_no'])
-                    ->first()
-                : $appropriation;
-
-            $officeLabel = optional($appropriation->officeAllotmentClass->offices)->office_name;
-
-            // Guard against two AROs releasing the same money: this row's
-            // authorized amount can't exceed what's left after every other
-            // existing ARO's usage of this appropriation.
-            $sourceAmount = $sourceRecord
-                ? (float) ($sourceRecord instanceof Supplemental ? $sourceRecord->amount : $sourceRecord->appropriation)
-                : $authorizedAppropriation;
-            $alreadyCommitted = $this->alreadyCommittedForAppropriation($appropriationId, $validated['fund_source']);
-            $balance = $sourceAmount - $alreadyCommitted;
-
-            if ($authorizedAppropriation > $balance + 0.005) {
-                throw new \RuntimeException(
-                    "Account Code {$appropriation->account_code} has only ".number_format(max($balance, 0), 2).
-                    ' remaining balance (already committed to other ARO(s)), but '.
-                    number_format($authorizedAppropriation, 2).' was entered.'
-                );
-            }
-
-            $forLaterRelease = $sourceRecord ? $this->calculateForLaterRelease($sourceRecord, $quarter) : 0;
-            $thisRelease = $authorizedAppropriation - $forLaterRelease;
-
-            $previouslyReleased = (float) AllotmentReleaseOrderItem::where('appropriation_id', $appropriationId)
-                ->whereHas('allotmentReleaseOrder', function ($q) use ($aro, $dateOfIssue) {
-                    $q->where('id', '!=', $aro->id)
-                        ->where('year', $dateOfIssue->year)
-                        ->where('date_of_issue', '<', $dateOfIssue);
-                })
-                ->sum('this_release');
-
-            // A single ARO can roll its checked account codes under multiple PPA
-            // Codes (each with its own Subtotal on the printed form) — each row
-            // types its own PPA Code, defaulting client-side to the ARO's header
-            // PPA Code, but falling back here too in case that's ever blank.
-            $rowPpaCode = $validated['row_ppa_code'][$index] ?? null;
-
-            AllotmentReleaseOrderItem::create([
-                'allotment_release_order_id' => $aro->id,
-                'appropriation_id' => $appropriationId,
-                'ppa_code' => $rowPpaCode ?: ($validated['ppa_code'] ?? null),
-                'account_code' => $appropriation->account_code,
-                'ppa_description' => $appropriation->description,
-                'programs' => $appropriation->programs,
-                'office_label' => $officeLabel,
-                'authorized_appropriation' => $authorizedAppropriation,
-                'for_later_release' => $forLaterRelease,
-                'previously_released_amount' => $previouslyReleased,
-                'this_release' => $thisRelease,
-            ]);
-        }
-    }
-
-    /**
-     * Total already committed (sum of this_release) against a given
-     * appropriation across every *other* existing ARO — used both to guard
-     * against double-releasing the same money and to show a live "Balance"
-     * in the create/edit Account Codes table.
-     *
-     * Annual Budget and Reenacted Budget releases draw from the appropriation's
-     * own authorized amount, while Supplemental Budget releases draw from a
-     * separate Supplemental amount for the same account code — so a Supplemental
-     * release must not count against (or be blocked by) an Annual/Reenacted
-     * release on the same appropriation_id, and vice versa.
-     */
-    private function alreadyCommittedForAppropriation(int $appropriationId, string $fundSource, ?int $excludeAroId = null): float
-    {
-        $sourceGroup = $fundSource === 'Supplemental Budget'
-            ? ['Supplemental Budget']
-            : ['Annual Budget', 'Reenacted Budget'];
-
-        return (float) AllotmentReleaseOrderItem::where('appropriation_id', $appropriationId)
-            ->when($excludeAroId, fn ($q) => $q->where('allotment_release_order_id', '!=', $excludeAroId))
-            ->whereHas('allotmentReleaseOrder', fn ($q) => $q->whereIn('fund_source', $sourceGroup))
-            ->sum('this_release');
-    }
-
-    /**
-     * Fiscal quarter (1-4) for a given date — mirrors DashboardController's
-     * private currentQuarter() logic (not reusable directly since it's private there).
-     */
-    private function currentQuarter(Carbon $date): int
-    {
-        return match (true) {
-            $date->month <= 3 => 1,
-            $date->month <= 6 => 2,
-            $date->month <= 9 => 3,
-            default => 4,
-        };
-    }
-
-    /**
-     * Sum of whichever quarterN columns fall after the given quarter — shared
-     * by both Annual (Appropriation) and Supplemental Budget (Supplemental)
-     * records since both tables have identically-named quarter1..quarter4 columns.
-     */
-    private function calculateForLaterRelease($record, int $currentQuarter): float
-    {
-        $forLater = 0;
-        if ($currentQuarter < 2) {
-            $forLater += (float) $record->quarter2;
-        }
-        if ($currentQuarter < 3) {
-            $forLater += (float) $record->quarter3;
-        }
-        if ($currentQuarter < 4) {
-            $forLater += (float) $record->quarter4;
-        }
-
-        return $forLater;
-    }
-
-    /**
-     * ARO No. format is {ClassPrefix}-{Year}-{Month}-{Sequence}, but the
-     * Sequence itself is one continuous counter per year — shared across
-     * every office, allotment class, and month, not scoped to the class
-     * prefix in the number. E.g. PS-2026-08-001 can be followed by
-     * MOOE-2026-08-002 or CO-2026-09-003; only a new year resets it to 001.
-     */
-    private function generateAroNo(int $officeAllotmentClassesId, Carbon $dateOfIssue, bool $lock = true): string
-    {
-        $officeAllotmentClass = OfficeAllotmentClass::with('allotmentClass')->findOrFail($officeAllotmentClassesId);
-        $classCode = optional($officeAllotmentClass->allotmentClass)->class;
-        // Capital Outlay's ARO No. prefix reads "CapEx", not the raw "CO" class code.
-        $classPrefix = $classCode === 'CO' ? 'CapEx' : ($classCode ?? 'ARO');
-
-        $year = (int) $dateOfIssue->format('Y');
-        $month = $dateOfIssue->format('m');
-
-        $query = AllotmentReleaseOrder::where('year', $year);
-        if ($lock) {
-            $query->lockForUpdate();
-        }
-
-        $lastSequence = $query->pluck('aro_no')->map(function ($aroNo) {
-            $segments = explode('-', $aroNo);
-
-            return (int) end($segments);
-        })->max() ?? 0;
-
-        $nextSequence = str_pad((string) ($lastSequence + 1), 3, '0', STR_PAD_LEFT);
-
-        return "{$classPrefix}-{$year}-{$month}-{$nextSequence}";
-    }
-
-    /**
-     * Fixes ARO Nos. that were generated before the CapEx prefix rule
-     * existed — e.g. CO-2026-08-004 for a Capital Outlay ARO gets corrected
-     * to CapEx-2026-08-004 on save, leaving the year/month/sequence intact.
-     */
-    private function normalizeAroNoPrefix(string $aroNo, int $officeAllotmentClassesId): string
-    {
-        $officeAllotmentClass = OfficeAllotmentClass::with('allotmentClass')->find($officeAllotmentClassesId);
-        $classCode = optional(optional($officeAllotmentClass)->allotmentClass)->class;
-        $expectedPrefix = $classCode === 'CO' ? 'CapEx' : ($classCode ?? 'ARO');
-
-        $segments = explode('-', $aroNo);
-
-        if (($segments[0] ?? null) === $classCode && $classCode !== $expectedPrefix) {
-            $segments[0] = $expectedPrefix;
-
-            return implode('-', $segments);
-        }
-
-        return $aroNo;
+        $this->aroService->saveItems($aro, $validated);
     }
 }

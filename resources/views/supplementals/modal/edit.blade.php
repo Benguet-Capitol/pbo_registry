@@ -27,7 +27,7 @@
 
                             <!-- Office and Allotment Class -->
                             <div class="sm:col-span-3 relative">
-                                <x-form.label for="edit_office_allotment_class" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
+                                <x-form.label for="edit_supplemental_office_allotment_class" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Office and Allotment Class')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
@@ -37,14 +37,14 @@
                                             withicon
                                             type="text"
                                             name="edit_office_allotment_class"
-                                            id="edit_office_allotment_class"
+                                            id="edit_supplemental_office_allotment_class"
                                             placeholder="{{ __('Office and Allotment Class') }}"
                                             class="block w-full text-xs bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-200"
                                             oninput="filterOfficeAllotmentClasses()"
                                             autocomplete="off" />
                                     </x-form.input-with-icon-wrapper>
                                     <!-- Hidden input to store the selected ID -->
-                                    <input type="hidden" name="edit_office_allotment_class_id" id="edit_office_allotment_class_id" />
+                                    <input type="hidden" name="edit_office_allotment_class_id" id="edit_supplemental_office_allotment_class_id" />
                                     <div id="editOfficeAllotmentClassDropdown" class="absolute w-full bg-white text-xs dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg hidden max-h-48 overflow-auto z-50">
                                         <!-- Suggestions appear here -->
                                     </div>
@@ -81,13 +81,13 @@
                             </div>
                             <!-- Number -->
                             <div class="sm:col-span-3">
-                                <x-form.label for="edit_supplemental_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Number')" />
+                                <x-form.label for="edit_supplemental_tracking_no" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Number')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
                                         <x-slot name="icon">
                                             <i class="fas fa-list-ol"></i>
                                         </x-slot>
-                                        <x-form.input withicon type='text' name="edit_supplemental_no" autocomplete="off" id="edit_supplemental_no" placeholder="{{ __('Number') }}" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
+                                        <x-form.input withicon type='text' name="edit_supplemental_no" autocomplete="off" id="edit_supplemental_tracking_no" placeholder="{{ __('Number') }}" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" />
                                     </x-form.input-with-icon-wrapper>
                                 </div>
                             </div>
@@ -248,17 +248,17 @@
         document.getElementById('editSupplementalForm').action = `/supplementals/${supplemental.id}`;
         
         // Fix: handle object or string for office_allotment_class
-        document.getElementById('edit_office_allotment_class').value = supplemental.office_allotment_class?.name || supplemental.office_allotment_class || '';
-        document.getElementById('edit_office_allotment_class_id').value = supplemental.office_allotment_classes_id;
+        document.getElementById('edit_supplemental_office_allotment_class').value = supplemental.office_allotment_class?.name || supplemental.office_allotment_class || '';
+        document.getElementById('edit_supplemental_office_allotment_class_id').value = supplemental.office_allotment_classes_id;
         document.getElementById('edit_supplemental_date').value = supplemental.supplemental_date || '';
-        document.getElementById('edit_supplemental_no').value = supplemental.supplemental_no || '';
+        document.getElementById('edit_supplemental_tracking_no').value = supplemental.supplemental_no || '';
         document.getElementById('edit_basis').value = supplemental.basis || '';
         document.getElementById('edit_type').value = supplemental.type || '';
         document.getElementById('edit_basis_no').value = supplemental.basis_no || '';
 
-        // Get the edit_office_allotment_class object by ID and display its office_abbreviation - class
+        // Get the office_allotment_class object by ID and display its office_abbreviation - class
         if (supplemental.office_allotment_class && typeof supplemental.office_allotment_class === 'object') {
-            document.getElementById('edit_office_allotment_class').value = supplemental.office_allotment_class.office_abbreviation + ' - ' + supplemental.office_allotment_class.class;
+            document.getElementById('edit_supplemental_office_allotment_class').value = supplemental.office_allotment_class.office_abbreviation + ' - ' + supplemental.office_allotment_class.class;
         }
 
         // Find the appropriation object by ID
@@ -313,7 +313,7 @@ const editOfficeAllotmentClasses = [
     @endforeach
 ];
 function filterEditOfficeAllotmentClasses() {
-    const input = document.getElementById("edit_office_allotment_class");
+    const input = document.getElementById("edit_supplemental_office_allotment_class");
     const dropdown = document.getElementById("editOfficeAllotmentClassDropdown");
     const filter = input.value.toLowerCase();
     dropdown.innerHTML = "";
@@ -332,7 +332,7 @@ function filterEditOfficeAllotmentClasses() {
         option.innerHTML = `${item.name}`;
         option.onclick = function() {
             input.value = item.name;
-            document.getElementById("edit_office_allotment_class_id").value = item.id;
+            document.getElementById("edit_supplemental_office_allotment_class_id").value = item.id;
             // Reset all account code fields when a new OfficeAllotmentClass is selected
             document.querySelectorAll('[name="edit_account_code"]').forEach(field => field.value = '');
             document.querySelectorAll('[name="edit_description"]').forEach(field => field.value = '');
@@ -349,13 +349,13 @@ function filterEditOfficeAllotmentClasses() {
 }
 document.addEventListener("click", function(event) {
     const dropdown = document.getElementById("editOfficeAllotmentClassDropdown");
-    if (!event.target.closest("#edit_office_allotment_class")) {
+    if (!event.target.closest("#edit_supplemental_office_allotment_class")) {
         dropdown.classList.add("hidden");
     }
 });
 // Attach to input event
-if (document.getElementById('edit_office_allotment_class')) {
-    document.getElementById('edit_office_allotment_class').addEventListener('input', filterEditOfficeAllotmentClasses);
+if (document.getElementById('edit_supplemental_office_allotment_class')) {
+    document.getElementById('edit_supplemental_office_allotment_class').addEventListener('input', filterEditOfficeAllotmentClasses);
 }
 
     function toggleEditQuartersRows() {
@@ -430,8 +430,8 @@ if (document.getElementById('edit_office_allotment_class')) {
 
 // Generate the Supplemental number in the format yyyy-mm-office_abbreviation-class and add S or R depending on the type (Edit Modal)
 function generateEditSupplementalNumber() {
-    const supplementalNoField = document.getElementById('edit_supplemental_no');
-    const officeAllotmentClassInput = document.getElementById('edit_office_allotment_class');
+    const supplementalNoField = document.getElementById('edit_supplemental_tracking_no');
+    const officeAllotmentClassInput = document.getElementById('edit_supplemental_office_allotment_class');
     const typeField = document.getElementById('edit_type');
     const date = new Date();
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (01-12)
@@ -463,14 +463,14 @@ if (document.getElementById('edit_type')) {
         generateEditSupplementalNumber();
     });
 }
-if (document.getElementById('edit_office_allotment_class')) {
-    document.getElementById('edit_office_allotment_class').addEventListener('input', function() {
+if (document.getElementById('edit_supplemental_office_allotment_class')) {
+    document.getElementById('edit_supplemental_office_allotment_class').addEventListener('input', function() {
         generateEditSupplementalNumber();
     });
 }
 // Helper to get selected fund from editOfficeAllotmentClasses (Edit Modal)
 function getEditSelectedFund() {
-    const input = document.getElementById('edit_office_allotment_class');
+    const input = document.getElementById('edit_supplemental_office_allotment_class');
     const value = input ? input.value : '';
     let fund = '';
     editOfficeAllotmentClasses.forEach(item => {
@@ -496,7 +496,7 @@ const editAppropriations = [
 ];
 // Filter account codes and display suggestions with description and program (Edit Modal)
 function filterEditAccountCodes(inputElement) {
-    const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id').value;
+    const officeAllotmentClassId = document.getElementById('edit_supplemental_office_allotment_class_id').value;
     const dropdown = inputElement.nextElementSibling;
     const filter = inputElement.value.toLowerCase();
     dropdown.innerHTML = '';
@@ -610,8 +610,8 @@ openEditSupplementalModal = function(supplemental) {
     // Update text color for all relevant fields after values are set
     [
         'edit_basis',
-        'edit_office_allotment_class',
-        'edit_supplemental_no',
+        'edit_supplemental_office_allotment_class',
+        'edit_supplemental_tracking_no',
         'edit_type',
         'edit_basis_no'
     ].forEach(function(id) {
@@ -636,8 +636,8 @@ function validateEditSupplementalForm() {
     document.querySelectorAll('.text-red-500').forEach(error => error.textContent = '');
 
     // Validate Office and Allotment Class
-    const officeAllotmentClass = document.getElementById('edit_office_allotment_class');
-    const officeAllotmentClassId = document.getElementById('edit_office_allotment_class_id');
+    const officeAllotmentClass = document.getElementById('edit_supplemental_office_allotment_class');
+    const officeAllotmentClassId = document.getElementById('edit_supplemental_office_allotment_class_id');
     if (!officeAllotmentClass.value.trim() || !officeAllotmentClassId.value.trim()) {
         document.getElementById('edit_OfficeAllotmentClassError').textContent = 'Office and Allotment Class is required.';
         isValid = false;
@@ -662,7 +662,7 @@ function validateEditSupplementalForm() {
     }
 
     // Validate Supplemental Number
-    const supplementalNo = document.getElementById('edit_supplemental_no');
+    const supplementalNo = document.getElementById('edit_supplemental_tracking_no');
     if (!supplementalNo.value.trim()) {
         supplementalNo.classList.add('border-red-500');
         supplementalNo.classList.remove('border-gray-300');

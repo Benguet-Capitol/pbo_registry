@@ -12,6 +12,7 @@
         "laravel/scout": "^11.5",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "3.1.x-dev",
+        "smalot/pdfparser": "^2.12",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-permission": "^6.18",
         "spatie/simple-excel": "^3.7",

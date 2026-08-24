@@ -200,7 +200,12 @@
                                     @if ($unit['rowspan'] > 0)
                                         <td class="{{ $itemCellBorder }} px-2 py-1 text-center" rowspan="{{ $unit['rowspan'] }}">{{ $unit['ppa_code'] }}</td>
                                     @endif
-                                    <td class="{{ $itemCellBorder }} px-2 py-1">{{ $item->ppa_description }}</td>
+                                    <td class="{{ $itemCellBorder }} px-2 py-1">
+                                        {{ $item->ppa_description }}
+                                        @if ($aro->isPdfOffice() && $item->project_no)
+                                            <div class="text-[10px] text-gray-600">Project No: {{ $item->project_no }}</div>
+                                        @endif
+                                    </td>
                                     <td class="{{ $itemCellBorder }} px-2 py-1 text-center">{{ $item->account_code }}</td>
                                     <td class="{{ $itemCellBorder }} px-2 py-1 text-right">{{ number_format($item->authorized_appropriation, 2) }}</td>
                                     <td class="{{ $itemCellBorder }} px-2 py-1 text-right">{{ $item->for_later_release > 0 ? number_format($item->for_later_release, 2) : '-' }}</td>

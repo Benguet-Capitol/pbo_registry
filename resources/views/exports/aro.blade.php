@@ -132,7 +132,12 @@
                     @if ($unit['rowspan'] > 0)
                         <td style="{{ $sideBorder }} {{ $topBorder }} {{ $bottomBorder }} padding: 4px; text-align: center; vertical-align: top;" rowspan="{{ $unit['rowspan'] }}">{{ $unit['ppa_code'] }}</td>
                     @endif
-                    <td style="{{ $sideBorder }} {{ $topBorder }} {{ $bottomBorder }} padding: 4px;">{{ $item->ppa_description }}</td>
+                    <td style="{{ $sideBorder }} {{ $topBorder }} {{ $bottomBorder }} padding: 4px;">
+                        {{ $item->ppa_description }}
+                        @if ($aro->isPdfOffice() && $item->project_no)
+                            <br><span style="font-size: 8px; color: #4b5563;">Project No: {{ $item->project_no }}</span>
+                        @endif
+                    </td>
                     <td style="{{ $sideBorder }} {{ $topBorder }} {{ $bottomBorder }} padding: 4px; text-align: center;">{{ $item->account_code }}</td>
                     <td style="{{ $sideBorder }} {{ $topBorder }} {{ $bottomBorder }} padding: 4px; text-align: right;">{{ number_format($item->authorized_appropriation, 2) }}</td>
                     <td style="{{ $sideBorder }} {{ $topBorder }} {{ $bottomBorder }} padding: 4px; text-align: right;">{{ $item->for_later_release > 0 ? number_format($item->for_later_release, 2) : '-' }}</td>

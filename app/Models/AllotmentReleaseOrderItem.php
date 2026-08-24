@@ -17,6 +17,7 @@ class AllotmentReleaseOrderItem extends Model
         'ppa_description',
         'programs',
         'office_label',
+        'project_no',
         'authorized_appropriation',
         'for_later_release',
         'previously_released_amount',

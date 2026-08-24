@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\AllotmentReleaseOrderExport;
 use App\Models\AllotmentReleaseOrder;
-use App\Models\AllotmentReleaseOrderItem;
 use App\Models\Appropriation;
 use App\Models\Employee;
 use App\Models\Office;
@@ -390,6 +389,11 @@ class AllotmentReleaseOrderController extends Controller
             ? $this->sefOfficeAllotmentClasses($office)
             : collect([$office]);
 
+        // PDF (Provincial Development Fund) rows carry their Project No. so the
+        // Account Codes table can show it after the PPA Description — see
+        // AllotmentReleaseOrder::isPdfOffice().
+        $isPdfOffice = optional($office->offices)->office_abbreviation === 'PDF';
+
         if ($fundSource === 'Supplemental Budget') {
             $items = collect();
 
@@ -426,6 +430,7 @@ class AllotmentReleaseOrderController extends Controller
                         'account_code' => $supplemental->appropriation->account_code,
                         'description' => $supplemental->appropriation->description,
                         'programs' => $supplemental->appropriation->programs,
+                        'project_no' => $supplemental->appropriation->project_no,
                         'office_label' => $officeLabel,
                         'authorized_appropriation' => $authorizedAppropriation,
                         'quarter1' => (float) $supplemental->quarter1,
@@ -442,6 +447,7 @@ class AllotmentReleaseOrderController extends Controller
                 'items' => $items->values(),
                 'ppa_code' => $ppaCode,
                 'is_sef_consolidated' => $isSefConsolidated,
+                'is_pdf_office' => $isPdfOffice,
             ]);
         }
 
@@ -463,6 +469,7 @@ class AllotmentReleaseOrderController extends Controller
                     'account_code' => $appropriation->account_code,
                     'description' => $appropriation->description,
                     'programs' => $appropriation->programs,
+                    'project_no' => $appropriation->project_no,
                     'office_label' => $officeLabel,
                     'authorized_appropriation' => $authorizedAppropriation,
                     'quarter1' => (float) $appropriation->quarter1,
@@ -479,6 +486,7 @@ class AllotmentReleaseOrderController extends Controller
             'items' => $items->values(),
             'ppa_code' => $ppaCode,
             'is_sef_consolidated' => $isSefConsolidated,
+            'is_pdf_office' => $isPdfOffice,
         ]);
     }
 

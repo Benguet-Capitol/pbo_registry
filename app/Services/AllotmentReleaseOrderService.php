@@ -286,6 +286,7 @@ class AllotmentReleaseOrderService
                 'ppa_description' => $appropriation->description,
                 'programs' => $appropriation->programs,
                 'office_label' => $officeLabel,
+                'project_no' => $appropriation->project_no,
                 'authorized_appropriation' => $authorizedAppropriation,
                 'for_later_release' => $forLaterRelease,
                 'previously_released_amount' => $previouslyReleased,

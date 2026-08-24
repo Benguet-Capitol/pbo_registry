@@ -84,6 +84,7 @@
      */
     const AroForm = {
         rowsData: {}, // prefix -> array of currently loaded appropriation/supplemental rows
+        isPdfOffice: {}, // prefix -> whether the selected office is PDF (Provincial Development Fund)
 
         el(prefix, name) {
             return document.getElementById(`${prefix}_${name}`);
@@ -187,6 +188,7 @@
                     }
 
                     this.rowsData[prefix] = data.items || [];
+                    this.isPdfOffice[prefix] = !!data.is_pdf_office;
                     this.renderRows(prefix);
                 });
         },
@@ -284,7 +286,10 @@
                             name="row_ppa_code[]" value="${(rowPpaCode || '').replace(/"/g, '&quot;')}" ${isChecked ? '' : 'disabled'}>
                     </td>
                     <td class="px-2 py-1 text-xs">${item.account_code}</td>
-                    <td class="px-2 py-1 text-xs">${item.description || ''}</td>
+                    <td class="px-2 py-1 text-xs">
+                        ${item.description || ''}
+                        ${this.isPdfOffice[prefix] && item.project_no ? `<div class="text-[10px] text-gray-500 dark:text-gray-400">Project No: ${item.project_no}</div>` : ''}
+                    </td>
                     <td class="px-2 py-1 text-xs text-right ${isExhausted ? 'text-red-600 dark:text-red-400 font-semibold' : ''}" title="${item.already_committed > 0 ? 'Already committed to other ARO(s): ' + Number(item.already_committed).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}">
                         ${hasNoAppropriation ? 'No appropriation available' : (isExhausted ? 'Fully released' : Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 }))}
                     </td>

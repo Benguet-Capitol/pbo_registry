@@ -184,7 +184,9 @@
                 <div class="max-h-[720px] overflow-y-auto p-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 bg-gray-50 dark:bg-gray-900">
                 @forelse ($allotmentReleaseOrders as $aro)
                     @php
-                        $officeAbbr = optional($aro->officeAllotmentClass->offices)->office_abbreviation ?? 'Unknown Office';
+                        $officeAbbr = $aro->isSefConsolidated()
+                            ? 'SEF'
+                            : (optional($aro->officeAllotmentClass->offices)->office_abbreviation ?? 'Unknown Office');
                         $allotmentClass = optional($aro->officeAllotmentClass->allotmentClass);
                         $classLabel = AllotmentReleaseOrder::displayClassLabel(optional($allotmentClass)->class, optional($allotmentClass)->description);
                         $totalThisRelease = $aro->items->sum('this_release');

@@ -126,6 +126,18 @@ class AllotmentReleaseOrder extends Model
     }
 
     /**
+     * True when this ARO's office is PDF (Provincial Development Fund) — its
+     * items show the appropriation's Project No. right after the PPA
+     * Description (still under that same thead column, not a new one) on the
+     * Preview and Excel Export. Requires officeAllotmentClass.offices to be
+     * eager-loaded.
+     */
+    public function isPdfOffice(): bool
+    {
+        return optional(optional($this->officeAllotmentClass)->offices)->office_abbreviation === 'PDF';
+    }
+
+    /**
      * Groups items into Subtotal blocks: when an item has a Program, the
      * Subtotal boundary follows the Program (a PPA Code shared by multiple
      * Programs — e.g. "Local Youth Development" then "SOFAD" both under the
@@ -216,14 +228,19 @@ class AllotmentReleaseOrder extends Model
 
         $units = [];
         $lastOfficeLabel = null;
+        // Tracked ACROSS groups (not reset per PPA Code/Program group) — a Subtotal
+        // is now per (PPA Code, Program) pair, but the same Program can legitimately
+        // span several PPA Codes in a row, and repeating its header every time would
+        // be redundant. Only print it again when the Program text actually changes
+        // from the immediately preceding row, or a new office section starts.
+        $lastProgram = null;
 
         foreach ($this->groupedItems() as $group) {
             if ($group['office_label'] !== null && $group['office_label'] !== $lastOfficeLabel) {
                 $units[] = ['type' => 'office', 'text' => $group['office_label'], 'lines' => $estimateLines($group['office_label'], 120)];
                 $lastOfficeLabel = $group['office_label'];
+                $lastProgram = null;
             }
-
-            $lastProgram = null;
 
             foreach ($group['rows'] as $item) {
                 if ($item->programs && $item->programs !== $lastProgram) {
@@ -231,15 +248,24 @@ class AllotmentReleaseOrder extends Model
                     $lastProgram = $item->programs;
                 }
 
+                // PDF (Provincial Development Fund) offices show the Project No. as an
+                // extra line under the PPA Description — budget one more line for it so
+                // pagination doesn't under-count this row's real printed height.
+                $projectNoLines = $this->isPdfOffice() && $item->project_no ? 1 : 0;
+
                 $units[] = [
                     'type' => 'item',
                     'item' => $item,
                     'ppa_code' => $group['ppa_code'],
-                    'lines' => $estimateLines($item->ppa_description, 55), // PPA Description column, ~3.4in wide
+                    'lines' => $estimateLines($item->ppa_description, 55) + $projectNoLines, // PPA Description column, ~3.4in wide
                 ];
             }
 
-            $units[] = ['type' => 'subtotal', 'ppa_code' => $group['ppa_code'], 'subtotal' => $group['subtotal'], 'lines' => 1];
+            // A Subtotal summing just one account code is redundant with that row
+            // itself, so it's only shown once a PPA Code's (Program) group has 2+ rows.
+            if ($group['rows']->count() > 1) {
+                $units[] = ['type' => 'subtotal', 'ppa_code' => $group['ppa_code'], 'subtotal' => $group['subtotal'], 'lines' => 1];
+            }
         }
 
         $pages = [];

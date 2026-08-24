@@ -111,6 +111,7 @@
             .then(r => r.json())
             .then(data => {
                 AroForm.rowsData['edit'] = data.items || [];
+                AroForm.isPdfOffice['edit'] = !!data.is_pdf_office;
                 AroForm.renderRows('edit', checkedAppropriationIds);
             });
 

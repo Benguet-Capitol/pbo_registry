@@ -284,13 +284,17 @@ class AllotmentReleaseOrderService
                 : 0;
             $thisRelease = $authorizedAppropriation - $forLaterRelease;
 
-            $previouslyReleased = (float) AllotmentReleaseOrderItem::where('appropriation_id', $appropriationId)
-                ->whereHas('allotmentReleaseOrder', function ($q) use ($aro, $dateOfIssue) {
-                    $q->where('id', '!=', $aro->id)
-                        ->where('year', $dateOfIssue->year)
-                        ->where('date_of_issue', '<', $dateOfIssue);
-                })
-                ->sum('this_release');
+            // Previously Released Amount is temporarily forced to 0 for the Preview/
+            // Export — the computation below is intentionally kept (not removed) so
+            // it can be re-enabled later; do not delete this block.
+            // $previouslyReleased = (float) AllotmentReleaseOrderItem::where('appropriation_id', $appropriationId)
+            //     ->whereHas('allotmentReleaseOrder', function ($q) use ($aro, $dateOfIssue) {
+            //         $q->where('id', '!=', $aro->id)
+            //             ->where('year', $dateOfIssue->year)
+            //             ->where('date_of_issue', '<', $dateOfIssue);
+            //     })
+            //     ->sum('this_release');
+            $previouslyReleased = 0;
 
             // A single ARO can roll its checked account codes under multiple PPA
             // Codes (each with its own Subtotal on the printed form) — each row

@@ -42,6 +42,7 @@
             <div class="mt-2">
                 <x-form.select name="fund_source" id="{{ $prefix }}_fund_source" class="block w-full text-xs" onchange="AroForm.onFundSourceChange('{{ $prefix }}')">
                     <option value="Annual Budget">Annual Budget</option>
+                    <option value="Annual Budget (Budget Ordinance)">Annual Budget (Budget Ordinance)</option>
                     <option value="Supplemental Budget">Supplemental Budget</option>
                     <option value="Reenacted Budget">Reenacted Budget</option>
                 </x-form.select>
@@ -56,6 +57,17 @@
                     class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" autocomplete="off"
                     onchange="AroForm.onSupplementalNoChange('{{ $prefix }}')" />
                 <p id="{{ $prefix }}_supplemental_no_error" class="hidden mt-1 text-[11px] text-red-600 dark:text-red-400">{{ __('Please enter the SB No.') }}</p>
+            </div>
+        </div>
+
+        <!-- Realignment No. (matches the Realignments module's own realignment_no batch field) -->
+        <div class="sm:col-span-2" id="{{ $prefix }}_realignment_no_wrapper" style="display:none;">
+            <x-form.label class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Realignment No.')" />
+            <div class="mt-2">
+                <x-form.input type="text" name="realignment_no" id="{{ $prefix }}_realignment_no" placeholder="{{ __('Realignment No.') }}"
+                    class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" autocomplete="off"
+                    onchange="AroForm.onRealignmentNoChange('{{ $prefix }}')" />
+                <p id="{{ $prefix }}_realignment_no_error" class="hidden mt-1 text-[11px] text-red-600 dark:text-red-400">{{ __('Please enter the Realignment No.') }}</p>
             </div>
         </div>
 

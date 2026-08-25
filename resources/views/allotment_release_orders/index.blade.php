@@ -123,6 +123,7 @@
                     <x-form.select name="fund_source_filter" class="filter-select w-full border border-gray-300 rounded-lg px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
                         <option value="">All Fund Sources</option>
                         <option value="Annual Budget" {{ request('fund_source_filter') == 'Annual Budget' ? 'selected' : '' }}>Annual Budget</option>
+                        <option value="Annual Budget (Budget Ordinance)" {{ request('fund_source_filter') == 'Annual Budget (Budget Ordinance)' ? 'selected' : '' }}>Annual Budget (Budget Ordinance)</option>
                         <option value="Supplemental Budget" {{ request('fund_source_filter') == 'Supplemental Budget' ? 'selected' : '' }}>Supplemental Budget</option>
                         <option value="Reenacted Budget" {{ request('fund_source_filter') == 'Reenacted Budget' ? 'selected' : '' }}>Reenacted Budget</option>
                     </x-form.select>
@@ -197,6 +198,13 @@
                                 'aroText' => 'text-blue-700 dark:text-blue-300',
                                 'aroIcon' => 'text-blue-500',
                                 'badge' => 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
+                            ],
+                            'Annual Budget (Budget Ordinance)' => [
+                                'cardBorder' => 'border-purple-300 dark:border-purple-700 border-l-4 border-l-purple-500',
+                                'headerBg' => 'bg-purple-50 dark:bg-purple-950 border-b border-purple-200 dark:border-purple-800',
+                                'aroText' => 'text-purple-700 dark:text-purple-300',
+                                'aroIcon' => 'text-purple-500',
+                                'badge' => 'bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200',
                             ],
                             'Supplemental Budget' => [
                                 'cardBorder' => 'border-green-300 dark:border-green-700 border-l-4 border-l-green-500',

@@ -23,8 +23,8 @@
     <div class="text-xs">{{ $lbeFormNumber }}</div>
     <div class="text-[10px] space-y-0.5">
         <div class="flex items-center gap-1.5">
-            <span style="{{ $checkboxStyle($aro->fund_source === 'Annual Budget') }}"></span>
-            <span>Annual Budget</span>
+            <span style="{{ $checkboxStyle(in_array($aro->fund_source, ['Annual Budget', 'Annual Budget (Budget Ordinance)'], true)) }}"></span>
+            <span>Annual Budget{{ $aro->fund_source === 'Annual Budget (Budget Ordinance)' ? ' (Budget Ordinance'.($aro->realignment_no ? ' No. '.$aro->realignment_no : '').')' : '' }}</span>
         </div>
         <div class="flex items-center gap-1.5">
             <span style="{{ $checkboxStyle($aro->fund_source === 'Supplemental Budget') }}"></span>

@@ -17,6 +17,7 @@ class AllotmentReleaseOrder extends Model
         'office_allotment_classes_id',
         'fund_source',
         'supplemental_no',
+        'realignment_no',
         'ppa_code',
         'provincial_budget_officer_id',
         'provincial_budget_officer_title',

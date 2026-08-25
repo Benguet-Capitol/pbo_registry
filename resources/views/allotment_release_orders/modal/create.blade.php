@@ -139,12 +139,16 @@
 
         onFundSourceChange(prefix) {
             const fundSource = this.el(prefix, 'fund_source').value;
-            const wrapper = this.el(prefix, 'supplemental_no_wrapper');
-            wrapper.style.display = fundSource === 'Supplemental Budget' ? '' : 'none';
+            this.el(prefix, 'supplemental_no_wrapper').style.display = fundSource === 'Supplemental Budget' ? '' : 'none';
+            this.el(prefix, 'realignment_no_wrapper').style.display = fundSource === 'Annual Budget (Budget Ordinance)' ? '' : 'none';
             this.loadAccountCodes(prefix);
         },
 
         onSupplementalNoChange(prefix) {
+            this.loadAccountCodes(prefix);
+        },
+
+        onRealignmentNoChange(prefix) {
             this.loadAccountCodes(prefix);
         },
 
@@ -163,6 +167,7 @@
             const officeAllotmentClassesId = this.el(prefix, 'office_allotment_classes_id').value;
             const fundSource = this.el(prefix, 'fund_source').value;
             const supplementalNo = this.el(prefix, 'supplemental_no').value;
+            const realignmentNo = this.el(prefix, 'realignment_no').value;
             const aroId = this.el(prefix, 'aro_id').value;
             const tbody = this.el(prefix, 'items_tbody');
 
@@ -178,6 +183,7 @@
                 fund_source: fundSource,
             });
             if (supplementalNo) params.set('supplemental_no', supplementalNo);
+            if (realignmentNo) params.set('realignment_no', realignmentNo);
             if (aroId) params.set('aro_id', aroId);
 
             fetch(`${aroRoutes.getAppropriations}?${params.toString()}`)
@@ -512,7 +518,7 @@
 
         clearAllErrors(prefix) {
             this.setFieldError(prefix, 'general', null);
-            ['office_allotment_class', 'date_of_issue', 'supplemental_no', 'pbo_signatory', 'lce_signatory', 'account_codes']
+            ['office_allotment_class', 'date_of_issue', 'supplemental_no', 'realignment_no', 'pbo_signatory', 'lce_signatory', 'account_codes']
                 .forEach(field => this.setFieldError(prefix, field, null));
         },
 
@@ -538,6 +544,9 @@
             const fundSource = this.el(prefix, 'fund_source').value;
             if (fundSource === 'Supplemental Budget' && !this.el(prefix, 'supplemental_no').value.trim()) {
                 markInvalid('supplemental_no', 'Please enter the SB No.');
+            }
+            if (fundSource === 'Annual Budget (Budget Ordinance)' && !this.el(prefix, 'realignment_no').value.trim()) {
+                markInvalid('realignment_no', 'Please enter the Realignment No.');
             }
             if (!this.el(prefix, 'pbo_signatory').value) {
                 markInvalid('pbo_signatory', 'Please select a Provincial Budget Officer Signatory.');

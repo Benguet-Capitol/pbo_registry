@@ -65,6 +65,8 @@
         document.getElementById('edit_fund_source').value = aro.fund_source;
         document.getElementById('edit_supplemental_no_wrapper').style.display = aro.fund_source === 'Supplemental Budget' ? '' : 'none';
         document.getElementById('edit_supplemental_no').value = aro.supplemental_no || '';
+        document.getElementById('edit_realignment_no_wrapper').style.display = aro.fund_source === 'Annual Budget (Budget Ordinance)' ? '' : 'none';
+        document.getElementById('edit_realignment_no').value = aro.realignment_no || '';
         document.getElementById('edit_ppa_code').value = aro.ppa_code || '';
         document.getElementById('edit_aro_no_preview').value = formatAroNoForDisplay(aro.aro_no);
         document.getElementById('edit_pbo_designation').value = aro.provincial_budget_officer_title;
@@ -101,9 +103,11 @@
         const officeAllotmentClassesId = aro.office_allotment_classes_id;
         const fundSource = aro.fund_source;
         const supplementalNo = aro.supplemental_no || '';
+        const realignmentNo = aro.realignment_no || '';
 
         const params = new URLSearchParams({ office_allotment_classes_id: officeAllotmentClassesId, fund_source: fundSource, aro_id: aro.id });
         if (supplementalNo) params.set('supplemental_no', supplementalNo);
+        if (realignmentNo) params.set('realignment_no', realignmentNo);
 
         AroForm.showLoadingRow('edit');
 

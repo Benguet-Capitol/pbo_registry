@@ -7,6 +7,7 @@ use App\Models\AllotmentReleaseOrderItem;
 use App\Models\Appropriation;
 use App\Models\Employee;
 use App\Models\OfficeAllotmentClass;
+use App\Models\Realignment;
 use App\Models\Supplemental;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -157,19 +158,26 @@ class AllotmentReleaseOrderService
         int $appropriationId,
         string $fundSource,
         ?int $excludeAroId = null,
-        ?string $supplementalNo = null
+        ?string $supplementalNo = null,
+        ?string $realignmentNo = null
     ): float {
-        $sourceGroup = $fundSource === 'Supplemental Budget'
-            ? ['Supplemental Budget']
-            : ['Annual Budget', 'Reenacted Budget'];
+        $sourceGroup = match ($fundSource) {
+            'Supplemental Budget' => ['Supplemental Budget'],
+            'Annual Budget (Budget Ordinance)' => ['Annual Budget (Budget Ordinance)'],
+            default => ['Annual Budget', 'Reenacted Budget'],
+        };
 
         return (float) AllotmentReleaseOrderItem::where('appropriation_id', $appropriationId)
             ->when($excludeAroId, fn ($q) => $q->where('allotment_release_order_id', '!=', $excludeAroId))
-            ->whereHas('allotmentReleaseOrder', function ($q) use ($sourceGroup, $fundSource, $supplementalNo) {
+            ->whereHas('allotmentReleaseOrder', function ($q) use ($sourceGroup, $fundSource, $supplementalNo, $realignmentNo) {
                 $q->whereIn('fund_source', $sourceGroup);
 
                 if ($fundSource === 'Supplemental Budget' && $supplementalNo) {
                     $q->where('supplemental_no', $supplementalNo);
+                }
+
+                if ($fundSource === 'Annual Budget (Budget Ordinance)' && $realignmentNo) {
+                    $q->where('realignment_no', $realignmentNo);
                 }
             })
             ->sum('this_release');
@@ -231,12 +239,18 @@ class AllotmentReleaseOrderService
             // checked row's appropriation can belong to a *different* SEF office than
             // the one the user picked to open the ARO, and this Supplemental lookup
             // must still resolve against that row's real office to find its amount.
-            $sourceRecord = $validated['fund_source'] === 'Supplemental Budget'
-                ? Supplemental::where('appropriations_id', $appropriationId)
+            $sourceRecord = match ($validated['fund_source']) {
+                'Supplemental Budget' => Supplemental::where('appropriations_id', $appropriationId)
                     ->where('office_allotment_classes_id', $appropriation->office_allotment_class_id)
                     ->where('basis_no', $validated['supplemental_no'])
-                    ->first()
-                : $appropriation;
+                    ->first(),
+                'Annual Budget (Budget Ordinance)' => Realignment::where('appropriations_id', $appropriationId)
+                    ->where('office_allotment_classes_id', $appropriation->office_allotment_class_id)
+                    ->where('type', 'Recipient')
+                    ->where('realignment_no', $validated['realignment_no'])
+                    ->first(),
+                default => $appropriation,
+            };
 
             $officeLabel = optional($appropriation->officeAllotmentClass->offices)->office_name;
 
@@ -244,12 +258,13 @@ class AllotmentReleaseOrderService
             // authorized amount can't exceed what's left after every other
             // existing ARO's usage of this appropriation.
             $sourceAmount = $sourceRecord
-                ? (float) ($sourceRecord instanceof Supplemental ? $sourceRecord->amount : $sourceRecord->appropriation)
+                ? (float) ($sourceRecord instanceof Appropriation ? $sourceRecord->appropriation : $sourceRecord->amount)
                 : $authorizedAppropriation;
             $alreadyCommitted = $this->alreadyCommittedForAppropriation(
                 $appropriationId,
                 $validated['fund_source'],
                 supplementalNo: $validated['supplemental_no'] ?? null,
+                realignmentNo: $validated['realignment_no'] ?? null,
             );
             $balance = $sourceAmount - $alreadyCommitted;
 
@@ -261,7 +276,12 @@ class AllotmentReleaseOrderService
                 );
             }
 
-            $forLaterRelease = $sourceRecord ? $this->calculateForLaterRelease($sourceRecord, $quarter) : 0;
+            // A realigned amount (Annual Budget (Budget Ordinance)) is fully
+            // releasable in the current release — Realignment rows carry no
+            // quarterly breakdown of their own, unlike Appropriation/Supplemental.
+            $forLaterRelease = ($sourceRecord && $validated['fund_source'] !== 'Annual Budget (Budget Ordinance)')
+                ? $this->calculateForLaterRelease($sourceRecord, $quarter)
+                : 0;
             $thisRelease = $authorizedAppropriation - $forLaterRelease;
 
             $previouslyReleased = (float) AllotmentReleaseOrderItem::where('appropriation_id', $appropriationId)

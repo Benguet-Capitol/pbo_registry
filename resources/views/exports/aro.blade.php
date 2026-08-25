@@ -58,7 +58,7 @@
 
         <tr>
             <td colspan="5" style="text-align: left; font-size: 9px;">{{ $lbeFormNumber }}</td>
-            <td colspan="2" style="text-align: left; font-size: 9px;">{{ $aro->fund_source === 'Annual Budget' ? '■' : '□' }} Annual Budget</td>
+            <td colspan="2" style="text-align: left; font-size: 9px;">{{ in_array($aro->fund_source, ['Annual Budget', 'Annual Budget (Budget Ordinance)'], true) ? '■' : '□' }} Annual Budget{{ $aro->fund_source === 'Annual Budget (Budget Ordinance)' ? ' (Budget Ordinance'.($aro->realignment_no ? ' No. '.$aro->realignment_no : '').')' : '' }}</td>
         </tr>
         <tr>
             <td colspan="5"></td>
@@ -195,7 +195,7 @@
         </tr>
         <tr>
             <td colspan="5" style="text-align: left; font-size: 9px;">{{ $lbeFormNumber }}</td>
-            <td colspan="2" style="text-align: left; font-size: 9px;">{{ $aro->fund_source === 'Annual Budget' ? '■' : '□' }} Annual Budget</td>
+            <td colspan="2" style="text-align: left; font-size: 9px;">{{ in_array($aro->fund_source, ['Annual Budget', 'Annual Budget (Budget Ordinance)'], true) ? '■' : '□' }} Annual Budget{{ $aro->fund_source === 'Annual Budget (Budget Ordinance)' ? ' (Budget Ordinance'.($aro->realignment_no ? ' No. '.$aro->realignment_no : '').')' : '' }}</td>
         </tr>
         <tr>
             <td colspan="5"></td>

@@ -8,6 +8,7 @@ use App\Models\Appropriation;
 use App\Models\Employee;
 use App\Models\Office;
 use App\Models\OfficeAllotmentClass;
+use App\Models\Realignment;
 use App\Models\Supplemental;
 use App\Services\AllotmentReleaseOrderService;
 use App\Traits\LogsActivity;
@@ -169,6 +170,7 @@ class AllotmentReleaseOrderController extends Controller
                     'office_allotment_classes_id' => $validated['office_allotment_classes_id'],
                     'fund_source' => $validated['fund_source'],
                     'supplemental_no' => $validated['supplemental_no'] ?? null,
+                    'realignment_no' => $validated['realignment_no'] ?? null,
                     'ppa_code' => $validated['ppa_code'] ?? null,
                     'provincial_budget_officer_id' => $validated['provincial_budget_officer_id'],
                     'provincial_budget_officer_title' => $validated['provincial_budget_officer_title'],
@@ -216,6 +218,7 @@ class AllotmentReleaseOrderController extends Controller
                     'office_allotment_classes_id' => $validated['office_allotment_classes_id'],
                     'fund_source' => $validated['fund_source'],
                     'supplemental_no' => $validated['supplemental_no'] ?? null,
+                    'realignment_no' => $validated['realignment_no'] ?? null,
                     'ppa_code' => $validated['ppa_code'] ?? null,
                     'provincial_budget_officer_id' => $validated['provincial_budget_officer_id'],
                     'provincial_budget_officer_title' => $validated['provincial_budget_officer_title'],
@@ -368,8 +371,9 @@ class AllotmentReleaseOrderController extends Controller
     {
         $request->validate([
             'office_allotment_classes_id' => 'required|exists:office_allotment_classes,id',
-            'fund_source' => 'required|in:Annual Budget,Supplemental Budget,Reenacted Budget',
+            'fund_source' => 'required|in:Annual Budget,Annual Budget (Budget Ordinance),Supplemental Budget,Reenacted Budget',
             'supplemental_no' => 'nullable|string',
+            'realignment_no' => 'nullable|string',
             'aro_id' => 'nullable|exists:allotment_release_orders,id',
         ]);
 
@@ -437,6 +441,63 @@ class AllotmentReleaseOrderController extends Controller
                         'quarter2' => (float) $supplemental->quarter2,
                         'quarter3' => (float) $supplemental->quarter3,
                         'quarter4' => (float) $supplemental->quarter4,
+                        'already_committed' => $alreadyCommitted,
+                        'balance' => max(0, $authorizedAppropriation - $alreadyCommitted),
+                    ];
+                }));
+            }
+
+            return response()->json([
+                'items' => $items->values(),
+                'ppa_code' => $ppaCode,
+                'is_sef_consolidated' => $isSefConsolidated,
+                'is_pdf_office' => $isPdfOffice,
+            ]);
+        }
+
+        if ($fundSource === 'Annual Budget (Budget Ordinance)') {
+            $items = collect();
+
+            foreach ($targetOffices as $targetOffice) {
+                $realignmentsQuery = Realignment::with('appropriation')
+                    ->where('office_allotment_classes_id', $targetOffice->id)
+                    ->where('type', 'Recipient');
+
+                if ($request->filled('realignment_no')) {
+                    // "Realignment No." on the ARO form matches the Realignments
+                    // module's own realignment_no batch identifier — the same
+                    // number shared by that batch's Source and Recipient rows.
+                    $realignmentsQuery->where('realignment_no', $request->realignment_no);
+                }
+
+                // Before a specific Realignment No. is typed, list every account code
+                // that has *any* Recipient realignment for this office/class (one row
+                // per account, most recent batch), same as the Supplemental Budget case.
+                $realignments = $realignmentsQuery->orderByDesc('realignment_date')->get()
+                    ->filter(fn ($r) => $r->appropriation)
+                    ->unique('appropriations_id')
+                    ->values();
+
+                $officeLabel = $isSefConsolidated ? optional($targetOffice->offices)->office_name : null;
+
+                $items = $items->merge($realignments->map(function ($realignment) use ($excludeAroId, $officeLabel) {
+                    $authorizedAppropriation = (float) $realignment->amount;
+                    $alreadyCommitted = $this->aroService->alreadyCommittedForAppropriation($realignment->appropriation->id, 'Annual Budget (Budget Ordinance)', $excludeAroId, realignmentNo: $realignment->realignment_no);
+
+                    return [
+                        'appropriation_id' => $realignment->appropriation->id,
+                        'account_code' => $realignment->appropriation->account_code,
+                        'description' => $realignment->appropriation->description,
+                        'programs' => $realignment->appropriation->programs,
+                        'project_no' => $realignment->appropriation->project_no,
+                        'office_label' => $officeLabel,
+                        'authorized_appropriation' => $authorizedAppropriation,
+                        // A realigned amount is fully releasable in the current release —
+                        // Realignment rows carry no quarterly breakdown of their own.
+                        'quarter1' => 0,
+                        'quarter2' => 0,
+                        'quarter3' => 0,
+                        'quarter4' => 0,
                         'already_committed' => $alreadyCommitted,
                         'balance' => max(0, $authorizedAppropriation - $alreadyCommitted),
                     ];
@@ -572,8 +633,9 @@ class AllotmentReleaseOrderController extends Controller
         $rules = [
             'date_of_issue' => 'required|date',
             'office_allotment_classes_id' => 'required|exists:office_allotment_classes,id',
-            'fund_source' => 'required|in:Annual Budget,Supplemental Budget,Reenacted Budget',
+            'fund_source' => 'required|in:Annual Budget,Annual Budget (Budget Ordinance),Supplemental Budget,Reenacted Budget',
             'supplemental_no' => 'nullable|required_if:fund_source,Supplemental Budget|string',
+            'realignment_no' => 'nullable|required_if:fund_source,Annual Budget (Budget Ordinance)|string',
             'ppa_code' => 'nullable|string',
             'provincial_budget_officer_id' => 'required|exists:employees,id',
             'provincial_budget_officer_title' => 'required|string',

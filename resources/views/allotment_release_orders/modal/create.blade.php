@@ -85,6 +85,7 @@
     const AroForm = {
         rowsData: {}, // prefix -> array of currently loaded appropriation/supplemental rows
         isPdfOffice: {}, // prefix -> whether the selected office is PDF (Provincial Development Fund)
+        _loadRequestSeq: {}, // prefix -> sequence number of the latest loadAccountCodes() call, to ignore stale responses
 
         el(prefix, name) {
             return document.getElementById(`${prefix}_${name}`);
@@ -178,6 +179,18 @@
 
             this.showLoadingRow(prefix);
 
+            // Several callers (e.g. the Supplementals index's "Create ARO" button)
+            // set office/fund source/SB No. one field at a time, each of which
+            // independently triggers a loadAccountCodes() call — so multiple
+            // requests for this prefix can be in flight at once. Fetches aren't
+            // guaranteed to resolve in the order they were sent, so without this
+            // guard an earlier (since-superseded) request could resolve LAST and
+            // silently overwrite the table with stale/incomplete data (e.g.
+            // showing the wrong Fund Source's account codes until the button is
+            // clicked a second time).
+            const requestSeq = (this._loadRequestSeq[prefix] || 0) + 1;
+            this._loadRequestSeq[prefix] = requestSeq;
+
             const params = new URLSearchParams({
                 office_allotment_classes_id: officeAllotmentClassesId,
                 fund_source: fundSource,
@@ -189,6 +202,8 @@
             fetch(`${aroRoutes.getAppropriations}?${params.toString()}`)
                 .then(r => r.json())
                 .then(data => {
+                    if (this._loadRequestSeq[prefix] !== requestSeq) return; // superseded by a newer call
+
                     if (!this.el(prefix, 'ppa_code').value && data.ppa_code) {
                         this.el(prefix, 'ppa_code').value = data.ppa_code;
                     }

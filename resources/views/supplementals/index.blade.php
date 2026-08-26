@@ -866,21 +866,35 @@
             if (!item) return;
 
             openCreateAroModal();
-            AroForm.selectOfficeAllotmentClass('create', item);
 
-            const fundSourceField = document.getElementById('create_fund_source');
-            fundSourceField.value = 'Supplemental Budget';
-            AroForm.onFundSourceChange('create');
+            // Set every prefilled field directly first, then fetch the Account
+            // Codes exactly once at the end. Previously this called
+            // AroForm.selectOfficeAllotmentClass()/onFundSourceChange()/
+            // onSupplementalNoChange() in sequence, each of which independently
+            // fires its own loadAccountCodes() request — those requests race, so
+            // an earlier one (e.g. still Fund Source "Annual Budget", before it
+            // was switched to "Supplemental Budget") could resolve last and leave
+            // the table showing the wrong account codes until the button was
+            // clicked a second time.
+            document.getElementById('create_office_allotment_class').value = item.name;
+            document.getElementById('create_office_allotment_classes_id').value = item.id;
+            document.getElementById('create_office_allotment_class_dropdown').classList.add('hidden');
+            document.getElementById('create_ppa_code').value = '';
+
+            document.getElementById('create_fund_source').value = 'Supplemental Budget';
+            document.getElementById('create_supplemental_no_wrapper').style.display = '';
+            document.getElementById('create_realignment_no_wrapper').style.display = 'none';
 
             if (prefill.supplementalNo) {
                 document.getElementById('create_supplemental_no').value = prefill.supplementalNo;
-                AroForm.onSupplementalNoChange('create');
             }
 
             if (prefill.dateOfIssue) {
                 document.getElementById('create_date_of_issue').value = prefill.dateOfIssue;
-                AroForm.onDateOfIssueChange('create');
             }
+
+            AroForm.loadAccountCodes('create');
+            AroForm.previewAroNo('create');
         }
 
         function openAroCreateModalFromPending() {

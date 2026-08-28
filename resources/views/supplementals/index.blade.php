@@ -309,6 +309,9 @@
                         <!-- Group Header (shared by every line under this Supplemental No.) -->
                         <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-blue-700">
+                                    <i class="fas fa-building text-[10px] opacity-80"></i>{{ $groupFirst->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $groupFirst->officeAllotmentClass->class ?? '-' }}
+                                </span>
                                 <span class="font-bold text-gray-800 dark:text-gray-100">
                                     <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $groupNo }}
                                 </span>
@@ -449,12 +452,6 @@
 
                                 <!-- Line Body -->
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
-                                    <div class="col-span-2">
-                                        <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Office & Class</div>
-                                        <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">
-                                            {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
-                                        </div>
-                                    </div>
                                     <div class="col-span-2">
                                         <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Amount</div>
                                         <div class="font-bold text-sm tabular-nums {{ $groupTypeAccent['amount'] }}">{{ number_format($amount, 2) }}</div>

@@ -366,9 +366,9 @@
                                          data-realignment-no="{{ $realignment->realignment_no }}"
                                          data-type="Source">
                                         <div class="flex flex-wrap justify-between items-start gap-2 pb-1.5 mb-1.5 border-b border-blue-500 dark:border-blue-700">
-                                            <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">
-                                                {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
-                                            </div>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-blue-700 break-words">
+                                                <i class="fas fa-building text-[10px] opacity-80"></i>{{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
+                                            </span>
                                             <div class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-sm tabular-nums whitespace-nowrap">
                                                 {{ number_format($realignment->amount, 2) }}
                                             </div>
@@ -430,9 +430,9 @@
                                          data-realignment-no="{{ $realignment->realignment_no }}"
                                          data-type="Recipient">
                                         <div class="flex flex-wrap justify-between items-start gap-2 pb-1.5 mb-1.5 border-b border-green-500 dark:border-green-700">
-                                            <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">
-                                                {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
-                                            </div>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-green-700 break-words">
+                                                <i class="fas fa-building text-[10px] opacity-80"></i>{{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
+                                            </span>
                                             <div class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-bold text-sm tabular-nums whitespace-nowrap">
                                                 {{ number_format($realignment->amount, 2) }}
                                             </div>

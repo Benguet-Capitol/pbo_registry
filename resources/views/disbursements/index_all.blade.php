@@ -311,7 +311,7 @@
                             $statusBadge = $dc['statusBadge'];
                             $searchText = $dc['searchText'];
                         @endphp
-                        <div class="dv-item dv-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
+                        <div class="dv-item dv-card bg-white dark:bg-gray-800 border border-green-300 dark:border-green-700 border-l-4 border-l-green-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
                              oncontextmenu="showDisbursementContextMenu(event, this)"
                              data-dv-no="{{ $disbursement->dv_no }}"
                              data-dv-date="{{ $disbursement->disbursement_date ?? '-' }}"
@@ -330,6 +330,9 @@
                             <!-- Card Header -->
                             <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-green-700">
+                                        <i class="fas fa-building text-[10px] opacity-80"></i>{{ $officeClassLabel }}
+                                    </span>
                                     <span class="font-bold text-green-700 dark:text-green-300">
                                         <i class="fas fa-hashtag mr-1 text-green-500"></i>{{ $disbursement->dv_no }}
                                     </span>
@@ -353,10 +356,6 @@
 
                             <!-- Card Body -->
                             <div class="px-3 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
-                                <div class="col-span-2">
-                                    <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Office & Class</div>
-                                    <div class="font-semibold text-gray-700 dark:text-gray-200 break-words">{{ $officeClassLabel }}</div>
-                                </div>
                                 <div>
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Account Code</div>
                                     <div class="font-medium text-gray-700 dark:text-gray-200 break-words">{{ $accountCode }}</div>

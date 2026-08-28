@@ -412,31 +412,7 @@ class RealignmentController extends Controller
                 'new_no' => $request->input('edit_realignment_no'),
             ]);
 
-            // 6. Update Appropriation account_code (Original logic maintained)
-            // ... (Appropriation update logic remains the same)
-            if ($type === 'Source' && $request->has('edit_source_account_code')) {
-                $appId = $request->input('edit_source_appropriations_id');
-                $accountCode = $request->input('edit_source_account_code');
-                if ($appId && $accountCode) {
-                    $app = Appropriation::find($appId);
-                    if ($app) {
-                        $app->account_code = $accountCode;
-                        $app->save();
-                    }
-                }
-            } elseif ($type === 'Recipient' && $request->has('edit_recipient_account_code')) {
-                $appId = $request->input('edit_recipient_appropriations_id');
-                $accountCode = $request->input('edit_recipient_account_code');
-                if ($appId && $accountCode) {
-                    $app = Appropriation::find($appId);
-                    if ($app) {
-                        $app->account_code = $accountCode;
-                        $app->save();
-                    }
-                }
-            }
-            
-            // 7. Redirect with status
+            // 6. Redirect with status
             return redirect()->route('realignments.index', $request->only(['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page', 'search']))
             ->with('status', 'Realignment No.: <strong>' . $request->input('edit_realignment_no') . '</strong> with Type: <strong>' . $realignment->type . '</strong> has been updated successfully! Shared administrative data was also synchronized.');
 

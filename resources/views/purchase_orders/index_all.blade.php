@@ -503,7 +503,7 @@
                 </div>
 
                 <!-- Totals Footer -->
-                <div id="purchaseOrdersFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600 text-center text-sm px-3 py-3">
+                <div id="purchaseOrdersFooter" class="bg-blue-100 dark:bg-blue-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-blue-700 dark:border-blue-800 border-l-blue-500 text-center text-sm px-3 py-3">
                     Total Purchase Order Amount:
                     <span id="totalPOAmountFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">
                         0.00
@@ -515,32 +515,48 @@
 
             <!-- List View (flat table) -->
             <div id="purchaseOrdersTableView" class="hidden">
+                @php
+                    // Highlights whichever column header matches the currently active sort pill.
+                    $thSort = fn ($key) => $sortBy == $key ? 'underline decoration-2 underline-offset-4' : '';
+                @endphp
                 <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                     <div class="overflow-x-auto">
                         <div class="max-h-[720px] overflow-y-auto" id="purchaseOrdersTableContainer">
                             <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
-                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                <thead class="text-center border-b-2 border-t-2 border-blue-700 dark:border-blue-800 text-xs bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 sticky top-0 z-10">
                                     <tr>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PO Number</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PO Date</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR No.</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Supplier</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PR Number</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Delivery Period</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Account Code</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">PO Amount</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Disbursed</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Remarks</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Files</th>
+                                        <th class="sticky left-0 z-10 px-2 py-3 leading-4 tracking-wider bg-blue-100 dark:bg-blue-950 border-l-4 border-l-blue-500">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('po_number') }}">PO Number</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('po_date') }}">PO Date</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">OBR No.</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('supplier') }}">Supplier</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('pr_no') }}">PR Number</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('delivery_period') }}">Delivery Period</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Account Code</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('po_amount') }}">PO Amount</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Disbursed</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('remarks') }}">Remarks</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Files</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        // Alternates a subtle band color each time the po_number changes,
+                                        // so rows belonging to the same PO read as one visual group.
+                                        $lastListPoNumber = null;
+                                        $groupBandToggle = false;
+                                    @endphp
                                     @forelse($purchaseOrders as $purchaseOrder)
                                         @php
                                             $pc = $poComputed[$purchaseOrder->id];
+                                            $isFirstRowOfGroup = $lastListPoNumber !== $purchaseOrder->po_number;
+                                            if ($isFirstRowOfGroup) {
+                                                $groupBandToggle = !$groupBandToggle;
+                                                $lastListPoNumber = $purchaseOrder->po_number;
+                                            }
+                                            $rowBandClass = $groupBandToggle ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40';
                                         @endphp
-                                        <tr class="po-item po-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                        <tr class="group po-item po-row {{ $rowBandClass }} border-b border-blue-100 dark:border-blue-900/40 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                                             oncontextmenu="showPurchaseOrderContextMenu(event, this)"
                                             data-po='@json($purchaseOrder)'
                                             data-po-id="{{ $purchaseOrder->id }}"
@@ -556,11 +572,16 @@
                                             data-description="{{ $pc['description'] }}"
                                             data-file-count="{{ $pc['fileCount'] }}"
                                             data-search-text="{{ $pc['searchText'] }}">
-                                            <td class="font-bold text-blue-700 dark:text-blue-300 px-2 py-2">{{ $purchaseOrder->po_number }}</td>
-                                            <td class="px-2 py-2">{{ $purchaseOrder->po_date ?? '-' }}</td>
-                                            <td class="px-2 py-2">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
-                                            <td class="text-left px-2 py-2">{{ $pc['officeClassLabel'] }}</td>
-                                            <td class="text-left px-2 py-2 max-w-xs">{{ $purchaseOrder->supplier ?? '-' }}</td>
+                                            <td class="sticky left-0 z-[1] {{ $rowBandClass }} group-hover:bg-gray-100 dark:group-hover:bg-gray-600 px-2 py-2 text-left border-l-4 border-l-blue-500">
+                                                <i class="fas fa-chevron-right text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 group-hover:text-blue-500 transition-opacity mr-1 text-[10px]"></i>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-600 dark:bg-blue-700 text-white font-semibold text-[11px]">{{ $pc['officeClassLabel'] }}</span>
+                                            </td>
+                                            <td class="px-2 py-2 font-bold text-blue-700 dark:text-blue-300">
+                                                @if ($isFirstRowOfGroup){{ $purchaseOrder->po_number }}@endif
+                                            </td>
+                                            <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $purchaseOrder->po_date ?? '-' }}@endif</td>
+                                            <td class="px-2 py-2 font-bold text-gray-900 dark:text-gray-100">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>
+                                            <td class="text-left px-2 py-2 max-w-xs font-bold text-gray-900 dark:text-gray-100">{{ $purchaseOrder->supplier ?? '-' }}</td>
                                             <td class="px-2 py-2">{{ $purchaseOrder->pr_no ?? '-' }}</td>
                                             <td class="px-2 py-2">{{ $purchaseOrder->delivery_period ?? '-' }}</td>
                                             <td class="font-semibold px-2 py-2">{{ $pc['accountCode'] }}</td>
@@ -594,7 +615,7 @@
                     </div>
 
                     <!-- Totals Footer -->
-                    <div class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600 text-center text-sm px-3 py-3">
+                    <div class="bg-blue-100 dark:bg-blue-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-blue-700 dark:border-blue-800 border-l-blue-500 text-center text-sm px-3 py-3">
                         Total Purchase Order Amount:
                         <span id="totalPOAmountFooterTable" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">0.00</span>
                     </div>

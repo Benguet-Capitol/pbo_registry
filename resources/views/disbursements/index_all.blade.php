@@ -400,7 +400,7 @@
                 </div>
 
                 <!-- Totals Footer -->
-                <div id="disbursementsFooter" class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600 text-center text-sm px-3 py-3">
+                <div id="disbursementsFooter" class="bg-green-100 dark:bg-green-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-green-700 dark:border-green-800 border-l-green-500 text-center text-sm px-3 py-3">
                     Total DV / Check Amount:
                     <span id="totalDVAmountFooter" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-bold text-base tabular-nums ml-2">
                         0.00
@@ -412,30 +412,46 @@
 
             <!-- List View (flat table) -->
             <div id="disbursementsTableView" class="hidden">
+                @php
+                    // Highlights whichever column header matches the currently active sort pill.
+                    $thSort = fn ($key) => $sortBy == $key ? 'underline decoration-2 underline-offset-4' : '';
+                @endphp
                 <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                     <div class="overflow-x-auto">
                         <div class="max-h-[720px] overflow-y-auto" id="disbursementsTableContainer">
                             <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
-                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                <thead class="text-center border-b-2 border-t-2 border-green-700 dark:border-green-800 text-xs bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300 sticky top-0 z-10">
                                     <tr>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">DV No.</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">DV Date</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR No.</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Status</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Account Code</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Program</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Description</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">DV Amount</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Remarks</th>
+                                        <th class="sticky left-0 z-10 px-2 py-3 leading-4 tracking-wider bg-green-100 dark:bg-green-950 border-l-4 border-l-green-500">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('dv_no') }}">DV No.</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('disbursement_date') }}">DV Date</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">OBR No.</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('status') }}">Status</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Account Code</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Program</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Description</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('disbursement_amount') }}">DV Amount</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('remarks') }}">Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        // Alternates a subtle band color each time the dv_no changes,
+                                        // so rows belonging to the same DV read as one visual group.
+                                        $lastListDvNo = null;
+                                        $groupBandToggle = false;
+                                    @endphp
                                     @forelse($disbursements as $disbursement)
                                         @php
                                             $dc = $dvComputed[$disbursement->id];
+                                            $isFirstRowOfGroup = $lastListDvNo !== $disbursement->dv_no;
+                                            if ($isFirstRowOfGroup) {
+                                                $groupBandToggle = !$groupBandToggle;
+                                                $lastListDvNo = $disbursement->dv_no;
+                                            }
+                                            $rowBandClass = $groupBandToggle ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40';
                                         @endphp
-                                        <tr class="dv-item dv-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                        <tr class="group dv-item dv-row {{ $rowBandClass }} border-b border-green-100 dark:border-green-900/40 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                                             oncontextmenu="showDisbursementContextMenu(event, this)"
                                             data-dv-no="{{ $disbursement->dv_no }}"
                                             data-dv-date="{{ $disbursement->disbursement_date ?? '-' }}"
@@ -450,10 +466,15 @@
                                             data-status="{{ $dc['status'] }}"
                                             data-remarks="{{ $disbursement->remarks ?? '-' }}"
                                             data-search-text="{{ $dc['searchText'] }}">
-                                            <td class="font-bold text-green-700 dark:text-green-300 px-2 py-2">{{ $disbursement->dv_no }}</td>
-                                            <td class="px-2 py-2">{{ $disbursement->disbursement_date ?? '-' }}</td>
-                                            <td class="px-2 py-2">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
-                                            <td class="text-left px-2 py-2">{{ $dc['officeClassLabel'] }}</td>
+                                            <td class="sticky left-0 z-[1] {{ $rowBandClass }} group-hover:bg-gray-100 dark:group-hover:bg-gray-600 px-2 py-2 text-left border-l-4 border-l-green-500">
+                                                <i class="fas fa-chevron-right text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 group-hover:text-green-500 transition-opacity mr-1 text-[10px]"></i>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-600 dark:bg-green-700 text-white font-semibold text-[11px]">{{ $dc['officeClassLabel'] }}</span>
+                                            </td>
+                                            <td class="px-2 py-2 font-bold text-green-700 dark:text-green-300">
+                                                @if ($isFirstRowOfGroup){{ $disbursement->dv_no }}@endif
+                                            </td>
+                                            <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $disbursement->disbursement_date ?? '-' }}@endif</td>
+                                            <td class="px-2 py-2 font-bold text-gray-900 dark:text-gray-100">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
                                             <td class="px-2 py-2">
                                                 <span class="px-2 py-1 rounded font-semibold {{ $dc['statusBadge']['bg'] }} {{ $dc['statusBadge']['text'] }}">{{ $dc['status'] ? ucfirst($dc['status']) : '-' }}</span>
                                             </td>
@@ -474,7 +495,7 @@
                     </div>
 
                     <!-- Totals Footer -->
-                    <div class="bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600 text-center text-sm px-3 py-3">
+                    <div class="bg-green-100 dark:bg-green-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-green-700 dark:border-green-800 border-l-green-500 text-center text-sm px-3 py-3">
                         Total DV / Check Amount:
                         <span id="totalDVAmountFooterTable" class="px-2 py-1 rounded text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-300 font-bold text-base tabular-nums ml-2">0.00</span>
                     </div>

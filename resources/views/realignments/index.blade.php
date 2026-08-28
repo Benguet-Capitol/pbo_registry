@@ -491,7 +491,7 @@
             </div>
 
             <!-- Totals Footer -->
-            <div id="realignmentsFooter" class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-300 dark:divide-gray-600 bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600">
+            <div id="realignmentsFooter" class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-300 dark:divide-gray-600 bg-blue-100 dark:bg-blue-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-blue-700 dark:border-blue-800 border-l-blue-500">
                 <div class="text-center text-sm px-1 py-3">
                     Total Source:
                     <span id="totalSourceFooter" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">
@@ -515,22 +515,28 @@
                     <div class="overflow-x-auto">
                         <div class="max-h-[720px] overflow-y-auto" id="realignmentsTableContainer">
                             <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
-                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                <thead class="text-center border-b-2 border-t-2 border-blue-700 dark:border-blue-800 text-xs bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 sticky top-0 z-10">
                                     <tr>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">No.</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Date</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Type</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Account Code</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Program</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Description</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Basis</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Amount</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Balanced</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Files</th>
+                                        <th class="sticky left-0 z-10 px-2 py-3 leading-4 tracking-wider bg-blue-100 dark:bg-blue-950 border-l-4 border-l-blue-500">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">No.</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Date</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Type</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Account Code</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Program</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Description</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Basis</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Amount</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Balanced</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Files</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        // Alternates a subtle band color each time the realignment_no changes,
+                                        // so rows belonging to the same batch read as one visual group.
+                                        $lastListRealignmentNo = null;
+                                        $groupBandToggle = false;
+                                    @endphp
                                     @forelse ($realignments as $realignment)
                                         @php
                                             $rowSearchText = strtolower(collect([
@@ -546,16 +552,32 @@
                                             ])->implode(' '));
                                             $rowFileCount = $groupFileCounts[$realignment->realignment_no] ?? 0;
                                             $rowBalanced = $groupBalanced[$realignment->realignment_no] ?? true;
+                                            $isFirstRowOfGroup = $lastListRealignmentNo !== $realignment->realignment_no;
+                                            if ($isFirstRowOfGroup) {
+                                                $groupBandToggle = !$groupBandToggle;
+                                                $lastListRealignmentNo = $realignment->realignment_no;
+                                            }
+                                            $rowBandClass = $groupBandToggle ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40';
+                                            $typeColor = $realignment->type === 'Source' ? 'blue' : 'green';
+                                            $rowBorderClass = $typeColor === 'blue' ? 'border-blue-100 dark:border-blue-900/40' : 'border-green-100 dark:border-green-900/40';
                                         @endphp
-                                        <tr class="realignment-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                        <tr class="group realignment-row {{ $rowBandClass }} border-b {{ $rowBorderClass }} hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                                             oncontextmenu="showRealignmentContextMenu(event, this)"
                                             data-realignment='@json($realignment)'
                                             data-realignment-no="{{ $realignment->realignment_no }}"
                                             data-type="{{ $realignment->type }}"
                                             data-amount="{{ (float) $realignment->amount }}"
                                             data-search-text="{{ $rowSearchText }}">
-                                            <td class="font-semibold px-2 py-2">{{ $realignment->realignment_no }}</td>
-                                            <td class="px-2 py-2">{{ $realignment->realignment_date }}</td>
+                                            <td class="sticky left-0 z-[1] {{ $rowBandClass }} group-hover:bg-gray-100 dark:group-hover:bg-gray-600 px-2 py-2 text-left border-l-4 {{ $typeColor === 'blue' ? 'border-l-blue-500' : 'border-l-green-500' }}">
+                                                <i class="fas fa-chevron-right text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 group-hover:text-blue-500 transition-opacity mr-1 text-[10px]"></i>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-white font-semibold text-[11px] {{ $typeColor === 'blue' ? 'bg-blue-600 dark:bg-blue-700' : 'bg-green-600 dark:bg-green-700' }}">
+                                                    {{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}
+                                                </span>
+                                            </td>
+                                            <td class="px-2 py-2 font-bold {{ $typeColor === 'blue' ? 'text-blue-700 dark:text-blue-300' : 'text-green-700 dark:text-green-300' }}">
+                                                @if ($isFirstRowOfGroup){{ $realignment->realignment_no }}@endif
+                                            </td>
+                                            <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $realignment->realignment_date }}@endif</td>
                                             <td class="px-2 py-2">
                                                 @if ($realignment->type === 'Source')
                                                     <span class="px-2 py-1 rounded font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Source</span>
@@ -563,7 +585,6 @@
                                                     <span class="px-2 py-1 rounded font-semibold bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Recipient</span>
                                                 @endif
                                             </td>
-                                            <td class="text-left px-2 py-2">{{ $realignment->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $realignment->officeAllotmentClass->class ?? '-' }}</td>
                                             <td class="font-semibold px-2 py-2">{{ $realignment->appropriation->account_code ?? '-' }}</td>
                                             <td class="text-left px-2 py-2 max-w-xs">{{ $realignment->appropriation->programs ?? '-' }}</td>
                                             <td class="text-left px-2 py-2 max-w-xs">{{ $realignment->appropriation->description ?? '-' }}</td>
@@ -605,7 +626,7 @@
                     </div>
 
                     <!-- Totals Footer -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-300 dark:divide-gray-600 bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600">
+                    <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-300 dark:divide-gray-600 bg-blue-100 dark:bg-blue-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-blue-700 dark:border-blue-800 border-l-blue-500">
                         <div class="text-center text-sm px-1 py-3">
                             Total Source:
                             <span id="totalSourceFooterTable" class="px-2 py-1 rounded text-blue-700 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 font-bold text-base tabular-nums ml-2">0.00</span>

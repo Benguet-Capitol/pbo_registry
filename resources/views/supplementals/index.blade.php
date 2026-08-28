@@ -296,10 +296,10 @@
                         $groupAmountTotal = 0;
 
                         $groupTypeAccent = $groupType === 'Supplemental'
-                            ? ['cardBorder' => 'border-emerald-300 dark:border-emerald-700', 'border' => 'border-emerald-500', 'badgeBg' => 'bg-emerald-100 dark:bg-emerald-900/50', 'badgeText' => 'text-emerald-700 dark:text-emerald-300', 'amount' => 'text-emerald-700 dark:text-emerald-400']
+                            ? ['cardBorder' => 'border-emerald-300 dark:border-emerald-700', 'border' => 'border-emerald-500', 'badgeBg' => 'bg-emerald-100 dark:bg-emerald-900/50', 'badgeText' => 'text-emerald-700 dark:text-emerald-300', 'amount' => 'text-emerald-700 dark:text-emerald-400', 'officeBadge' => 'bg-emerald-600 dark:bg-emerald-700']
                             : ($groupType === 'Reversion'
-                                ? ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-red-500', 'badgeBg' => 'bg-red-100 dark:bg-red-900/50', 'badgeText' => 'text-red-700 dark:text-red-300', 'amount' => 'text-red-700 dark:text-red-400']
-                                : ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-gray-400', 'badgeBg' => 'bg-gray-100 dark:bg-gray-700', 'badgeText' => 'text-gray-700 dark:text-gray-300', 'amount' => 'text-gray-700 dark:text-gray-300']);
+                                ? ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-red-500', 'badgeBg' => 'bg-red-100 dark:bg-red-900/50', 'badgeText' => 'text-red-700 dark:text-red-300', 'amount' => 'text-red-700 dark:text-red-400', 'officeBadge' => 'bg-red-600 dark:bg-red-700']
+                                : ['cardBorder' => 'border-gray-300 dark:border-gray-600', 'border' => 'border-gray-400', 'badgeBg' => 'bg-gray-100 dark:bg-gray-700', 'badgeText' => 'text-gray-700 dark:text-gray-300', 'amount' => 'text-gray-700 dark:text-gray-300', 'officeBadge' => 'bg-gray-600 dark:bg-gray-700']);
                         // Every ARO tied to this batch's SB No., and whether any row in the
                         // batch's amount no longer matches its ARO(s) (see
                         // SupplementalController::buildExistingAroLookups()).
@@ -312,7 +312,7 @@
                         <!-- Group Header (shared by every line under this Supplemental No.) -->
                         <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-blue-700">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg {{ $groupTypeAccent['officeBadge'] }} text-white font-bold text-[11px] tracking-wide shadow-sm">
                                     <i class="fas fa-building text-[10px] opacity-80"></i>{{ $groupFirst->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $groupFirst->officeAllotmentClass->class ?? '-' }}
                                 </span>
                                 <span class="font-bold text-gray-800 dark:text-gray-100">
@@ -518,7 +518,7 @@
             </div>
 
             <!-- Totals Footer -->
-            <div id="supplementalsFooter" class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-300 dark:divide-gray-600 bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600">
+            <div id="supplementalsFooter" class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-300 dark:divide-gray-600 bg-green-100 dark:bg-green-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-green-700 dark:border-green-800 border-l-green-500">
                 <div class="text-center text-sm px-1 py-3">
                     Total Supplemental:
                     <span id="totalSourceFooter" class="px-2 py-1 rounded text-emerald-700 bg-emerald-100 dark:bg-emerald-900 dark:text-emerald-300 font-bold text-base tabular-nums ml-2">
@@ -544,27 +544,37 @@
 
             <!-- List View (flat table) -->
             <div id="supplementalsTableView" class="hidden">
+                @php
+                    // Highlights whichever column header matches the currently active sort pill.
+                    $thSort = fn ($key) => $sortBy == $key ? 'underline decoration-2 underline-offset-4' : '';
+                @endphp
                 <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                     <div class="overflow-x-auto">
                         <div class="max-h-[720px] overflow-y-auto" id="supplementalsTableContainer">
                             <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
-                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                <thead class="text-center border-b-2 border-t-2 border-green-700 dark:border-green-800 text-xs bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-300 sticky top-0 z-10">
                                     <tr>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">No.</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Date</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Type</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Account Code</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Program</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Description</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Basis</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Amount</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Qtr Total</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Balanced</th>
-                                        <th class="px-2 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Files</th>
+                                        <th class="sticky left-0 z-10 px-2 py-3 leading-4 tracking-wider bg-green-100 dark:bg-green-950 border-l-4 border-l-green-500 {{ $thSort('office_allotment_class') }}">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('supplemental_no') }}">No.</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('supplemental_date') }}">Date</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('type') }}">Type</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Account Code</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Program</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Description</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('basis') }}">Basis</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Amount</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Qtr Total</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Balanced</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider">Files</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        // Alternates a subtle band color each time the supplemental_no changes,
+                                        // so rows belonging to the same batch read as one visual group.
+                                        $lastListSupplementalNo = null;
+                                        $groupBandToggle = false;
+                                    @endphp
                                     @forelse($supplementals as $supplemental)
                                         @php
                                             $rowAmount = isset($supplemental->amount) ? (float)$supplemental->amount : 0;
@@ -591,16 +601,34 @@
                                                 $supplemental->appropriation->account_code ?? '',
                                                 $supplemental->appropriation->description ?? '',
                                             ])->implode(' '));
+                                            $isFirstRowOfGroup = $lastListSupplementalNo !== $supplemental->supplemental_no;
+                                            if ($isFirstRowOfGroup) {
+                                                $groupBandToggle = !$groupBandToggle;
+                                                $lastListSupplementalNo = $supplemental->supplemental_no;
+                                            }
+                                            $rowBandClass = $groupBandToggle ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40';
+                                            $typeBorder = $rowType === 'Supplemental' ? 'border-l-emerald-500' : ($rowType === 'Reversion' ? 'border-l-red-500' : 'border-l-gray-400');
+                                            $typeBadgeSolid = $rowType === 'Supplemental' ? 'bg-emerald-600 dark:bg-emerald-700' : ($rowType === 'Reversion' ? 'bg-red-600 dark:bg-red-700' : 'bg-gray-600 dark:bg-gray-700');
+                                            $typeTextColor = $rowType === 'Supplemental' ? 'text-emerald-700 dark:text-emerald-400' : ($rowType === 'Reversion' ? 'text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-300');
+                                            $rowBorderClass = $rowType === 'Supplemental' ? 'border-emerald-100 dark:border-emerald-900/40' : ($rowType === 'Reversion' ? 'border-red-100 dark:border-red-900/40' : 'border-gray-200 dark:border-gray-700');
                                         @endphp
-                                        <tr class="supplemental-item supplemental-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                        <tr class="group supplemental-item supplemental-row {{ $rowBandClass }} border-b {{ $rowBorderClass }} hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                                             oncontextmenu="showSupplementalContextMenu(event, this)"
                                             data-supplemental='@json($supplemental)'
                                             data-supplemental-no="{{ $supplemental->supplemental_no }}"
                                             data-type="{{ $rowType }}"
                                             data-amount="{{ $rowAmount }}"
                                             data-search-text="{{ $rowSearchText }}">
-                                            <td class="font-semibold px-2 py-2">{{ $supplemental->supplemental_no }}</td>
-                                            <td class="px-2 py-2">{{ $supplemental->supplemental_date }}</td>
+                                            <td class="sticky left-0 z-[1] {{ $rowBandClass }} group-hover:bg-gray-100 dark:group-hover:bg-gray-600 px-2 py-2 text-left border-l-4 {{ $typeBorder }}">
+                                                <i class="fas fa-chevron-right text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 group-hover:text-blue-500 transition-opacity mr-1 text-[10px]"></i>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-white font-semibold text-[11px] {{ $typeBadgeSolid }}">
+                                                    {{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}
+                                                </span>
+                                            </td>
+                                            <td class="px-2 py-2 font-bold {{ $typeTextColor }}">
+                                                @if ($isFirstRowOfGroup){{ $supplemental->supplemental_no }}@endif
+                                            </td>
+                                            <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $supplemental->supplemental_date }}@endif</td>
                                             <td class="px-2 py-2">
                                                 @if ($rowType === 'Supplemental')
                                                     <span class="px-2 py-1 rounded font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">Supplemental</span>
@@ -610,7 +638,6 @@
                                                     <span class="px-2 py-1 rounded font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{ $rowType ?: '-' }}</span>
                                                 @endif
                                             </td>
-                                            <td class="text-left px-2 py-2">{{ $supplemental->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $supplemental->officeAllotmentClass->class ?? '-' }}</td>
                                             <td class="font-semibold px-2 py-2">{{ $supplemental->appropriation->account_code ?? '-' }}</td>
                                             <td class="text-left px-2 py-2 max-w-xs">{{ $supplemental->appropriation->programs ?? '-' }}</td>
                                             <td class="text-left px-2 py-2 max-w-xs">{{ $supplemental->appropriation->description ?? '-' }}</td>
@@ -690,7 +717,7 @@
                     </div>
 
                     <!-- Totals Footer -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-300 dark:divide-gray-600 bg-gray-200 dark:bg-gray-900 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-700 dark:border-gray-600">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-300 dark:divide-gray-600 bg-green-100 dark:bg-green-950 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-b-2 border-l-4 border-green-700 dark:border-green-800 border-l-green-500">
                         <div class="text-center text-sm px-1 py-3">
                             Total Supplemental:
                             <span id="totalSourceFooterTable" class="px-2 py-1 rounded text-emerald-700 bg-emerald-100 dark:bg-emerald-900 dark:text-emerald-300 font-bold text-base tabular-nums ml-2">0.00</span>

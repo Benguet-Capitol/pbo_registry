@@ -202,7 +202,7 @@
             <table id="employeesTable" class="text-center w-full text-xs rtl:text-right text-gray-500 dark:text-gray-400 mb-10">
                 <thead class="text-center text-xs border-b-2 border-gray-700 text-gray-700 bg-gray-200 border-t-2 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10 transition-colors duration-200">
                     <tr>
-                        <th class="px-1 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer">
+                        <th class="px-1 py-3 border-gray-300 leading-4 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer border-l-4 border-l-gray-500">
                             <a href="{{ route('office_allotment_classes.index', array_merge(request()->all(), ['sort_by' => 'office_abbreviation', 'sort_order' => $sortBy == 'office_abbreviation' && $sortOrder == 'asc' ? 'desc' : 'asc'])) }}" class="inline-flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors duration-200">
                                 <span>Office</span>
                                 <span class="transition-transform duration-200">
@@ -276,8 +276,19 @@
                 </thead>
                 <tbody id="officeAllotmentBody">
                     @forelse ($office_allotment_classes as $office_allotment_class)
+                        @php
+                            // Color-codes the Fund Source badge so the three budget sources
+                            // (Annual Budget / Supplemental Budget / Continuing Capital Outlay)
+                            // are recognizable at a glance, consistent across offices.
+                            $classBadgeColor = match ($office_allotment_class->fund_source) {
+                                'Annual Budget' => 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400',
+                                'Supplemental Budget' => 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400',
+                                'Continuing Capital Outlay' => 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-400',
+                                default => 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+                            };
+                        @endphp
                         <tr
-                            class="{{ $loop->even ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer relative transition-colors duration-200 ease-in-out"
+                            class="{{ $loop->even ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer relative transition-colors duration-200 ease-in-out"
                             ondblclick="window.location.href='{{ route('appropriations.index', ['office_allotment_class_id' => $office_allotment_class->id]) }}'"
                             oncontextmenu="showContextMenu(event, this)"
                             data-id="{{ $office_allotment_class->id }}"
@@ -285,14 +296,14 @@
                             data-class="{{ e($office_allotment_class->allotmentClass->description ?? '') }}"
                             data-json='@json($office_allotment_class)'
                         >
-                            <td class="font-semibold px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                                {{ $office_allotment_class->offices->office_abbreviation }}
+                            <td class="px-1 py-2 text-center transition-colors duration-200 border-l-4 border-l-gray-500">
+                                <span class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold inline-block transition-all duration-200 transform hover:scale-105">{{ $office_allotment_class->offices->office_abbreviation }}</span>
                             </td>
                             <td class="font-semibold px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
                                 {{ $office_allotment_class->allotmentClass->description ?? 'N/A' }}
                             </td>
-                            <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                                {{ $office_allotment_class->fund_source }}
+                            <td class="px-1 py-2 text-center transition-colors duration-200">
+                                <span class="px-2 py-1 rounded {{ $classBadgeColor }} font-semibold inline-block transition-all duration-200 transform hover:scale-105">{{ $office_allotment_class->fund_source }}</span>
                             </td>
                             <td class="px-1 py-2 text-gray-600 dark:text-gray-300 transition-colors duration-200">
                                 {{ $office_allotment_class->fund }}
@@ -330,7 +341,7 @@
 
                 <tfoot class="bg-gray-200 dark:bg-gray-900 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
                     <tr>
-                        <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300">
+                        <td colspan="6" class="text-right text-sm font-bold px-1 py-3 text-gray-700 dark:text-gray-300 border-l-4 border-l-gray-500">
                             Total Approved Appropriation:
                         </td>
                         <td id="totalAppropriationFooter" class="px-1 py-3 font-bold text-sm text-gray-900 dark:text-white"></td>

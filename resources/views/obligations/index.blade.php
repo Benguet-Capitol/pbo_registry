@@ -725,7 +725,7 @@
                 </div>
 
                 <!-- Totals Footer -->
-                <div id="obligationTableFooter" class="bg-gray-200 dark:bg-gray-900 border-t-2 border-gray-700 dark:border-gray-600 px-3 py-3">
+                <div id="obligationTableFooter" class="bg-blue-100 dark:bg-blue-950 border-t-2 border-b-2 border-l-4 border-blue-700 dark:border-blue-800 border-l-blue-500 px-3 py-3">
                     <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm font-bold text-gray-700 dark:text-gray-200">
                         <div>Total Obligation:
                             <span id="footerTotalObligationAmount" class="text-green-700 dark:text-green-300 tabular-nums ml-1">0.00</span>
@@ -746,28 +746,33 @@
 
             <!-- Obligation List (table) View -->
             <div id="obligationsTableView" class="hidden">
+                @php
+                    // Highlights whichever column header matches the currently active sort pill,
+                    // so the table stays visually tied to the sort controls above it.
+                    $thSort = fn ($key) => $sortBy == $key ? 'underline decoration-2 underline-offset-4' : '';
+                @endphp
                 <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                     <div class="overflow-x-auto">
                         <div class="max-h-[720px] overflow-y-auto" id="obligationsTableContainer">
                             <table id="obligationsTable" class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
-                                <thead class="text-center border-b-2 border-t-2 border-gray-700 text-xs text-gray-700 bg-gray-200 dark:bg-gray-900 dark:text-gray-400 sticky top-0 z-10">
+                                <thead class="text-center border-b-2 border-t-2 border-blue-700 dark:border-blue-800 text-xs bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 sticky top-0 z-10">
                                     <tr>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Office & Class</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR No.</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR Date</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">OBR Type</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Particulars</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Obligation</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Purchase Order</th>
+                                        <th class="sticky left-0 z-10 px-3 py-3 leading-4 tracking-wider bg-blue-100 dark:bg-blue-950 border-l-4 border-l-blue-500 {{ $thSort('office_allotment_class') }}">Office & Class</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('obr_no') }}">OBR No.</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('obr_date') }}">OBR Date</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('obr_type') }}">OBR Type</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('particulars') }}">Particulars</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('obr_amount') }}">Obligation</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('po_amount') }}">Purchase Order</th>
                                         @hasanyrole('Obligation|Administrator|Developer')
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Remarks</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('remarks') }}">Remarks</th>
                                         @endhasanyrole
                                         @hasanyrole('Disbursement|Administrator|Developer|Obligation')
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Disbursement</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Balance</th>
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Payment Remarks</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('dv_amount') }}">Disbursement</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('balance') }}">Balance</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider {{ $thSort('payment_remarks') }}">Payment Remarks</th>
                                         @endhasanyrole
-                                        <th class="px-3 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">Files</th>
+                                        <th class="px-3 py-3 leading-4 tracking-wider">Files</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -785,8 +790,9 @@
                                             $isLower = $c['isLower'];
                                             $isOBRZero = $c['isOBRZero'];
                                             $searchText = $c['searchText'];
+                                            $rowBandClass = $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40';
                                         @endphp
-                                        <tr class="obligation-item obligation-row bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                        <tr class="group obligation-item obligation-row {{ $rowBandClass }} border-b border-blue-100 dark:border-blue-900/40 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                                             ondblclick="openModal({{ $obligation->id }})"
                                             oncontextmenu="showObligationContextMenu(event, this)"
                                             data-obligation='@json($obligation)'
@@ -806,10 +812,15 @@
                                             data-balance="{{ $balance }}"
                                             data-file-count="{{ $fileCount }}"
                                             data-search-text="{{ $searchText }}">
-                                            <td class="font-semibold px-1 py-2">{{ $officeAbbr }} - {{ $allotmentClass }}</td>
-                                            <td class="font-semibold text-left px-1 py-2">{{ $obligation->obr_no }}</td>
+                                            <td class="sticky left-0 z-[1] {{ $rowBandClass }} group-hover:bg-gray-100 dark:group-hover:bg-gray-600 px-1 py-2 text-left border-l-4 border-l-blue-500">
+                                                <i class="fas fa-chevron-right text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 group-hover:text-blue-500 transition-opacity mr-1 text-[10px]"></i>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-600 dark:bg-blue-700 text-white font-semibold text-[11px]">{{ $officeAbbr }} - {{ $allotmentClass }}</span>
+                                            </td>
+                                            <td class="font-bold text-left px-1 py-2 text-blue-700 dark:text-blue-300">{{ $obligation->obr_no }}</td>
                                             <td class="text-left px-1 py-2">{{ $obligation->obr_date }}</td>
-                                            <td class="text-left px-1 py-2">{{ $obligation->obr_type }}</td>
+                                            <td class="text-left px-1 py-2">
+                                                <span class="px-2 py-1 rounded font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{ $obligation->obr_type }}</span>
+                                            </td>
                                             <td class="text-left px-1 py-2 max-w-sm">{{ $obligation->particulars }}</td>
                                             <td class="px-1 py-2 text-right obligation-amount">
                                                 @if ($obligation->obr_amount == 0.00)
@@ -931,7 +942,7 @@
                     </div>
 
                     <!-- Totals Footer -->
-                    <div class="bg-gray-200 dark:bg-gray-900 border-t-2 border-gray-700 dark:border-gray-600 px-3 py-3">
+                    <div class="bg-blue-100 dark:bg-blue-950 border-t-2 border-b-2 border-l-4 border-blue-700 dark:border-blue-800 border-l-blue-500 px-3 py-3">
                         <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm font-bold text-gray-700 dark:text-gray-200">
                             <div>Total Obligation:
                                 <span id="footerTotalObligationAmountTable" class="text-green-700 dark:text-green-300 tabular-nums ml-1">0.00</span>

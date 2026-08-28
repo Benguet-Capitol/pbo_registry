@@ -90,7 +90,7 @@
             <table class="w-full text-left text-gray-800 dark:text-gray-200 text-xs">
                 <thead class="sticky top-0 z-10 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border-b-2 border-gray-300 dark:border-gray-600">
                     <tr>
-                            <th class="px-4 py-3 min-w-[120px] text-center font-semibold text-gray-700 dark:text-gray-200">User</th>
+                            <th class="px-4 py-3 min-w-[120px] text-center font-semibold text-gray-700 dark:text-gray-200 border-l-4 border-l-gray-500">User</th>
                             <th class="px-4 py-3 min-w-[100px] text-center font-semibold text-gray-700 dark:text-gray-200">Event Type</th>
                             <th class="px-4 py-3 min-w-[150px] text-center font-semibold text-gray-700 dark:text-gray-200">Date & Time</th>
                             <th class="px-4 py-3 min-w-[200px] text-center font-semibold text-gray-700 dark:text-gray-200">Description</th>
@@ -99,8 +99,10 @@
                     </thead>
                     <tbody>
                         @forelse($logs as $log)
-                            <tr class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <td class="px-4 py-3 text-center text-gray-900 dark:text-white font-semibold">{{ $log->user->name ?? 'N/A' }}</td>
+                            <tr class="{{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <td class="px-4 py-3 text-center border-l-4 border-l-gray-500">
+                                    <span class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold inline-block">{{ $log->user->name ?? 'N/A' }}</span>
+                                </td>
                                 <td class="px-4 py-3 text-center">
                                     <span class="px-2 py-1 rounded-full text-xs font-semibold {{ 
                                         match($log->event_type) {

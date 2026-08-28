@@ -99,7 +99,7 @@
             <table id="usersTable" class="mb-10 text-center w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 border-b-2 border-t-2 border-gray-400 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th class="px-6 py-3  leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                        <th class="px-6 py-3  leading-4 text-gray-600 tracking-wider dark:text-gray-300 border-l-4 border-l-gray-500">
                             <a href="{{ route('users.index', ['sort_by' => 'name', 'sort_order' => $sortBy == 'name' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                 Name
                                 @if($sortBy == 'name')
@@ -137,8 +137,10 @@
                 </thead>
                 <tbody>
                     @foreach ($users as $user)
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $user->name }}</td>
+                    <tr class="{{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border-b dark:border-gray-700 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 border-l-4 border-l-gray-500">
+                            <span class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold inline-block">{{ $user->name }}</span>
+                        </td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $user->username }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $user->usertype }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300" title="{{ $user->office_name }}">

@@ -113,7 +113,7 @@
                                 $icon = $isCurrent ? ($sortOrder === 'asc' ? '▲' : '▼') : '';
                                 $sortQuery = array_merge(request()->except('page'), ['sort_by' => $column, 'sort_order' => $nextOrder]);
                             @endphp
-                            <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300 ">
+                            <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300 {{ $loop->first ? 'border-l-4 border-l-gray-500' : '' }}">
                                 <a href="?{{ http_build_query($sortQuery) }}" class="text-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
                                     {{ __($label) }}
                                     <span class="text-[10px]">{!! $icon !!}</span>
@@ -132,8 +132,12 @@
                 </thead>
                 <tbody>
                     @forelse($documents as $document)
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300">{{ $document->title }}</td>
+                    <tr class="{{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border-b dark:border-gray-700 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300 border-l-4 border-l-gray-500">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                                {{ $document->title }}
+                            </span>
+                        </td>
                         <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300">{{ $document->category ?? '-' }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300">{{ $document->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300">
@@ -317,10 +321,12 @@
             return;
         }
 
-        tbody.innerHTML = documents.map(doc => `
-            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300">
-                    <i class="fas fa-file-pdf text-red-600 mr-2"></i>${escapeHtml(doc.title)}
+        tbody.innerHTML = documents.map((doc, idx) => `
+            <tr class="${idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40'} border-b dark:border-gray-700 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300 border-l-4 border-l-gray-500">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        <i class="fas fa-file-pdf text-red-600 mr-2"></i>${escapeHtml(doc.title)}
+                    </span>
                 </td>
                 <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300">
                     ${doc.category ? escapeHtml(doc.category) : '-'}

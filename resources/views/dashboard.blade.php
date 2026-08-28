@@ -453,7 +453,7 @@
                     <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
                         <thead class="bg-gray-200 dark:bg-gray-800">
                             <tr>
-                                <th class="px-4 py-2">Amount Range</th>
+                                <th class="px-4 py-2 border-l-4 border-l-gray-500">Amount Range</th>
                                 <th class="px-4 py-2 text-center">Count</th>
                                 <th class="px-4 py-2 text-center">Percentage</th>
                                 <th class="px-4 py-2 text-center">Visual</th>
@@ -464,7 +464,7 @@
                             @foreach($obligationRanges as $range)
                             @php $percentage = $totalRange > 0 ? ($range['count'] / $totalRange) * 100 : 0; @endphp
                             <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <td class="px-4 py-2 font-semibold">{{ $range['label'] }}</td>
+                                <td class="px-4 py-2 font-semibold border-l-4 border-l-gray-500">{{ $range['label'] }}</td>
                                 <td class="px-4 py-2 text-center font-semibold text-blue-600 dark:text-blue-400">{{ $range['count'] }}</td>
                                 <td class="px-4 py-2 text-center text-gray-700 dark:text-gray-300">{{ number_format($percentage, 1) }}%</td>
                                 <td class="px-4 py-2">
@@ -507,7 +507,7 @@
                 <table id="dashboardTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
-                            <th class="sticky left-0 z-20 px-2 py-2 w-[70px] text-center bg-gray-200 dark:bg-gray-900 border-r-2 border-gray-400 dark:border-gray-600">View Details</th>
+                            <th class="sticky left-0 z-20 px-2 py-2 w-[70px] text-center bg-gray-200 dark:bg-gray-900 border-r-2 border-gray-400 dark:border-gray-600 border-l-4 border-l-gray-500">View Details</th>
                             <th class="px-2 py-2 w-[100px] text-center">Office</th>
                             <th class="px-2 py-2 w-[120px] text-center">Allotment Class</th>
                             @role('Disbursement|Administrator|Developer|Obligation')
@@ -538,8 +538,8 @@
                     </thead>
                     <tbody>
                         @forelse ($officeAllotmentClasses as $class)
-                        <tr 
-                            class="group bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                        <tr
+                            class="group {{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                             ondblclick="window.location.href='{{ route('dashboard.accounts', $class->id) }}{{ $dateFilterQuery ? '?'.$dateFilterQuery : '' }}'"
                             data-class-id="{{ $class->id }}"
                             data-year="{{ $selectedYear }}"
@@ -560,7 +560,7 @@
                             data-disbursements-to-obligations="{{ $class->disbursements_to_obligations }}"
                             data-disbursements-to-appropriations="{{ $class->disbursements_to_appropriations }}"
                         >
-                            <td class="sticky left-0 z-[1] px-1 py-2 text-center bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-600 border-r-2 border-gray-300 dark:border-gray-600">
+                            <td class="sticky left-0 z-[1] px-1 py-2 text-center {{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} group-hover:bg-gray-100 dark:group-hover:bg-gray-600 border-r-2 border-gray-300 dark:border-gray-600 border-l-4 border-l-gray-500">
                                 <div class="relative inline-block text-left">
                                     <!-- Dropdown Button -->
                                     <button onclick="toggleDropdown(this)"
@@ -587,10 +587,26 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $class->office_abbreviation }}</td>
+                            <td class="px-1 py-2 text-center">
+                                <span class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold inline-block">{{ $class->office_abbreviation }}</span>
+                            </td>
                             <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $class->class }}</td>
                             @role('Disbursement|Administrator|Developer|Obligation')
-                            <td class="px-1 py-2 text-center">{{ $class->fundSourceRelation->category ?? '-' }}</td>
+                            <td class="px-1 py-2 text-center">
+                                @php
+                                    $fundTypeCategory = $class->fundSourceRelation->category ?? null;
+                                    $fundTypeColor = match ($fundTypeCategory) {
+                                        'Current' => 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400',
+                                        'Continuing' => 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-400',
+                                        default => 'text-gray-600 dark:text-gray-300',
+                                    };
+                                @endphp
+                                @if($fundTypeCategory)
+                                    <span class="px-2 py-1 rounded {{ $fundTypeColor }} font-semibold inline-block">{{ $fundTypeCategory }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td class="px-1 py-2 text-center">{{ $class->fpp_code }}</td>
                             @endrole
                             <td class="px-1 py-2 text-right font-semibold text-blue-700 dark:text-blue-300">{{ number_format($class->appropriations_sum, 2) }}</td>

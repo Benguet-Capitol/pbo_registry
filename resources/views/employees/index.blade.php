@@ -92,7 +92,7 @@
             <table id="employeesDataTable" class="text-center w-full text-xs text-left rtl:text-right text-gray-500 dark:text-gray-400">
                 <thead class="text-center border-b-2 border-t-2 border-gray-400 text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th class="px-6 py-3  leading-4 text-gray-600 tracking-wider dark:text-gray-300">
+                        <th class="px-6 py-3  leading-4 text-gray-600 tracking-wider dark:text-gray-300 border-l-4 border-l-gray-500">
                             <a href="{{ route('employees.index', ['sort_by' => 'employee_id', 'sort_order' => $sortBy == 'employee_id' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}">
                                 Employee ID
                                 @if($sortBy == 'employee_id')
@@ -129,9 +129,11 @@
                 </thead>
                 <tbody>
                     @foreach ($employees as $employee)
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $employee->employee_id }}</td>
-                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $employee->name }}</td>
+                    <tr class="{{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border-b dark:border-gray-700 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 border-l-4 border-l-gray-500">{{ $employee->employee_id }}</td>
+                        <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">
+                            <span class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold inline-block">{{ $employee->name }}</span>
+                        </td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $employee->designation }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300" title="{{ $employee->office_name }}">{{ $employee->office_abbreviation }}</td>
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">

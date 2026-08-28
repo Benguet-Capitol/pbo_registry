@@ -332,7 +332,7 @@
                     <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
                         <thead class="bg-gray-200 dark:bg-gray-800">
                             <tr>
-                                <th class="px-4 py-2">Amount Range</th>
+                                <th class="px-4 py-2 border-l-4 border-l-gray-500">Amount Range</th>
                                 <th class="px-4 py-2 text-center">Count</th>
                                 <th class="px-4 py-2 text-center">Percentage</th>
                                 <th class="px-4 py-2 text-center">Visual</th>
@@ -343,7 +343,7 @@
                             @foreach($obligationRanges as $range)
                             @php $percentage = $totalRange > 0 ? ($range['count'] / $totalRange) * 100 : 0; @endphp
                             <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <td class="px-4 py-2 font-semibold">{{ $range['label'] }}</td>
+                                <td class="px-4 py-2 font-semibold border-l-4 border-l-gray-500">{{ $range['label'] }}</td>
                                 <td class="px-4 py-2 text-center font-semibold text-blue-600 dark:text-blue-400">{{ $range['count'] }}</td>
                                 <td class="px-4 py-2 text-center text-gray-700 dark:text-gray-300">{{ number_format($percentage, 1) }}%</td>
                                 <td class="px-4 py-2">
@@ -376,7 +376,7 @@
                 <table id="accountsTable" class="w-full text-[11px] text-gray-700 dark:text-gray-300 text-left border-collapse">
                     <thead class="sticky top-0 z-10 bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-200 border-t-2 border-b-2 border-gray-700">
                         <tr>
-                            <th class="sticky left-0 z-20 px-2 py-2 w-[200px] text-center bg-gray-200 dark:bg-gray-900 border-r-2 border-gray-400 dark:border-gray-600">Programs</th>
+                            <th class="sticky left-0 z-20 px-2 py-2 w-[200px] text-center bg-gray-200 dark:bg-gray-900 border-r-2 border-gray-400 dark:border-gray-600 border-l-4 border-l-gray-500">Programs</th>
                             <th class="px-2 py-2 w-[150px] text-center">Account Code</th>
                             <th class="px-2 py-2 w-[200px] text-center">Description</th>
                             @role('Disbursement|Administrator|Developer|Obligation')
@@ -425,8 +425,8 @@
                             data-account-code="{{ $appropriation->account_code }}"
                             data-description="{{ $appropriation->description }}"
                             data-appropriation-id="{{ $appropriation->id }}"
-                            class="group bg-white border dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td class="sticky left-0 z-[1] px-1 py-2 text-center text-gray-900 dark:text-white font-bold bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-600 border-r-2 border-gray-300 dark:border-gray-600">{{ $appropriation->programs }}</td>
+                            class="group {{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+                            <td class="sticky left-0 z-[1] px-1 py-2 text-center text-gray-900 dark:text-white font-bold {{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} group-hover:bg-gray-100 dark:group-hover:bg-gray-600 border-r-2 border-gray-300 dark:border-gray-600 border-l-4 border-l-gray-500">{{ $appropriation->programs }}</td>
                             <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->account_code }}</td>
                             <td class="px-1 py-2 text-center text-gray-900 dark:text-white font-bold">{{ $appropriation->description }}</td>
                             @role('Disbursement|Administrator|Developer|Obligation')

@@ -206,23 +206,9 @@
                     </button>
                     @endcan
                 </div>
-                <!-- Right: Total Records and Search Input -->
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
-                    <!-- Total Records -->
-                    <div class="flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
-                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
-                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
-                    </div>
-                    <!-- Search Input -->
-                    <div class="flex items-center space-x-2 w-full sm:w-72 md:w-96">
-                        <i class="fas fa-search text-gray-400 flex-shrink-0"></i>
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for supplementals" class="form-control border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    </div>
-                </div>
             </div>
 
-            <!-- Sort pills (replaces the old sortable table headers) -->
+            <!-- Sort pills (left) and Total Records (right), all inline -->
             @php
                 $sortOptions = [
                     'office_allotment_class' => 'Office & Class',
@@ -232,34 +218,51 @@
                     'basis' => 'Basis',
                 ];
             @endphp
-            <div class="flex flex-wrap items-center gap-2 mb-3">
-                <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
-                @foreach ($sortOptions as $sortKey => $sortLabel)
-                    @php
-                        $isActiveSort = $sortBy == $sortKey;
-                        $nextOrder = $isActiveSort && $sortOrder == 'asc' ? 'desc' : 'asc';
-                    @endphp
-                    <a href="{{ route('supplementals.index', array_merge(request()->except('page'), ['sort_by' => $sortKey, 'sort_order' => $nextOrder])) }}"
-                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors
-                       {{ $isActiveSort ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600' }}">
-                        {{ $sortLabel }}
-                        @if ($isActiveSort)
-                            <i class="fas fa-arrow-{{ $sortOrder == 'asc' ? 'up' : 'down' }} text-[10px]"></i>
-                        @endif
-                    </a>
-                @endforeach
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
+                    @foreach ($sortOptions as $sortKey => $sortLabel)
+                        @php
+                            $isActiveSort = $sortBy == $sortKey;
+                            $nextOrder = $isActiveSort && $sortOrder == 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('supplementals.index', array_merge(request()->except('page'), ['sort_by' => $sortKey, 'sort_order' => $nextOrder])) }}"
+                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                           {{ $isActiveSort ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600' }}">
+                            {{ $sortLabel }}
+                            @if ($isActiveSort)
+                                <i class="fas fa-arrow-{{ $sortOrder == 'asc' ? 'up' : 'down' }} text-[10px]"></i>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+
+                <!-- Total Records -->
+                <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
+                    <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                    <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                </div>
             </div>
 
-            <!-- View toggle: Card / List -->
-            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
-                <button type="button" id="supplementalsListViewBtn" onclick="setSupplementalsView('table')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                    <i class="fas fa-table-list"></i> List View
-                </button>
-                <button type="button" id="supplementalsCardViewBtn" onclick="setSupplementalsView('card')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                    <i class="fas fa-grip"></i> Card View
-                </button>
+            <!-- View toggle: Card / List, and Search, all inline -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+                    <button type="button" id="supplementalsListViewBtn" onclick="setSupplementalsView('table')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                        <i class="fas fa-table-list"></i> List View
+                    </button>
+                    <button type="button" id="supplementalsCardViewBtn" onclick="setSupplementalsView('card')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                        <i class="fas fa-grip"></i> Card View
+                    </button>
+                </div>
+
+                <!-- Search Input -->
+                <div class="flex items-center space-x-2 w-full sm:w-auto sm:min-w-[24rem]">
+                    <i class="fas fa-search text-gray-400 flex-shrink-0"></i>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for supplementals" class="form-control border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                </div>
             </div>
 
             <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->

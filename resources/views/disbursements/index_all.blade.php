@@ -205,29 +205,6 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <!-- Search Form -->
-                    <form id="searchForm" method="GET" action="{{ route('disbursements.all') }}" class="flex flex-wrap items-center gap-2">
-                        <!-- Hidden inputs to preserve filters -->
-                        <input type="hidden" name="year1" value="{{ $selectedYear }}">
-                        <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
-                        <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
-                        <input type="hidden" name="sort_by" value="{{ $sortBy }}">
-                        <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
-
-                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-36 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="">All Columns</option>
-                            <option value="dv_no" {{ request('search_column') == 'dv_no' ? 'selected' : '' }}>DV No.</option>
-                            <option value="dv_date" {{ request('search_column') == 'dv_date' ? 'selected' : '' }}>DV Date</option>
-                            <option value="payee" {{ request('search_column') == 'payee' ? 'selected' : '' }}>Payee</option>
-                            <option value="address" {{ request('search_column') == 'address' ? 'selected' : '' }}>Address</option>
-                            <option value="dv_remarks" {{ request('search_column') == 'dv_remarks' ? 'selected' : '' }}>Remarks</option>
-                        </x-form.select>
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search disbursements" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-48 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                        <button type="submit" class="flex-shrink-0 text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </form>
-
                     <!-- Export Button -->
                     <button type="button" onclick="exportDisbursementsToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 whitespace-nowrap" title="Export filtered data to Excel">
                         <i class="fas fa-download mr-1"></i>
@@ -243,8 +220,9 @@
                 </div>
             </div>
 
-            <!-- View toggle: Card / List -->
-            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+            <!-- View toggle: Card / List, and Search, all inline -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
                 <button type="button" id="dvListViewBtn" onclick="setDisbursementsView('table')"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
                     <i class="fas fa-table-list"></i> List View
@@ -253,6 +231,30 @@
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
                     <i class="fas fa-grip"></i> Card View
                 </button>
+                </div>
+
+                <!-- Search Form -->
+                <form id="searchForm" method="GET" action="{{ route('disbursements.all') }}" class="flex flex-wrap items-center gap-2">
+                    <!-- Hidden inputs to preserve filters -->
+                    <input type="hidden" name="year1" value="{{ $selectedYear }}">
+                    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
+                    <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+                    <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
+
+                    <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-36 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Columns</option>
+                        <option value="dv_no" {{ request('search_column') == 'dv_no' ? 'selected' : '' }}>DV No.</option>
+                        <option value="dv_date" {{ request('search_column') == 'dv_date' ? 'selected' : '' }}>DV Date</option>
+                        <option value="payee" {{ request('search_column') == 'payee' ? 'selected' : '' }}>Payee</option>
+                        <option value="address" {{ request('search_column') == 'address' ? 'selected' : '' }}>Address</option>
+                        <option value="dv_remarks" {{ request('search_column') == 'dv_remarks' ? 'selected' : '' }}>Remarks</option>
+                    </x-form.select>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search disbursements" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-80 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    <button type="submit" class="flex-shrink-0 text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
 
             <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->

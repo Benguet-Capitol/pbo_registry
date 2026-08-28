@@ -224,7 +224,7 @@
                     </button>
                     @endcan
                 </div>
-                <!-- Right: Total Records and Search Input -->
+                <!-- Right: Total Records -->
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
                     <!-- Total Records -->
                     <div class="flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
@@ -232,24 +232,27 @@
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
                         <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
                     </div>
-                    <!-- Search Input -->
-                    <div class="flex items-center space-x-2 w-full sm:w-72 md:w-96">
-                        <i class="fas fa-search text-gray-400 flex-shrink-0"></i>
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for realignments" class="form-control border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                    </div>
                 </div>
             </div>
 
-            <!-- View toggle: Card / List -->
-            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
-                <button type="button" id="realignmentsListViewBtn" onclick="setRealignmentsView('table')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                    <i class="fas fa-table-list"></i> List View
-                </button>
-                <button type="button" id="realignmentsCardViewBtn" onclick="setRealignmentsView('card')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                    <i class="fas fa-grip"></i> Card View
-                </button>
+            <!-- View toggle: Card / List, and Search, all inline -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+                    <button type="button" id="realignmentsListViewBtn" onclick="setRealignmentsView('table')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                        <i class="fas fa-table-list"></i> List View
+                    </button>
+                    <button type="button" id="realignmentsCardViewBtn" onclick="setRealignmentsView('card')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                        <i class="fas fa-grip"></i> Card View
+                    </button>
+                </div>
+
+                <!-- Search Input -->
+                <div class="flex items-center space-x-2 w-full sm:w-auto sm:min-w-[24rem]">
+                    <i class="fas fa-search text-gray-400 flex-shrink-0"></i>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for realignments" class="form-control border border-gray-300 rounded-lg w-full px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                </div>
             </div>
 
             <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->
@@ -264,14 +267,14 @@
             <!-- Legend / column headers for the Source | Recipient split (card view only) -->
             <div id="realignmentsCardView">
             <div class="hidden md:grid grid-cols-[1fr_28px_1fr] items-center gap-0 mb-1 px-1">
-                <div class="text-center text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 py-1">
-                    <i class="fas fa-arrow-up mr-1"></i>Source
+                <div class="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-600 dark:bg-blue-700 rounded-t-md py-1.5">
+                    <i class="fas fa-arrow-up"></i>Source
                 </div>
                 <div class="flex justify-center text-gray-400 dark:text-gray-500">
                     <i class="fas fa-arrow-right"></i>
                 </div>
-                <div class="text-center text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-300 py-1">
-                    <i class="fas fa-arrow-down mr-1"></i>Recipient
+                <div class="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-white bg-green-600 dark:bg-green-700 rounded-t-md py-1.5">
+                    <i class="fas fa-arrow-down"></i>Recipient
                 </div>
             </div>
 
@@ -356,7 +359,8 @@
 
                             <!-- SOURCE COLUMN -->
                             <div class="bg-blue-50/50 dark:bg-blue-950/10 md:border-r md:border-gray-200 md:dark:border-gray-700">
-                                <div class="md:hidden px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 font-bold uppercase tracking-wide">
+                                <div class="md:hidden flex items-center gap-2 px-3 py-1.5 bg-blue-600 dark:bg-blue-700 text-white font-bold uppercase tracking-wide text-[11px]">
+                                    <i class="fas fa-arrow-up text-[10px]"></i>
                                     Source
                                 </div>
                                 @forelse($sources as $realignment)
@@ -420,7 +424,8 @@
 
                             <!-- RECIPIENT COLUMN -->
                             <div class="bg-green-50/50 dark:bg-green-950/10 md:border-l md:border-gray-200 md:dark:border-gray-700">
-                                <div class="md:hidden px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 font-bold uppercase tracking-wide">
+                                <div class="md:hidden flex items-center gap-2 px-3 py-1.5 bg-green-600 dark:bg-green-700 text-white font-bold uppercase tracking-wide text-[11px]">
+                                    <i class="fas fa-arrow-down text-[10px]"></i>
                                     Recipient
                                 </div>
                                 @forelse($recipients as $realignment)

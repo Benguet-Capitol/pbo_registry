@@ -326,36 +326,6 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <!-- Search Section -->
-                    <form id="searchForm" method="GET" action="{{ route('obligations.index') }}" class="flex flex-wrap items-center gap-2">
-                        <!-- Hidden inputs to preserve filters -->
-                        <input type="hidden" name="year1" value="{{ $selectedYear }}">
-                        <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
-                        <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
-                        <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
-                        <input type="hidden" name="from_date" value="{{ request('from_date') }}">
-                        <input type="hidden" name="to_date" value="{{ request('to_date') }}">
-                        <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
-                        <input type="hidden" name="sort_by" value="{{ $sortBy }}">
-                        <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
-
-                        <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-36 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="">All Columns</option>
-                            <option value="obr_no" {{ request('search_column') == 'obr_no' ? 'selected' : '' }}>OBR No.</option>
-                            <option value="obr_date" {{ request('search_column') == 'obr_date' ? 'selected' : '' }}>OBR Date</option>
-                            <option value="obr_type" {{ request('search_column') == 'obr_type' ? 'selected' : '' }}>OBR Type</option>
-                            <option value="particulars" {{ request('search_column') == 'particulars' ? 'selected' : '' }}>Particulars</option>
-                            <option value="office_abbreviation" {{ request('search_column') == 'office_abbreviation' ? 'selected' : '' }}>Office</option>
-                            <option value="allotment_class" {{ request('search_column') == 'allotment_class' ? 'selected' : '' }}>Allotment Class</option>
-                            <option value="processed_by" {{ request('search_column') == 'processed_by' ? 'selected' : '' }}>Processed By</option>
-                            <option value="remarks" {{ request('search_column') == 'remarks' ? 'selected' : '' }}>Remarks</option>
-                        </x-form.select>
-                        <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for obligations" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-48 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                        <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </form>
-
                     <!-- Export Button -->
                     <button type="button" id="exportObligationsBtn" onclick="exportObligationsToExcel()" class="text-green-600 inline-flex leading-4 tracking-wider items-center hover:text-white border border-green-600 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-4 py-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-900 transition-colors whitespace-nowrap">
                         <i id="exportObligationsIcon" class="fas fa-file-excel mr-1"></i>
@@ -405,16 +375,48 @@
                 }
             @endphp
 
-            <!-- View toggle: Card / List -->
-            <div class="flex items-center gap-1 mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
-                <button type="button" id="tableViewBtn" onclick="setObligationsView('table')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                    <i class="fas fa-table-list"></i> List View
-                </button>
-                <button type="button" id="cardViewBtn" onclick="setObligationsView('card')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
-                    <i class="fas fa-grip"></i> Card View
-                </button>
+            <!-- View toggle: Card / List, and Search, all inline -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit">
+                    <button type="button" id="tableViewBtn" onclick="setObligationsView('table')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                        <i class="fas fa-table-list"></i> List View
+                    </button>
+                    <button type="button" id="cardViewBtn" onclick="setObligationsView('card')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors">
+                        <i class="fas fa-grip"></i> Card View
+                    </button>
+                </div>
+
+                <!-- Search Section -->
+                <form id="searchForm" method="GET" action="{{ route('obligations.index') }}" class="flex flex-wrap items-center gap-2">
+                    <!-- Hidden inputs to preserve filters -->
+                    <input type="hidden" name="year1" value="{{ $selectedYear }}">
+                    <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
+                    <input type="hidden" name="fund_filter" value="{{ request('fund_filter') }}">
+                    <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
+                    <input type="hidden" name="from_date" value="{{ request('from_date') }}">
+                    <input type="hidden" name="to_date" value="{{ request('to_date') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
+                    <input type="hidden" name="sort_by" value="{{ $sortBy }}">
+                    <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
+
+                    <x-form.select name="search_column" id="searchColumn" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-36 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Columns</option>
+                        <option value="obr_no" {{ request('search_column') == 'obr_no' ? 'selected' : '' }}>OBR No.</option>
+                        <option value="obr_date" {{ request('search_column') == 'obr_date' ? 'selected' : '' }}>OBR Date</option>
+                        <option value="obr_type" {{ request('search_column') == 'obr_type' ? 'selected' : '' }}>OBR Type</option>
+                        <option value="particulars" {{ request('search_column') == 'particulars' ? 'selected' : '' }}>Particulars</option>
+                        <option value="office_abbreviation" {{ request('search_column') == 'office_abbreviation' ? 'selected' : '' }}>Office</option>
+                        <option value="allotment_class" {{ request('search_column') == 'allotment_class' ? 'selected' : '' }}>Allotment Class</option>
+                        <option value="processed_by" {{ request('search_column') == 'processed_by' ? 'selected' : '' }}>Processed By</option>
+                        <option value="remarks" {{ request('search_column') == 'remarks' ? 'selected' : '' }}>Remarks</option>
+                    </x-form.select>
+                    <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for obligations" class="border border-gray-300 rounded-lg px-3 py-2 text-xs w-80 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                    <button type="submit" class="text-blue-600 hover:text-white border border-blue-600 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-600 dark:focus:ring-blue-900">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
 
             <!-- Shared "no results" message — sits outside both views so it's visible regardless of which is active -->

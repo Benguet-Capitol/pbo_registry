@@ -109,6 +109,7 @@
                                             'create' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
                                             'update' => 'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200',
                                             'delete' => 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200',
+                                            'cancel' => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
                                             'auth' => 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
                                             default => 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
                                         }

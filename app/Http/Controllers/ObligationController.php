@@ -920,7 +920,7 @@ class ObligationController extends Controller
             $validated = $request->validate([
                 'edit_office_allotment_class_id' => 'required|integer|exists:office_allotment_classes,id',
                 'edit_obr_date' => 'required|date',
-                'edit_obr_no' => 'required|string|max:255',
+                'edit_obr_no' => 'required|string|max:255|unique:obligations,obr_no,'.$obligation->id,
                 'edit_obr_type' => 'required|string|max:255',
                 'edit_particulars' => 'required|string',
                 'edit_remarks' => 'nullable|string',
@@ -1258,28 +1258,20 @@ class ObligationController extends Controller
                 $obligation->obligationAmounts->pluck('id')
             )->get()->groupBy('obligation_amounts_id');
 
-            // Prepare bulk insert data
-            $adjustmentsToCreate = [];
-            
+            // Created one-by-one (not a bulk ::insert()) so each row fires Eloquent's
+            // 'created' event and gets logged via LogsActivity, same as any other adjustment.
             foreach ($obligation->obligationAmounts as $amount) {
                 $existingAdjustmentSum = $existingAdjustments->get($amount->id)?->sum('adjustment_amount') ?? 0;
                 $adjustmentAmount = -($amount->obr_amount + $existingAdjustmentSum);
 
-                $adjustmentsToCreate[] = [
+                ObligationAdjustment::create([
                     'obligation_id' => $obligation->id,
                     'obligation_amounts_id' => $amount->id,
                     'adjustment_date' => $currentDate,
                     'adjustment_amount' => $adjustmentAmount,
                     'adjustment_remarks' => $validated['remarks'],
                     'adjusted_by' => $userName,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            // Bulk insert all adjustments (single query instead of N queries)
-            if (!empty($adjustmentsToCreate)) {
-                ObligationAdjustment::insert($adjustmentsToCreate);
+                ]);
             }
 
             DB::commit();
@@ -1355,71 +1347,14 @@ class ObligationController extends Controller
     public function activityHistory($obligationId): JsonResponse
     {
         try {
-            // Find the obligation first
-            $obligation = Obligation::findOrFail($obligationId);
-            
-            // Get all purchase order numbers related to this obligation
-            $purchaseOrders = PurchaseOrder::where('obligation_id', $obligationId)->get();
-            $poNumbers = $purchaseOrders->pluck('po_number')->toArray();
-            
-            // Escape special regex characters in OBR number
-            $escapedObrNo = preg_quote($obligation->obr_no, '/');
-            
-            // Fetch activity logs related to this obligation and its purchase orders
-            // We'll search for:
-            // 1. Activities where details contains the obligation_id
-            // 2. Activities where description mentions the exact obligation ID or OBR number
-            // 3. Activities related to purchase orders for this obligation
-            
+            // Confirm the obligation exists (404s otherwise), but the query below no longer
+            // needs anything else from it — history is looked up by the permanent numeric
+            // obligation_id column, not by obr_no text, so it can never leak between
+            // obligations and never resurfaces once an obr_no is deleted and reused.
+            Obligation::findOrFail($obligationId);
+
             $activities = ActivityLog::with('user')
-                ->where(function($query) use ($obligationId, $obligation, $escapedObrNo, $poNumbers) {
-                    // Obligation-related activities
-                    $query->where(function($obligationQuery) use ($obligationId, $obligation, $escapedObrNo) {
-                        // Check if details JSON contains obligation_id
-                        $obligationQuery->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId])
-                            // Or description mentions "Obligation #ID" (exact ID match)
-                            ->orWhere('description', 'like', "%Obligation #{$obligationId} %")
-                            ->orWhere('description', 'like', "%Obligation #{$obligationId}:%")
-                            ->orWhere('description', 'like', "%Obligation #{$obligationId}-%")
-                            // Or description mentions the exact OBR number with word boundaries
-                            // Match "OBR# {number}" or "OBR: {number}" or just the number surrounded by spaces/punctuation
-                            ->orWhere('description', 'REGEXP', "OBR[#:]?[[:space:]]*{$escapedObrNo}([[:space:]]|\$|,|\\.|;)")
-                            // Or match the OBR number at the start of the description
-                            ->orWhere('description', 'like', "{$obligation->obr_no} %")
-                            ->orWhere('description', 'like', "{$obligation->obr_no}:%")
-                            ->orWhere('description', 'like', "{$obligation->obr_no}-%")
-                            // Or description mentions obligation-related actions with exact ID in details
-                            ->orWhere(function($q) use ($obligationId) {
-                                $q->where('description', 'like', "%obligation%")
-                                  ->whereRaw("JSON_EXTRACT(details, '$.id') = ?", [$obligationId]);
-                            });
-                    });
-                    
-                    // Add purchase order related activities
-                    if (!empty($poNumbers)) {
-                        $query->orWhere(function($poQuery) use ($poNumbers, $obligationId) {
-                            foreach ($poNumbers as $poNumber) {
-                                $poQuery->orWhere(function($q) use ($poNumber, $obligationId) {
-                                    // Match PO number in description AND obligation_id in JSON details
-                                    $q->where(function($subQ) use ($poNumber, $obligationId) {
-                                        $subQ->where('description', 'like', "%{$poNumber}%")
-                                          ->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId]);
-                                    })
-                                      // Or check details JSON for both po_number and obligation_id
-                                      ->orWhere(function($subQ) use ($poNumber, $obligationId) {
-                                          $subQ->whereRaw("JSON_EXTRACT(details, '$.po_number') = ?", [$poNumber])
-                                            ->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId]);
-                                      })
-                                      // Or check for PO# format with obligation_id
-                                      ->orWhere(function($subQ) use ($poNumber, $obligationId) {
-                                          $subQ->where('description', 'like', "%PO#{$poNumber}%")
-                                            ->whereRaw("JSON_EXTRACT(details, '$.obligation_id') = ?", [$obligationId]);
-                                      });
-                                });
-                            }
-                        });
-                    }
-                })
+                ->where('obligation_id', $obligationId)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -2190,7 +2125,9 @@ class ObligationController extends Controller
                 'obligationAmounts.disbursements',
                 'obligationAdjustments',
                 'purchaseOrders',
-                'disbursements'
+                'disbursements',
+                'officeAllotmentClass.offices',
+                'officeAllotmentClass.allotmentClass',
             ])->findOrFail($obligationId);
 
             // Get the to_date for filtering adjustments
@@ -2231,6 +2168,10 @@ class ObligationController extends Controller
             return response()->json([
                 'id' => $obligation->id,
                 'obr_no' => $obligation->obr_no,
+                'obr_date' => $obligation->obr_date,
+                'obr_type' => $obligation->obr_type,
+                'office_abbreviation' => optional($obligation->officeAllotmentClass->offices ?? null)->office_abbreviation ?? '-',
+                'allotment_class' => optional($obligation->officeAllotmentClass->allotmentClass ?? null)->class ?? '-',
                 'particulars' => $obligation->particulars,
                 'obligation_amounts' => $amounts,
             ]);

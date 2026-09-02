@@ -73,7 +73,7 @@
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="year1" class="sr-only">Year</label>
-                    <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitDisbursementsFormAjax(this.form)">
                         @foreach($availableYears as $year1)
                         <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
@@ -83,7 +83,7 @@
                 <!-- Office and Allotment Class Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="officeAllotmentClass" class="sr-only">Office & Class</label>
-                    <x-form.select name="office_allotment_class_filter" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="office_allotment_class_filter" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitDisbursementsFormAjax(this.form)">
                         <option value="">All Allotment Classes per Office</option>
                         @foreach($officeAllotmentClasses as $officeAllotmentClass)
                         <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_filter') == $officeAllotmentClass->id ? 'selected' : '' }}>
@@ -96,7 +96,7 @@
                 <!-- Per Page Dropdown -->
                 <div class="flex items-center space-x-2">
                     <label for="perPage" class="sr-only">Show per page</label>
-                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="this.form.submit()">
+                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="submitDisbursementsFormAjax(this.form)">
                         <option value="10" {{ request('per_page', '10') == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', '10') == 25 ? 'selected' : '' }}>25</option>
                         <option value="50" {{ request('per_page', '10') == 50 ? 'selected' : '' }}>50</option>
@@ -139,6 +139,7 @@
             }
         @endphp
 
+        <div id="activeFilterChipsContainer">
         @if (count($activeFilterChips) > 0)
             <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
@@ -161,6 +162,7 @@
                 </a>
             </div>
         @endif
+        </div>
     </div>
 
     <!-- Disbursements -->
@@ -186,7 +188,7 @@
 
             <!-- Sort pills (left) and Export / Search / Total Records (right), all inline -->
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2" id="sortPillsContainer">
                     <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
                     @foreach ($sortOptions as $sortKey => $sortLabel)
                         @php
@@ -238,7 +240,7 @@
                     <!-- Hidden inputs to preserve filters -->
                     <input type="hidden" name="year1" value="{{ $selectedYear }}">
                     <input type="hidden" name="office_allotment_class_filter" value="{{ request('office_allotment_class_filter') }}">
-                    <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page', 10) }}">
                     <input type="hidden" name="sort_by" value="{{ $sortBy }}">
                     <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
 
@@ -502,6 +504,13 @@
                 </div>
             </div>
             <!-- /#disbursementsTableView -->
+
+            <!-- Pagination -->
+            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400" id="disbursementsPagination">
+                @if ($perPage != 'all')
+                {{ $disbursements->appends(request()->query())->links() }}
+                @endif
+            </div>
         </div>
     </div>
 
@@ -580,6 +589,84 @@
         updateTotalRecordsCount();
         updateDisbursementFooterTotal();
     }
+
+    // Shows a full-page spinner overlay while an AJAX filter/sort request is in flight.
+    function showDisbursementsLoadingOverlay() {
+        let overlay = document.getElementById('pageLoadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pageLoadingOverlay';
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-30 z-[10005] flex items-center justify-center';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>';
+            document.body.appendChild(overlay);
+        }
+    }
+
+    // Fetches the URL in the background and splices chips/pills/card/table/pagination markup in, instead of a full reload.
+    function loadDisbursementsSorted(url) {
+        showDisbursementsLoadingOverlay();
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => {
+                if (!response.ok) throw new Error('Request failed: ' + response.status);
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const idsToSync = ['activeFilterChipsContainer', 'sortPillsContainer', 'disbursementsCardView', 'disbursementsTableView', 'disbursementsPagination'];
+
+                idsToSync.forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) {
+                        currentEl.innerHTML = newEl.innerHTML;
+                    }
+                });
+
+                // Sync filter/search forms with the server's applied values, skipping the live search box so typing isn't clobbered.
+                ['year1', 'office_allotment_class_filter', 'per_page', 'sort_by', 'sort_order'].forEach(name => {
+                    const newField = doc.querySelector(`#filterForm [name="${name}"]`) || doc.querySelector(`#searchForm [name="${name}"]`);
+                    if (!newField) return;
+                    document.querySelectorAll(`#filterForm [name="${name}"], #searchForm [name="${name}"]`)
+                        .forEach(field => { field.value = newField.value; });
+                });
+
+                history.pushState(null, '', url);
+
+                filterTable();
+            })
+            .catch(error => {
+                console.error('Failed to load disbursements, falling back to full page navigation:', error);
+                window.location.href = url;
+            })
+            .finally(() => {
+                const overlay = document.getElementById('pageLoadingOverlay');
+                if (overlay) overlay.remove();
+            });
+    }
+
+    // Submits the filter or search form via the same background fetch-and-splice as above.
+    function submitDisbursementsFormAjax(form) {
+        const params = new URLSearchParams(new FormData(form));
+        const url = form.action + '?' + params.toString();
+        loadDisbursementsSorted(url);
+    }
+    document.getElementById('filterForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitDisbursementsFormAjax(this);
+    });
+    document.getElementById('searchForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitDisbursementsFormAjax(this);
+    });
+
+    // Delegated click handler for sort pills and active-filter chip links (both get replaced on every load).
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a');
+        if (!link) return;
+        e.preventDefault();
+        loadDisbursementsSorted(link.href);
+    });
 
     /**
      * Clear the search box (used by the active-filter chip and the no-results message)

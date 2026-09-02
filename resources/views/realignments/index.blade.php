@@ -104,7 +104,7 @@
                     id="year1"
                     class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     data-default="{{ date('Y') }}"
-                    onchange="this.form.submit()">
+                    onchange="submitRealignmentsFormAjax(this.form)">
                         @foreach($availableYears as $year1)
                             <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
@@ -119,7 +119,7 @@
                     id="officeAllotmentClass"
                     class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     data-default=""
-                    onchange="this.form.submit()">
+                    onchange="submitRealignmentsFormAjax(this.form)">
                         <option value="">All Allotment Classes per Office</option>
                         @foreach($officeAllotmentClasses as $officeAllotmentClass)
                             <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_id') == $officeAllotmentClass->id ? 'selected' : '' }}>
@@ -137,7 +137,7 @@
                     id="realignment_type_filter"
                     class="filter-select border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     data-default=""
-                    onchange="this.form.submit()">
+                    onchange="submitRealignmentsFormAjax(this.form)">
                         <option value="">All Types</option>
                         <option value="Source" {{ request('realignment_type_filter') == 'Source' ? 'selected' : '' }}>Source</option>
                         <option value="Recipient" {{ request('realignment_type_filter') == 'Recipient' ? 'selected' : '' }}>Recipient</option>
@@ -151,7 +151,7 @@
                     name="per_page"
                     id="perPage"
                     class="filter-select text-gray-400 border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    onchange="this.form.submit()">
+                    onchange="submitRealignmentsFormAjax(this.form)">
                         <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
                         <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
@@ -189,6 +189,7 @@
             }
         @endphp
 
+        <div id="activeFilterChipsContainer">
         @if (count($activeFilterChips) > 0)
             <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
@@ -211,6 +212,7 @@
                 </a>
             </div>
         @endif
+        </div>
     </div>
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 dark:bg-gray-800">
@@ -224,14 +226,42 @@
                     </button>
                     @endcan
                 </div>
-                <!-- Right: Total Records -->
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
-                    <!-- Total Records -->
-                    <div class="flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
-                        <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
-                        <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
-                    </div>
+            </div>
+
+            <!-- Sort pills (left) and Total Records (right), all inline -->
+            @php
+                $sortOptions = [
+                    'office_allotment_class' => 'Office & Class',
+                    'realignment_no' => 'No.',
+                    'realignment_date' => 'Date',
+                    'type' => 'Type',
+                    'basis' => 'Basis',
+                ];
+            @endphp
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex flex-wrap items-center gap-2" id="sortPillsContainer">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
+                    @foreach ($sortOptions as $sortKey => $sortLabel)
+                        @php
+                            $isActiveSort = $sortBy == $sortKey;
+                            $nextOrder = $isActiveSort && $sortOrder == 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('realignments.index', array_merge(request()->except('page'), ['sort_by' => $sortKey, 'sort_order' => $nextOrder])) }}"
+                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                           {{ $isActiveSort ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600' }}">
+                            {{ $sortLabel }}
+                            @if ($isActiveSort)
+                                <i class="fas fa-arrow-{{ $sortOrder == 'asc' ? 'up' : 'down' }} text-[10px]"></i>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+
+                <!-- Total Records -->
+                <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
+                    <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
+                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
+                    <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
                 </div>
             </div>
 
@@ -511,20 +541,24 @@
 
             <!-- List View (flat table, one row per Source/Recipient entry) -->
             <div id="realignmentsTableView" class="hidden">
+                @php
+                    // Highlights whichever column header matches the currently active sort pill.
+                    $thSort = fn ($key) => $sortBy == $key ? 'underline decoration-2 underline-offset-4' : '';
+                @endphp
                 <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                     <div class="overflow-x-auto">
                         <div class="max-h-[720px] overflow-y-auto" id="realignmentsTableContainer">
                             <table class="min-w-full text-xs text-center text-gray-600 dark:text-gray-300">
                                 <thead class="text-center border-b-2 border-t-2 border-blue-700 dark:border-blue-800 text-xs bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 sticky top-0 z-10">
                                     <tr>
-                                        <th class="sticky left-0 z-10 px-2 py-3 leading-4 tracking-wider bg-blue-100 dark:bg-blue-950 border-l-4 border-l-blue-500">Office & Class</th>
-                                        <th class="px-2 py-3 leading-4 tracking-wider">No.</th>
-                                        <th class="px-2 py-3 leading-4 tracking-wider">Date</th>
-                                        <th class="px-2 py-3 leading-4 tracking-wider">Type</th>
+                                        <th class="sticky left-0 z-10 px-2 py-3 leading-4 tracking-wider bg-blue-100 dark:bg-blue-950 border-l-4 border-l-blue-500 {{ $thSort('office_allotment_class') }}">Office & Class</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('realignment_no') }}">No.</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('realignment_date') }}">Date</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('type') }}">Type</th>
                                         <th class="px-2 py-3 leading-4 tracking-wider">Account Code</th>
                                         <th class="px-2 py-3 leading-4 tracking-wider">Program</th>
                                         <th class="px-2 py-3 leading-4 tracking-wider">Description</th>
-                                        <th class="px-2 py-3 leading-4 tracking-wider">Basis</th>
+                                        <th class="px-2 py-3 leading-4 tracking-wider {{ $thSort('basis') }}">Basis</th>
                                         <th class="px-2 py-3 leading-4 tracking-wider">Amount</th>
                                         <th class="px-2 py-3 leading-4 tracking-wider">Balanced</th>
                                         <th class="px-2 py-3 leading-4 tracking-wider">Files</th>
@@ -641,7 +675,7 @@
             <!-- /#realignmentsTableView -->
 
              <!-- Pagination -->
-            <div class="mt-4">
+            <div class="mt-4" id="realignmentsPagination">
                 @if ($perPage != 'all')
                 {{ $realignments->appends(request()->query())->links() }}
                 @endif
@@ -1028,6 +1062,82 @@
             filterRealignments(searchValue);
         }
     }
+
+    // Shows a full-page spinner overlay while an AJAX filter request is in flight.
+    function showRealignmentsLoadingOverlay() {
+        let overlay = document.getElementById('pageLoadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pageLoadingOverlay';
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-30 z-[10005] flex items-center justify-center';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>';
+            document.body.appendChild(overlay);
+        }
+    }
+
+    // Fetches the URL in the background and splices chips/pagination/card/table markup in, instead of a full reload.
+    function loadRealignmentsSorted(url) {
+        showRealignmentsLoadingOverlay();
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => {
+                if (!response.ok) throw new Error('Request failed: ' + response.status);
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const idsToSync = ['activeFilterChipsContainer', 'sortPillsContainer', 'realignmentsCardView', 'realignmentsTableView', 'realignmentsPagination'];
+
+                idsToSync.forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) {
+                        currentEl.innerHTML = newEl.innerHTML;
+                    }
+                });
+
+                // Sync filterForm with the server's applied values, skipping the live search box so typing isn't clobbered.
+                ['year1', 'office_allotment_class_id', 'realignment_type_filter', 'per_page'].forEach(name => {
+                    const newField = doc.querySelector(`#filterForm [name="${name}"]`);
+                    if (!newField) return;
+                    document.querySelectorAll(`#filterForm [name="${name}"]`).forEach(field => { field.value = newField.value; });
+                });
+
+                history.pushState(null, '', url);
+
+                const searchInput = document.getElementById('searchInput');
+                updateFooterTotals();
+                updateTotalRecordsCount();
+                filterActiveRealignmentsView(searchInput ? searchInput.value : '');
+            })
+            .catch(error => {
+                console.error('Failed to load realignments, falling back to full page navigation:', error);
+                window.location.href = url;
+            })
+            .finally(() => {
+                const overlay = document.getElementById('pageLoadingOverlay');
+                if (overlay) overlay.remove();
+            });
+    }
+
+    // Exposed on window since it's invoked from inline onchange attributes (outside this IIFE's scope).
+    window.submitRealignmentsFormAjax = function(form) {
+        const params = new URLSearchParams(new FormData(form));
+        const url = form.action + '?' + params.toString();
+        loadRealignmentsSorted(url);
+    }
+    document.getElementById('filterForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitRealignmentsFormAjax(this);
+    });
+
+    // Delegated click handler for sort pills and active-filter chip links (both get replaced on every load).
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a');
+        if (!link) return;
+        e.preventDefault();
+        loadRealignmentsSorted(link.href);
+    });
 
     /**
      * Card / List view toggle

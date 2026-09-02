@@ -99,7 +99,7 @@
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="year1" class="sr-only">Year</label>
-                    <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitSupplementalsFormAjax(this.form)">
                         @foreach($availableYears as $year1)
                             <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
@@ -109,7 +109,7 @@
                 <!-- Office and Allotment Class Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="officeAllotmentClass" class="sr-only">Office & Class</label>
-                    <x-form.select name="office_allotment_class_id" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="office_allotment_class_id" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitSupplementalsFormAjax(this.form)">
                         <option value="">All Allotment Classes per Office</option>
                         @foreach($officeAllotmentClasses as $officeAllotmentClass)
                         <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_id') == $officeAllotmentClass->id ? 'selected' : '' }}>
@@ -122,7 +122,7 @@
                 <!-- OBR Type Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="type" class="sr-only">Type</label>
-                    <x-form.select name="supplemental_type_filter" id="supplemental_type_filter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="supplemental_type_filter" id="supplemental_type_filter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitSupplementalsFormAjax(this.form)">
                         <option value="">All Types</option>
                         <option value="Supplemental" {{ request('supplemental_type_filter') == 'Supplemental' ? 'selected' : '' }}>Supplemental</option>
                         <option value="Reversion" {{ request('supplemental_type_filter') == 'Reversion' ? 'selected' : '' }}>Reversion</option>
@@ -132,7 +132,7 @@
                 <!-- Per Page Dropdown -->
                 <div class="flex items-center space-x-2">
                     <label for="perPage" class="sr-only">Show per page</label>
-                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="this.form.submit()">
+                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="submitSupplementalsFormAjax(this.form)">
                         <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
                         <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
@@ -170,6 +170,7 @@
             }
         @endphp
 
+        <div id="activeFilterChipsContainer">
         @if (count($activeFilterChips) > 0)
             <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
@@ -192,6 +193,7 @@
                 </a>
             </div>
         @endif
+        </div>
     </div>
 
 
@@ -219,7 +221,7 @@
                 ];
             @endphp
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2" id="sortPillsContainer">
                     <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
                     @foreach ($sortOptions as $sortKey => $sortLabel)
                         @php
@@ -736,7 +738,7 @@
             <!-- /#supplementalsTableView -->
 
              <!-- Pagination -->
-            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
+            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400" id="supplementalsPagination">
                 @if ($perPage != 'all')
                 {{ $supplementals->appends(request()->query())->links() }}
                 @endif
@@ -1258,6 +1260,82 @@
             filterSupplementals(searchValue);
         }
     }
+
+    // Shows a full-page spinner overlay while an AJAX filter/sort request is in flight.
+    function showSupplementalsLoadingOverlay() {
+        let overlay = document.getElementById('pageLoadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pageLoadingOverlay';
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-30 z-[10005] flex items-center justify-center';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>';
+            document.body.appendChild(overlay);
+        }
+    }
+
+    // Fetches the URL in the background and splices chips/pills/card/table/pagination markup in, instead of a full reload.
+    function loadSupplementalsSorted(url) {
+        showSupplementalsLoadingOverlay();
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => {
+                if (!response.ok) throw new Error('Request failed: ' + response.status);
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const idsToSync = ['activeFilterChipsContainer', 'sortPillsContainer', 'supplementalsCardView', 'supplementalsTableView', 'supplementalsPagination'];
+
+                idsToSync.forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) {
+                        currentEl.innerHTML = newEl.innerHTML;
+                    }
+                });
+
+                // Sync filterForm with the server's applied values, skipping the live search box so typing isn't clobbered.
+                ['year1', 'office_allotment_class_id', 'supplemental_type_filter', 'per_page'].forEach(name => {
+                    const newField = doc.querySelector(`#filterForm [name="${name}"]`);
+                    if (!newField) return;
+                    document.querySelectorAll(`#filterForm [name="${name}"]`).forEach(field => { field.value = newField.value; });
+                });
+
+                history.pushState(null, '', url);
+
+                const searchInput = document.getElementById('searchInput');
+                updateFooterTotals();
+                updateTotalRecordsCount();
+                filterActiveSupplementalsView(searchInput ? searchInput.value : '');
+            })
+            .catch(error => {
+                console.error('Failed to load supplementals, falling back to full page navigation:', error);
+                window.location.href = url;
+            })
+            .finally(() => {
+                const overlay = document.getElementById('pageLoadingOverlay');
+                if (overlay) overlay.remove();
+            });
+    }
+
+    // Exposed on window since it's invoked from inline onchange attributes (outside this IIFE's scope).
+    window.submitSupplementalsFormAjax = function(form) {
+        const params = new URLSearchParams(new FormData(form));
+        const url = form.action + '?' + params.toString();
+        loadSupplementalsSorted(url);
+    }
+    document.getElementById('filterForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitSupplementalsFormAjax(this);
+    });
+
+    // Delegated click handler for sort pills and active-filter chip links (both get replaced on every load).
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a');
+        if (!link) return;
+        e.preventDefault();
+        loadSupplementalsSorted(link.href);
+    });
 
     /**
      * Clear the search box (used by the active-filter chip and the no-results message)

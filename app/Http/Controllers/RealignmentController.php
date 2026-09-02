@@ -56,7 +56,15 @@ class RealignmentController extends Controller
         }
 
         // --- Sorting & Pagination ---
-        $query->orderBy($sortBy, $sortOrder);
+        // Whitelist sortable columns; 'office_allotment_class' has no matching column, so it sorts by the FK instead.
+        $sortColumnMap = [
+            'office_allotment_class' => 'office_allotment_classes_id',
+            'realignment_no' => 'realignment_no',
+            'realignment_date' => 'realignment_date',
+            'type' => 'type',
+            'basis' => 'basis',
+        ];
+        $query->orderBy($sortColumnMap[$sortBy] ?? 'id', $sortOrder);
         $realignments = $perPage === 'all'
             ? $query->get()
             : $query->paginate($perPage)->appends([

@@ -115,11 +115,25 @@ trait LogsActivity
                     $description = static::getDefaultDescription($model, $action, $changes);
             }
 
-            ActivityLogger::log($description, $action, null);
+            ActivityLogger::log($description, $action, null, $model, static::resolveObligationId($model, $modelName));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error logging activity: '.$e->getMessage());
         }
 
+    }
+
+    /**
+     * Resolves the owning Obligation's PK for anything in the obligation family, so the
+     * obligation history modal can look up activity by a permanent numeric ID instead of
+     * parsing free-text descriptions. Returns null for models unrelated to Obligations.
+     */
+    protected static function resolveObligationId($model, string $modelName): ?int
+    {
+        return match ($modelName) {
+            'Obligation' => $model->id,
+            'PurchaseOrder', 'Disbursement', 'ObligationAdjustment' => $model->obligation_id,
+            default => null,
+        };
     }
 
     /**
@@ -149,7 +163,7 @@ trait LogsActivity
 
             $description = "Cancellation of Obligation ({$baseDetails}). {$amountDetails}.{$remarksPart}";
 
-            ActivityLogger::log($description, 'delete', null);
+            ActivityLogger::log($description, 'cancel', null, $obligation, $obligation->id);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error logging obligation cancellation: '.$e->getMessage());
         }

@@ -131,7 +131,7 @@
                         name="appropriation_filter"
                         id="appropriation_filter"
                         class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                        onchange="this.form.submit()"
+                        onchange="submitCosFormAjax(this.form)"
                         :disabled="$appropriationsForFilter->isEmpty()">
                         <option value="">
                             {{ $appropriationsForFilter->isEmpty() ? __('Select Office/Class first') : __('All Accounts') }}
@@ -147,7 +147,7 @@
                 <!-- Per Page Dropdown -->
                 <div class="flex items-center space-x-2">
                     <label for="perPage" class="sr-only">Show per page</label>
-                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="this.form.submit()">
+                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="submitCosFormAjax(this.form)">
                         <option value="10" {{ request('per_page', '10') == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', '10') == 25 ? 'selected' : '' }}>25</option>
                         <option value="50" {{ request('per_page', '10') == 50 ? 'selected' : '' }}>50</option>
@@ -201,6 +201,7 @@
             }
         @endphp
 
+        <div id="activeFilterChipsContainer">
         @if (count($activeFilterChips) > 0)
             <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
@@ -217,6 +218,7 @@
                 </a>
             </div>
         @endif
+        </div>
     </div>
 
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-2 dark:bg-gray-800">
@@ -232,6 +234,7 @@
 
             <!-- Right: Import/Export, Total Records, Search — all in one row -->
             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
+                <div id="cosImportExportButtons" class="flex flex-wrap items-center gap-2">
                 <!-- Import from Excel Button -->
                 @if(request()->filled('office_allotment_class_filter') && request()->filled('appropriation_filter'))
                     <button type="button" onclick="openImportModal()" class="text-purple-600 inline-flex items-center leading-4 tracking-wider hover:text-white border border-purple-600 hover:bg-purple-600 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-xs px-4 py-2 text-center dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-600 dark:focus:ring-purple-900 transition-colors whitespace-nowrap">
@@ -251,6 +254,7 @@
                         <span id="exportBtnLabel">{{ __('Export') }}</span>
                     </button>
                 @endif
+                </div>
 
                 <!-- Total Records -->
                 <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
@@ -382,6 +386,7 @@
                 </div>
 
                 <!-- Summary Footer -->
+                <div id="cosSummaryFooter">
                 @if($cosList->count() > 0)
                     <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-300 dark:divide-gray-600 bg-gray-200 dark:bg-gray-900 border-t-2 border-gray-700 dark:border-gray-600">
                         @if(!is_null($totalAppropriation))
@@ -408,14 +413,17 @@
                         @endif
                     </div>
                 @endif
+                </div>
             </div>
 
             <!-- Pagination -->
+            <div id="cosPagination">
             @if($cosList->hasPages())
                 <div class="mt-2">
                     {{ $cosList->links() }}
                 </div>
             @endif
+            </div>
         </div>
     </div>
 
@@ -510,14 +518,95 @@
 
         function resetAppropriationAndSubmit(select) {
             document.getElementById('appropriation_filter').value = '';
-            select.form.submit();
+            submitCosFormAjax(select.form);
         }
 
         function resetDependentFiltersAndSubmit(yearSelect) {
             document.getElementById('officeAllotmentClass').value = '';
             document.getElementById('appropriation_filter').value = '';
-            yearSelect.form.submit();
+            submitCosFormAjax(yearSelect.form);
         }
+
+        // Shows a full-page spinner overlay while an AJAX filter/sort request is in flight.
+        function showCosLoadingOverlay() {
+            let overlay = document.getElementById('pageLoadingOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'pageLoadingOverlay';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-30 z-[10005] flex items-center justify-center';
+                overlay.innerHTML = '<div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>';
+                document.body.appendChild(overlay);
+            }
+        }
+
+        // Fetches the URL in the background and splices chips/buttons/list/footer/pagination markup in, instead of a full reload.
+        function loadCosSorted(url) {
+            showCosLoadingOverlay();
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => {
+                    if (!response.ok) throw new Error('Request failed: ' + response.status);
+                    return response.text();
+                })
+                .then(html => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const idsToSync = ['activeFilterChipsContainer', 'cosImportExportButtons', 'totalRecordsCount', 'cosListContainer', 'cosSummaryFooter', 'cosPagination'];
+
+                    idsToSync.forEach(id => {
+                        const newEl = doc.getElementById(id);
+                        const currentEl = document.getElementById(id);
+                        if (newEl && currentEl) {
+                            currentEl.innerHTML = newEl.innerHTML;
+                        }
+                    });
+
+                    // Sync filter/search forms with the server's applied values, skipping the live search box so typing isn't clobbered.
+                    ['year1', 'office_allotment_class_filter', 'appropriation_filter', 'per_page'].forEach(name => {
+                        const newField = doc.querySelector(`#filterForm [name="${name}"]`) || doc.querySelector(`#searchForm [name="${name}"]`);
+                        if (!newField) return;
+                        document.querySelectorAll(`#filterForm [name="${name}"], #searchForm [name="${name}"]`)
+                            .forEach(field => { field.value = newField.value; });
+                    });
+                    ['search', 'search_column'].forEach(name => {
+                        const newField = doc.querySelector(`#searchForm [name="${name}"]`);
+                        if (!newField || newField.id === 'searchInput' || newField.id === 'searchColumn') return;
+                        document.querySelectorAll(`#filterForm [name="${name}"]`).forEach(field => { field.value = newField.value; });
+                    });
+
+                    history.pushState(null, '', url);
+                })
+                .catch(error => {
+                    console.error('Failed to load COS list, falling back to full page navigation:', error);
+                    window.location.href = url;
+                })
+                .finally(() => {
+                    const overlay = document.getElementById('pageLoadingOverlay');
+                    if (overlay) overlay.remove();
+                });
+        }
+
+        // Submits the filter or search form via the same background fetch-and-splice as above.
+        function submitCosFormAjax(form) {
+            const params = new URLSearchParams(new FormData(form));
+            const url = form.action + '?' + params.toString();
+            loadCosSorted(url);
+        }
+        document.getElementById('filterForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            submitCosFormAjax(this);
+        });
+        document.getElementById('searchForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            submitCosFormAjax(this);
+        });
+
+        // Delegated click handler for active-filter chip links and the empty-state "clear filters" link.
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('#activeFilterChipsContainer a, #cosListContainer a');
+            if (!link) return;
+            e.preventDefault();
+            loadCosSorted(link.href);
+        });
 
         function closeAllDropdowns() {
             const dropdowns = document.querySelectorAll('[id$="Dropdown"]');

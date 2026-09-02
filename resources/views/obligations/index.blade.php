@@ -121,7 +121,7 @@
                 <!-- Year Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="year1" class="sr-only">Year</label>
-                    <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="year1" id="year1" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitObligationsFormAjax(this.form)">
                         @foreach($availableYears as $year1)
                         <option value="{{ $year1 }}" {{ $selectedYear == $year1 ? 'selected' : '' }}>{{ $year1 }}</option>
                         @endforeach
@@ -131,7 +131,7 @@
                 <!-- Office and Allotment Class Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="officeAllotmentClass" class="sr-only">Office & Class</label>
-                    <x-form.select name="office_allotment_class_filter" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="office_allotment_class_filter" id="officeAllotmentClass" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitObligationsFormAjax(this.form)">
                         <option value="">All Allotment Classes per Office</option>
                         @foreach($officeAllotmentClasses as $officeAllotmentClass)
                         <option value="{{ $officeAllotmentClass->id }}" {{ request('office_allotment_class_filter') == $officeAllotmentClass->id ? 'selected' : '' }}>
@@ -144,7 +144,7 @@
                 <!-- Fund Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="fundFilter" class="sr-only">Fund</label>
-                    <x-form.select name="fund_filter" id="fundFilter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="fund_filter" id="fundFilter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitObligationsFormAjax(this.form)">
                         <option value="">All Funds</option>
                         @foreach($funds as $fund)
                         <option value="{{ $fund }}" {{ request('fund_filter') == $fund ? 'selected' : '' }}>
@@ -157,7 +157,7 @@
                 <!-- OBR Type Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="obr_type" class="sr-only">OBR Type</label>
-                    <x-form.select name="obr_type_filter" id="obr_type_filter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="this.form.submit()">
+                    <x-form.select name="obr_type_filter" id="obr_type_filter" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" onchange="submitObligationsFormAjax(this.form)">
                         <option value="">All Types</option>
                         <option value="Regular" {{ request('obr_type_filter') == 'Regular' ? 'selected' : '' }}>Regular</option>
                         <option value="Purchase Request" {{ request('obr_type_filter') == 'Purchase Request' ? 'selected' : '' }}>Purchase Request</option>
@@ -168,7 +168,7 @@
                 <!-- Per Page Dropdown -->
                 <div class="flex items-center space-x-2">
                     <label for="perPage" class="sr-only">Show per page</label>
-                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="this.form.submit()">
+                    <x-form.select name="per_page" id="perPage" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full dark:border-gray-600 dark:bg-gray-800 dark:text-white" onchange="submitObligationsFormAjax(this.form)">
                         <option value="10" {{ request('per_page', '10') == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', '10') == 25 ? 'selected' : '' }}>25</option>
                         <option value="50" {{ request('per_page', '10') == 50 ? 'selected' : '' }}>50</option>
@@ -256,6 +256,7 @@
             }
         @endphp
 
+        <div id="activeFilterChipsContainer">
         @if (count($activeFilterChips) > 0)
             <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active filters:</span>
@@ -278,6 +279,7 @@
                 </a>
             </div>
         @endif
+        </div>
     </div>
 
     <div class="bg-white overflow-hidden sm:rounded-lg shadow-md mb-2 dark:bg-gray-800">
@@ -294,7 +296,7 @@
 
             <!-- Sort pills (left) and Export / Search / Total Records (right), all inline -->
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2" id="sortPillsContainer">
                     <span class="text-xs text-gray-500 dark:text-gray-400 font-medium mr-1">Sort by:</span>
                     @php
                         $sortPill = function ($key, $label) use ($sortBy, $sortOrder) {
@@ -342,9 +344,7 @@
             </div>
 
             @php
-                // Precompute derived values once per obligation so both the
-                // card view and the table view below can reuse them without
-                // duplicating the same computation logic in two loops.
+                // Precompute derived values once per obligation so both views can reuse them.
                 $obligationComputed = [];
                 foreach ($obligations as $obligation) {
                     $officeAbbr = $obligation->officeAllotmentClass->offices->office_abbreviation ?? '-';
@@ -367,10 +367,18 @@
                         $obligation->payment_remarks,
                     ])->implode(' '));
 
+                    // Color-codes the OBR Type badge by obligation kind.
+                    $obrTypeColor = match ($obligation->obr_type) {
+                        'Regular' => 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-400',
+                        'Purchase Request' => 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-400',
+                        'Project/Contract' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-400',
+                        default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+                    };
+
                     $obligationComputed[$obligation->id] = compact(
                         'officeAbbr', 'allotmentClass', 'poAmount', 'disbursementAmount',
                         'obligationAmount', 'balance', 'fileCount', 'isEqual', 'isLower',
-                        'isOBRZero', 'searchText'
+                        'isOBRZero', 'searchText', 'obrTypeColor'
                     );
                 }
             @endphp
@@ -397,7 +405,7 @@
                     <input type="hidden" name="obr_type_filter" value="{{ request('obr_type_filter') }}">
                     <input type="hidden" name="from_date" value="{{ request('from_date') }}">
                     <input type="hidden" name="to_date" value="{{ request('to_date') }}">
-                    <input type="hidden" name="per_page" value="{{ request('per_page', 'all') }}">
+                    <input type="hidden" name="per_page" value="{{ request('per_page', 10) }}">
                     <input type="hidden" name="sort_by" value="{{ $sortBy }}">
                     <input type="hidden" name="sort_order" value="{{ $sortOrder }}">
 
@@ -446,6 +454,7 @@
                             $isLower = $c['isLower'];
                             $isOBRZero = $c['isOBRZero'];
                             $searchText = $c['searchText'];
+                            $obrTypeColor = $c['obrTypeColor'];
                         @endphp
                         <div class="obligation-item obligation-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
                              ondblclick="openModal({{ $obligation->id }})"
@@ -480,7 +489,7 @@
                                     <span class="font-semibold text-gray-600 dark:text-gray-300">
                                         <i class="far fa-calendar mr-1"></i>{{ $obligation->obr_date }}
                                     </span>
-                                    <span class="px-2 py-1 rounded font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                                    <span class="px-2 py-1 rounded font-semibold {{ $obrTypeColor }}">
                                         {{ $obligation->obr_type }}
                                     </span>
                                 </div>
@@ -747,8 +756,7 @@
             <!-- Obligation List (table) View -->
             <div id="obligationsTableView" class="hidden">
                 @php
-                    // Highlights whichever column header matches the currently active sort pill,
-                    // so the table stays visually tied to the sort controls above it.
+                    // Highlights whichever column header matches the currently active sort pill.
                     $thSort = fn ($key) => $sortBy == $key ? 'underline decoration-2 underline-offset-4' : '';
                 @endphp
                 <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
@@ -790,6 +798,7 @@
                                             $isLower = $c['isLower'];
                                             $isOBRZero = $c['isOBRZero'];
                                             $searchText = $c['searchText'];
+                                            $obrTypeColor = $c['obrTypeColor'];
                                             $rowBandClass = $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40';
                                         @endphp
                                         <tr class="group obligation-item obligation-row {{ $rowBandClass }} border-b border-blue-100 dark:border-blue-900/40 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
@@ -819,7 +828,7 @@
                                             <td class="font-bold text-left px-1 py-2 text-blue-700 dark:text-blue-300">{{ $obligation->obr_no }}</td>
                                             <td class="text-left px-1 py-2">{{ $obligation->obr_date }}</td>
                                             <td class="text-left px-1 py-2">
-                                                <span class="px-2 py-1 rounded font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{ $obligation->obr_type }}</span>
+                                                <span class="px-2 py-1 rounded font-semibold {{ $obrTypeColor }}">{{ $obligation->obr_type }}</span>
                                             </td>
                                             <td class="text-left px-1 py-2 max-w-sm">{{ $obligation->particulars }}</td>
                                             <td class="px-1 py-2 text-right obligation-amount">
@@ -961,41 +970,9 @@
             </div>
             <!-- /#obligationsTableView -->
 
-            <!-- Obligation Details Panel -->
-            <div id="obligationDetailsPanel" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-md px-4 pb-4 pt-2 mt-3">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
-                        <span id="detailObrNo" class="text-blue-600 dark:text-blue-400"></span>
-                        <span id="detailParticulars" class="text-gray-700 dark:text-gray-300 text-xs font-normal"></span>
-                    </h3>
-                    <button onclick="closeObligationDetails()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
+            @include('obligations.panel.obligation_details')
 
-                <!-- Details Table -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-md">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Program</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Account Code</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Description</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Original Obligation</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjustment</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Adjusted Obligation</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Purchase Order</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-200">Disbursement</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detailsTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <!-- Populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
+            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400" id="obligationsPagination">
                 @if ($perPage != 'all')
                 {{ $obligations->appends(request()->query())->links() }}
                 @endif
@@ -1068,23 +1045,7 @@
     <div id="createObligationAdjustmentModalContainer"></div>
     <div id="createDisbursementModalContainer"></div>
 
-    <!-- Obligation History Modal -->
     <style>
-        @keyframes scaleInUp {
-            from {
-                opacity: 0;
-                transform: scale(0.9) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .animate-scaleInUp {
-            animation: scaleInUp 0.3s ease-out;
-        }
-
         /* Highlight when context menu is open (applies to both card and list/table views) */
         .obligation-item.context-menu-active {
             background-color: rgba(59, 130, 246, 0.1);
@@ -1096,38 +1057,7 @@
         }
     </style>
 
-    <div id="obligationHistoryModal" style="display: none;" aria-hidden="true" class="fixed inset-0 z-[10003] flex items-center justify-center bg-black bg-opacity-50">
-        <div class="flex flex-col max-h-[90vh] w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-2xl animate-scaleInUp">
-            <!-- Modal header -->
-            <div class="flex justify-between items-center px-4 py-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 border-b-2 border-gray-200 dark:border-gray-700 rounded-t-lg">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-history text-gray-600 dark:text-gray-300 text-xl"></i>
-                    <div>
-                        <h3 class="text-base leading-6 font-semibold text-gray-900 dark:text-gray-100">
-                            Obligation Status/History
-                        </h3>
-                        <span id="historyObligationInfo" class="text-xs text-gray-600 dark:text-gray-400"></span>
-                    </div>
-                </div>
-                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 hover:text-white hover:bg-gray-600 dark:hover:bg-gray-700 rounded-full p-2 transition-colors duration-200">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <!-- Modal body (scrollable) -->
-            <div id="historyContent" class="overflow-y-auto flex-1 max-h-[calc(90vh-240px)] p-4 space-y-3">
-                <div class="flex justify-center items-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
-                </div>
-            </div>
-            <!-- Modal footer -->
-            <div class="flex justify-end gap-3 p-4 border-t-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-                <button type="button" onclick="closeObligationHistoryModal()" class="text-gray-600 dark:text-gray-300 inline-flex leading-4 tracking-wider hover:text-white border border-gray-600 dark:border-gray-400 hover:bg-gray-600 dark:hover:bg-gray-600 text-xs px-5 py-3 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 rounded-lg">
-                    <i class="fas fa-times mr-2"></i>
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
+    @include('obligations.modal.obligation_history')
 
 <script>
 
@@ -1141,10 +1071,23 @@
             document.body.appendChild(overlay);
         }
     }
-    document.getElementById('filterForm').addEventListener('submit', showLoadingOverlay);
-    document.getElementById('searchForm').addEventListener('submit', showLoadingOverlay);
-    document.querySelectorAll('#filterForm select').forEach(el => el.addEventListener('change', showLoadingOverlay));
+    // Filter/search forms are intercepted below (submitObligationsFormAjax); pagination links still reload.
     document.querySelectorAll('.pagination a').forEach(el => el.addEventListener('click', showLoadingOverlay));
+
+    // Submits the filter/search form via the same background fetch-and-splice as sort pills.
+    function submitObligationsFormAjax(form) {
+        const params = new URLSearchParams(new FormData(form));
+        const url = form.action + '?' + params.toString();
+        loadObligationsSorted(url);
+    }
+    document.getElementById('filterForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitObligationsFormAjax(this);
+    });
+    document.getElementById('searchForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitObligationsFormAjax(this);
+    });
 
     // Date Range Validation: Set minimum to date based on from date
     const fromDateInput = document.getElementById('fromDate');
@@ -1164,9 +1107,7 @@
         });
     }
 
-    /**
-     * Card / List view toggle
-     */
+    // Card / List view toggle
     function getActiveContainer() {
         const cardView = document.getElementById('obligationsCardView');
         return cardView.classList.contains('hidden')
@@ -1191,11 +1132,7 @@
         }
     }
 
-    /**
-     * Dispatches a Card View footer action button to the same functions the
-     * right-click context menu already uses, so both stay in sync with a
-     * single implementation per action.
-     */
+    // Dispatches a Card View footer action button to the same functions the context menu uses.
     window.triggerObligationCardAction = function(button, action) {
         const card = button.closest('.obligation-item');
         if (!card) return;
@@ -1304,9 +1241,7 @@
         card.classList.add('context-menu-active');
         window.currentObligationContextMenuRow = card;
 
-        // The menu is position:fixed, so we work in raw viewport coordinates
-        // (clientX/clientY) and must NOT add page scroll offsets, or the menu
-        // drifts away from the cursor the further the page has been scrolled.
+        // Menu is position:fixed, so use raw viewport coordinates (no page scroll offset).
         const menuHeight = 400; // Approximate menu height
         const menuWidth = 192; // w-48 = 12rem = 192px
         const viewportHeight = window.innerHeight;
@@ -1510,9 +1445,7 @@
     });
 })();
 
-    /**
-     * Update total records count based on visible items in the active view
-     */
+    // Update total records count based on visible items in the active view
     function updateTotalRecordsCount() {
         const items = getActiveContainer().querySelectorAll('.obligation-item');
         let visibleCount = 0;
@@ -1529,131 +1462,7 @@
         }
     }
 
-    /**
-     * Open obligation history modal
-     */
-    function openObligationHistoryModal(obligation) {
-        if (!obligation || !obligation.id) {
-            alert('Invalid obligation selected');
-            return;
-        }
-
-        const modal = document.getElementById('obligationHistoryModal');
-        const historyContent = document.getElementById('historyContent');
-        const historyInfo = document.getElementById('historyObligationInfo');
-
-        // Show modal with loading spinner and display flex
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
-        historyInfo.textContent = ` | ${obligation.obr_no || 'Loading...'}`;
-        historyContent.innerHTML = '<div class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div></div>';
-
-        // Fetch activity history
-        fetch(`/obligations/${obligation.id}/activity-history`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.data) {
-                    displayActivityHistory(data.data, historyContent);
-                } else {
-                    historyContent.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">No activity history found</div>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching activity history:', error);
-                historyContent.innerHTML = '<div class="text-center py-8 text-red-500">Failed to load activity history. Please try again.</div>';
-            });
-    }
-
-    /**
-     * Close obligation history modal
-     */
-    function closeObligationHistoryModal() {
-        const modal = document.getElementById('obligationHistoryModal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.setAttribute('aria-hidden', 'true');
-        }
-    }
-
-    /**
-     * Display activity history in timeline format
-     */
-    function displayActivityHistory(activities, container) {
-        if (!activities || activities.length === 0) {
-            container.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">No activity history found</div>';
-            return;
-        }
-
-        let html = '<div class="space-y-4">';
-        
-        activities.forEach((activity, index) => {
-            const date = new Date(activity.created_at);
-            const formattedDate = date.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-            });
-            const formattedTime = date.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-
-            // Determine activity color and icon based on event type
-            let colorClass = 'bg-blue-500';
-            let icon = 'fas fa-circle';
-            
-            if (activity.event_type === 'created' || activity.description.toLowerCase().includes('created')) {
-                colorClass = 'bg-green-500';
-                icon = 'fas fa-plus-circle';
-            } else if (activity.event_type === 'updated' || activity.description.toLowerCase().includes('updated') || activity.description.toLowerCase().includes('edited')) {
-                colorClass = 'bg-blue-500';
-                icon = 'fas fa-edit';
-            } else if (activity.description.toLowerCase().includes('adjustment')) {
-                colorClass = 'bg-yellow-500';
-                icon = 'fas fa-file-edit';
-            } else if (activity.description.toLowerCase().includes('purchase order')) {
-                colorClass = 'bg-purple-500';
-                icon = 'fas fa-file-invoice';
-            } else if (activity.event_type === 'deleted' || activity.description.toLowerCase().includes('deleted')) {
-                colorClass = 'bg-red-500';
-                icon = 'fas fa-trash';
-            }
-
-            html += `
-                <div class="flex gap-3 ${index !== activities.length - 1 ? 'border-l-2 border-gray-300 dark:border-gray-600 ml-2 pb-4' : ''}">
-                    <div class="relative">
-                        <div class="absolute -left-[9px] top-0 w-4 h-4 ${colorClass} rounded-full flex items-center justify-center">
-                            <i class="${icon} text-white text-[8px]"></i>
-                        </div>
-                    </div>
-                    <div class="flex-1 ml-6">
-                        <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">${activity.description}</p>
-                                    ${activity.user ? `<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">by ${activity.user.name}</p>` : ''}
-                                </div>
-                                <div class="text-right ml-4">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">${formattedDate}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">${formattedTime}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += '</div>';
-        container.innerHTML = html;
-    }
-
-    /**
-     * Compute totals for the visible items in the active view (reading
-     * precomputed numeric data attributes rather than parsing formatted/
-     * displayed text), then mirror the result into both views' footer
-     * elements so switching views never shows a stale figure.
-     */
+    // Computes totals from visible items' data attributes and mirrors them into both views' footers.
     function computeTableTotals() {
         let totalObligation = 0;
         let totalPO = 0;
@@ -1682,6 +1491,68 @@
         });
     }
 
+    // Fetches the URL in the background and splices sort/card/table/pagination markup in, instead of a full reload.
+    function loadObligationsSorted(url) {
+        showLoadingOverlay();
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => {
+                if (!response.ok) throw new Error('Request failed: ' + response.status);
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const idsToSync = ['activeFilterChipsContainer', 'sortPillsContainer', 'obligationsCardView', 'obligationsTableView', 'obligationsPagination'];
+
+                idsToSync.forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) {
+                        currentEl.innerHTML = newEl.innerHTML;
+                    }
+                });
+
+                // Sync filter/search forms with the server's applied values, skipping the live search box so typing isn't clobbered.
+                ['year1', 'office_allotment_class_filter', 'fund_filter', 'obr_type_filter',
+                 'from_date', 'to_date', 'per_page', 'sort_by', 'sort_order'].forEach(name => {
+                    const newField = doc.querySelector(`#filterForm [name="${name}"]`);
+                    if (!newField) return;
+                    document.querySelectorAll(`#filterForm [name="${name}"], #searchForm [name="${name}"]`)
+                        .forEach(field => { field.value = newField.value; });
+                });
+                ['search', 'search_column'].forEach(name => {
+                    const newField = doc.querySelector(`#searchForm [name="${name}"]`);
+                    if (!newField) return;
+                    document.querySelectorAll(`#filterForm [name="${name}"]`)
+                        .forEach(field => { field.value = newField.value; });
+                });
+
+                history.pushState(null, '', url);
+
+                // Re-run setup since the swapped-in elements are brand new DOM nodes.
+                bindObligationRowClicks();
+                computeTableTotals();
+                updateTotalRecordsCount();
+                filterTable();
+            })
+            .catch(error => {
+                console.error('Failed to load sorted obligations, falling back to full page navigation:', error);
+                window.location.href = url;
+            })
+            .finally(() => {
+                const overlay = document.getElementById('pageLoadingOverlay');
+                if (overlay) overlay.remove();
+            });
+    }
+
+    // Delegated click handler for sort pills and active-filter chip links (both get replaced on every load).
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a');
+        if (!link) return;
+        e.preventDefault();
+        loadObligationsSorted(link.href);
+    });
+
     // Initialize all event handlers
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize card totals
@@ -1708,11 +1579,7 @@
         }
     });
 
-    /**
-     * Filter obligation cards/rows based on the search input. Filters items
-     * in BOTH views (not just the active one) so that switching views keeps
-     * whatever search is currently applied instead of resetting it.
-     */
+    // Filters cards/rows in both views by the search input, so switching views keeps the filter applied.
     function filterTable() {
         const input = document.getElementById("searchInput");
         const filter = input.value.toLowerCase().trim();
@@ -1756,9 +1623,7 @@
         computeTableTotals();
     }
 
-    /**
-     * Clear the search box (used by the active-filter chip and the no-results message)
-     */
+    // Clear the search box (used by the active-filter chip and the no-results message)
     function clearObligationSearchFilter() {
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
@@ -1768,8 +1633,12 @@
         }
     }
 
-    // Add event listener for input event to filter cards as you type
-    document.getElementById('searchInput').addEventListener('input', filterTable);
+    // Debounced input listener so filtering doesn't run on every keystroke.
+    let searchInputDebounceTimer = null;
+    document.getElementById('searchInput').addEventListener('input', function () {
+        clearTimeout(searchInputDebounceTimer);
+        searchInputDebounceTimer = setTimeout(filterTable, 200);
+    });
 
 
     // Function to toggle dropdown menu
@@ -1899,8 +1768,7 @@ function validateCreateObligationAdjustmentForm() {
         isValid = false;
     }
 
-    // Validate at least one obligation amount has a meaningful adjustment
-    // Adjusted Amount can be 0 (which creates a negative adjustment), but we need at least one row with a non-zero Adjusted Amount
+    // Validate at least one row has a meaningful (non-zero) Adjusted Amount change.
     let atLeastOneNonZeroAdjustment = false;
     
     adjustmentAmounts.forEach(input => {
@@ -2533,112 +2401,10 @@ function openCreatePOModal(obligationId) {
         return false;
     }
 
-    // Display Obligation Details Panel
-    function displayObligationDetails(obligationId) {
-        // Remove highlight from any previously highlighted card
-        const previouslyHighlighted = document.querySelector('.obligation-row-highlighted');
-        if (previouslyHighlighted) {
-            previouslyHighlighted.classList.remove('obligation-row-highlighted');
-        }
+    // displayObligationDetails()/closeObligationDetails() now live in obligations.panel.obligation_details.
 
-        // Add highlight to the current card
-        const currentCard = document.querySelector(`.obligation-card[data-obligation-id="${obligationId}"]`);
-        if (currentCard) {
-            currentCard.classList.add('obligation-row-highlighted');
-        }
-
-        // Build URL with date range parameters if they exist
-        const params = new URLSearchParams(window.location.search);
-        let url = `/api/obligations/${obligationId}/details`;
-        
-        if (params.has('from_date') || params.has('to_date')) {
-            const queryParams = new URLSearchParams();
-            if (params.has('from_date')) {
-                queryParams.append('from_date', params.get('from_date'));
-            }
-            if (params.has('to_date')) {
-                queryParams.append('to_date', params.get('to_date'));
-            }
-            url += `?${queryParams.toString()}`;
-        }
-
-        // Fetch obligation details with amounts
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch obligation details');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const panel = document.getElementById('obligationDetailsPanel');
-                const tbody = document.getElementById('detailsTableBody');
-                
-                // Clear previous rows
-                tbody.innerHTML = '';
-                
-                // Populate header info
-                document.getElementById('detailObrNo').textContent = data.obr_no;
-                document.getElementById('detailParticulars').textContent = '| ' + data.particulars;
-                
-                // Populate details rows
-                if (data.obligation_amounts && data.obligation_amounts.length > 0) {
-                    data.obligation_amounts.forEach(amount => {
-                        const row = document.createElement('tr');
-                        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
-                        
-                        const originalObligation = parseFloat(amount.amount || 0);
-                        const adjustment = parseFloat(amount.adjustment || 0);
-                        const adjustedObligation = parseFloat(amount.adjusted_obligation || 0);
-                        const poAmount = parseFloat(amount.po_amount || 0);
-                        const disbursementAmount = parseFloat(amount.disbursement_amount || 0);
-                        
-                        // Helper function to format currency or show '-' if zero
-                        const formatCurrency = (value) => {
-                            return value === 0 ? '-' : value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        };
-                        
-                        row.innerHTML = `
-                            <td class="px-3 py-2 text-xs text-gray-900 dark:text-gray-200">${amount.program || '-'}</td>
-                            <td class="px-3 py-2 text-xs text-gray-900 dark:text-gray-200">${amount.account_code || '-'}</td>
-                            <td class="px-3 py-2 text-xs text-gray-900 dark:text-gray-200">${amount.description || '-'}</td>
-                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(originalObligation)}</td>
-                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(adjustment)}</td>
-                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200 font-semibold">${formatCurrency(adjustedObligation)}</td>
-                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(poAmount)}</td>
-                            <td class="px-3 py-2 text-right text-xs text-gray-900 dark:text-gray-200">${formatCurrency(disbursementAmount)}</td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="8" class="px-3 py-4 text-center text-gray-500 dark:text-gray-400 italic">No details available</td></tr>';
-                }
-                
-                // Show the panel
-                panel.classList.remove('hidden');
-                
-                // Scroll to the panel
-                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to load obligation details');
-            });
-    }
-
-    // Close Obligation Details Panel
-    function closeObligationDetails() {
-        document.getElementById('obligationDetailsPanel').classList.add('hidden');
-        
-        // Remove highlight from the card when closing panel
-        const highlightedCard = document.querySelector('.obligation-row-highlighted');
-        if (highlightedCard) {
-            highlightedCard.classList.remove('obligation-row-highlighted');
-        }
-    }
-
-    // Add click listeners to obligation cards/rows (left click), in both views
-    document.addEventListener('DOMContentLoaded', function() {
+    // Binds row click-to-open; named so it can be re-run after an AJAX swap replaces the markup.
+    function bindObligationRowClicks() {
         const items = document.querySelectorAll('.obligation-item[data-obligation-id]');
         items.forEach(item => {
             item.addEventListener('click', function(e) {
@@ -2652,6 +2418,10 @@ function openCreatePOModal(obligationId) {
                 }
             });
         });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        bindObligationRowClicks();
 
         // Auto-select and display the first obligation's details (from whichever view is active)
         const activeItems = getActiveContainer().querySelectorAll('.obligation-item[data-obligation-id]');
@@ -2663,9 +2433,7 @@ function openCreatePOModal(obligationId) {
         }
     });
 
-    /**
-     * Show toast notification
-     */
+    // Show toast notification
     function showToast(message, type = 'success') {
         const toastId = 'toast_' + Date.now();
         const toastContainer = document.getElementById('toastContainer') || createToastContainer();
@@ -2708,9 +2476,7 @@ function openCreatePOModal(obligationId) {
         }, 4000);
     }
 
-    /**
-     * Create toast container if it doesn't exist
-     */
+    // Create toast container if it doesn't exist
     function createToastContainer() {
         const container = document.createElement('div');
         container.id = 'toastContainer';
@@ -2719,13 +2485,7 @@ function openCreatePOModal(obligationId) {
         return container;
     }
 
-    /**
-     * Export filtered obligations data to Excel.
-     * Reads directly from each visible card's data attributes (numeric
-     * amounts already computed server-side) rather than scraping
-     * formatted table-cell text — simpler and avoids re-parsing
-     * "Cancelled"/"N/A" placeholder strings back into numbers.
-     */
+    // Export filtered obligations to Excel, reading visible cards' data attributes rather than scraping table text.
     async function exportObligationsToExcel() {
         const button = document.getElementById('exportObligationsBtn');
         if (button.dataset.loading === 'true') {
@@ -2754,10 +2514,7 @@ function openCreatePOModal(obligationId) {
 
             const data = [headers];
 
-            // Process in chunks, yielding to the browser between each one so the
-            // tab stays responsive and repaints the progress label — a plain
-            // synchronous loop over thousands of cards would freeze the page for
-            // its entire duration with no visual feedback in between.
+            // Process in chunks, yielding to the browser so the tab stays responsive and shows progress.
             const CHUNK_SIZE = 500;
             const total = allCards.length;
 

@@ -323,6 +323,8 @@
                 // Precompute derived values once per PO so both the card view
                 // and the table view below can reuse them.
                 $poComputed = [];
+                $poNumberTotals = [];
+                $poNumberDisbursementTotals = [];
                 foreach ($purchaseOrders as $purchaseOrder) {
                     $officeClassLabel = (optional($purchaseOrder->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-') . ' - ' . (optional($purchaseOrder->obligation->officeAllotmentClass->allotmentClass)->class ?? '-');
                     $obligationAmount = $purchaseOrder->obligation->obligationAmounts->where('id', $purchaseOrder->obligation_amounts_id)->first();
@@ -347,6 +349,11 @@
                         'officeClassLabel', 'program', 'accountCode', 'description',
                         'fileCount', 'poAmount', 'disbursementAmount', 'disbursedPct', 'searchText'
                     );
+
+                    // Accumulate the total PO / disbursed amounts across all rows sharing the same PO Number
+                    // (a single PO can be split across multiple appropriations/rows).
+                    $poNumberTotals[$purchaseOrder->po_number] = ($poNumberTotals[$purchaseOrder->po_number] ?? 0) + $poAmount;
+                    $poNumberDisbursementTotals[$purchaseOrder->po_number] = ($poNumberDisbursementTotals[$purchaseOrder->po_number] ?? 0) + $disbursementAmount;
                 }
             @endphp
 
@@ -367,13 +374,14 @@
                             $disbursedPct = $pc['disbursedPct'];
                             $searchText = $pc['searchText'];
                         @endphp
-                        <div class="po-item po-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
+                        <div class="po-item po-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm text-xs hover:shadow-md transition-shadow cursor-pointer"
                              oncontextmenu="showPurchaseOrderContextMenu(event, this)"
                              data-po='@json($purchaseOrder)'
                              data-po-id="{{ $purchaseOrder->id }}"
                              data-po-number="{{ $purchaseOrder->po_number }}"
                              data-obligation-id="{{ $purchaseOrder->obligation_id }}"
                              data-po-amount="{{ $poAmount }}"
+                             data-po-total-amount="{{ $poNumberTotals[$purchaseOrder->po_number] }}"
                              data-disbursement-amount="{{ $disbursementAmount }}"
                              data-office-class="{{ $officeClassLabel }}"
                              data-obr-no="{{ $purchaseOrder->obligation->obr_no ?? '-' }}"
@@ -385,13 +393,21 @@
                              data-search-text="{{ $searchText }}">
 
                             <!-- Card Header -->
-                            <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
+                            <div class="rounded-t-lg flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-blue-700">
                                         <i class="fas fa-building text-[10px] opacity-80"></i>{{ $officeClassLabel }}
                                     </span>
-                                    <span class="font-bold text-blue-700 dark:text-blue-300">
+                                    <span class="group relative inline-flex items-center font-bold text-blue-700 dark:text-blue-300">
                                         <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $purchaseOrder->po_number }}
+                                        <!-- Tooltip: Total PO Amount / Total Disbursed across all rows sharing this PO Number -->
+                                        <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                            <span class="block text-blue-300">Total Purchase Order: {{ number_format($poNumberTotals[$purchaseOrder->po_number], 2) }}</span>
+                                            <span class="block border-t border-gray-700 my-1"></span>
+                                            <span class="block text-emerald-300">Total Disbursement: {{ number_format($poNumberDisbursementTotals[$purchaseOrder->po_number], 2) }}</span>
+                                            <!-- Arrow -->
+                                            <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                        </span>
                                     </span>
                                     <span class="text-gray-700 dark:text-gray-300">
                                         <i class="far fa-calendar mr-1"></i>{{ $purchaseOrder->po_date ?? '-' }}
@@ -469,7 +485,7 @@
                             </div>
 
                             <!-- Card Footer: Amount / Disbursement -->
-                            <div class="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                            <div class="rounded-b-lg px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
                                 <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                                     <div>
                                         <span class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mr-1">PO Amount</span>
@@ -565,6 +581,7 @@
                                             data-po-number="{{ $purchaseOrder->po_number }}"
                                             data-obligation-id="{{ $purchaseOrder->obligation_id }}"
                                             data-po-amount="{{ $pc['poAmount'] }}"
+                                            data-po-total-amount="{{ $poNumberTotals[$purchaseOrder->po_number] }}"
                                             data-disbursement-amount="{{ $pc['disbursementAmount'] }}"
                                             data-office-class="{{ $pc['officeClassLabel'] }}"
                                             data-obr-no="{{ $purchaseOrder->obligation->obr_no ?? '-' }}"
@@ -579,7 +596,19 @@
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-600 dark:bg-blue-700 text-white font-semibold text-[11px]">{{ $pc['officeClassLabel'] }}</span>
                                             </td>
                                             <td class="px-2 py-2 font-bold text-blue-700 dark:text-blue-300">
-                                                @if ($isFirstRowOfGroup){{ $purchaseOrder->po_number }}@endif
+                                                @if ($isFirstRowOfGroup)
+                                                    <span class="group relative inline-flex items-center">
+                                                        {{ $purchaseOrder->po_number }}
+                                                        <!-- Tooltip: Total PO Amount / Total Disbursed across all rows sharing this PO Number -->
+                                                        <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs font-normal rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                                            <span class="block text-blue-300">Total Purchase Order: {{ number_format($poNumberTotals[$purchaseOrder->po_number], 2) }}</span>
+                                                            <span class="block border-t border-gray-700 my-1"></span>
+                                                            <span class="block text-emerald-300">Total Disbursement: {{ number_format($poNumberDisbursementTotals[$purchaseOrder->po_number], 2) }}</span>
+                                                            <!-- Arrow -->
+                                                            <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                                        </span>
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $purchaseOrder->po_date ?? '-' }}@endif</td>
                                             <td class="px-2 py-2 font-bold text-gray-900 dark:text-gray-100">{{ $purchaseOrder->obligation->obr_no ?? '-' }}</td>

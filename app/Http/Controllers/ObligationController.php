@@ -1854,7 +1854,7 @@ class ObligationController extends Controller
                 $obligations->whereDate('obr_date', '<=', $toDate);
             }
             
-            $obligations = $obligations->orderBy('obr_date', 'asc')->get();
+            $obligations = $obligations->orderBy('obr_date', 'desc')->get();
 
             // Transform obligations data
             $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate) {
@@ -1992,7 +1992,7 @@ class ObligationController extends Controller
                 $obligations->whereDate('obr_date', '<=', $toDate);
             }
             
-            $obligations = $obligations->orderBy('obr_date', 'asc')->get();
+            $obligations = $obligations->orderBy('obr_date', 'desc')->get();
 
             // Transform obligations data
             $obligationsData = $obligations->map(function ($obligation) use ($fromDate, $toDate, $appropriationId) {

@@ -229,6 +229,15 @@
                         </tr>
                     @endforeach
                 </tbody>
+                <tfoot>
+                    <tr class="bg-gray-100 dark:bg-gray-700 font-semibold border-t-2 border-gray-400">
+                        <td class="px-2 py-3 text-right text-gray-700 dark:text-gray-300" colspan="9">Total Purchase Order</td>
+                        <td class="px-2 py-3 text-gray-700 dark:text-gray-300">
+                            {{ number_format($purchase_orders->sum('po_amount'), 2) }}
+                        </td>
+                        @canany(['edit purchase orders', 'delete purchase orders'])<td class="px-2 py-3"></td>@endcanany
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>

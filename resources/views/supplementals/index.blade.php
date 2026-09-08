@@ -285,6 +285,8 @@
                     // Cached per-record values so the List View below doesn't need to recompute them
                     $supplementalFileCounts = [];
                     $supplementalBalanced = [];
+                    $groupAmountTotals = [];
+                    $groupTypeByNo = [];
                     // Group by supplemental_no so all lines belonging to the same
                     // Supplemental Budget / Reversion document render as one card.
                     $groupedSupplementals = $supplementals->groupBy('supplemental_no');
@@ -308,17 +310,23 @@
                         $groupAros = $existingAroByBatch[$groupNo] ?? [];
                         $groupAroStale = $staleAroByBatch[$groupNo] ?? false;
                     @endphp
-                    <div class="supplemental-group bg-white dark:bg-gray-800 border {{ $groupTypeAccent['cardBorder'] }} border-l-4 {{ $groupTypeAccent['border'] }} rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow"
+                    <div class="supplemental-group bg-white dark:bg-gray-800 border {{ $groupTypeAccent['cardBorder'] }} border-l-4 {{ $groupTypeAccent['border'] }} rounded-lg shadow-sm text-xs hover:shadow-md transition-shadow"
                          data-supplemental-no="{{ $groupNo }}">
 
                         <!-- Group Header (shared by every line under this Supplemental No.) -->
-                        <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
+                        <div class="rounded-t-lg flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg {{ $groupTypeAccent['officeBadge'] }} text-white font-bold text-[11px] tracking-wide shadow-sm">
                                     <i class="fas fa-building text-[10px] opacity-80"></i>{{ $groupFirst->officeAllotmentClass->office_abbreviation ?? '-' }} - {{ $groupFirst->officeAllotmentClass->class ?? '-' }}
                                 </span>
-                                <span class="font-bold text-gray-800 dark:text-gray-100">
+                                <span class="group relative inline-flex items-center font-bold text-gray-800 dark:text-gray-100">
                                     <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $groupNo }}
+                                    <!-- Tooltip: Total Supplemental / Total Reversion for this Supplemental No. -->
+                                    <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs font-normal rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                        <span class="block {{ $groupType === 'Reversion' ? 'text-red-300' : 'text-emerald-300' }}">Total {{ $groupType === 'Reversion' ? 'Reversion' : 'Supplemental' }}: {{ number_format($groupAmountTotal, 2) }}</span>
+                                        <!-- Arrow -->
+                                        <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                    </span>
                                 </span>
                                 <span class="text-gray-600 dark:text-gray-300">
                                     <i class="far fa-calendar mr-1"></i>{{ $groupFirst->supplemental_date }}
@@ -506,8 +514,13 @@
                         @endforeach
                         </div>
 
+                        @php
+                            $groupAmountTotals[$groupNo] = $groupAmountTotal;
+                            $groupTypeByNo[$groupNo] = $groupType;
+                        @endphp
+
                         <!-- Group Total (sum of all lines under this Supplemental No.) -->
-                        <div class="px-3 py-1.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 text-right text-[11px]">
+                        <div class="rounded-b-lg px-3 py-1.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 text-right text-[11px]">
                             <span class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mr-1">Group Total</span>
                             <span class="font-bold tabular-nums {{ $groupTypeAccent['amount'] }}">{{ number_format($groupAmountTotal, 2) }}</span>
                         </div>
@@ -628,7 +641,21 @@
                                                 </span>
                                             </td>
                                             <td class="px-2 py-2 font-bold {{ $typeTextColor }}">
-                                                @if ($isFirstRowOfGroup){{ $supplemental->supplemental_no }}@endif
+                                                @if ($isFirstRowOfGroup)
+                                                    @php
+                                                        $rowGroupType = $groupTypeByNo[$supplemental->supplemental_no] ?? $rowType;
+                                                        $rowGroupTotal = $groupAmountTotals[$supplemental->supplemental_no] ?? 0;
+                                                    @endphp
+                                                    <span class="group relative inline-flex items-center">
+                                                        {{ $supplemental->supplemental_no }}
+                                                        <!-- Tooltip: Total Supplemental / Total Reversion for this Supplemental No. -->
+                                                        <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs font-normal rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                                            <span class="block {{ $rowGroupType === 'Reversion' ? 'text-red-300' : 'text-emerald-300' }}">Total {{ $rowGroupType === 'Reversion' ? 'Reversion' : 'Supplemental' }}: {{ number_format($rowGroupTotal, 2) }}</span>
+                                                            <!-- Arrow -->
+                                                            <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                                        </span>
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $supplemental->supplemental_date }}@endif</td>
                                             <td class="px-2 py-2">

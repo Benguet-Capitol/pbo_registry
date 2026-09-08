@@ -272,6 +272,7 @@
                 // Precompute derived values once per disbursement so both the
                 // card view and the table view below can reuse them.
                 $dvComputed = [];
+                $obrNoDisbursementTotals = [];
                 foreach ($disbursements as $disbursement) {
                     $officeClassLabel = (optional($disbursement->obligation->officeAllotmentClass->offices)->office_abbreviation ?? '-') . ' - ' . (optional($disbursement->obligation->officeAllotmentClass->allotmentClass)->class ?? '-');
                     $program = $disbursement->obligationAmount?->appropriation?->programs ?? '-';
@@ -279,6 +280,10 @@
                     $description = $disbursement->obligationAmount?->appropriation?->description ?? '-';
                     $dvAmount = (float)($disbursement->disbursement_amount ?? 0);
                     $status = $disbursement->status ?? '';
+
+                    // Accumulate the total disbursement amount across all rows sharing the same OBR No.
+                    $obrNo = $disbursement->obligation->obr_no ?? '-';
+                    $obrNoDisbursementTotals[$obrNo] = ($obrNoDisbursementTotals[$obrNo] ?? 0) + $dvAmount;
 
                     $statusBadge = $status === 'Full Payment'
                         ? ['bg' => 'bg-green-100 dark:bg-green-900', 'text' => 'text-green-700 dark:text-green-300']
@@ -315,7 +320,7 @@
                             $statusBadge = $dc['statusBadge'];
                             $searchText = $dc['searchText'];
                         @endphp
-                        <div class="dv-item dv-card bg-white dark:bg-gray-800 border border-green-300 dark:border-green-700 border-l-4 border-l-green-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-shadow cursor-pointer"
+                        <div class="dv-item dv-card bg-white dark:bg-gray-800 border border-green-300 dark:border-green-700 border-l-4 border-l-green-500 rounded-lg shadow-sm text-xs hover:shadow-md transition-shadow cursor-pointer"
                              oncontextmenu="showDisbursementContextMenu(event, this)"
                              data-dv-no="{{ $disbursement->dv_no }}"
                              data-dv-date="{{ $disbursement->disbursement_date ?? '-' }}"
@@ -332,7 +337,7 @@
                              data-search-text="{{ $searchText }}">
 
                             <!-- Card Header -->
-                            <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
+                            <div class="rounded-t-lg flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white font-bold text-[11px] tracking-wide shadow-sm dark:bg-green-700">
                                         <i class="fas fa-building text-[10px] opacity-80"></i>{{ $officeClassLabel }}
@@ -343,8 +348,16 @@
                                     <span class="font-semibold text-gray-700 dark:text-gray-300">
                                         <i class="far fa-calendar mr-1"></i>{{ $disbursement->disbursement_date ?? '-' }}
                                     </span>
-                                    <span class="font-semibold text-gray-700 dark:text-gray-300">
+                                    <span class="group relative inline-flex items-center font-semibold text-gray-700 dark:text-gray-300">
                                         <span class="font-semibold">OBR:</span> {{ $disbursement->obligation->obr_no ?? '-' }}
+                                        @if($disbursement->obligation->obr_no ?? null)
+                                            <!-- Tooltip: Total Disbursement across all rows sharing this OBR No. -->
+                                            <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs font-normal rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                                <span class="block text-emerald-300">Total Disbursement: {{ number_format($obrNoDisbursementTotals[$disbursement->obligation->obr_no] ?? 0, 2) }}</span>
+                                                <!-- Arrow -->
+                                                <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                            </span>
+                                        @endif
                                     </span>
                                 </div>
                                 <div>
@@ -359,7 +372,7 @@
                             </div>
 
                             <!-- Card Body -->
-                            <div class="px-3 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
+                            <div class="rounded-b-lg px-3 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
                                 <div>
                                     <div class="text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Account Code</div>
                                     <div class="font-medium text-gray-700 dark:text-gray-200 break-words">{{ $accountCode }}</div>
@@ -476,7 +489,19 @@
                                                 @if ($isFirstRowOfGroup){{ $disbursement->dv_no }}@endif
                                             </td>
                                             <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $disbursement->disbursement_date ?? '-' }}@endif</td>
-                                            <td class="px-2 py-2 font-bold text-gray-900 dark:text-gray-100">{{ $disbursement->obligation->obr_no ?? '-' }}</td>
+                                            <td class="px-2 py-2 font-bold text-gray-900 dark:text-gray-100">
+                                                <span class="group relative inline-flex items-center">
+                                                    {{ $disbursement->obligation->obr_no ?? '-' }}
+                                                    @if($disbursement->obligation->obr_no ?? null)
+                                                        <!-- Tooltip: Total Disbursement across all rows sharing this OBR No. -->
+                                                        <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs font-normal rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                                            <span class="block text-emerald-300">Total Disbursement: {{ number_format($obrNoDisbursementTotals[$disbursement->obligation->obr_no] ?? 0, 2) }}</span>
+                                                            <!-- Arrow -->
+                                                            <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                                        </span>
+                                                    @endif
+                                                </span>
+                                            </td>
                                             <td class="px-2 py-2">
                                                 <span class="px-2 py-1 rounded font-semibold {{ $dc['statusBadge']['bg'] }} {{ $dc['statusBadge']['text'] }}">{{ $dc['status'] ? ucfirst($dc['status']) : '-' }}</span>
                                             </td>

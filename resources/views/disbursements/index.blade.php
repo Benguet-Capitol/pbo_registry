@@ -203,6 +203,15 @@
                     @endphp
                     @endforeach
                 </tbody>
+                <tfoot>
+                    <tr class="bg-gray-100 dark:bg-gray-700 font-semibold border-t-2 border-gray-400">
+                        <td class="px-2 py-3 text-right text-gray-700 dark:text-gray-300" colspan="7">Total Disbursement</td>
+                        <td class="px-2 py-3 text-gray-700 dark:text-gray-300">
+                            {{ number_format($disbursements->sum('disbursement_amount'), 2) }}
+                        </td>
+                        <td class="px-2 py-3"></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>

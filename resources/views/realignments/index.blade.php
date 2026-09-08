@@ -317,6 +317,8 @@
                     // Cached per-group values so the List View below doesn't need to recompute or re-query them
                     $groupBalanced = [];
                     $groupFileCounts = [];
+                    $groupSourceTotals = [];
+                    $groupRecipientTotals = [];
                 @endphp
 
                 @forelse ($groupedRealignments as $realignmentNo => $group)
@@ -332,6 +334,8 @@
                         $fileCount = \App\Models\RealignmentFile::where('realignment_no', $realignmentNo)->count();
                         $groupBalanced[$realignmentNo] = $isBalanced;
                         $groupFileCounts[$realignmentNo] = $fileCount;
+                        $groupSourceTotals[$realignmentNo] = $groupSourceTotal;
+                        $groupRecipientTotals[$realignmentNo] = $groupRecipientTotal;
                         $searchText = strtolower(collect([
                             $realignmentNo,
                             $firstItem->realignment_date,
@@ -343,15 +347,29 @@
                             $group->pluck('appropriation.description')->implode(' '),
                         ])->implode(' '));
                     @endphp
-                    <div class="realignment-group bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg overflow-hidden shadow-sm text-xs"
+                    <div class="realignment-group bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm text-xs"
                          data-search-text="{{ $searchText }}"
                          data-realignment-no="{{ $realignmentNo }}">
 
                         <!-- Group Header -->
-                        <div class="flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
+                        <div class="rounded-t-lg flex flex-wrap justify-between items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-600">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-                                <span class="font-bold text-gray-800 dark:text-gray-100">
+                                <span class="group relative inline-flex items-center font-bold text-gray-800 dark:text-gray-100">
                                     <i class="fas fa-hashtag mr-1 text-blue-500"></i>{{ $realignmentNo }}
+                                    <!-- Tooltip: Total Source / Total Recipient for this realignment_no -->
+                                    <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs font-normal rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                        <span class="block text-blue-300">Total Source: {{ number_format($groupSourceTotal, 2) }}</span>
+                                        <span class="block border-t border-gray-700 my-1"></span>
+                                        <span class="block text-green-300">Total Recipient: {{ number_format($groupRecipientTotal, 2) }}</span>
+                                        <span class="block border-t border-gray-700 my-1"></span>
+                                        @if ($isBalanced)
+                                            <span class="block text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Balanced</span>
+                                        @else
+                                            <span class="block text-amber-400"><i class="fas fa-triangle-exclamation mr-1"></i>Mismatch</span>
+                                        @endif
+                                        <!-- Arrow -->
+                                        <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                    </span>
                                 </span>
                                 <span class="text-gray-600 dark:text-gray-300">
                                     <i class="far fa-calendar mr-1"></i>{{ $firstItem->realignment_date }}
@@ -385,7 +403,7 @@
                         </div>
 
                         <!-- Source (left) | Recipient (right) -->
-                        <div class="grid grid-cols-1 md:grid-cols-[1fr_24px_1fr] divide-y md:divide-y-0 divide-gray-200 dark:divide-gray-700">
+                        <div class="rounded-b-lg overflow-hidden grid grid-cols-1 md:grid-cols-[1fr_24px_1fr] divide-y md:divide-y-0 divide-gray-200 dark:divide-gray-700">
 
                             <!-- SOURCE COLUMN -->
                             <div class="bg-blue-50/50 dark:bg-blue-950/10 md:border-r md:border-gray-200 md:dark:border-gray-700">
@@ -609,7 +627,25 @@
                                                 </span>
                                             </td>
                                             <td class="px-2 py-2 font-bold {{ $typeColor === 'blue' ? 'text-blue-700 dark:text-blue-300' : 'text-green-700 dark:text-green-300' }}">
-                                                @if ($isFirstRowOfGroup){{ $realignment->realignment_no }}@endif
+                                                @if ($isFirstRowOfGroup)
+                                                    <span class="group relative inline-flex items-center">
+                                                        {{ $realignment->realignment_no }}
+                                                        <!-- Tooltip: Total Source / Total Recipient for this realignment_no -->
+                                                        <span class="edge-tooltip absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-xs font-normal rounded shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+                                                            <span class="block text-blue-300">Total Source: {{ number_format($groupSourceTotals[$realignment->realignment_no] ?? 0, 2) }}</span>
+                                                            <span class="block border-t border-gray-700 my-1"></span>
+                                                            <span class="block text-green-300">Total Recipient: {{ number_format($groupRecipientTotals[$realignment->realignment_no] ?? 0, 2) }}</span>
+                                                            <span class="block border-t border-gray-700 my-1"></span>
+                                                            @if ($rowBalanced)
+                                                                <span class="block text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Balanced</span>
+                                                            @else
+                                                                <span class="block text-amber-400"><i class="fas fa-triangle-exclamation mr-1"></i>Mismatch</span>
+                                                            @endif
+                                                            <!-- Arrow -->
+                                                            <span class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></span>
+                                                        </span>
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td class="px-2 py-2">@if ($isFirstRowOfGroup){{ $realignment->realignment_date }}@endif</td>
                                             <td class="px-2 py-2">

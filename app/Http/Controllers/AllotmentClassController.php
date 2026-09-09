@@ -70,7 +70,7 @@ class AllotmentClassController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'class' => 'required|string|max:255|unique:allotment_classes,class',
+            'class' => 'required|string|max:5|unique:allotment_classes,class',
             'description' => 'required|string|max:255',
             'category' => 'required|string|max:255',
         ]);
@@ -83,7 +83,7 @@ class AllotmentClassController extends Controller
     public function update(Request $request, AllotmentClass $allotment_class): RedirectResponse
     {
         $validated = $request->validate([
-            'edit_class' => 'required|string|max:255|unique:allotment_classes,class,' . $allotment_class->id,
+            'edit_class' => 'required|string|max:5|unique:allotment_classes,class,' . $allotment_class->id,
             'edit_description' => 'required|string|max:255',
             'edit_category' => 'required|string|max:255',
         ]);

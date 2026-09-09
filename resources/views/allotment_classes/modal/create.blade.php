@@ -23,7 +23,7 @@
                                 <x-slot name="icon">
                                     <i class="fas fa-torah"></i>
                                 </x-slot>
-                                <x-form.input withicon id="class" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" type="text" name="class" :value="old('class')" autocomplete="off" autofocus placeholder="{{ __('Class') }}" />
+                                <x-form.input withicon id="class" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" type="text" name="class" :value="old('class')" autocomplete="off" autofocus maxlength="5" placeholder="{{ __('Class') }}" />
                             </x-form.input-with-icon-wrapper>
                             <span id="classError" class="text-red-500 text-xs"></span>
                         </div>

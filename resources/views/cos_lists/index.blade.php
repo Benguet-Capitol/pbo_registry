@@ -571,7 +571,16 @@
                         const newField = doc.querySelector(`#filterForm [name="${name}"]`) || doc.querySelector(`#searchForm [name="${name}"]`);
                         if (!newField) return;
                         document.querySelectorAll(`#filterForm [name="${name}"], #searchForm [name="${name}"]`)
-                            .forEach(field => { field.value = newField.value; });
+                            .forEach(field => {
+                                // For selects (e.g. the Accounts filter), the option list and
+                                // disabled state depend on the newly selected office, so refresh
+                                // those too — not just the value — or a stale dropdown lingers.
+                                if (field.tagName === 'SELECT' && newField.tagName === 'SELECT') {
+                                    field.innerHTML = newField.innerHTML;
+                                    field.disabled = newField.disabled;
+                                }
+                                field.value = newField.value;
+                            });
                     });
                     ['search', 'search_column'].forEach(name => {
                         const newField = doc.querySelector(`#searchForm [name="${name}"]`);

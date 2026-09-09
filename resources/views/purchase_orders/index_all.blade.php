@@ -1547,14 +1547,26 @@
                 isSubmittingDisbursement = true;
                 
                 // Fetch the year from the obligation's office allotment class
-                fetch(`/api/obligations/${obligationId}/year`)
-                    .then(response => response.json())
+                fetch(`/api/obligations/${obligationId}/year`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch obligation year (status ${response.status}).`);
+                        }
+                        return response.json();
+                    })
                     .then(yearData => {
                         // Make AJAX call to check DV uniqueness
                         return fetch('{{ route("disbursements.checkDvNumber") }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                             },
                             body: JSON.stringify({
@@ -1563,7 +1575,12 @@
                             })
                         });
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Failed to validate DV number (status ${response.status}).`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.exists) {
                             if (dvNoError) {
@@ -1588,7 +1605,9 @@
                         // Reset flag and show error
                         isSubmittingDisbursement = false;
                         if (dvNoError) {
-                            dvNoError.innerText = 'Error validating DV number. Please try again.';
+                            dvNoError.innerText = error?.message
+                                ? `Error validating DV number: ${error.message}`
+                                : 'Error validating DV number. Please try again.';
                             // Scroll error into view and focus on the field
                             dvNoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             poNumber.focus();

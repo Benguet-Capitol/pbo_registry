@@ -27,6 +27,11 @@ class RealignmentController extends Controller
         $currentYear = date('Y');
         $selectedYear = $request->input('year1', $currentYear);
 
+        // Defer the heavy realignments query/count on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $realignmentsLoading = ! $request->ajax();
+
+        if (! $realignmentsLoading) {
+
         // --- Base Query: Eager load all related data in one go ---
         $query = Realignment::with([
             'appropriation.officeAllotmentClass.offices',
@@ -76,6 +81,16 @@ class RealignmentController extends Controller
                 'realignment_type' => $request->realignment_type,
                 'per_page' => $perPage,
             ]);
+
+        } else {
+            $realignments = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
 
         // --- Reference Data ---
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
@@ -182,6 +197,7 @@ class RealignmentController extends Controller
             ->get();
 
         // Get total count of realignments based on filters (grouped by realignment_no)
+        if (! $realignmentsLoading) {
         $totalRecords = Realignment::with('appropriation.officeAllotmentClass')
             ->whereHas('officeAllotmentClass', function ($q) use ($selectedYear) {
                 $q->where('year', $selectedYear);
@@ -204,6 +220,9 @@ class RealignmentController extends Controller
             })
             ->distinct('realignment_no')
             ->count('realignment_no');
+        } else {
+            $totalRecords = 0;
+        }
 
 
         // --- Return View ---
@@ -222,7 +241,8 @@ class RealignmentController extends Controller
             'officeAllotmentClassesJs',
             'appropriationsJs',
             'realignmentsBulkDelete',
-            'totalRecords'
+            'totalRecords',
+            'realignmentsLoading'
         ));
     }
 

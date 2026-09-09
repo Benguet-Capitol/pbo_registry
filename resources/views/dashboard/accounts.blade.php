@@ -201,7 +201,11 @@
 
     @include('dashboard.partials.account-overview')
 
-    @include('dashboard.partials.account-summary-cards')
+    <div id="accountSummaryCards">
+    @if(!($accountsLoading ?? false))
+        @include('dashboard.partials.account-summary-cards')
+    @endif
+    </div>
 
     <!-- Right-Click Context Menu for Accounts Table -->
     <div id="accountContextMenu" class="hidden fixed text-xs bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg shadow-2xl z-[10000] text-blue-900 dark:text-blue-100 min-w-max max-w-[calc(100vw-1rem)] border-2 border-blue-400 dark:border-blue-600">
@@ -242,45 +246,44 @@
 
     // Update the context menu handler to include the Obligate option
     document.addEventListener('DOMContentLoaded', function() {
-        const accountsTable = document.getElementById('accountsTable');
         const contextMenu = document.getElementById('accountContextMenu');
 
-        if (accountsTable) {
-            accountsTable.addEventListener('contextmenu', function(event) {
-                event.preventDefault();
-                
-                // Find the closest row
-                const row = event.target.closest('tr');
-                if (row && row.querySelector('td')) {
-                    const appropriationId = row.dataset.appropriationId;
-                    const accountCode = row.getAttribute('data-account-code');
-                    const programs = row.querySelector('td:nth-child(1)')?.textContent?.trim();
-                    const description = row.getAttribute('data-description');
-                    
-                    // Store context including office allotment class ID from the page
-                    currentAccountAppropriation = {
-                        accountCode: accountCode,
-                        description: description,
-                        appropriationId: appropriationId,
-                        programs: programs,
-                        officeAllotmentClassId: '{{ $officeAllotmentClasses->id }}' // Add this
-                    };
-                    
-                    // Position the context menu
-                    contextMenu.style.left = event.clientX + 'px';
-                    contextMenu.style.top = event.clientY + 'px';
-                    contextMenu.classList.remove('hidden');
-                }
-            });
+        // Delegated on document (not the table itself) so it keeps working after
+        // #accountInsightsPanel's contents are replaced by the loading-state AJAX fetch.
+        document.addEventListener('contextmenu', function(event) {
+            const row = event.target.closest('#accountsTable tbody tr');
+            if (!row) return;
+            event.preventDefault();
 
-            // Hide context menu on click
-            document.addEventListener('click', function(e) {
-                if (!contextMenu.contains(e.target) && !e.target.closest('tr')) {
-                    contextMenu.classList.add('hidden');
-                }
-            });
-        }
-        
+            if (row.querySelector('td')) {
+                const appropriationId = row.dataset.appropriationId;
+                const accountCode = row.getAttribute('data-account-code');
+                const programs = row.querySelector('td:nth-child(1)')?.textContent?.trim();
+                const description = row.getAttribute('data-description');
+
+                // Store context including office allotment class ID from the page
+                currentAccountAppropriation = {
+                    accountCode: accountCode,
+                    description: description,
+                    appropriationId: appropriationId,
+                    programs: programs,
+                    officeAllotmentClassId: '{{ $officeAllotmentClasses->id }}' // Add this
+                };
+
+                // Position the context menu
+                contextMenu.style.left = event.clientX + 'px';
+                contextMenu.style.top = event.clientY + 'px';
+                contextMenu.classList.remove('hidden');
+            }
+        });
+
+        // Hide context menu on click
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target) && !e.target.closest('tr')) {
+                contextMenu.classList.add('hidden');
+            }
+        });
+
         // Handle the Obligate context menu option
         const contextObligate = document.getElementById('contextObligate');
         if (contextObligate) {
@@ -484,4 +487,36 @@
             });
         }
     </script>
+
+    @if($accountsLoading ?? false)
+        <script>
+            // Shell (filters, header, modals) rendered without the heavy per-account
+            // aggregation. Fetch the real data now, in the background, and swap it into
+            // the two data panels, then re-run the same init functions
+            // account-chart-animations.blade.php already runs on DOMContentLoaded.
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        ['accountInsightsPanel', 'accountSummaryCards'].forEach(id => {
+                            const newEl = doc.getElementById(id);
+                            const currentEl = document.getElementById(id);
+                            if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                        });
+
+                        if (typeof addHeatmapToggle === 'function') addHeatmapToggle();
+                        if (typeof animateAllCards === 'function') animateAllCards();
+                        if (typeof animateGraphOnLoad === 'function') animateGraphOnLoad();
+                        if (typeof heatmapEnabled !== 'undefined' && heatmapEnabled && typeof applyHeatmap === 'function') applyHeatmap();
+                        if (typeof animateProgressBars === 'function') animateProgressBars();
+                        if (typeof setupCardClickHandlers === 'function') setupCardClickHandlers();
+                    })
+                    .catch(error => {
+                        console.error('Failed to load accounts data, falling back to full page navigation:', error);
+                        window.location.reload();
+                    });
+            });
+        </script>
+    @endif
 </x-app-layout>

@@ -19,7 +19,7 @@
                 <div class="grid gap-4">
                         <!-- Category -->
                         <div class="space-y-2">
-                            <input type="hidden" id="fund_source_id" name="fund_source_id" value="{{ $fund_source->id }}" />
+                            <input type="hidden" id="fund_source_id" name="fund_source_id" value="" />
                             <x-form.label for="category" :value="__('Category')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">

@@ -60,7 +60,13 @@ class SAAOBCOController extends Controller
             if (!empty($selectedOffice)) {
                 $officesQuery->where('id', $selectedOffice);
             }
-            
+
+            // Defer the heavy office/appropriation aggregation on first load; the page's own AJAX
+            // fetch re-requests it with a loading state.
+            $saaobcoLoading = ! $request->ajax();
+
+            if (! $saaobcoLoading) {
+
             $offices = $officesQuery->with([
                 'officeAllotmentClasses' => function ($query) use ($selectedYear) {
                     $query->where('year', $selectedYear)
@@ -318,7 +324,12 @@ class SAAOBCOController extends Controller
                 }
             }
 
-            return view('saaobco.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'allOffices', 'accounts', 'overallTotal'))
+            } else {
+                $offices = collect();
+                $overallTotal = null;
+            }
+
+            return view('saaobco.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'allOffices', 'accounts', 'overallTotal', 'saaobcoLoading'))
                 ->with('status', session('status'));
         }
 

@@ -14,12 +14,17 @@ class ProgramController extends Controller
      */
     public function index(Request $request): View
     {
-        $perPage = $request->input('per_page', 10); // Default to 10 rows per page
+        $perPage = $request->input('per_page', 'all'); // Default to showing all rows
         $search = $request->input('search');
 
         // Get sorting parameters from query string, default to 'id' and 'desc'
         $sortBy = $request->query('sort_by', 'id');
         $sortOrder = $request->query('sort_order', 'asc');
+
+        // Defer the heavy programs query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $programsLoading = ! $request->ajax();
+
+        if (! $programsLoading) {
 
         // Query programs
         $query = Program::query();
@@ -36,12 +41,22 @@ class ProgramController extends Controller
             $programs = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
         }
 
+        } else {
+            $programs = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'Programs']
         ];
 
-        return view('programs.index', compact('programs', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb'))
+        return view('programs.index', compact('programs', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb', 'programsLoading'))
             ->with('status', session('status'));
     }
 

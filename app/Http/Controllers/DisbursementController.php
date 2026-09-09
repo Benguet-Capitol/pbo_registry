@@ -94,6 +94,11 @@ class DisbursementController extends Controller
         $currentYear = date('Y');
         $selectedYear = $request->input('year1', $currentYear);
 
+        // Defer the heavy disbursements query/count on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $disbursementsLoading = ! $request->ajax();
+
+        if (! $disbursementsLoading) {
+
         $query = Disbursement::with([
                 'obligation.obligationAmounts.appropriation',
                 'obligation.officeAllotmentClass.offices',
@@ -188,6 +193,18 @@ class DisbursementController extends Controller
         // If paginated, use links for pagination in the view
         $isPaginated = $perPage !== 'all';
 
+        } else {
+            $perPage = is_numeric($perPage) ? (int) $perPage : 10;
+            $disbursements = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                $perPage,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            $isPaginated = $perPage !== 'all';
+        }
+
         // Fetch distinct years from the database
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
         // Get the list of office allotment classes filtered by the selected year
@@ -207,6 +224,7 @@ class DisbursementController extends Controller
         ];
 
         // Calculate total records (unique dv_no values)
+        if (! $disbursementsLoading) {
         $totalRecordsQuery = Disbursement::with([
                 'obligation.obligationAmounts.appropriation',
                 'obligation.officeAllotmentClass.offices',
@@ -279,8 +297,11 @@ class DisbursementController extends Controller
         }
 
         $totalRecords = $totalRecordsQuery->distinct('dv_no')->count('dv_no');
+        } else {
+            $totalRecords = 0;
+        }
 
-        return view('disbursements.index_all', compact('disbursements', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'isPaginated', 'totalRecords'));
+        return view('disbursements.index_all', compact('disbursements', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'isPaginated', 'totalRecords', 'disbursementsLoading'));
     }
 
     /**

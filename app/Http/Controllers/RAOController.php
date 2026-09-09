@@ -2,7 +2,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\OfficeAllotmentClass;
 use App\Models\Appropriation;
 use App\Models\Office;
@@ -31,8 +30,13 @@ class RAOController extends Controller
             ->orderBy('office', 'asc')
             ->get();
 
+        // Defer the heavy per-appropriation calculation on first load; the page's own AJAX fetch
+        // re-requests it with a loading state. getCalculatedData() already returns clean empty
+        // defaults when no office allotment class is selected, so reuse that path for the shell.
+        $raoLoading = ! $request->ajax();
+
         // Get calculated data
-        $calculatedData = $this->getCalculatedData($selectedYear, $selectedOfficeAllotmentClass, $asOfDate);
+        $calculatedData = $this->getCalculatedData($selectedYear, $raoLoading ? null : $selectedOfficeAllotmentClass, $asOfDate);
 
         // Get all employees for signatory filter
         $employees = Employee::where('office', '12')->orderBy('employee_id')->get();
@@ -46,6 +50,7 @@ class RAOController extends Controller
             'asOfDate' => $asOfDate,
             'employees' => $employees,
             'officeAllotmentClasses' => $officeAllotmentClasses,
+            'raoLoading' => $raoLoading,
         ], $calculatedData))->with('status', session('status'));
     }
 
@@ -78,7 +83,10 @@ class RAOController extends Controller
         }
         
         if ($selectedOfficeAllotmentClass) {
+            // Eager-load supplementals/realignments once instead of querying them per
+            // appropriation (and again per quarter) inside the loops below.
             $appropriations = Appropriation::where('office_allotment_class_id', $selectedOfficeAllotmentClass)
+                ->with(['supplementals', 'realignments'])
                 ->get();
             
             // Apply custom sorting logic: accounts without programs first, then by program alphabetically, then by account code
@@ -89,21 +97,22 @@ class RAOController extends Controller
 
             foreach ($appropriations as $appropriation) {
                 // Calculate supplemental appropriations
-                $supplementalAmount = $appropriation->supplementals()
+                $supplementalAmount = $appropriation->supplementals
                     ->where('type', 'Supplemental')
                     ->where('supplemental_date', '<=', $asOfDate)
                     ->sum('amount');
-                
+
                 // Calculate reversions
-                $reversionAmount = $appropriation->supplementals()
+                $reversionAmount = $appropriation->supplementals
                     ->where('type', 'Reversion')
                     ->where('supplemental_date', '<=', $asOfDate)
                     ->sum('amount') * -1;
-                
+
                 // Calculate realignments
-                $realignmentAmount = $appropriation->realignments()
+                $realignmentAmount = $appropriation->realignments
                     ->where('realignment_date', '<=', $asOfDate)
-                    ->sum(DB::raw("CASE WHEN type = 'Recipient' THEN amount WHEN type = 'Source' THEN -amount ELSE 0 END"));
+                    ->reduce(fn($carry, $r) =>
+                        $carry + ($r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0)), 0);
                 
                 // Get quarter values
                 $quarter1 = $appropriation->quarter1 ?? 0;
@@ -125,21 +134,20 @@ class RAOController extends Controller
                     $quarterEnd = date('Y-m-t', strtotime("$selectedYear-" . ($q * 3) . "-01"));
                     
                     // Get supplementals for this quarter with details
-                    $qSupplementals = $appropriation->supplementals()
+                    $quarterCutoff = min($quarterEnd, $asOfDate);
+
+                    $qSupplementals = $appropriation->supplementals
                         ->where('type', 'Supplemental')
-                        ->whereBetween('supplemental_date', [$quarterStart, min($quarterEnd, $asOfDate)])
-                        ->get();
-                    
+                        ->whereBetween('supplemental_date', [$quarterStart, $quarterCutoff]);
+
                     // Get reversions for this quarter with details
-                    $qReversions = $appropriation->supplementals()
+                    $qReversions = $appropriation->supplementals
                         ->where('type', 'Reversion')
-                        ->whereBetween('supplemental_date', [$quarterStart, min($quarterEnd, $asOfDate)])
-                        ->get();
-                    
+                        ->whereBetween('supplemental_date', [$quarterStart, $quarterCutoff]);
+
                     // Get realignments for this quarter with details
-                    $qRealignments = $appropriation->realignments()
-                        ->whereBetween('realignment_date', [$quarterStart, min($quarterEnd, $asOfDate)])
-                        ->get();
+                    $qRealignments = $appropriation->realignments
+                        ->whereBetween('realignment_date', [$quarterStart, $quarterCutoff]);
                     
                     $quarterlyData[$q] = [
                         'supplementals' => $qSupplementals,

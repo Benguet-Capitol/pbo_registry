@@ -192,7 +192,7 @@
                     <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 shrink-0">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">@if($appropriationsLoading ?? false)<i class="fas fa-spinner fa-spin"></i>@else{{ $totalRecords }}@endif</span>
                     </div>
                     <!-- Search Input -->
                     <div class="flex items-center text-xs gap-3 w-full sm:min-w-96 sm:w-auto">
@@ -372,7 +372,14 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="appropriationsTableBody">
+                    @if($appropriationsLoading ?? false)
+                        <tr>
+                            <td colspan="{{ auth()->user()->can('delete appropriations') ? 13 : 12 }}" class="px-3 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading accounts...
+                            </td>
+                        </tr>
+                    @else
                     @forelse ($appropriations as $appropriation)
                     <tr 
                         class="{{ $loop->even ? 'bg-gray-50 dark:bg-gray-800/60' : 'bg-white dark:bg-gray-800' }} border-b dark:border-gray-700 text-gray-600 border-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer relative transition-colors duration-200 ease-in-out"
@@ -413,11 +420,12 @@
                         </td>
                     </tr>
                     @endforelse
+                    @endif
                 </tbody>
             </table>
             </div>
             </div>
-            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
+            <div class="mt-4 text-xs text-gray-600 dark:text-gray-400" id="appropriationsPagination">
                 @if ($perPage != 'all')
                 {{ $appropriations->appends(request()->query())->links() }}
                 @endif
@@ -761,6 +769,41 @@ function confirmBulkDelete() {
         if (!event.target.closest('.relative.inline-block')) {
             closeAllDropdowns();
         }
+    });
+
+    // Fetches the table/pagination fragment in the background and splices it in, so switching
+    // pages (or the initial shell-to-real-data load) only refreshes the table, not the whole page.
+    function loadAppropriations(url, pushHistory = true) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                ['appropriationsTableBody', 'totalRecordsCount', 'appropriationsPagination'].forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                });
+                if (pushHistory) history.pushState(null, '', url);
+            })
+            .catch(error => {
+                console.error('Failed to load appropriations, falling back to full page navigation:', error);
+                window.location.href = url;
+            });
+    }
+
+    @if($appropriationsLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the loading row gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAppropriations(window.location.href, false);
+        });
+    @endif
+
+    // Delegated click handler for pagination links (they get replaced on every load).
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#appropriationsPagination a');
+        if (!link) return;
+        e.preventDefault();
+        loadAppropriations(link.href);
     });
     </script>
 

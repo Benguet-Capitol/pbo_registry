@@ -147,6 +147,7 @@
                 if(request('signatory_name')) $activeChips[] = ['label' => 'Signatory', 'value' => request('signatory_name'), 'param' => 'signatory_name'];
                 if(request('signatory_designation')) $activeChips[] = ['label' => 'Designation', 'value' => request('signatory_designation'), 'param' => 'signatory_designation'];
             @endphp
+            <div id="activeFilterChipsContainer">
             @if(count($activeChips) > 0)
             <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                 <span class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Active:</span>
@@ -160,6 +161,7 @@
                 @endforeach
             </div>
             @endif
+            </div>
 
             <!-- Buttons Row -->
             <div class="flex items-center space-x-2 mt-4">
@@ -184,7 +186,12 @@
         </div>
 
         <div class="p-4 bg-white rounded-md border-b border-gray-200 relative overflow-x-auto shadow-md sm:rounded-lg dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 ease-in-out">
-            @if($funds->isEmpty())
+            <div id="saaobgfcurrentsummaryResultsContainer">
+            @if($saaobgfcurrentsummaryLoading ?? false)
+                <div class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-16">
+                    <i class="fas fa-spinner fa-spin"></i> Loading SAAOB GF Current Summary data...
+                </div>
+            @elseif($funds->isEmpty())
                 <div class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
                     <i class="fas fa-folder-open text-4xl mb-3"></i>
                     <p class="text-sm font-medium">No data available for the selected filters</p>
@@ -783,6 +790,7 @@
         </div>
     </div>
     @endif
+    </div>
     </form>
 
     <style>
@@ -972,15 +980,76 @@
             [...url.searchParams.keys()].forEach(key => {
                 if (!keep.includes(key)) url.searchParams.delete(key);
             });
-            window.location.href = url.toString();
+            loadSaaobgfcurrentsummary(url.toString());
         }
 
         // Remove a single filter param and resubmit
         function removeFilter(param) {
             const url = new URL(window.location.href);
             url.searchParams.delete(param);
-            window.location.href = url.toString();
+            loadSaaobgfcurrentsummary(url.toString());
         }
+
+        // Full-screen overlay so the user can't change another filter while one load is in flight.
+        function showLoadingOverlay() {
+            let overlay = document.getElementById('pageLoadingOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'pageLoadingOverlay';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-30 z-[10005] flex items-center justify-center';
+                overlay.innerHTML = '<div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>';
+                document.body.appendChild(overlay);
+            }
+        }
+
+        // Fetches the report fragment in the background and splices it in, blocking further
+        // filter changes (via the overlay) until this load finishes.
+        function loadSaaobgfcurrentsummary(url, pushHistory = true) {
+            showLoadingOverlay();
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => response.text())
+                .then(html => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const newEl = doc.getElementById('saaobgfcurrentsummaryResultsContainer');
+                    const currentEl = document.getElementById('saaobgfcurrentsummaryResultsContainer');
+                    if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+
+                    // Keep the active-filter chips in sync too (e.g. so they disappear
+                    // after Clear Filters), since they aren't part of the swapped results container.
+                    const newChips = doc.getElementById('activeFilterChipsContainer');
+                    const currentChips = document.getElementById('activeFilterChipsContainer');
+                    if (newChips && currentChips) currentChips.innerHTML = newChips.innerHTML;
+
+                    // Keep the filter form in sync with the server's applied values (e.g.
+                    // after Clear Filters or removing a single filter chip), since the form
+                    // itself isn't part of the swapped results container.
+                    const newFilterForm = doc.getElementById('filterForm');
+                    const currentFilterForm = document.getElementById('filterForm');
+                    if (newFilterForm && currentFilterForm) {
+                        newFilterForm.querySelectorAll('[name]').forEach(newField => {
+                            const currentField = currentFilterForm.querySelector(`[name="${newField.getAttribute('name')}"]`);
+                            if (currentField) currentField.value = newField.value;
+                        });
+                    }
+
+                    if (pushHistory) history.pushState(null, '', url);
+                })
+                .catch(error => {
+                    console.error('Failed to load SAAOB GF Current Summary data, falling back to full page navigation:', error);
+                    window.location.href = url;
+                })
+                .finally(() => {
+                    const overlay = document.getElementById('pageLoadingOverlay');
+                    if (overlay) overlay.remove();
+                });
+        }
+
+        // Intercept the filter form so changing a filter only reloads the report, not the whole page.
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const params = new URLSearchParams(new FormData(this));
+            loadSaaobgfcurrentsummary(window.location.pathname + '?' + params.toString());
+        });
 
         // Toast notification functions
         function showSuccessToast(message = 'File downloaded successfully') {
@@ -1086,6 +1155,10 @@
 
         // Intercept PDF generation
         window.printSAAOBGFCurrentSummaryTable = function() {
+            if (!document.getElementById('saaobGFCurrentSummaryTable')) {
+                showErrorToast('Report data is still loading. Please wait a moment and try again.');
+                return;
+            }
             if (!validateSignatories()) return;
 
             const btn = document.getElementById('print-btn');
@@ -1237,5 +1310,23 @@
             newWin.print();
 
         }
+
+        @if($saaobgfcurrentsummaryLoading ?? false)
+            // Shell rendered without data; fetch the real report now so the loading state gets replaced.
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        const newEl = doc.getElementById('saaobgfcurrentsummaryResultsContainer');
+                        const currentEl = document.getElementById('saaobgfcurrentsummaryResultsContainer');
+                        if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                    })
+                    .catch(error => {
+                        console.error('Failed to load SAAOB GF Current Summary data, falling back to full page navigation:', error);
+                        window.location.reload();
+                    });
+            });
+        @endif
     </script>
 </x-app-layout>

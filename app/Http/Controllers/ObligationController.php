@@ -54,6 +54,11 @@ class ObligationController extends Controller
         $currentYear = date('Y');
         $selectedYear = $request->input('year1', $currentYear);
 
+        // Defer the heavy obligations query/count on first load; the page's own AJAX fetch (loadObligationsSorted) re-requests it with a loading state.
+        $obligationsLoading = ! $request->ajax();
+
+        if (! $obligationsLoading) {
+
         // --- Base Query for Obligations ---
         $query = Obligation::with([
             'officeAllotmentClass.offices',
@@ -194,7 +199,21 @@ class ObligationController extends Controller
                 'per_page' => $perPage,
             ]);
 
+        } else {
+            $obligations = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         // --- Preload Appropriations and related data ---
+        // Scoped to the selected year (like the obligations query above) instead of pulling
+        // every appropriation in the system — this feeds the Create/Edit Obligation modals,
+        // which are rendered as part of the page shell, so it can't be deferred behind
+        // $obligationsLoading, but it can be kept to only the year actually being viewed.
         $appropriations = Appropriation::select(
             'id',
             'office_allotment_class_id',
@@ -206,7 +225,9 @@ class ObligationController extends Controller
             'quarter2',
             'quarter3',
             'quarter4'
-        )->with([
+        )->whereHas('officeAllotmentClass', function ($q) use ($selectedYear) {
+            $q->where('year', $selectedYear);
+        })->with([
             'obligationAmounts.obligationAdjustments',
             'realignments',
             'supplementals'
@@ -346,6 +367,7 @@ class ObligationController extends Controller
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
 
         // Get total count of obligations based on filters
+        if (! $obligationsLoading) {
         $totalRecords = Obligation::with([
             'officeAllotmentClass.offices',
             'officeAllotmentClass.allotmentClass'
@@ -420,6 +442,9 @@ class ObligationController extends Controller
             }
         })
         ->count();
+        } else {
+            $totalRecords = 0;
+        }
 
         $officeAllotmentClasses = OfficeAllotmentClass::with(['offices', 'allotmentClass'])
             ->where('year', $selectedYear)
@@ -464,6 +489,7 @@ class ObligationController extends Controller
             'selectedYear',
             'office_allotment_classes',
             'obligations_check',
+            'obligationsLoading',
             'breadcrumb',
             'funds',
             'totalRecords'

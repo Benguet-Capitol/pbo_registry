@@ -7,7 +7,6 @@ use App\Models\Office;
 use Illuminate\Contracts\View\View;
 use Carbon\Carbon;
 use App\Models\ObligationAdjustment;
-use App\Models\Disbursement;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -378,8 +377,11 @@ class SAAODBGFExport implements FromView, WithStyles, WithEvents
 
     public function view(): View
     {
-         $selectedYear = request('year1', date('Y'));
-        $asOfDate = request('as_of_filter', now()->toDateString());
+        // Use the values passed to the constructor instead of re-reading request() here,
+        // which discarded the constructor args and would break if this export ever ran
+        // outside the original HTTP request (e.g. queued).
+        $selectedYear = $this->selectedYear ?? date('Y');
+        $asOfDate = $this->asOfDate ?? now()->toDateString();
         $allAllotmentClasses = AllotmentClass::all();
 
         $officeQuery = Office::where('fund', 'General Fund')->orderBy('id');
@@ -401,13 +403,13 @@ class SAAODBGFExport implements FromView, WithStyles, WithEvents
                         'appropriations.supplementals',
                         'appropriations.realignments',
                         'appropriations.obligationAmounts.obligation.obligationAdjustments',
+                        'appropriations.obligationAmounts.obligation.disbursements',
                     ]);
             }
         ])->get();
 
         // --- Helper function for totals
-        function computeTotals($classes)
-        {
+        $computeTotals = function ($classes) {
             $totals = [
                 'approved_appropriation' => 0,
                 'supplemental' => 0,
@@ -449,7 +451,7 @@ class SAAODBGFExport implements FromView, WithStyles, WithEvents
                     : 0;
 
             return $totals;
-        }
+        };
 
         // --- Main computation
         foreach ($offices as $office) {
@@ -486,7 +488,11 @@ class SAAODBGFExport implements FromView, WithStyles, WithEvents
                     ->where('supplemental_date', '<=', $asOfDate)
                     ->sum('amount') * -1;
 
+                // Uses the already eager-loaded appropriations.supplementals relation (matching
+                // the $supplemental/$reversion calculations above) instead of OfficeAllotmentClass's
+                // own (non-eager-loaded) supplementals relation, which lazy-loaded once per group.
                 $sbForLater = $oacGroup
+                    ->flatMap->appropriations
                     ->flatMap->supplementals
                     ->where('type', 'Supplemental')
                     ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
@@ -546,15 +552,17 @@ class SAAODBGFExport implements FromView, WithStyles, WithEvents
                 $obligation = $obligationBase + $obligationAdjustments;
 
                 // --- Disbursements ---
-                // Get all obligation_amounts_ids for this allotment class group
-                $obligationAmountIds = $oacGroup
+                // Computed from the already eager-loaded obligation.disbursements relation
+                // instead of a fresh query per allotment-class group (was N+1 across offices).
+                $disbursement = $oacGroup
                     ->flatMap->appropriations
                     ->flatMap->obligationAmounts
-                    ->pluck('id')
-                    ->toArray();
-
-                $disbursement = Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds)
-                    ->where('disbursement_date', '<=', $asOfDate)
+                    ->flatMap(fn($oa) =>
+                        $oa->obligation
+                            ? $oa->obligation->disbursements->where('disbursement_date', '<=', $asOfDate)
+                            : collect()
+                    )
+                    ->unique('id')
                     ->sum('disbursement_amount');
 
                 // --- Balances and percentages ---
@@ -596,17 +604,17 @@ class SAAODBGFExport implements FromView, WithStyles, WithEvents
 
             // Assign computed results under each office
             $office->allotmentClasses = $allotmentClasses->values();
-            $office->totals = (object) computeTotals($allotmentClasses);
+            $office->totals = (object) $computeTotals($allotmentClasses);
 
             // --- Group totals by category ---
             $currentClasses = $allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
             $continuingClasses = $allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
 
-            $office->total_current = (object) computeTotals($currentClasses);
-            $office->total_continuing = (object) computeTotals($continuingClasses);
+            $office->total_current = (object) $computeTotals($currentClasses);
+            $office->total_continuing = (object) $computeTotals($continuingClasses);
 
             // Combine all for grand total
-            $office->total_overall = (object) computeTotals($allotmentClasses);
+            $office->total_overall = (object) $computeTotals($allotmentClasses);
 
             // Ensure default totals always exist even if empty
             foreach (['total_current', 'total_continuing', 'total_overall'] as $key) {

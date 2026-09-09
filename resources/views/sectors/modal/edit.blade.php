@@ -19,7 +19,7 @@
                 <div class="grid gap-4">
                         <!-- Sector -->
                         <div class="space-y-2">
-                            <input type="hidden" id="sector_id" name="sector_id" value="{{ $sector->id }}" />
+                            <input type="hidden" id="sector_id" name="sector_id" value="" />
                             <x-form.label for="edit_sector" :value="__('Sector')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">

@@ -243,7 +243,7 @@
                 <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
                     <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                     <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                    <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                    <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">@if($supplementalsLoading ?? false)<i class="fas fa-spinner fa-spin"></i>@else{{ $totalRecords }}@endif</span>
                 </div>
             </div>
 
@@ -292,6 +292,11 @@
                     $groupedSupplementals = $supplementals->groupBy('supplemental_no');
                 @endphp
 
+                @if($supplementalsLoading ?? false)
+                    <div class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-6">
+                        <i class="fas fa-spinner fa-spin"></i> Loading supplementals...
+                    </div>
+                @else
                 @forelse($groupedSupplementals as $groupNo => $groupItems)
                     @php
                         $groupFirst = $groupItems->first();
@@ -530,6 +535,7 @@
                         No Supplemental Appropriations or Reversions found
                     </div>
                 @endforelse
+                @endif
             </div>
 
             <!-- Totals Footer -->
@@ -590,6 +596,13 @@
                                         $lastListSupplementalNo = null;
                                         $groupBandToggle = false;
                                     @endphp
+                                    @if($supplementalsLoading ?? false)
+                                        <tr>
+                                            <td colspan="12" class="px-3 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading supplementals...
+                                            </td>
+                                        </tr>
+                                    @else
                                     @forelse($supplementals as $supplemental)
                                         @php
                                             $rowAmount = isset($supplemental->amount) ? (float)$supplemental->amount : 0;
@@ -740,6 +753,7 @@
                                             </td>
                                         </tr>
                                     @endforelse
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -1301,8 +1315,8 @@
     }
 
     // Fetches the URL in the background and splices chips/pills/card/table/pagination markup in, instead of a full reload.
-    function loadSupplementalsSorted(url) {
-        showSupplementalsLoadingOverlay();
+    function loadSupplementalsSorted(url, pushHistory = true, showOverlay = true) {
+        if (showOverlay) showSupplementalsLoadingOverlay();
 
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(response => {
@@ -1328,7 +1342,7 @@
                     document.querySelectorAll(`#filterForm [name="${name}"]`).forEach(field => { field.value = newField.value; });
                 });
 
-                history.pushState(null, '', url);
+                if (pushHistory) history.pushState(null, '', url);
 
                 const searchInput = document.getElementById('searchInput');
                 updateFooterTotals();
@@ -1345,6 +1359,13 @@
             });
     }
 
+    @if($supplementalsLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the skeleton gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSupplementalsSorted(window.location.href, false, false);
+        });
+    @endif
+
     // Exposed on window since it's invoked from inline onchange attributes (outside this IIFE's scope).
     window.submitSupplementalsFormAjax = function(form) {
         const params = new URLSearchParams(new FormData(form));
@@ -1356,9 +1377,10 @@
         submitSupplementalsFormAjax(this);
     });
 
-    // Delegated click handler for sort pills and active-filter chip links (both get replaced on every load).
+    // Delegated click handler for sort pills, active-filter chip links, and pagination links
+    // (all get replaced on every load, so delegation on a stable ancestor is required).
     document.addEventListener('click', function (e) {
-        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a');
+        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a, #supplementalsPagination a');
         if (!link) return;
         e.preventDefault();
         loadSupplementalsSorted(link.href);

@@ -9,8 +9,13 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
+        // Defer the heavy activity log query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $activityLogsLoading = ! $request->ajax();
+
+        if (! $activityLogsLoading) {
+
         $query = ActivityLog::with('user')->latest();
-        
+
         // Search functionality
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -38,7 +43,17 @@ class ActivityLogController extends Controller
         }
 
         $logs = $query->paginate(25)->withQueryString();
-        
+
+        } else {
+            $logs = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                25,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         // Get unique event types for filter
         $eventTypes = ActivityLog::distinct()->orderBy('event_type')->pluck('event_type');
 
@@ -47,6 +62,6 @@ class ActivityLogController extends Controller
             ['label' => 'Activity Logs']
         ];
 
-        return view('activity-logs.index', compact('logs', 'eventTypes', 'breadcrumb'));
+        return view('activity-logs.index', compact('logs', 'eventTypes', 'breadcrumb', 'activityLogsLoading'));
     }
 }

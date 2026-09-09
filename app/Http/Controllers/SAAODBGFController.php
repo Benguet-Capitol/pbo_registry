@@ -15,7 +15,6 @@ use App\Models\Employee;
 use App\Models\ObligationAdjustment;
 use App\Models\Fund;
 use App\Models\Sector;
-use App\Models\Disbursement;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Traits\LogsActivity;
 
@@ -47,6 +46,12 @@ class SAAODBGFController extends Controller
                 default => 4,
             };
 
+        // Defer the heavy per-office/allotment-class aggregation on first load; the page's
+        // own AJAX fetch re-requests it with a loading state.
+        $saaodbgfLoading = ! $request->ajax();
+
+        if (! $saaodbgfLoading) {
+
        $offices = $officeQuery->with([
             'officeAllotmentClasses' => function ($query) use ($selectedYear) {
                 $query->where('year', $selectedYear)
@@ -56,55 +61,11 @@ class SAAODBGFController extends Controller
                         'appropriations.supplementals',
                         'appropriations.realignments',
                         'appropriations.obligationAmounts.obligation.obligationAdjustments',
+                        'appropriations.obligationAmounts.obligation.disbursements',
                     ]);
             }
         ])->get();
 
-        // --- Helper function for totals
-        function computeTotals($classes)
-        {
-            $totals = [
-                'approved_appropriation' => 0,
-                'supplemental' => 0,
-                'reversion' => 0,
-                'realignment' => 0,
-                'authorized_appropriation' => 0,
-                'allotment' => 0,
-                'obligation' => 0,
-                'authorized_appropriation_balance' => 0,
-                'percent_obligated_to_authorized' => 0,
-                'disbursement' => 0,
-                'percent_disbursed_to_obligated' => 0,
-                'percent_disbursed_to_authorized' => 0,
-                'obligation_balance' => 0,
-            ];
-
-            foreach ($classes as $class) {
-                foreach ($totals as $key => $value) {
-                    if (isset($class->$key)) {
-                        $totals[$key] += $class->$key;
-                    }
-                }
-            }
-
-            // Derived percentages
-            $totals['percent_obligated_to_authorized'] =
-                $totals['authorized_appropriation'] > 0
-                    ? ($totals['obligation'] / $totals['authorized_appropriation']) * 100
-                    : 0;
-
-            $totals['percent_disbursed_to_obligated'] =
-                $totals['obligation'] > 0
-                    ? ($totals['disbursement'] / $totals['obligation']) * 100
-                    : 0;
-
-            $totals['percent_disbursed_to_authorized'] =
-                $totals['authorized_appropriation'] > 0
-                    ? ($totals['disbursement'] / $totals['authorized_appropriation']) * 100
-                    : 0;
-
-            return $totals;
-        }
 
         // --- Main computation
         foreach ($offices as $office) {
@@ -201,15 +162,17 @@ class SAAODBGFController extends Controller
                 $obligation = $obligationBase + $obligationAdjustments;
 
                 // --- Disbursements ---
-                // Get all obligation_amounts_ids for this allotment class group
-                $obligationAmountIds = $oacGroup
+                // Computed from the already eager-loaded obligation.disbursements relation
+                // instead of a fresh query per allotment-class group (was N+1 across offices).
+                $disbursement = $oacGroup
                     ->flatMap->appropriations
                     ->flatMap->obligationAmounts
-                    ->pluck('id')
-                    ->toArray();
-
-                $disbursement = Disbursement::whereIn('obligation_amounts_id', $obligationAmountIds)
-                    ->where('disbursement_date', '<=', $asOfDate)
+                    ->flatMap(fn($oa) =>
+                        $oa->obligation
+                            ? $oa->obligation->disbursements->where('disbursement_date', '<=', $asOfDate)
+                            : collect()
+                    )
+                    ->unique('id')
                     ->sum('disbursement_amount');
 
                 // --- Balances and percentages ---
@@ -251,17 +214,17 @@ class SAAODBGFController extends Controller
 
             // Assign computed results under each office
             $office->allotmentClasses = $allotmentClasses->values();
-            $office->totals = (object) computeTotals($allotmentClasses);
+            $office->totals = (object) $this->computeSaaodbGfTotals($allotmentClasses);
 
             // --- Group totals by category ---
             $currentClasses = $allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
             $continuingClasses = $allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
 
-            $office->total_current = (object) computeTotals($currentClasses);
-            $office->total_continuing = (object) computeTotals($continuingClasses);
+            $office->total_current = (object) $this->computeSaaodbGfTotals($currentClasses);
+            $office->total_continuing = (object) $this->computeSaaodbGfTotals($continuingClasses);
 
             // Combine all for grand total
-            $office->total_overall = (object) computeTotals($allotmentClasses);
+            $office->total_overall = (object) $this->computeSaaodbGfTotals($allotmentClasses);
 
             // Ensure default totals always exist even if empty
             foreach (['total_current', 'total_continuing', 'total_overall'] as $key) {
@@ -400,6 +363,34 @@ class SAAODBGFController extends Controller
             ? ($grandSummary['total_disbursements'] / $grandSummary['total_obligations']) * 100
             : 0;
 
+        } else {
+            $offices = collect();
+            $grandTotals = (object) [
+                'approved_appropriation' => 0,
+                'supplemental' => 0,
+                'reversion' => 0,
+                'realignment' => 0,
+                'authorized_appropriation' => 0,
+                'allotment' => 0,
+                'obligation' => 0,
+                'authorized_appropriation_balance' => 0,
+                'percent_obligated_to_authorized' => 0,
+                'disbursement' => 0,
+                'percent_disbursed_to_obligated' => 0,
+                'percent_disbursed_to_authorized' => 0,
+                'obligation_balance' => 0,
+            ];
+            $summaryTotals = [];
+            $grandSummary = [
+                'total_appropriation' => 0,
+                'total_obligations' => 0,
+                'total_disbursements' => 0,
+                'percent_obligation_vs_authorized' => 0,
+                'percent_disbursement_vs_authorized' => 0,
+                'percent_disbursement_vs_obligation' => 0,
+            ];
+        }
+
         return view('saaodbgf.index', compact(
             'availableYears',
             'selectedYear',
@@ -409,8 +400,54 @@ class SAAODBGFController extends Controller
             'grandTotals',
             'allAllotmentClasses',
             'summaryTotals',
-            'grandSummary'
+            'grandSummary',
+            'saaodbgfLoading'
         ))->with('status', session('status'));
+    }
+
+    private function computeSaaodbGfTotals($classes)
+    {
+        $totals = [
+            'approved_appropriation' => 0,
+            'supplemental' => 0,
+            'reversion' => 0,
+            'realignment' => 0,
+            'authorized_appropriation' => 0,
+            'allotment' => 0,
+            'obligation' => 0,
+            'authorized_appropriation_balance' => 0,
+            'percent_obligated_to_authorized' => 0,
+            'disbursement' => 0,
+            'percent_disbursed_to_obligated' => 0,
+            'percent_disbursed_to_authorized' => 0,
+            'obligation_balance' => 0,
+        ];
+
+        foreach ($classes as $class) {
+            foreach ($totals as $key => $value) {
+                if (isset($class->$key)) {
+                    $totals[$key] += $class->$key;
+                }
+            }
+        }
+
+        // Derived percentages
+        $totals['percent_obligated_to_authorized'] =
+            $totals['authorized_appropriation'] > 0
+                ? ($totals['obligation'] / $totals['authorized_appropriation']) * 100
+                : 0;
+
+        $totals['percent_disbursed_to_obligated'] =
+            $totals['obligation'] > 0
+                ? ($totals['disbursement'] / $totals['obligation']) * 100
+                : 0;
+
+        $totals['percent_disbursed_to_authorized'] =
+            $totals['authorized_appropriation'] > 0
+                ? ($totals['disbursement'] / $totals['authorized_appropriation']) * 100
+                : 0;
+
+        return $totals;
     }
 
 public function exportExcel(Request $request)

@@ -81,6 +81,11 @@ class OfficeAllotmentClassController extends Controller
             $query->where('office_allotment_classes.fund_source', $fundSourceFilter);
         }
 
+        // Defer the heavy office-allotment-classes query/count on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $officeAllotmentClassesLoading = ! $request->ajax();
+
+        if (! $officeAllotmentClassesLoading) {
+
         // Apply sorting
         if ($sortBy === 'total_appropriation') {
             // Fetch the data first to calculate total appropriation
@@ -159,6 +164,17 @@ class OfficeAllotmentClassController extends Controller
             })
             ->count();
 
+        } else {
+            $office_allotment_classes = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            $totalRecords = 0;
+        }
+
         // Fetch distinct years from the database
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
 
@@ -185,7 +201,8 @@ class OfficeAllotmentClassController extends Controller
             'availableYears',
             'selectedYear',
             'totalRecords',
-            'breadcrumb'
+            'breadcrumb',
+            'officeAllotmentClassesLoading'
         ))->with('status', session('status'));
     }
 

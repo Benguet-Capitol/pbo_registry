@@ -55,7 +55,11 @@ class SAAOBFundSourceController extends Controller
                 $fundSourcesQuery->where('category', $selectedFundSource);
             }
 
-            $fundSources = $fundSourcesQuery->with(['officeAllotmentClasses' => function ($query) use ($selectedYear) {
+            // Defer the heavy fund-source/fund aggregation on first load; the page's own AJAX
+            // fetch re-requests it with a loading state.
+            $saaobfundsourceLoading = ! $request->ajax();
+
+            $fundSources = $saaobfundsourceLoading ? collect() : $fundSourcesQuery->with(['officeAllotmentClasses' => function ($query) use ($selectedYear) {
                     $query->where('year', $selectedYear)
                         ->with([
                         'appropriations', // no sorting here
@@ -68,10 +72,9 @@ class SAAOBFundSourceController extends Controller
             ->get()
             ->groupBy('category')
             ->map(function ($sources, $category) use ($currentQuarter, $asOfDate, $selectedYear) {
-                $fundSourceCodes = $sources->pluck('source');
-            
-                $fundsInUse = OfficeAllotmentClass::whereIn('fund_source', $fundSourceCodes)
-                    ->where('year', $selectedYear)
+                // Derived from the already eager-loaded officeAllotmentClasses relation (which
+                // is scoped to $selectedYear) instead of a fresh query per category.
+                $fundsInUse = $sources->flatMap->officeAllotmentClasses
                     ->pluck('fund')
                     ->unique();
                 
@@ -227,7 +230,7 @@ class SAAOBFundSourceController extends Controller
             })
             ->values();
 
-            return view('saaobfundsource.index', compact('availableYears', 'selectedYear', 'selectedFundSource', 'asOfDate', 'employees', 'fundSources', 'allFundSources'))
+            return view('saaobfundsource.index', compact('availableYears', 'selectedYear', 'selectedFundSource', 'asOfDate', 'employees', 'fundSources', 'allFundSources', 'saaobfundsourceLoading'))
                 ->with('status', session('status'));
         }
 

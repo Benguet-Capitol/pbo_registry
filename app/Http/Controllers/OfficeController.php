@@ -11,9 +11,9 @@ use Illuminate\View\View;
 
 class OfficeController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): View
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', 'all');
         $search = $request->input('search');
         $sortBy = $request->query('sort_by', 'id');
         $sortOrder = $request->query('sort_order', 'asc');
@@ -34,14 +34,21 @@ class OfficeController extends Controller
             });
         }
 
-        $offices = $perPage == 'all'
-            ? $query->orderBy($sortBy, $sortOrder)->get()
-            : $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+        // Defer the heavy offices query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $officesLoading = ! $request->ajax();
 
-        if ($request->ajax()) {
-            return response()->json([
-                'html' => view('offices.partials.table', compact('offices'))->render()
-            ]);
+        if (! $officesLoading) {
+            $offices = $perPage == 'all'
+                ? $query->orderBy($sortBy, $sortOrder)->get()
+                : $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+        } else {
+            $offices = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
         }
 
         $funds = Fund::all()->sortBy('fund');
@@ -51,7 +58,7 @@ class OfficeController extends Controller
             ['label' => 'Offices']
         ];
 
-        return view('offices.index', compact('offices', 'perPage', 'search', 'sortBy', 'sortOrder', 'funds', 'breadcrumb'))
+        return view('offices.index', compact('offices', 'perPage', 'search', 'sortBy', 'sortOrder', 'funds', 'breadcrumb', 'officesLoading'))
             ->with('status', session('status'));
     }
 

@@ -338,7 +338,7 @@
                     <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">@if($obligationsLoading ?? false)<i class="fas fa-spinner fa-spin"></i>@else{{ $totalRecords }}@endif</span>
                     </div>
                 </div>
             </div>
@@ -440,6 +440,11 @@
             <div id="obligationsCardView">
             <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                 <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="obligationsContainer">
+                    @if($obligationsLoading ?? false)
+                        <div class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-6">
+                            <i class="fas fa-spinner fa-spin"></i> Loading obligations...
+                        </div>
+                    @else
                     @forelse ($obligations as $obligation)
                         @php
                             $c = $obligationComputed[$obligation->id];
@@ -731,6 +736,7 @@
                             No Obligations found
                         </div>
                     @endforelse
+                    @endif
                 </div>
 
                 <!-- Totals Footer -->
@@ -784,6 +790,13 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @if($obligationsLoading ?? false)
+                                        <tr>
+                                            <td colspan="12" class="px-3 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading obligations...
+                                            </td>
+                                        </tr>
+                                    @else
                                     @forelse ($obligations as $obligation)
                                         @php
                                             $c = $obligationComputed[$obligation->id];
@@ -945,6 +958,7 @@
                                             </td>
                                         </tr>
                                     @endforelse
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -1071,8 +1085,9 @@
             document.body.appendChild(overlay);
         }
     }
-    // Filter/search forms are intercepted below (submitObligationsFormAjax); pagination links still reload.
-    document.querySelectorAll('.pagination a').forEach(el => el.addEventListener('click', showLoadingOverlay));
+    // Filter/search forms are intercepted below (submitObligationsFormAjax); pagination links
+    // are intercepted via the delegated click handler further down so switching pages only
+    // reloads the table, not the whole page.
 
     // Submits the filter/search form via the same background fetch-and-splice as sort pills.
     function submitObligationsFormAjax(form) {
@@ -1492,8 +1507,8 @@
     }
 
     // Fetches the URL in the background and splices sort/card/table/pagination markup in, instead of a full reload.
-    function loadObligationsSorted(url) {
-        showLoadingOverlay();
+    function loadObligationsSorted(url, pushHistory = true, showOverlay = true) {
+        if (showOverlay) showLoadingOverlay();
 
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(response => {
@@ -1527,7 +1542,7 @@
                         .forEach(field => { field.value = newField.value; });
                 });
 
-                history.pushState(null, '', url);
+                if (pushHistory) history.pushState(null, '', url);
 
                 // Re-run setup since the swapped-in elements are brand new DOM nodes.
                 bindObligationRowClicks();
@@ -1545,9 +1560,17 @@
             });
     }
 
-    // Delegated click handler for sort pills and active-filter chip links (both get replaced on every load).
+    @if($obligationsLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the skeleton gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadObligationsSorted(window.location.href, false, false);
+        });
+    @endif
+
+    // Delegated click handler for sort pills, active-filter chip links, and pagination links
+    // (all get replaced on every load, so delegation on a stable ancestor is required).
     document.addEventListener('click', function(e) {
-        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a');
+        const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a, #obligationsPagination a');
         if (!link) return;
         e.preventDefault();
         loadObligationsSorted(link.href);

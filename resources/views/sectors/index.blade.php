@@ -66,11 +66,11 @@
                     <x-form.input type="text" name="search" id="searchInput" value="{{ request('search') }}" autocomplete="off" placeholder="Search for sectors" class="border border-gray-300 w-full sm:w-[300px] min-w-0 rounded-lg px-4 py-2 text-xs dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
                     <form method="GET" action="{{ route('sectors.index') }}" class="w-full sm:w-auto">
                         <x-form.select name="per_page" id="perPage" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-4 py-2 text-xs w-full sm:w-auto dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                            <option value="10" {{ request('per_page', 'all') == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ request('per_page', 'all') == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ request('per_page', 'all') == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page', 'all') == 100 ? 'selected' : '' }}>100</option>
+                            <option value="all" {{ request('per_page', 'all') == 'all' ? 'selected' : '' }}>All</option>
                         </x-form.select>
                         <button type="submit" class="hidden"></button>
                     </form>
@@ -106,7 +106,14 @@
                         @canany(['edit sectors', 'delete sectors'])<th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Action') }}</th>@endcanany
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="sectorsTableBody">
+                    @if($sectorsLoading ?? false)
+                        <tr>
+                            <td colspan="4" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading sectors...
+                            </td>
+                        </tr>
+                    @else
                     @foreach ($sectors as $sector)
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300">{{ $sector->sector }}</td>
@@ -136,9 +143,10 @@
                         </td>
                     </tr>
                     @endforeach
+                    @endif
                 </tbody>
             </table>
-            <div class="mt-4">
+            <div class="mt-4" id="sectorsPagination">
                 @if ($perPage != 'all')
                 {{ $sectors->appends(request()->query())->links() }}
                 @endif
@@ -199,6 +207,41 @@
         if (!event.target.closest('.relative.inline-block')) {
             closeAllDropdowns();
         }
+    });
+
+    // Fetches the table/pagination fragment in the background and splices it in, so switching
+    // pages (or the initial shell-to-real-data load) only refreshes the table, not the whole page.
+    function loadSectors(url, pushHistory = true) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                ['sectorsTableBody', 'sectorsPagination'].forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                });
+                if (pushHistory) history.pushState(null, '', url);
+            })
+            .catch(error => {
+                console.error('Failed to load sectors, falling back to full page navigation:', error);
+                window.location.href = url;
+            });
+    }
+
+    @if($sectorsLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the loading row gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSectors(window.location.href, false);
+        });
+    @endif
+
+    // Delegated click handler for pagination links (they get replaced on every load).
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#sectorsPagination a');
+        if (!link) return;
+        e.preventDefault();
+        loadSectors(link.href);
     });
 </script>
 

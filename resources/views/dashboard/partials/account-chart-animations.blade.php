@@ -1042,57 +1042,56 @@ if (typeof originalUpdateCardValues === 'function') {
 
     // Right-click context menu handler for accounts table
     document.addEventListener('DOMContentLoaded', function() {
-        const accountsTable = document.getElementById('accountsTable');
         const contextMenu = document.getElementById('accountContextMenu');
 
-        if (accountsTable) {
-            accountsTable.addEventListener('contextmenu', function(event) {
-                event.preventDefault();
-                
-                // Find the closest row
-                const row = event.target.closest('tr');
-                if (row && row.querySelector('td')) {
-                    const appropriationId = row.dataset.appropriationId;
-                    const accountCode = row.getAttribute('data-account-code');
-                    const programs = row.querySelector('td:nth-child(1)')?.textContent?.trim();
-                    const description = row.getAttribute('data-description');
-                    
-                    // Store context
-                    currentAccountAppropriation = {
-                        accountCode: accountCode,
-                        description: description,
-                        appropriationId: appropriationId,
-                        programs: programs
-                    };
-                    
-                    // Remove highlight from previously selected row
-                    document.querySelectorAll('#accountsTable tbody tr.context-menu-active').forEach(r => {
-                        r.classList.remove('context-menu-active');
-                    });
-                    
-                    // Highlight the current row
-                    row.classList.add('context-menu-active');
-                    window.currentAccountContextMenuRow = row;
-                    
-                    // Position the context menu
-                        contextMenu.style.left = event.clientX + 'px';
-                        contextMenu.style.top = event.clientY + 'px';
-                    contextMenu.classList.remove('hidden');
-                }
-            });
+        // Delegated on document (not the table itself) so it keeps working after
+        // #accountInsightsPanel's contents are replaced by the loading-state AJAX fetch.
+        document.addEventListener('contextmenu', function(event) {
+            const row = event.target.closest('#accountsTable tbody tr');
+            if (!row) return;
+            event.preventDefault();
 
-            // Hide context menu on click
-            document.addEventListener('click', function(e) {
-                if (!contextMenu.contains(e.target) && !e.target.closest('tr')) {
-                    contextMenu.classList.add('hidden');
-                    // Remove highlight when menu is closed
-                    if (window.currentAccountContextMenuRow) {
-                        window.currentAccountContextMenuRow.classList.remove('context-menu-active');
-                        window.currentAccountContextMenuRow = null;
-                    }
+            if (row.querySelector('td')) {
+                const appropriationId = row.dataset.appropriationId;
+                const accountCode = row.getAttribute('data-account-code');
+                const programs = row.querySelector('td:nth-child(1)')?.textContent?.trim();
+                const description = row.getAttribute('data-description');
+
+                // Store context
+                currentAccountAppropriation = {
+                    accountCode: accountCode,
+                    description: description,
+                    appropriationId: appropriationId,
+                    programs: programs
+                };
+
+                // Remove highlight from previously selected row
+                document.querySelectorAll('#accountsTable tbody tr.context-menu-active').forEach(r => {
+                    r.classList.remove('context-menu-active');
+                });
+
+                // Highlight the current row
+                row.classList.add('context-menu-active');
+                window.currentAccountContextMenuRow = row;
+
+                // Position the context menu
+                    contextMenu.style.left = event.clientX + 'px';
+                    contextMenu.style.top = event.clientY + 'px';
+                contextMenu.classList.remove('hidden');
+            }
+        });
+
+        // Hide context menu on click
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target) && !e.target.closest('tr')) {
+                contextMenu.classList.add('hidden');
+                // Remove highlight when menu is closed
+                if (window.currentAccountContextMenuRow) {
+                    window.currentAccountContextMenuRow.classList.remove('context-menu-active');
+                    window.currentAccountContextMenuRow = null;
                 }
-            });
-        }
+            }
+        });
     });
 
 

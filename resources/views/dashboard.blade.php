@@ -268,7 +268,11 @@
 
     @include('dashboard.partials.overview')
 
-    @include('dashboard.partials.summary-cards')
+    <div id="dashboardSummaryCards">
+    @if(!($dashboardLoading ?? false))
+        @include('dashboard.partials.summary-cards')
+    @endif
+    </div>
 
     <!-- Right-Click Context Menu -->
     <div id="contextMenu" class="hidden fixed bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded-lg shadow-2xl z-[9999] text-xs">
@@ -706,5 +710,67 @@
 
     <!-- Obligation Details Modal -->
     @include('obligations.modal.obligation_details')
+
+    @if($dashboardLoading ?? false)
+        <script>
+            // Shell (filters, header, modals) rendered without the heavy aggregation.
+            // Fetch the real data now, in the background, and swap it into the two
+            // data panels, then re-run the same init functions chart-animations.blade.php
+            // already runs on DOMContentLoaded (they're written to be safely re-callable).
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        ['dashboardInsightsPanel', 'dashboardSummaryCards'].forEach(id => {
+                            const newEl = doc.getElementById(id);
+                            const currentEl = document.getElementById(id);
+                            if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                        });
+
+                        if (typeof addHeatmapToggle === 'function') addHeatmapToggle();
+                        if (typeof animateAllCards === 'function') animateAllCards();
+                        if (typeof heatmapEnabled !== 'undefined' && heatmapEnabled && typeof applyHeatmap === 'function') applyHeatmap();
+                        if (typeof animateProgressBars === 'function') animateProgressBars();
+                        if (typeof createTopPerformersWidget === 'function') createTopPerformersWidget();
+                        if (typeof setupCardClickHandlers === 'function') setupCardClickHandlers();
+                    })
+                    .catch(error => {
+                        console.error('Failed to load dashboard data, falling back to full page navigation:', error);
+                        window.location.reload();
+                    });
+            });
+        </script>
+    @endif
+
+    <script>
+        // Fetches just the Office Allotment Classes table/pagination fragment in the background
+        // and splices it in, so switching pages only refreshes that table, not the whole dashboard.
+        function loadDashboardOAC(url, pushHistory = true) {
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => response.text())
+                .then(html => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    ['dashboardOACTableBody', 'dashboardOACPagination'].forEach(id => {
+                        const newEl = doc.getElementById(id);
+                        const currentEl = document.getElementById(id);
+                        if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                    });
+                    if (pushHistory) history.pushState(null, '', url);
+                })
+                .catch(error => {
+                    console.error('Failed to load office allotment classes, falling back to full page navigation:', error);
+                    window.location.href = url;
+                });
+        }
+
+        // Delegated click handler for pagination links (they get replaced on every load).
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('#dashboardOACPagination a');
+            if (!link) return;
+            e.preventDefault();
+            loadDashboardOAC(link.href);
+        });
+    </script>
 
 </x-app-layout>

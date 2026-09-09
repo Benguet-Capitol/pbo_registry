@@ -34,6 +34,11 @@ class DocumentController extends Controller
             $perPage = (int) $perPage;
         }
 
+        // Defer the heavy documents query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $documentsLoading = ! $request->ajax();
+
+        if (! $documentsLoading) {
+
         if ($query) {
             $documents = Document::search($query)
                 ->with('uploadedBy', 'files')
@@ -46,12 +51,23 @@ class DocumentController extends Controller
                 ->appends(request()->query());
         }
 
+        } else {
+            $documents = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                $perPage === PHP_INT_MAX ? 10 : $perPage,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         return view('documents.index', [
             'documents' => $documents,
             'query' => $query,
             'perPage' => $request->input('per_page', 10),
             'sortBy' => $sortBy,
             'sortOrder' => $sortOrder,
+            'documentsLoading' => $documentsLoading,
         ]);
     }
 

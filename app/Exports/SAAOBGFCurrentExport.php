@@ -111,15 +111,6 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
                     $sheet->setCellValue("N{$row}", "=IF(H{$row}>0,J{$row}/H{$row},0.00)");
                 }
 
-                // Utility: Apply percentage formulas for columns M and O
-                function applyPercentageFormulas($sheet, $row)
-                {
-                    $g = "G{$row}";
-                    $h = "H{$row}";
-                    $j = "J{$row}";
-                    $sheet->setCellValue("L{$row}", "=IF($g>0,$j/$g,0)");
-                    $sheet->setCellValue("N{$row}", "=IF($h>0,$j/$h,0)");
-                }
 
                 // Loop through all rows to apply formulas
                 for ($row = 13; $row <= $lastDataRow; $row++) {
@@ -146,7 +137,7 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
                         foreach (range('C', 'N') as $col) {
                             $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
                         }
-                        applyPercentageFormulas($sheet, $row);
+                        $this->applyPercentageFormulas($sheet, $row);
                     }
 
                     // === TOTAL ROW ===
@@ -166,7 +157,7 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($subtotalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
 
@@ -186,7 +177,7 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
                 }
@@ -224,12 +215,12 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
 
     public function view(): View
     {
-        $selectedYear = $this->selectedYear;
-        $asOfDate = $this->asOfDate;
-
-        $selectedYear = request('year1', date('Y'));
-        $asOfDate = request('as_of_filter', now()
-            ->toDateString());
+        // Use the values passed to the constructor (falling back the same way the controller's
+        // request-driven defaults do) instead of silently re-reading request() here, which
+        // discarded the constructor args and would break if this export ever ran outside the
+        // original HTTP request (e.g. queued).
+        $selectedYear = $this->selectedYear ?? date('Y');
+        $asOfDate = $this->asOfDate ?? now()->toDateString();
 
         $sectors = Sector::orderBy('sector_code')
             ->get();
@@ -249,30 +240,46 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
 
         $grandTotals = $blankTotals;
 
-        foreach ($sectors as $sector) {
-            $sector->offices = Office::whereHas('officeAllotmentClasses', function ($query) use ($sector, $selectedYear) {
+        // Fetched once instead of per sector; each sector clones what it needs before mutating.
+        $allOfficesForSectors = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
                 $query->where('year', $selectedYear)
                     ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
-                    ->whereHas('appropriations', function ($q) use ($sector) {
-                        $q->where('fpp_code', 'like', $sector->sector_code . '%');
-                    });
+                    ->whereHas('appropriations');
             })
-                ->with([
-                    'officeAllotmentClasses' => function ($query) use ($selectedYear) {
-                        $query->where('year', $selectedYear)
-                            ->whereHas('allotmentClass', function ($subQuery) {
-                                $subQuery->where('category', 'Current');
-                            })
-                            ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
-                            ->orderBy('id');
-                    },
-                    'officeAllotmentClasses.allotmentClass',
-                    'officeAllotmentClasses.appropriations.supplementals',
-                    'officeAllotmentClasses.appropriations.realignments',
-                    'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
-                ])
-                ->orderBy('id')
-                ->get();
+            ->with([
+                'officeAllotmentClasses' => function ($query) use ($selectedYear) {
+                    $query->where('year', $selectedYear)
+                        ->whereHas('allotmentClass', function ($subQuery) {
+                            $subQuery->where('category', 'Current');
+                        })
+                        ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
+                        ->orderBy('id');
+                },
+                'officeAllotmentClasses.allotmentClass',
+                'officeAllotmentClasses.appropriations.supplementals',
+                'officeAllotmentClasses.appropriations.realignments',
+                'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
+            ])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($sectors as $sector) {
+            $sector->offices = $allOfficesForSectors
+                ->filter(function ($office) use ($sector) {
+                    return $office->officeAllotmentClasses->contains(function ($oac) use ($sector) {
+                        return $oac->appropriations->contains(fn ($a) => str_starts_with($a->fpp_code, $sector->sector_code));
+                    });
+                })
+                ->map(function ($office) {
+                    // Shallow clone office + allotment-classes only; nested relations stay shared.
+                    $officeClone = clone $office;
+                    $officeClone->setRelation(
+                        'officeAllotmentClasses',
+                        $office->officeAllotmentClasses->map(fn ($oac) => clone $oac)->values()
+                    );
+                    return $officeClone;
+                })
+                ->values();
 
             $month = Carbon::parse($asOfDate)->month;
             $currentQuarter = match (true) {
@@ -437,5 +444,15 @@ class SAAOBGFCurrentExport implements FromView, WithStyles, WithEvents
             'signatoryName' => $this->signatoryName,
             'signatoryDesignation' => $this->signatoryDesignation,
         ]);
+    }
+
+    // Apply percentage formulas for columns L and N
+    private function applyPercentageFormulas($sheet, $row)
+    {
+        $g = "G{$row}";
+        $h = "H{$row}";
+        $j = "J{$row}";
+        $sheet->setCellValue("L{$row}", "=IF($g>0,$j/$g,0)");
+        $sheet->setCellValue("N{$row}", "=IF($h>0,$j/$h,0)");
     }
 }

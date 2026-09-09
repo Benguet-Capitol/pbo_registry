@@ -266,7 +266,7 @@
                     <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">@if($purchaseOrdersLoading ?? false)<i class="fas fa-spinner fa-spin"></i>@else{{ $totalRecords }}@endif</span>
                     </div>
                 </div>
             </div>
@@ -361,6 +361,11 @@
             <div id="purchaseOrdersCardView">
             <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                 <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="purchaseOrdersContainer">
+                    @if($purchaseOrdersLoading ?? false)
+                        <div class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-6">
+                            <i class="fas fa-spinner fa-spin"></i> Loading purchase orders...
+                        </div>
+                    @else
                     @forelse($purchaseOrders as $purchaseOrder)
                         @php
                             $pc = $poComputed[$purchaseOrder->id];
@@ -518,6 +523,7 @@
                             @endif
                         </div>
                     @endforelse
+                    @endif
                 </div>
 
                 <!-- Totals Footer -->
@@ -564,6 +570,13 @@
                                         $lastListPoNumber = null;
                                         $groupBandToggle = false;
                                     @endphp
+                                    @if($purchaseOrdersLoading ?? false)
+                                        <tr>
+                                            <td colspan="12" class="px-3 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading purchase orders...
+                                            </td>
+                                        </tr>
+                                    @else
                                     @forelse($purchaseOrders as $purchaseOrder)
                                         @php
                                             $pc = $poComputed[$purchaseOrder->id];
@@ -640,6 +653,7 @@
                                             <td colspan="12" class="px-3 py-10 text-center text-gray-500 dark:text-gray-400">No purchase orders found.</td>
                                         </tr>
                                     @endforelse
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -788,8 +802,8 @@
         }
 
         // Fetches the URL in the background and splices chips/pills/card/table/pagination markup in, instead of a full reload.
-        function loadPurchaseOrdersSorted(url) {
-            showPurchaseOrdersLoadingOverlay();
+        function loadPurchaseOrdersSorted(url, pushHistory = true, showOverlay = true) {
+            if (showOverlay) showPurchaseOrdersLoadingOverlay();
 
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(response => {
@@ -821,7 +835,7 @@
                         document.querySelectorAll(`#filterForm [name="${name}"]`).forEach(field => { field.value = newField.value; });
                     });
 
-                    history.pushState(null, '', url);
+                    if (pushHistory) history.pushState(null, '', url);
 
                     updatePurchaseOrdersFooterTotal();
                     updateTotalRecordsCount();
@@ -836,6 +850,13 @@
                     if (overlay) overlay.remove();
                 });
         }
+
+        @if($purchaseOrdersLoading ?? false)
+            // Shell rendered without data; fetch the real table now so the skeleton gets replaced.
+            document.addEventListener('DOMContentLoaded', function() {
+                loadPurchaseOrdersSorted(window.location.href, false, false);
+            });
+        @endif
 
         // Submits the filter or search form via the same background fetch-and-splice as above.
         function submitPurchaseOrdersFormAjax(form) {
@@ -852,9 +873,10 @@
             submitPurchaseOrdersFormAjax(this);
         });
 
-        // Delegated click handler for sort pills and active-filter chip links (both get replaced on every load).
+        // Delegated click handler for sort pills, active-filter chip links, and pagination links
+        // (all get replaced on every load, so delegation on a stable ancestor is required).
         document.addEventListener('click', function (e) {
-            const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a');
+            const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a, #purchaseOrdersPagination a');
             if (!link) return;
             e.preventDefault();
             loadPurchaseOrdersSorted(link.href);

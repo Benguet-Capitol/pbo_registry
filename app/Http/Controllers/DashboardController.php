@@ -296,6 +296,51 @@ class DashboardController extends Controller
             ->select('class')->distinct()->get()->unique('class')
             ->sortBy(fn($item) => optional($item->allotmentClass)->id)->values();
 
+        // SEF consolidation check (cheap; computed unconditionally since the
+        // active-filter labels below need it regardless of loading state).
+        $isSEFConsolidated = false;
+        $sefIds = null;
+        if ($officeFilter && !$isGuest) {
+            $selectedOfficeRecord = Office::find($officeFilter);
+            if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
+                $sefIds = Office::where('fund', 'Special Education Fund')->pluck('id');
+                $isSEFConsolidated = true;
+            }
+        }
+
+        // Display labels for active filters (cheap lookups; shown in the header immediately).
+        $selectedOfficeName = null;
+        if ($officeFilter) {
+            $selectedOfficeName = $isSEFConsolidated
+                ? 'Special Education Fund'
+                : optional(Office::find($officeFilter))->office_name;
+        }
+
+        $selectedAllotmentClassDesc = $allotmentClassFilter
+            ? optional(AllotmentClass::where('class', $allotmentClassFilter)->first())->description
+            : null;
+
+        $selectedGroup = $groupFilter
+            ? Office::where('branch', $groupFilter)->value('branch')
+            : null;
+
+        $selectedFundType = $fundTypeFilter
+            ? FundSource::where('category', $fundTypeFilter)->value('category')
+            : null;
+
+        $selectedFund = $fundFilter
+            ? Fund::where('fund_type', $fundFilter)->value('fund_type')
+            : null;
+
+        $selectedYear = $currentYear;
+        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
+        $breadcrumb = [['label' => 'Dashboard', 'route' => route('dashboard')]];
+
+        // Defer the heavy dashboard aggregation on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $dashboardLoading = ! $request->ajax();
+
+        if (! $dashboardLoading) {
+
         // --- Base query ---
         $query = OfficeAllotmentClass::with([
             'appropriations',
@@ -325,14 +370,9 @@ class DashboardController extends Controller
             $query->whereIn('office_allotment_classes.fund', $fundTypes2);
         }
 
-        // SEF consolidation logic
-        $isSEFConsolidated = false;
         if ($officeFilter && !$isGuest) {
-            $selectedOfficeRecord = Office::find($officeFilter);
-            if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
-                $sefIds = Office::where('fund', 'Special Education Fund')->pluck('id');
+            if ($isSEFConsolidated) {
                 $query->whereIn('office_allotment_classes.office', $sefIds);
-                $isSEFConsolidated = true;
             } else {
                 $query->where('office_allotment_classes.office', $officeFilter);
             }
@@ -360,8 +400,6 @@ class DashboardController extends Controller
             ->join('allotment_classes', 'office_allotment_classes.class', '=', 'allotment_classes.class')
             ->orderBy('allotment_classes.id')
             ->select('office_allotment_classes.*');
-
-        $selectedYear = $currentYear;
 
         $officeAllotmentClasses = $perPage === 'all'
             ? $orderedQuery->get()
@@ -582,39 +620,50 @@ class DashboardController extends Controller
             $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
         });
 
-        // --- Misc view data ---
-        $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
-
         // Broad unfiltered set used only for the obligation/create modals
         $office_allotment_classes = OfficeAllotmentClass::with([
             'offices', 'allotmentClass', 'fundSourceRelation', 'fund',
         ])->where('year', $currentYear)->get();
 
-        // Display labels for active filters
-        $selectedOfficeName = null;
-        if ($officeFilter) {
-            $selectedOfficeName = $isSEFConsolidated
-                ? 'Special Education Fund'
-                : optional(Office::find($officeFilter))->office_name;
+        } else {
+            $officeAllotmentClasses = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            $office_allotment_classes = collect();
+            $appropriations = collect();
+            $totalAppropriations = 0;
+            $totalAllotments = 0;
+            $totalObligations = 0;
+            $allotmentBalance = 0;
+            $allotmentAccomplishment = 0;
+            $totalSupplementals = 0;
+            $totalReversions = 0;
+            $totalRealignments = 0;
+            $totalAuthorizedAppropriations = 0;
+            $totalForLaterRelease = 0;
+            $totalAuthorizedAppropriationsBalance = 0;
+            $totalAuthorizedAppropriationsAccomplishment = 0;
+            $totalDisbursements = 0;
+            $totalDisbursementsToObligations = 0;
+            $totalDisbursementsToAppropriations = 0;
+            $disbursementBalance = 0;
+            $totalObligationCount = 0;
+            $totalPurchaseOrderCount = 0;
+            $totalDisbursementCount = 0;
+            $averageObligationCountPerDay = 0;
+            $averageDisbursementCountPerDay = 0;
+            $obligationRanges = $this->buildObligationRanges([]);
+            $obligationsByQuarter = [
+                ['quarter' => 'Q1', 'count' => 0],
+                ['quarter' => 'Q2', 'count' => 0],
+                ['quarter' => 'Q3', 'count' => 0],
+                ['quarter' => 'Q4', 'count' => 0],
+            ];
         }
-
-        $selectedAllotmentClassDesc = $allotmentClassFilter
-            ? optional(AllotmentClass::where('class', $allotmentClassFilter)->first())->description
-            : null;
-
-        $selectedGroup = $groupFilter
-            ? Office::where('branch', $groupFilter)->value('branch')
-            : null;
-
-        $selectedFundType = $fundTypeFilter
-            ? FundSource::where('category', $fundTypeFilter)->value('category')
-            : null;
-
-        $selectedFund = $fundFilter
-            ? Fund::where('fund_type', $fundFilter)->value('fund_type')
-            : null;
-
-        $breadcrumb = [['label' => 'Dashboard', 'route' => route('dashboard')]];
 
         return view('dashboard', compact(
             'officeAllotmentClasses',
@@ -658,7 +707,8 @@ class DashboardController extends Controller
             'averageObligationCountPerDay',
             'averageDisbursementCountPerDay',
             'obligationRanges',
-            'obligationsByQuarter'
+            'obligationsByQuarter',
+            'dashboardLoading'
         ));
     }
 
@@ -706,11 +756,21 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized access to this office data.');
         }
 
+        $selectedYear = $officeAllotmentClasses->year;
+        $breadcrumb = [
+            ['label' => 'Dashboard', 'route' => route('dashboard')],
+            ['label' => 'Balances | Accounts'],
+        ];
+
+        // Defer the heavy per-account aggregation on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $accountsLoading = ! $request->ajax();
+
+        if (! $accountsLoading) {
+
         // Sort appropriations
         $officeAllotmentClasses->appropriations = $this->sortAppropriations($officeAllotmentClasses->appropriations);
 
         $currentQuarter = $this->currentQuarter($toDate);
-        $selectedYear   = $officeAllotmentClasses->year;
 
         // --- Class-level aggregates ---
         $officeAllotmentClasses->appropriations_sum = $officeAllotmentClasses->appropriations->sum('appropriation');
@@ -997,10 +1057,59 @@ class DashboardController extends Controller
             'offices', 'allotmentClass', 'fundSourceRelation', 'fund',
         ])->where('year', $selectedYear)->get();
 
-        $breadcrumb = [
-            ['label' => 'Dashboard', 'route' => route('dashboard')],
-            ['label' => 'Balances | Accounts'],
-        ];
+        } else {
+            $officeAllotmentClasses->appropriations_sum = 0;
+            $officeAllotmentClasses->supplemental_sum = 0;
+            $officeAllotmentClasses->reversion_sum = 0;
+            $officeAllotmentClasses->realignments_sum = 0;
+            $officeAllotmentClasses->authorized_appropriations = 0;
+            $officeAllotmentClasses->for_later_release = 0;
+            $officeAllotmentClasses->allotments_sum = 0;
+            $officeAllotmentClasses->obligations_sum = 0;
+            $officeAllotmentClasses->balance_appropriations = 0;
+            $officeAllotmentClasses->appropriation_accomplishment = 0;
+            $officeAllotmentClasses->balance_allotments = 0;
+            $officeAllotmentClasses->allotment_accomplishment = 0;
+            $officeAllotmentClasses->disbursements_sum = 0;
+            $officeAllotmentClasses->disbursements_to_obligations = 0;
+            $officeAllotmentClasses->disbursements_to_appropriations = 0;
+            $officeAllotmentClasses->disbursement_balance = 0;
+
+            foreach ($officeAllotmentClasses->appropriations as $appropriation) {
+                $appropriation->appropriation_sum = 0;
+                $appropriation->supplemental_sum = 0;
+                $appropriation->reversion_sum = 0;
+                $appropriation->realignments_sum = 0;
+                $appropriation->allotments_sum = 0;
+                $appropriation->for_later_release = 0;
+                $appropriation->obligations_sum = 0;
+                $appropriation->authorized_appropriations = 0;
+                $appropriation->appropriation_accomplishment = 0;
+                $appropriation->balance_allotments = 0;
+                $appropriation->allotment_accomplishment = 0;
+                $appropriation->balance_appropriations = 0;
+                $appropriation->disbursements = 0;
+                $appropriation->disbursements_to_obligations = 0;
+                $appropriation->disbursements_to_appropriations = 0;
+                $appropriation->disbursement_balance = 0;
+            }
+
+            $obrSum = 0;
+            $appropriations = collect();
+            $totalObligationCount = 0;
+            $totalPurchaseOrderCount = 0;
+            $totalDisbursementCount = 0;
+            $averageObligationCountPerDay = 0;
+            $averageDisbursementCountPerDay = 0;
+            $obligationRanges = $this->buildObligationRanges([]);
+            $obligationsByQuarter = [
+                ['quarter' => 'Q1', 'count' => 0],
+                ['quarter' => 'Q2', 'count' => 0],
+                ['quarter' => 'Q3', 'count' => 0],
+                ['quarter' => 'Q4', 'count' => 0],
+            ];
+            $office_allotment_classes = collect();
+        }
 
         return view('dashboard.accounts', compact(
             'officeAllotmentClasses',
@@ -1016,7 +1125,8 @@ class DashboardController extends Controller
             'averageObligationCountPerDay',
             'averageDisbursementCountPerDay',
             'obligationRanges',
-            'obligationsByQuarter'
+            'obligationsByQuarter',
+            'accountsLoading'
         ));
     }
 }

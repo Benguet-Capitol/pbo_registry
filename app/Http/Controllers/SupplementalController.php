@@ -37,6 +37,11 @@ class SupplementalController extends Controller
     $currentYear = date('Y');
     $selectedYear = $request->input('year1', $currentYear);
 
+    // Defer the heavy supplementals query/count on first load; the page's own AJAX fetch re-requests it with a loading state.
+    $supplementalsLoading = ! $request->ajax();
+
+    if (! $supplementalsLoading) {
+
     // Preload supplementals with office allotment class and appropriation
     $query = Supplemental::with(['officeAllotmentClass', 'appropriation'])
         ->whereHas('officeAllotmentClass', fn($q) => $q->where('year', $selectedYear));
@@ -72,6 +77,16 @@ class SupplementalController extends Controller
             'type' => $request->supplemental_type_filter,
             'per_page' => $perPage,
         ]);
+
+    } else {
+        $supplementals = new \Illuminate\Pagination\LengthAwarePaginator(
+            collect(),
+            0,
+            is_numeric($perPage) ? (int) $perPage : 10,
+            1,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+    }
 
     $availableYears = OfficeAllotmentClass::distinct()
         ->orderBy('year', 'desc')
@@ -143,6 +158,7 @@ class SupplementalController extends Controller
         ->get();
 
     // Calculate total records (unique supplemental_no values)
+    if (! $supplementalsLoading) {
     $totalRecordsQuery = Supplemental::with(['officeAllotmentClass', 'appropriation'])
         ->whereHas('officeAllotmentClass', fn($q) => $q->where('year', $selectedYear));
 
@@ -165,6 +181,9 @@ class SupplementalController extends Controller
     }
 
     $totalRecords = $totalRecordsQuery->distinct('supplemental_no')->count('supplemental_no');
+    } else {
+        $totalRecords = 0;
+    }
 
     [$existingAroByRow, $existingAroByBatch, $staleAroByRow, $staleAroByBatch] = $this->buildExistingAroLookups($supplementals);
 
@@ -172,7 +191,7 @@ class SupplementalController extends Controller
         'supplementals', 'perPage', 'search', 'sortBy', 'sortOrder',
         'availableYears', 'selectedYear', 'officeAllotmentClasses',
         'office_allotment_classes', 'appropriations', 'breadcrumb', 'supplementalsBulkDelete', 'totalRecords',
-        'existingAroByRow', 'existingAroByBatch', 'staleAroByRow', 'staleAroByBatch'
+        'existingAroByRow', 'existingAroByBatch', 'staleAroByRow', 'staleAroByBatch', 'supplementalsLoading'
     ));
 }
 

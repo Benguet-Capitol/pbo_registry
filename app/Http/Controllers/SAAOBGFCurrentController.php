@@ -57,34 +57,55 @@ class SAAOBGFCurrentController extends Controller
 
         $grandTotals = $blankTotals;
 
+        // Defer the heavy per-sector office/allotment-class aggregation on first load; the
+        // page's own AJAX fetch re-requests it with a loading state.
+        $saaobgfcurrentLoading = ! $request->ajax();
+
+        if (! $saaobgfcurrentLoading) {
+        // Fetched once instead of per sector; each sector clones what it needs before mutating.
+        $allOfficesForSectors = Office::whereHas('officeAllotmentClasses', function ($query) use ($selectedYear) {
+                    $query->where('year', $selectedYear)
+                        ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
+                        ->whereHas('appropriations');
+                })
+            ->with([
+                'officeAllotmentClasses' => function ($query) use ($selectedYear) {
+                    $query->where('year', $selectedYear)
+                        ->whereHas('allotmentClass', function ($subQuery) {
+                            $subQuery->where('category', 'Current');
+                        })
+                        ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
+                        ->orderBy(
+                        AllotmentClass::select('id')
+                            ->whereColumn('allotment_classes.class', 'office_allotment_classes.class'),
+                        'asc'
+                    );
+                },
+                'officeAllotmentClasses.allotmentClass',
+                'officeAllotmentClasses.appropriations.supplementals',
+                'officeAllotmentClasses.appropriations.realignments',
+                'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
+            ])
+            ->orderBy('id')
+            ->get();
+
         foreach ($sectors as $sector) {
-            $sector->offices = Office::whereHas('officeAllotmentClasses', function ($query) use ($sector, $selectedYear) {
-                        $query->where('year', $selectedYear)
-                            ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
-                            ->whereHas('appropriations', function ($q) use ($sector) {
-                                $q->where('fpp_code', 'like', $sector->sector_code . '%');
-                            });
-                    })
-                ->with([
-                    'officeAllotmentClasses' => function ($query) use ($selectedYear) {
-                        $query->where('year', $selectedYear)
-                            ->whereHas('allotmentClass', function ($subQuery) {
-                                $subQuery->where('category', 'Current');
-                            })
-                            ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
-                            ->orderBy(
-                            AllotmentClass::select('id')
-                                ->whereColumn('allotment_classes.class', 'office_allotment_classes.class'),
-                            'asc'
-                        );
-                    },
-                    'officeAllotmentClasses.allotmentClass',
-                    'officeAllotmentClasses.appropriations.supplementals',
-                    'officeAllotmentClasses.appropriations.realignments',
-                    'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
-                ])
-                ->orderBy('id')
-                ->get();
+            $sector->offices = $allOfficesForSectors
+                ->filter(function ($office) use ($sector) {
+                    return $office->officeAllotmentClasses->contains(function ($oac) use ($sector) {
+                        return $oac->appropriations->contains(fn ($a) => str_starts_with($a->fpp_code, $sector->sector_code));
+                    });
+                })
+                ->map(function ($office) {
+                    // Shallow clone office + allotment-classes only; nested relations stay shared.
+                    $officeClone = clone $office;
+                    $officeClone->setRelation(
+                        'officeAllotmentClasses',
+                        $office->officeAllotmentClasses->map(fn ($oac) => clone $oac)->values()
+                    );
+                    return $officeClone;
+                })
+                ->values();
 
                 $month = Carbon::parse($asOfDate)->month;
                 $currentQuarter = match(true) {
@@ -241,8 +262,14 @@ class SAAOBGFCurrentController extends Controller
             $grandTotals['allotment_accomplishment'] = $grandTotals['allotment'] > 0
                 ? ($grandTotals['obligations'] / $grandTotals['allotment']) * 100
                 : 0;
+        } else {
+            foreach ($sectors as $sector) {
+                $sector->offices = collect();
+                $sector->totals = $blankTotals;
+            }
+        }
 
-        return view('saaobgfcurrent.index', compact('offices', 'sectors', 'employees', 'availableYears', 'selectedYear', 'asOfDate', 'allotmentClasses', 'grandTotals'));
+        return view('saaobgfcurrent.index', compact('offices', 'sectors', 'employees', 'availableYears', 'selectedYear', 'asOfDate', 'allotmentClasses', 'grandTotals', 'saaobgfcurrentLoading'));
     }
 
     public function exportExcel(Request $request)

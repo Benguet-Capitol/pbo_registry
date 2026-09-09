@@ -19,7 +19,7 @@
                 <div class="grid gap-4">
                     <!-- Code -->
                     <div class="space-y-2">
-                        <input type="hidden" name="account_code_id" id="account_code_id" value="{{ $account_code->id }}">
+                        <input type="hidden" name="account_code_id" id="account_code_id" value="">
                         <x-form.label for="code" :value="__('Code')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
                         <x-form.input-with-icon-wrapper>
                             <x-slot name="icon">

@@ -73,6 +73,12 @@ class SAAODBOfficeController extends Controller
             }
         }
 
+        // Defer the heavy per-office/allotment-class aggregation on first load; the page's
+        // own AJAX fetch re-requests it with a loading state.
+        $saaodbofficeLoading = ! $request->ajax();
+
+        if (! $saaodbofficeLoading) {
+
         // Get all offices with their OfficeAllotmentClasses and related data
         $offices = $officesQuery->with([
             'officeAllotmentClasses' => function ($query) use ($selectedYear) {
@@ -88,6 +94,7 @@ class SAAODBOfficeController extends Controller
             'officeAllotmentClasses.appropriations.realignments',
             'officeAllotmentClasses.appropriations.supplementals',
             'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
+            'officeAllotmentClasses.appropriations.disbursements',
         ])->get();
 
         // Filter out offices that have no appropriations after account_code filtering
@@ -333,7 +340,12 @@ class SAAODBOfficeController extends Controller
                     : 0;
             }
 
-        return view('saaodboffice.index', compact('availableYears', 'allOffices', 'offices', 'selectedYear', 'selectedOffice', 'asOfDate', 'employees', 'officesQuery', 'accounts', 'selectedAccountCode', 'overallTotal', 'isSEFConsolidated'))
+        } else {
+            $offices = collect();
+            $overallTotal = null;
+        }
+
+        return view('saaodboffice.index', compact('availableYears', 'allOffices', 'offices', 'selectedYear', 'selectedOffice', 'asOfDate', 'employees', 'officesQuery', 'accounts', 'selectedAccountCode', 'overallTotal', 'isSEFConsolidated', 'saaodbofficeLoading'))
             ->with('status', session('status'));
     }
 

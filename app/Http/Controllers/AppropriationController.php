@@ -97,8 +97,13 @@ class AppropriationController extends Controller
                 ->get(['id', 'aro_no', 'date_of_issue']);
         }
         
+        // Defer the heavy appropriations query/count on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $appropriationsLoading = ! $request->ajax();
+
+        if (! $appropriationsLoading) {
+
         $query = Appropriation::query()->with(['officeAllotmentClass.allotmentClass']);
-        
+
         if ($officeAllotmentClassId) {
             $query->where('office_allotment_class_id', $officeAllotmentClassId);
         }
@@ -158,6 +163,17 @@ class AppropriationController extends Controller
             $appropriations = $this->sortAppropriations($appropriations);
         }
 
+        } else {
+            $appropriations = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+            $totalRecords = 0;
+        }
+
         $account_codes = AccountCode::all()->sortBy('id');
         $programs = Program::all()->sortBy('id');
 
@@ -167,7 +183,7 @@ class AppropriationController extends Controller
             ['label' => 'Accounts']
         ];
 
-        return view('appropriations.index', compact('appropriations', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClass', 'allotmentClassDescription', 'officeName', 'account_codes', 'officeAllotmentClassId', 'totalAppropriation', 'breadcrumb', 'programs', 'totalAllotment', 'totalRecords', 'officeAllotmentClassesForForm', 'arosForOffice'))->with('status', session('status'));
+        return view('appropriations.index', compact('appropriations', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClass', 'allotmentClassDescription', 'officeName', 'account_codes', 'officeAllotmentClassId', 'totalAppropriation', 'breadcrumb', 'programs', 'totalAllotment', 'totalRecords', 'officeAllotmentClassesForForm', 'arosForOffice', 'appropriationsLoading'))->with('status', session('status'));
     }
 
     /**

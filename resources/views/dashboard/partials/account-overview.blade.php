@@ -36,6 +36,12 @@
         </form>
     </div>
 
+    <div id="accountInsightsPanel">
+    @if($accountsLoading ?? false)
+        <div class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-6 mb-4">
+            <i class="fas fa-spinner fa-spin"></i> Loading account data...
+        </div>
+    @else
     {{-- Analytics & Insights Panel (for Accounts) --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
         <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -485,4 +491,6 @@
                 </table>
             </div>
         </div>
+    </div>
+    @endif
     </div>

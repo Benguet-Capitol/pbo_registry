@@ -141,19 +141,6 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                     $sheet->setCellValue("S{$row}", "=K{$row}-P{$row}");
                 }
 
-                // Utility: Apply percentage formulas for columns M and O
-                function applyPercentageFormulas($sheet, $row)
-                {
-                    $h = "H{$row}";
-                    $i = "I{$row}";
-                    $k = "K{$row}";
-                    $p = "P{$row}";
-
-                    $sheet->setCellValue("M{$row}", "=IF($h>0,$k/$h,0)");
-                    $sheet->setCellValue("O{$row}", "=IF($i>0,$k/$i,0)");
-                    $sheet->setCellValue("Q{$row}", "=IF($k>0,$p/$k,0)");
-                    $sheet->setCellValue("R{$row}", "=IF($h>0,$p/$h,0)");
-                }
 
                 // Loop through all rows to apply formulas
                 for ($row = 13; $row <= $lastDataRow; $row++) {
@@ -180,7 +167,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                         foreach (range('D', 'S') as $col) {
                             $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
                         }
-                        applyPercentageFormulas($sheet, $row);
+                        $this->applyPercentageFormulas($sheet, $row);
                     }
 
                     // === TOTAL ROW ===
@@ -211,7 +198,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($subtotalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                         // If no subtotals, sum all content rows directly
                         elseif (!empty($contentRows)) {
@@ -221,7 +208,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                             foreach (range('D', 'S') as $col) {
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}{$endRow})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
 
@@ -241,7 +228,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
                 }
@@ -283,7 +270,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                             $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
                         }
 
-                        applyPercentageFormulas($sheet, $insertRow);
+                        $this->applyPercentageFormulas($sheet, $insertRow);
 
                         $totalCOERow = $insertRow;
                     }
@@ -314,7 +301,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                             $sheet->setCellValue("{$col}{$insertRow}", "=SUM({$refs})");
                         }
 
-                        applyPercentageFormulas($sheet, $insertRow);
+                        $this->applyPercentageFormulas($sheet, $insertRow);
                     }
                 }
 
@@ -345,7 +332,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
                         $refs = implode(',', array_map(fn($r) => "{$col}{$r}", $grandTotalRows));
                         $sheet->setCellValue("{$col}{$overallTotalRow}", "=SUM({$refs})");
                     }
-                    applyPercentageFormulas($sheet, $overallTotalRow);
+                    $this->applyPercentageFormulas($sheet, $overallTotalRow);
 
                     // Format number and percentage columns
                     foreach (range('D', 'S') as $column) {
@@ -428,6 +415,7 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
             'officeAllotmentClasses.appropriations.realignments',
             'officeAllotmentClasses.appropriations.supplementals',
             'officeAllotmentClasses.appropriations.obligationAmounts.obligation.obligationAdjustments',
+            'officeAllotmentClasses.appropriations.disbursements',
         ])->orderBy('id', 'asc')->get();
 
         // Filter out offices that have no appropriations after account_code filtering
@@ -621,8 +609,21 @@ class SAAODBExport implements FromView, WithStyles, WithEvents
             'preparedSignatoryDesignation' => $this->preparedSignatoryDesignation,
             'certifiedSignatoryName' => $this->certifiedSignatoryName,
             'certifiedSignatoryDesignation' => $this->certifiedSignatoryDesignation,
-            'isSEFConsolidated' => $this->isSEFConsolidated,
         ]);
+    }
+
+    // Apply percentage formulas for columns M, O, Q and R
+    private function applyPercentageFormulas($sheet, $row)
+    {
+        $h = "H{$row}";
+        $i = "I{$row}";
+        $k = "K{$row}";
+        $p = "P{$row}";
+
+        $sheet->setCellValue("M{$row}", "=IF($h>0,$k/$h,0)");
+        $sheet->setCellValue("O{$row}", "=IF($i>0,$k/$i,0)");
+        $sheet->setCellValue("Q{$row}", "=IF($k>0,$p/$k,0)");
+        $sheet->setCellValue("R{$row}", "=IF($h>0,$p/$h,0)");
     }
 
     private function computeTotals($appropriations)

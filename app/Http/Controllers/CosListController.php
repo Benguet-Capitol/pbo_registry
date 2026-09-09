@@ -45,6 +45,11 @@ class CosListController extends Controller
     $currentYear = date('Y');
     $selectedYear = $request->input('year1', $currentYear);
 
+    // Defer the heavy COS list query/totals on first load; the page's own AJAX fetch re-requests it with a loading state.
+    $cosListLoading = ! $request->ajax();
+
+    if (! $cosListLoading) {
+
     // Base query for COS records
     $query = CosList::with([
         'officeAllotmentClass.offices',
@@ -157,6 +162,19 @@ class CosListController extends Controller
             'appropriation_filter' => $request->appropriation_filter,
         ]);
 
+    $totalAnnualRate = $totalsQuery->sum('annual_rate');
+
+    } else {
+        $cosList = new \Illuminate\Pagination\LengthAwarePaginator(
+            collect(),
+            0,
+            is_numeric($perPage) ? (int) $perPage : 10,
+            1,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+        $totalAnnualRate = 0;
+    }
+
         // Get all available years from existing records
         $availableYears = OfficeAllotmentClass::query()
         ->distinct()
@@ -213,8 +231,6 @@ class CosListController extends Controller
             }
         }
 
-        $totalAnnualRate = $totalsQuery->sum('annual_rate');
-
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'COS List']
@@ -233,7 +249,8 @@ class CosListController extends Controller
             'sortOrder',
             'breadcrumb',
             'totalAnnualRate',
-            'totalAppropriation'
+            'totalAppropriation',
+            'cosListLoading'
         ));
     }
 

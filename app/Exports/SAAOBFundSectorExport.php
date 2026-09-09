@@ -110,15 +110,6 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                     $sheet->setCellValue("N{$row}", "=IF(H{$row}>0,J{$row}/H{$row},0.00)");
                 }
 
-                // Utility: Apply percentage formulas for columns M and O
-                function applyPercentageFormulas($sheet, $row)
-                {
-                    $g = "G{$row}";
-                    $h = "H{$row}";
-                    $j = "J{$row}";
-                    $sheet->setCellValue("L{$row}", "=IF($g>0,$j/$g,0)");
-                    $sheet->setCellValue("N{$row}", "=IF($h>0,$j/$h,0)");
-                }
 
                 for ($row = 14; $row <= $lastDataRow; $row++) {
                     $marker = strtolower(trim((string) $sheet->getCell("O{$row}")->getValue()));
@@ -139,7 +130,7 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                         foreach (range('C', 'N') as $col) {
                             $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
                         }
-                        applyPercentageFormulas($sheet, $row);
+                        $this->applyPercentageFormulas($sheet, $row);
                     }
 
                     // === TOTAL FOR SUBTOTALS ===
@@ -155,7 +146,7 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($subtotalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
 
@@ -180,7 +171,7 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($classRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
                     // === GRAND TOTAL ===
@@ -196,7 +187,7 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalSubtotals)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
                 }
@@ -702,5 +693,15 @@ class SAAOBFundSectorExport implements FromView, WithStyles, WithEvents
             'signatoryName' => $this->signatoryName,
             'signatoryDesignation' => $this->signatoryDesignation,
         ]);
+    }
+
+    // Apply percentage formulas for columns L and N
+    private function applyPercentageFormulas($sheet, $row)
+    {
+        $g = "G{$row}";
+        $h = "H{$row}";
+        $j = "J{$row}";
+        $sheet->setCellValue("L{$row}", "=IF($g>0,$j/$g,0)");
+        $sheet->setCellValue("N{$row}", "=IF($h>0,$j/$h,0)");
     }
 }

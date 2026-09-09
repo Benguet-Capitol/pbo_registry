@@ -97,7 +97,14 @@
                             <th class="px-4 py-3 min-w-[120px] text-center font-semibold text-gray-700 dark:text-gray-200">IP Address</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="activityLogsTableBody">
+                        @if($activityLogsLoading ?? false)
+                            <tr>
+                                <td colspan="5" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Loading activity logs...
+                                </td>
+                            </tr>
+                        @else
                         @forelse($logs as $log)
                             <tr class="{{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <td class="px-4 py-3 text-center border-l-4 border-l-gray-500">
@@ -128,12 +135,13 @@
                                 </td>
                             </tr>
                         @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
-            <div class="mt-4 px-4 py-2">
+            <div class="mt-4 px-4 py-2" id="activityLogsPagination">
                 {{ $logs->links() }}
             </div>
         </div>
@@ -145,6 +153,41 @@
         element.addEventListener('change', () => {
             document.getElementById('filterForm').submit();
         });
+    });
+
+    // Fetches the table/pagination fragment in the background and splices it in, so switching
+    // pages (or the initial shell-to-real-data load) only refreshes the table, not the whole page.
+    function loadActivityLogs(url, pushHistory = true) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                ['activityLogsTableBody', 'activityLogsPagination'].forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                });
+                if (pushHistory) history.pushState(null, '', url);
+            })
+            .catch(error => {
+                console.error('Failed to load activity logs, falling back to full page navigation:', error);
+                window.location.href = url;
+            });
+    }
+
+    @if($activityLogsLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the skeleton gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadActivityLogs(window.location.href, false);
+        });
+    @endif
+
+    // Delegated click handler for pagination links (they get replaced on every load).
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#activityLogsPagination a');
+        if (!link) return;
+        e.preventDefault();
+        loadActivityLogs(link.href);
     });
 </script>
 

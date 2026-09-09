@@ -41,21 +41,28 @@ class NDDController extends Controller
 
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
+        // Defer the heavy obligations query on first load; the page's own AJAX fetch
+        // re-requests it with a loading state.
+        $nddLoading = ! $request->ajax();
+
         // Fetch obligations based on criteria
-        $obligationsData = $this->getObligations($selectedYear, $selectedOffice, $asOfDate);
+        $obligationsData = $nddLoading
+            ? ['obligations' => collect(), 'totals' => ['GRAND_TOTAL' => number_format(0, 2)]]
+            : $this->getObligations($selectedYear, $selectedOffice, $asOfDate);
         $obligations = $obligationsData['obligations'];
         $totals = $obligationsData['totals'];
 
         return view('ndd.index', compact(
-            'availableYears', 
-            'selectedYear', 
-            'selectedOffice', 
-            'asOfDate', 
-            'employees', 
+            'availableYears',
+            'selectedYear',
+            'selectedOffice',
+            'asOfDate',
+            'employees',
             'officeAllotmentClasses',
             'offices',
             'obligations',
-            'totals'
+            'totals',
+            'nddLoading'
         ))->with('status', session('status'));
     }
 
@@ -113,6 +120,16 @@ class NDDController extends Controller
 
         $results = collect();
 
+        // Batch-fetch every purchase order needed by this page in one query instead of
+        // firing a fresh PurchaseOrder::whereIn(...) per Purchase-Request obligation below.
+        $allObligationAmountIds = $obligations->flatMap->obligationAmounts->pluck('id');
+        $purchaseOrdersByObligationAmountId = $allObligationAmountIds->isNotEmpty()
+            ? PurchaseOrder::whereIn('obligation_amounts_id', $allObligationAmountIds)
+                ->orderBy('po_date', 'asc')
+                ->get()
+                ->groupBy('obligation_amounts_id')
+            : collect();
+
         foreach ($obligations as $obligation) {
             // Calculate obligation balance
             $obrTotal = $obligation->obligationAmounts->sum('obr_amount');
@@ -145,10 +162,11 @@ class NDDController extends Controller
                 $obligationAmountIds = $obligation->obligationAmounts->pluck('id');
                 
                 if ($obligationAmountIds->isNotEmpty()) {
-                    $purchaseOrders = PurchaseOrder::whereIn('obligation_amounts_id', $obligationAmountIds)
-                        ->orderBy('po_date', 'asc')
-                        ->get();
-                    
+                    $purchaseOrders = $obligationAmountIds
+                        ->flatMap(fn($id) => $purchaseOrdersByObligationAmountId->get($id, collect()))
+                        ->sortBy('po_date')
+                        ->values();
+
                     if ($purchaseOrders->isNotEmpty()) {
                         // Group purchase orders by po_number and sum po_amount across all obligation amounts
                         $groupedByPoNumber = $purchaseOrders->groupBy('po_number');

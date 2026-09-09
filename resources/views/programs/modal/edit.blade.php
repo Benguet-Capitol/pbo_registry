@@ -19,7 +19,7 @@
                 <div class="grid gap-4">
                         <!-- Program -->
                         <div class="space-y-2">
-                            <input type="hidden" id="program_id" name="program_id" value="{{ $program->id }}" />
+                            <input type="hidden" id="program_id" name="program_id" value="" />
                             <x-form.label for="program" :value="__('Program / Project / Activity')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">

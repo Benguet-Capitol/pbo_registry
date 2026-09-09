@@ -25,6 +25,11 @@ class EmployeeController extends Controller
         $sortBy = $request->query('sort_by', 'id');
         $sortOrder = $request->query('sort_order', 'desc');
 
+        // Defer the heavy employees query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $employeesLoading = ! $request->ajax();
+
+        if (! $employeesLoading) {
+
         // Query employees
         $query = Employee::with('officeRelation'); // Eager load the office relationship
 
@@ -59,6 +64,16 @@ class EmployeeController extends Controller
             $employees = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
         }
 
+        } else {
+            $employees = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         $offices = Office::orderBy('id')->get();
 
         $breadcrumb = [
@@ -66,7 +81,7 @@ class EmployeeController extends Controller
             ['label' => 'Employees']
         ];
 
-        return view('employees.index', compact('employees', 'offices', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb'))->with('status', session('status'));
+        return view('employees.index', compact('employees', 'offices', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb', 'employeesLoading'))->with('status', session('status'));
     }
 
     public function store(Request $request): RedirectResponse

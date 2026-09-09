@@ -182,7 +182,12 @@
 
             <!-- Card View -->
             <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
-                <div class="max-h-[720px] overflow-y-auto p-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 bg-gray-50 dark:bg-gray-900">
+                <div class="max-h-[720px] overflow-y-auto p-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 bg-gray-50 dark:bg-gray-900" id="allotmentReleaseOrdersContainer">
+                @if($allotmentReleaseOrdersLoading ?? false)
+                    <div class="col-span-full flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-6">
+                        <i class="fas fa-spinner fa-spin"></i> Loading allotment release orders...
+                    </div>
+                @else
                 @forelse ($allotmentReleaseOrders as $aro)
                     @php
                         $officeAbbr = $aro->isSefConsolidated()
@@ -272,6 +277,7 @@
                         No Allotment Release Orders found.
                     </div>
                 @endforelse
+                @endif
             </div>
         </div>
     </div>
@@ -283,5 +289,23 @@
         function closeAllDropdowns() {
             document.querySelectorAll('[id$="_office_allotment_class_dropdown"]').forEach(d => d.classList.add('hidden'));
         }
+
+        @if($allotmentReleaseOrdersLoading ?? false)
+            // Shell rendered without data; fetch the real list now so the skeleton gets replaced.
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        const newEl = doc.getElementById('allotmentReleaseOrdersContainer');
+                        const currentEl = document.getElementById('allotmentReleaseOrdersContainer');
+                        if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                    })
+                    .catch(error => {
+                        console.error('Failed to load allotment release orders, falling back to full page navigation:', error);
+                        window.location.reload();
+                    });
+            });
+        @endif
     </script>
 </x-app-layout>

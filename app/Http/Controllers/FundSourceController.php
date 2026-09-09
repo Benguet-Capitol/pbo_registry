@@ -11,12 +11,17 @@ class FundSourceController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10); // Default to 10 rows per page
+        $perPage = $request->input('per_page', 'all'); // Default to showing all rows
         $search = $request->input('search');
 
         // Get sorting parameters from query string, default to 'id' and 'desc'
         $sortBy = $request->query('sort_by', 'id');
         $sortOrder = $request->query('sort_order', 'asc');
+
+        // Defer the heavy fund sources query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $fundSourcesLoading = ! $request->ajax();
+
+        if (! $fundSourcesLoading) {
 
         // Query Fund Sources
         $query = FundSource::query();
@@ -33,12 +38,22 @@ class FundSourceController extends Controller
             $fund_sources = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
         }
 
+        } else {
+            $fund_sources = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         $breadcrumb = [
             ['label' => 'Dashboard', 'route' => route('dashboard')],
             ['label' => 'Fund Sources']
         ];
 
-        return view('fund_sources.index', compact('fund_sources', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb'))->with('status', session('status'));
+        return view('fund_sources.index', compact('fund_sources', 'perPage', 'search', 'sortBy', 'sortOrder', 'breadcrumb', 'fundSourcesLoading'))->with('status', session('status'));
     }
 
     public function store(Request $request): RedirectResponse

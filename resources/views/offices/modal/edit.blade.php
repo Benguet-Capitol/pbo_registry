@@ -19,7 +19,7 @@
                 <div class="grid gap-4">
                         <!-- Office Name -->
                         <div class="space-y-2">
-                            <input type="hidden" name="office_id" id="office_id" value="{{ $office->id }}">
+                            <input type="hidden" name="office_id" id="office_id" value="">
                             <x-form.label
                                 for="office_name"
                                 :value="__('Office Name')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />

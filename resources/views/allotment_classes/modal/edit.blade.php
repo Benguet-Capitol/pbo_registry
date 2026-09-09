@@ -19,7 +19,7 @@
                     <div class="grid gap-4">
                         <!-- Class -->
                         <div class="space-y-2">
-                            <input type="hidden" name="allotment_class_id" id="allotment_class_id" value="{{ $allotment_class->id }}">
+                            <input type="hidden" name="allotment_class_id" id="allotment_class_id" value="">
                             <x-form.label for="class" :value="__('Class')" class="block text-xs font-medium text-gray-900 dark:text-gray-200" />
                             <x-form.input-with-icon-wrapper>
                                 <x-slot name="icon">
@@ -49,8 +49,8 @@
                                 </x-slot>
                                 <x-form.select withicon id="edit_category" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" name="edit_category" placeholder="{{ __('Category') }}">
                                     <option value="">{{ __('Select Category') }}</option>
-                                    <option value="Current" {{ (old('category', $allotment_class->category ?? null) == 'Current') ? 'selected' : '' }}>Current</option>
-                                    <option value="Continuing" {{ (old('category', $allotment_class->category ?? null) == 'Continuing') ? 'selected' : '' }}>Continuing</option>
+                                    <option value="Current" {{ old('category') == 'Current' ? 'selected' : '' }}>Current</option>
+                                    <option value="Continuing" {{ old('category') == 'Continuing' ? 'selected' : '' }}>Continuing</option>
                                 </x-form.select>
                             </x-form.input-with-icon-wrapper>
                             <span id="editcategoryError" class="text-red-500 text-xs"></span>

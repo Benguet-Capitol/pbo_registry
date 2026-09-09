@@ -130,15 +130,6 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                     $sheet->setCellValue("P{$row}", "=IF(J{$row}>0,L{$row}/J{$row},0.00)");
                 }
 
-                // Utility: Apply percentage formulas for columns N and P
-                function applyPercentageFormulas($sheet, $row)
-                {
-                    $i = "I{$row}";
-                    $j = "J{$row}";
-                    $l = "L{$row}";
-                    $sheet->setCellValue("N{$row}", "=IF($i>0,$l/$i,0)");
-                    $sheet->setCellValue("P{$row}", "=IF($j>0,$l/$j,0)");
-                }
 
                 // Loop through all rows to apply formulas
                 for ($row = 13; $row <= $lastDataRow; $row++) {
@@ -164,7 +155,7 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                         foreach (range('E', 'P') as $col) {
                             $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
                         }
-                        applyPercentageFormulas($sheet, $row);
+                        $this->applyPercentageFormulas($sheet, $row);
                     }
 
                     // === GRAND TOTAL ROW ===
@@ -183,7 +174,7 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
 
@@ -194,7 +185,7 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", $grandTotalRows));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
                 }
@@ -530,5 +521,15 @@ class SAAOBCOExport implements FromView, WithStyles, WithEvents
             'signatoryDesignation' => $this->signatoryDesignation,
             'overallTotal' => $overallTotal,
         ]);
+    }
+
+    // Apply percentage formulas for columns N and P
+    private function applyPercentageFormulas($sheet, $row)
+    {
+        $i = "I{$row}";
+        $j = "J{$row}";
+        $l = "L{$row}";
+        $sheet->setCellValue("N{$row}", "=IF($i>0,$l/$i,0)");
+        $sheet->setCellValue("P{$row}", "=IF($j>0,$l/$j,0)");
     }
 }

@@ -10,7 +10,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\ObligationAdjustment;
-use App\Models\OfficeAllotmentClass;
 use App\Models\Sector;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Events\AfterSheet;
@@ -111,15 +110,6 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                     $sheet->setCellValue("M{$row}", "=IF(G{$row}>0,I{$row}/G{$row},0.00)");
                 }
 
-                // Utility: Apply percentage formulas for columns M and O
-                function applyPercentageFormulas($sheet, $row)
-                {
-                    $f = "F{$row}";
-                    $g = "G{$row}";
-                    $i = "I{$row}";
-                    $sheet->setCellValue("K{$row}", "=IF($f>0,$i/$f,0)");
-                    $sheet->setCellValue("M{$row}", "=IF($g>0,$i/$g,0)");
-                }
 
                 // Loop through all rows to apply formulas
                 for ($row = 13; $row <= $lastDataRow; $row++) {
@@ -145,7 +135,7 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                         foreach (range('B', 'M') as $col) {
                             $sheet->setCellValue("{$col}{$row}", "=SUM({$col}{$startRow}:{$col}" . ($row - 1) . ")");
                         }
-                        applyPercentageFormulas($sheet, $row);
+                        $this->applyPercentageFormulas($sheet, $row);
                     }
 
                     // === GRAND TOTAL ROW ===
@@ -164,7 +154,7 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
                                 $refs = implode(',', array_map(fn($r) => "{$col}{$r}", array_reverse($totalRows)));
                                 $sheet->setCellValue("{$col}{$row}", "=SUM({$refs})");
                             }
-                            applyPercentageFormulas($sheet, $row);
+                            $this->applyPercentageFormulas($sheet, $row);
                         }
                     }
                 }
@@ -241,10 +231,9 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
             ->get()
             ->groupBy('category')
             ->map(function ($sources, $category) use ($currentQuarter, $asOfDate) {
-                $fundSourceCodes = $sources->pluck('source');
-
-                $fundsInUse = OfficeAllotmentClass::whereIn('fund_source', $fundSourceCodes)
-                    ->where('year', $this->selectedYear)
+                // Derived from the already eager-loaded officeAllotmentClasses relation (which
+                // is scoped to $selectedYear) instead of a fresh query per category.
+                $fundsInUse = $sources->flatMap->officeAllotmentClasses
                     ->pluck('fund')
                     ->unique();
 
@@ -402,5 +391,15 @@ class SAAOBFundSourceExport implements FromView, WithStyles, WithEvents
             'signatoryName' => $this->signatoryName,
             'signatoryDesignation' => $this->signatoryDesignation,
         ]);
+    }
+
+    // Apply percentage formulas for columns K and M
+    private function applyPercentageFormulas($sheet, $row)
+    {
+        $f = "F{$row}";
+        $g = "G{$row}";
+        $i = "I{$row}";
+        $sheet->setCellValue("K{$row}", "=IF($f>0,$i/$f,0)");
+        $sheet->setCellValue("M{$row}", "=IF($g>0,$i/$g,0)");
     }
 }

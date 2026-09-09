@@ -135,6 +135,12 @@
     </div>
     </div>
 
+    <div id="dashboardInsightsPanel">
+    @if($dashboardLoading ?? false)
+        <div id="dashboardLoadingSkeleton" class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-6 mb-4">
+            <i class="fas fa-spinner fa-spin"></i> Loading dashboard data...
+        </div>
+    @else
     {{-- Insights & Analytics Panel --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
         <div class="flex justify-between items-center mb-3 border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -456,7 +462,7 @@
                             @endrole
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="dashboardOACTableBody">
                         @forelse ($officeAllotmentClasses as $class)
                         <tr
                             class="group {{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
@@ -639,10 +645,12 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-4">
+            <div class="mt-4" id="dashboardOACPagination">
                 @if ($perPage != 'all')
                 {{ $officeAllotmentClasses->appends(request()->query())->links() }}
                 @endif
             </div>
         </div>
+    </div>
+    @endif
     </div>

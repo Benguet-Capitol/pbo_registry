@@ -51,6 +51,12 @@ class SAAOBFundSectorController extends Controller
             $fundsQuery->where('fund_type', $selectedFund);
         }
 
+        // Defer the heavy fund/sector aggregation on first load; the page's own AJAX fetch
+        // re-requests it with a loading state.
+        $saaobfundsectorLoading = ! $request->ajax();
+
+        if (! $saaobfundsectorLoading) {
+
         $funds = $fundsQuery->with([
             'officeAllotmentClasses' => fn($query) => $query->where('year', $selectedYear),
             'officeAllotmentClasses.fundSourceRelation',
@@ -478,6 +484,11 @@ class SAAOBFundSectorController extends Controller
             return $baseFund;
         })->values();
 
+        } else {
+            $funds = collect();
+            $groupedFunds = collect();
+        }
+
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderByDesc('year')->pluck('year');
 
         return view('saaobfundsector.index', compact(
@@ -489,7 +500,8 @@ class SAAOBFundSectorController extends Controller
             'employees',
             'funds',
             'groupedFunds',
-            'sectors'
+            'sectors',
+            'saaobfundsectorLoading'
         ))->with('status', session('status'));
     }
 

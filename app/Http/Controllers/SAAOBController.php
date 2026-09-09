@@ -67,17 +67,26 @@ class SAAOBController extends Controller
             });
 
             // Check if selected office is a SEF office, if so get all SEF offices
+            // (also determines $isSEFConsolidated below; queried once instead of twice)
+            $isSEFConsolidated = false;
             if (!empty($selectedOffice)) {
                 $selectedOfficeRecord = Office::find($selectedOffice);
                 if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
                     // Get all SEF offices
                     $officesQuery->where('fund', 'Special Education Fund');
+                    $isSEFConsolidated = true;
                 } else {
                     // Otherwise, filter to just the selected office
                     $officesQuery->where('id', $selectedOffice);
                 }
             }
-            
+
+            // Defer the heavy office/appropriation aggregation on first load; the page's own AJAX
+            // fetch re-requests it with a loading state.
+            $saaobLoading = ! $request->ajax();
+
+            if (! $saaobLoading) {
+
             // Get all offices with their OfficeAllotmentClasses and related data
             $offices = $officesQuery->with([
                 'officeAllotmentClasses' => function ($query) use ($selectedYear) {
@@ -256,15 +265,6 @@ class SAAOBController extends Controller
                 $office->grandTotal = $gt;
             }
 
-            // Determine if we're viewing consolidated SEF offices
-            $isSEFConsolidated = false;
-            if (!empty($selectedOffice)) {
-                $selectedOfficeRecord = Office::find($selectedOffice);
-                if ($selectedOfficeRecord && $selectedOfficeRecord->fund === 'Special Education Fund') {
-                    $isSEFConsolidated = true;
-                }
-            }
-
             // Calculate overall total if all offices are selected or SEF is consolidated
             $overallTotal = null;
             if ((empty($selectedOffice) || $isSEFConsolidated) && count($offices) > 0) {
@@ -280,7 +280,12 @@ class SAAOBController extends Controller
                     : 0;
             }
 
-            return view('saaob.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'officesQuery', 'allOffices', 'accounts', 'overallTotal', 'isSEFConsolidated'))
+            } else {
+                $offices = collect();
+                $overallTotal = null;
+            }
+
+            return view('saaob.index', compact('availableYears', 'offices', 'selectedYear', 'selectedOffice', 'selectedAccountCode', 'asOfDate', 'employees', 'officesQuery', 'allOffices', 'accounts', 'overallTotal', 'isSEFConsolidated', 'saaobLoading'))
                 ->with('status', session('status'));
         }
 

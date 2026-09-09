@@ -95,6 +95,11 @@ class PurchaseOrderController extends Controller
 
         $allotmentClasses = AllotmentClass::orderBy('class', 'desc')->get();
 
+        // Defer the heavy purchase orders query/count on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $purchaseOrdersLoading = ! $request->ajax();
+
+        if (! $purchaseOrdersLoading) {
+
         $query = PurchaseOrder::with([
                 'obligation.obligationAmounts.appropriation',
                 'obligation.officeAllotmentClass.offices',
@@ -233,6 +238,17 @@ class PurchaseOrderController extends Controller
             });
         }
 
+        } else {
+            $perPage = is_numeric($perPage) ? (int) $perPage : 10;
+            $purchaseOrders = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                $perPage,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         // Fetch distinct years from the database
         $availableYears = OfficeAllotmentClass::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
         // Get the list of office allotment classes filtered by the selected year
@@ -252,6 +268,7 @@ class PurchaseOrderController extends Controller
         ];
 
         // Calculate total records (unique po_number values)
+        if (! $purchaseOrdersLoading) {
         $totalRecordsQuery = PurchaseOrder::with([
                 'obligation.obligationAmounts.appropriation',
                 'obligation.officeAllotmentClass.offices',
@@ -340,8 +357,11 @@ class PurchaseOrderController extends Controller
         }
 
         $totalRecords = $totalRecordsQuery->distinct('po_number')->count('po_number');
+        } else {
+            $totalRecords = 0;
+        }
 
-        return view('purchase_orders.index_all', compact('purchaseOrders', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'totalRecords', 'allotmentClasses'));
+        return view('purchase_orders.index_all', compact('purchaseOrders', 'breadcrumb', 'availableYears', 'selectedYear', 'perPage', 'search', 'sortBy', 'sortOrder', 'officeAllotmentClasses', 'office_allotment_classes', 'totalRecords', 'allotmentClasses', 'purchaseOrdersLoading'));
     }
 
     /**

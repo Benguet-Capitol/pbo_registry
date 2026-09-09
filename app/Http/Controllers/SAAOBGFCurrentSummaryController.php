@@ -31,6 +31,12 @@ class SAAOBGFCurrentSummaryController extends Controller
         $offices = Office::all();
         $employees = Employee::where('office', '12')->orderBy('employee_id')->get();
 
+        // Defer the heavy per-fund/sector/allotment-class aggregation on first load; the
+        // page's own AJAX fetch re-requests it with a loading state.
+        $saaobgfcurrentsummaryLoading = ! $request->ajax();
+
+        if (! $saaobgfcurrentsummaryLoading) {
+
         // Per Fund and Allotment Class
         $funds = Fund::where('fund_type', 'General Fund')
             ->with(['officeAllotmentClasses' => function ($query) use ($selectedYear) {
@@ -39,9 +45,10 @@ class SAAOBGFCurrentSummaryController extends Controller
                     $subQuery->where('category', 'Current')
                 )
                 ->where('fund_source', '!=', 'Continuing Capital Outlay')
-                ->with(['allotmentClass', 
+                ->with(['allotmentClass',
                         'appropriations.supplementals',
                         'appropriations.realignments',
+                        'appropriations.obligationAmounts.obligation',
                         'appropriations.obligationAmounts.obligationAdjustments'
                     ])
                     ->orderBy(
@@ -226,26 +233,30 @@ class SAAOBGFCurrentSummaryController extends Controller
         $grand = $grandTotal;
 
 
+        // Fetched once instead of per sector; each sector filters this read-only collection in
+        // memory (safe since the .map() below returns brand-new objects, never mutating these).
+        $allOACsForSectors = OfficeAllotmentClass::where('year', $selectedYear)
+            ->where('fund_source', '!=', 'Continuing Capital Outlay')
+            ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
+            ->whereHas('allotmentClass', function ($q) {
+                $q->where('category', 'Current');
+            })
+            ->whereHas('appropriations')
+            ->with([
+                'allotmentClass',
+                'appropriations.supplementals',
+                'appropriations.realignments',
+                'appropriations.obligationAmounts.obligation',
+                'appropriations.obligationAmounts.obligationAdjustments',
+            ])
+            ->get();
+
         // Per sector
         $sectors = Sector::orderBy('sector_code')
             ->get()
-            ->map(function ($sector) use ($currentQuarter, $selectedYear, $asOfDate) {
-                $presentAllotmentClasses = OfficeAllotmentClass::where('year', $selectedYear)
-                    ->where('fund_source', '!=', 'Continuing Capital Outlay')
-                    ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
-                    ->whereHas('allotmentClass', function ($q) {
-                        $q->where('category', 'Current');
-                    })
-                    ->whereHas('appropriations', function ($q) use ($sector) {
-                        $q->where('fpp_code', 'like', $sector->sector_code . '%');
-                    })
-                    ->with([
-                        'allotmentClass',
-                        'appropriations.supplementals',
-                        'appropriations.realignments',
-                        'appropriations.obligationAmounts.obligationAdjustments',
-                    ])
-                    ->get()
+            ->map(function ($sector) use ($currentQuarter, $asOfDate, $allOACsForSectors) {
+                $presentAllotmentClasses = $allOACsForSectors
+                    ->filter(fn ($oac) => $oac->appropriations->contains(fn ($a) => str_starts_with($a->fpp_code, $sector->sector_code)))
                     ->groupBy('allotmentClass.class')
                     ->map(function ($group) use ($currentQuarter, $sector, $asOfDate) {
                         $allotmentClass = $group->first()->allotmentClass;
@@ -302,7 +313,7 @@ class SAAOBGFCurrentSummaryController extends Controller
 
                         $obligationBase = $oacAppropriations
                             ->flatMap->obligationAmounts
-                            ->filter(fn($oa) => $asOfDate ? $oa->obr_date <= $asOfDate : true)
+                            ->filter(fn($oa) => $oa->obligation && ($asOfDate ? $oa->obligation->obr_date <= $asOfDate : true))
                             ->sum('obr_amount');
 
                         $obligationAdjustments = $oacAppropriations
@@ -404,7 +415,7 @@ class SAAOBGFCurrentSummaryController extends Controller
                 $query->where('year', $selectedYear)
                     ->where('fund_source', '!=', 'Continuing Capital Outlay')
                     ->whereIn('fund', ['General Fund', 'Provincial Development Fund'])
-                    ->with(['appropriations.supplementals', 'appropriations.realignments', 'appropriations.obligationAmounts.obligationAdjustments']);
+                    ->with(['appropriations.supplementals', 'appropriations.realignments', 'appropriations.obligationAmounts.obligation', 'appropriations.obligationAmounts.obligationAdjustments']);
             }])
             ->get();
 
@@ -538,7 +549,32 @@ class SAAOBGFCurrentSummaryController extends Controller
             }) / max($computedAllotmentClasses->sum('allotment'), 1) * 100,
         ];
 
-        return view('saaobgfcurrentsummary.index', compact('offices', 'sectors', 'employees', 'allotmentClasses', 'computedAllotmentClasses', 'availableYears', 'selectedYear', 'asOfDate', 'funds', 'grandTotal', 'grandTotals', 'overAllGrandTotal'));
+        } else {
+            $emptyTotals = (object) [
+                'approved_appropriations' => 0,
+                'sb_appropriation' => 0,
+                'reversion' => 0,
+                'realignment' => 0,
+                'authorized_appropriation' => 0,
+                'for_later_release' => 0,
+                'allotment' => 0,
+                'obligation' => 0,
+                'appropriation_balance' => 0,
+                'allotment_balance' => 0,
+                'appropriation_accomplishment' => 0,
+                'allotment_accomplishment' => 0,
+            ];
+
+            $funds = collect();
+            $sectors = collect();
+            $allotmentClasses = collect();
+            $computedAllotmentClasses = collect();
+            $grandTotal = clone $emptyTotals;
+            $grandTotals = clone $emptyTotals;
+            $overAllGrandTotal = clone $emptyTotals;
+        }
+
+        return view('saaobgfcurrentsummary.index', compact('offices', 'sectors', 'employees', 'allotmentClasses', 'computedAllotmentClasses', 'availableYears', 'selectedYear', 'asOfDate', 'funds', 'grandTotal', 'grandTotals', 'overAllGrandTotal', 'saaobgfcurrentsummaryLoading'));
     }
 
     public function exportExcel(Request $request)

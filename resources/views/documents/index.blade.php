@@ -130,7 +130,14 @@
                         <th class="px-6 py-3 border-gray-300 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="documentsTableBody">
+                    @if($documentsLoading ?? false)
+                        <tr>
+                            <td colspan="6" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading documents...
+                            </td>
+                        </tr>
+                    @else
                     @forelse($documents as $document)
                     <tr class="{{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border-b dark:border-gray-700 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                         <td class="px-6 py-3 border-b border-gray-300 text-left text-gray-600 dark:text-gray-300 border-l-4 border-l-gray-500">
@@ -212,10 +219,11 @@
                         </td>
                     </tr>
                     @endforelse
+                    @endif
                 </tbody>
             </table>
             <!-- Pagination -->
-            <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700" id="documentsPagination">
                 @if ($perPage != 'all')
                     {{ $documents->appends(request()->query())->links() }}
                 @else
@@ -420,6 +428,41 @@
                 firstAlert.parentElement.insertBefore(alertDiv, firstAlert);
             }
         }
+    });
+
+    // Fetches the table/pagination fragment in the background and splices it in, so switching
+    // pages (or the initial shell-to-real-data load) only refreshes the table, not the whole page.
+    function loadDocuments(url, pushHistory = true) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                ['documentsTableBody', 'documentsPagination'].forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                });
+                if (pushHistory) history.pushState(null, '', url);
+            })
+            .catch(error => {
+                console.error('Failed to load documents, falling back to full page navigation:', error);
+                window.location.href = url;
+            });
+    }
+
+    @if($documentsLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the skeleton gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDocuments(window.location.href, false);
+        });
+    @endif
+
+    // Delegated click handler for pagination links (they get replaced on every load).
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#documentsPagination a');
+        if (!link) return;
+        e.preventDefault();
+        loadDocuments(link.href);
     });
 </script>
 

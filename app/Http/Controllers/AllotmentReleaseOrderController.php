@@ -41,6 +41,11 @@ class AllotmentReleaseOrderController extends Controller
         $selectedYear = $request->input('year1', $currentYear);
         $search = $request->input('search');
 
+        // Defer the heavy allotment release orders query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $allotmentReleaseOrdersLoading = ! $request->ajax();
+
+        if (! $allotmentReleaseOrdersLoading) {
+
         $query = AllotmentReleaseOrder::with([
             'officeAllotmentClass.offices',
             'officeAllotmentClass.allotmentClass',
@@ -80,6 +85,10 @@ class AllotmentReleaseOrderController extends Controller
         }
 
         $allotmentReleaseOrders = $query->orderByDesc('id')->get();
+
+        } else {
+            $allotmentReleaseOrders = collect();
+        }
 
         $availableYears = OfficeAllotmentClass::query()
             ->distinct()
@@ -136,7 +145,8 @@ class AllotmentReleaseOrderController extends Controller
             'activeFilterChips',
             'search',
             'breadcrumb',
-            'officeAllotmentClassesForForm'
+            'officeAllotmentClassesForForm',
+            'allotmentReleaseOrdersLoading'
         ))->with('status', session('status'));
     }
 

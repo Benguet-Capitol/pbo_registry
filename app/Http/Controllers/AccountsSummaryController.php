@@ -85,14 +85,18 @@ class AccountsSummaryController extends Controller
         }
     }
     
-    $allotmentClasses = $query->orderBy('id')
+    // Defer the heavy per-class/account aggregation on first load; the page's own AJAX
+    // fetch re-requests it with a loading state.
+    $accountsSummaryLoading = ! $request->ajax();
+
+    $allotmentClasses = $accountsSummaryLoading ? collect() : $query->orderBy('id')
         ->get()
         ->groupBy(function($item) {
             return $item->allotmentClass->description;
         });
 
     // Build grouped structure: class => [accounts with their appropriations]
-    $allotmentClassTotals = $allotmentClasses->map(function($classes) use ($asOfDate, $currentQuarter, $accountCodes) {
+    $allotmentClassTotals = $accountsSummaryLoading ? collect() : $allotmentClasses->map(function($classes) use ($asOfDate, $currentQuarter, $accountCodes) {
         $classAccounts = [];
         $classSubtotals = [
             'appropriation' => 0,
@@ -273,7 +277,8 @@ class AccountsSummaryController extends Controller
         'employees',
         'allotmentClassTotals',
         'availableFunds',
-        'selectedFund'
+        'selectedFund',
+        'accountsSummaryLoading'
     ))->with('status', session('status'));
 }
 

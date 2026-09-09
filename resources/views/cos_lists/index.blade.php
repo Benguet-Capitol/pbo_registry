@@ -260,7 +260,7 @@
                 <div class="flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 whitespace-nowrap">
                     <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                     <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                    <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $cosList->total() ?? count($cosList) }}</span>
+                    <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">@if($cosListLoading ?? false)<i class="fas fa-spinner fa-spin"></i>@else{{ $cosList->total() ?? count($cosList) }}@endif</span>
                 </div>
 
                 <!-- Search Section -->
@@ -291,6 +291,11 @@
             <!-- COS Cards -->
             <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                 <div class="max-h-[720px] overflow-y-auto p-2 space-y-3 bg-gray-50 dark:bg-gray-900" id="cosListContainer">
+                    @if($cosListLoading ?? false)
+                        <div class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 text-sm py-6">
+                            <i class="fas fa-spinner fa-spin"></i> Loading Contract of Services records...
+                        </div>
+                    @else
                     @forelse ($cosList as $cos)
                         <div class="cos-card bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-700 border-l-4 border-l-blue-500 rounded-lg shadow-sm overflow-hidden text-xs hover:shadow-md transition-all"
                              data-cos="{{ json_encode($cos->only(['id','office_allotment_class_id','appropriation_id','employee_id','employee_name','position_title','salary_grade','from_date','to_date','monthly_rate','annual_rate','remarks','basis'])) }}">
@@ -383,6 +388,7 @@
                             @endif
                         </div>
                     @endforelse
+                    @endif
                 </div>
 
                 <!-- Summary Footer -->
@@ -540,8 +546,8 @@
         }
 
         // Fetches the URL in the background and splices chips/buttons/list/footer/pagination markup in, instead of a full reload.
-        function loadCosSorted(url) {
-            showCosLoadingOverlay();
+        function loadCosSorted(url, pushHistory = true, showOverlay = true) {
+            if (showOverlay) showCosLoadingOverlay();
 
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(response => {
@@ -573,7 +579,7 @@
                         document.querySelectorAll(`#filterForm [name="${name}"]`).forEach(field => { field.value = newField.value; });
                     });
 
-                    history.pushState(null, '', url);
+                    if (pushHistory) history.pushState(null, '', url);
                 })
                 .catch(error => {
                     console.error('Failed to load COS list, falling back to full page navigation:', error);
@@ -584,6 +590,13 @@
                     if (overlay) overlay.remove();
                 });
         }
+
+        @if($cosListLoading ?? false)
+            // Shell rendered without data; fetch the real list now so the skeleton gets replaced.
+            document.addEventListener('DOMContentLoaded', function() {
+                loadCosSorted(window.location.href, false, false);
+            });
+        @endif
 
         // Submits the filter or search form via the same background fetch-and-splice as above.
         function submitCosFormAjax(form) {
@@ -600,9 +613,11 @@
             submitCosFormAjax(this);
         });
 
-        // Delegated click handler for active-filter chip links and the empty-state "clear filters" link.
+        // Delegated click handler for active-filter chip links, the empty-state "clear filters"
+        // link, and pagination links (all get replaced on every load, so delegation on a stable
+        // ancestor is required).
         document.addEventListener('click', function (e) {
-            const link = e.target.closest('#activeFilterChipsContainer a, #cosListContainer a');
+            const link = e.target.closest('#activeFilterChipsContainer a, #cosListContainer a, #cosPagination a');
             if (!link) return;
             e.preventDefault();
             loadCosSorted(link.href);

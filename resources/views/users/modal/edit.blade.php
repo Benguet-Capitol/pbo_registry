@@ -23,7 +23,7 @@
                         <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-6">
                             <!-- Name -->
                             <div class="sm:col-span-3">
-                                <input type="hidden" name="user_id" id="user_id" value="{{ $user->id }}">
+                                <input type="hidden" name="user_id" id="user_id" value="">
                                 <x-form.label for="edit_name" class="block text-xs font-medium text-gray-900 dark:text-gray-200" :value="__('Name')" />
                                 <div class="mt-2">
                                     <x-form.input-with-icon-wrapper>
@@ -32,7 +32,7 @@
                                         </x-slot>
                                         <x-form.select withicon id="edit_name" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" name="edit_name" autocomplete="off">
                                             @foreach($employees as $employee)
-                                            <option value="{{ $employee->name }}" {{ old('name', $user->name) == $employee->name ? 'selected' : '' }}>
+                                            <option value="{{ $employee->name }}" {{ old('name') == $employee->name ? 'selected' : '' }}>
                                                 {{ $employee->name }}
                                             </option>
                                             @endforeach
@@ -50,7 +50,7 @@
                                         <x-slot name="icon">
                                             <i class="fas fa-envelope"></i>
                                         </x-slot>
-                                        <x-form.input withicon id="edit_username" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" type="text" name="edit_username" autocomplete="off" placeholder="{{ __('Username') }}" :value="old('username', $user->username)" />
+                                        <x-form.input withicon id="edit_username" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" type="text" name="edit_username" autocomplete="off" placeholder="{{ __('Username') }}" :value="old('username')" />
                                     </x-form.input-with-icon-wrapper>
                                     <span id="username_Error" class="text-red-500 text-xs error-message"></span>
                                 </div>
@@ -67,7 +67,7 @@
                                         <x-form.select withicon id="edit_usertype" class="block w-full text-xs dark:bg-gray-800 dark:text-gray-200" name="edit_usertype" autocomplete="off">
                                             <option value="">{{ __('Select Role') }}</option>
                                             @foreach($roles as $role)
-                                                <option value="{{ $role->name }}" {{ old('usertype', $user->usertype) == $role->name ? 'selected' : '' }}>{{ $role->name }}</option>
+                                                <option value="{{ $role->name }}" {{ old('usertype') == $role->name ? 'selected' : '' }}>{{ $role->name }}</option>
                                             @endforeach
                                         </x-form.select>
                                     </x-form.input-with-icon-wrapper>

@@ -378,8 +378,11 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
 
     public function view(): View
     {
-         $selectedYear = request('year1', date('Y'));
-        $asOfDate = request('as_of_filter', now()->toDateString());
+        // Use the values passed to the constructor instead of re-reading request() here,
+        // which discarded the constructor args and would break if this export ever ran
+        // outside the original HTTP request (e.g. queued).
+        $selectedYear = $this->selectedYear ?? date('Y');
+        $asOfDate = $this->asOfDate ?? now()->toDateString();
         $allAllotmentClasses = AllotmentClass::all();
 
         $fundsQuery = Fund::orderBy('id');
@@ -401,13 +404,13 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                         'appropriations.supplementals',
                         'appropriations.realignments',
                         'appropriations.obligationAmounts.obligation.obligationAdjustments',
+                        'appropriations.obligationAmounts.obligation.disbursements',
                     ]);
             }
         ])->get();
 
         // --- Helper function for totals
-        function computeTotals($classes)
-        {
+        $computeTotals = function ($classes) {
             $totals = [
                 'approved_appropriation' => 0,
                 'supplemental' => 0,
@@ -449,7 +452,7 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                     : 0;
 
             return $totals;
-        }
+        };
 
         // --- Main computation
         foreach ($funds as $fund) {
@@ -486,7 +489,11 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
                     ->where('supplemental_date', '<=', $asOfDate)
                     ->sum('amount') * -1;
 
+                // Uses the already eager-loaded appropriations.supplementals relation (matching
+                // the $supplemental/$reversion calculations above) instead of OfficeAllotmentClass's
+                // own (non-eager-loaded) supplementals relation, which lazy-loaded once per group.
                 $sbForLater = $oacGroup
+                            ->flatMap->appropriations
                             ->flatMap->supplementals
                             ->where('type', 'Supplemental')
                             ->filter(fn($s) => $asOfDate ? $s->supplemental_date <= $asOfDate : true)
@@ -598,17 +605,17 @@ class SAAODBAllFundsExport implements FromView, WithStyles, WithEvents
 
             // Assign computed results under each fund
             $fund->allotmentClasses = $allotmentClasses->values();
-            $fund->totals = (object) computeTotals($allotmentClasses);
+            $fund->totals = (object) $computeTotals($allotmentClasses);
 
             // --- Group totals by category ---
             $currentClasses = $allotmentClasses->filter(fn($c) => !str_contains(strtoupper($c->class), 'CCO'));
             $continuingClasses = $allotmentClasses->filter(fn($c) => str_contains(strtoupper($c->class), 'CCO'));
 
-            $fund->total_current = (object) computeTotals($currentClasses);
-            $fund->total_continuing = (object) computeTotals($continuingClasses);
+            $fund->total_current = (object) $computeTotals($currentClasses);
+            $fund->total_continuing = (object) $computeTotals($continuingClasses);
 
             // Combine all for grand total
-            $fund->total_overall = (object) computeTotals($allotmentClasses);
+            $fund->total_overall = (object) $computeTotals($allotmentClasses);
 
             // Ensure default totals always exist even if empty
             foreach (['total_current', 'total_continuing', 'total_overall'] as $key) {

@@ -127,7 +127,14 @@
                         @canany(['edit employees', 'delete employees'])<th class="px-6 py-3 leading-4 text-gray-600 tracking-wider dark:text-gray-300">{{ __('Actions') }}</th>@endcanany
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="employeesTableBody">
+                    @if($employeesLoading ?? false)
+                        <tr>
+                            <td colspan="5" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading employees...
+                            </td>
+                        </tr>
+                    @else
                     @foreach ($employees as $employee)
                     <tr class="{{ $loop->odd ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/40' }} border-b dark:border-gray-700 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                         <td class="px-6 py-3 border-b border-gray-300 text-gray-600 dark:text-gray-300 border-l-4 border-l-gray-500">{{ $employee->employee_id }}</td>
@@ -160,9 +167,10 @@
                         </td>
                     </tr>
                     @endforeach
+                    @endif
                 </tbody>
             </table>
-            <div class="mt-4">
+            <div class="mt-4" id="employeesPagination">
                 @if ($perPage != 'all')
                 {{ $employees->appends(request()->query())->links() }}
                 @endif
@@ -231,6 +239,41 @@
             drop.classList.add('hidden');
         });
     }
+
+    // Fetches the table/pagination fragment in the background and splices it in, so switching
+    // pages (or the initial shell-to-real-data load) only refreshes the table, not the whole page.
+    function loadEmployees(url, pushHistory = true) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                ['employeesTableBody', 'employeesPagination'].forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                });
+                if (pushHistory) history.pushState(null, '', url);
+            })
+            .catch(error => {
+                console.error('Failed to load employees, falling back to full page navigation:', error);
+                window.location.href = url;
+            });
+    }
+
+    @if($employeesLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the skeleton gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployees(window.location.href, false);
+        });
+    @endif
+
+    // Delegated click handler for pagination links (they get replaced on every load).
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#employeesPagination a');
+        if (!link) return;
+        e.preventDefault();
+        loadEmployees(link.href);
+    });
 </script>
 
 <style>

@@ -25,6 +25,11 @@ class UserController extends Controller
         $sortBy = $request->query('sort_by', 'id');
         $sortOrder = $request->query('sort_order', 'desc');
 
+        // Defer the heavy users query on first load; the page's own AJAX fetch re-requests it with a loading state.
+        $usersLoading = ! $request->ajax();
+
+        if (! $usersLoading) {
+
         // Query users with office relationship
         $query = User::with('officeRelation'); // Eager load the office relationship
 
@@ -59,6 +64,16 @@ class UserController extends Controller
             $users = $query->paginate($perPage);
         }
 
+        } else {
+            $users = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                is_numeric($perPage) ? (int) $perPage : 10,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
+
         // Get employees and sort by name (locally)
         $employees = Employee::all()->sortBy('name');
 
@@ -76,7 +91,7 @@ class UserController extends Controller
             ['label' => 'Users']
         ];
 
-        return view('users.index', compact('users', 'perPage', 'search', 'sortBy', 'sortOrder', 'employees', 'roles', 'offices', 'restrictedRoleNames', 'breadcrumb'))
+        return view('users.index', compact('users', 'perPage', 'search', 'sortBy', 'sortOrder', 'employees', 'roles', 'offices', 'restrictedRoleNames', 'breadcrumb', 'usersLoading'))
             ->with('status', session('status'));
     }
 

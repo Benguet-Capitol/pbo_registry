@@ -187,7 +187,7 @@
                     <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600 shrink-0">
                         <i class="fas fa-list text-blue-600 dark:text-blue-400"></i>
                         <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Total Records:</span>
-                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">{{ $totalRecords }}</span>
+                        <span id="totalRecordsCount" class="text-xs font-bold text-blue-900 dark:text-blue-200">@if($officeAllotmentClassesLoading ?? false)<i class="fas fa-spinner fa-spin"></i>@else{{ $totalRecords }}@endif</span>
                     </div>
                     <!-- Search Input -->
                     <div class="flex items-center gap-2 w-full sm:min-w-96 sm:w-auto">
@@ -275,6 +275,13 @@
                     </tr>
                 </thead>
                 <tbody id="officeAllotmentBody">
+                    @if($officeAllotmentClassesLoading ?? false)
+                        <tr>
+                            <td colspan="7" class="px-1 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading office allotment classes...
+                            </td>
+                        </tr>
+                    @else
                     @forelse ($office_allotment_classes as $office_allotment_class)
                         @php
                             // Color-codes the Fund Source badge so the three budget sources
@@ -337,6 +344,7 @@
                             </td>
                         </tr>
                     @endforelse
+                    @endif
                 </tbody>
 
                 <tfoot class="bg-gray-200 dark:bg-gray-900 border-t-2 border-b-2 border-gray-700 dark:border-gray-600">
@@ -352,7 +360,7 @@
             </div>
 
             <!-- Pagination -->
-            <div class="mt-4">
+            <div class="mt-4" id="paginationContainer">
                 @if ($perPage != 'all')
                     {{ $office_allotment_classes->appends(request()->query())->links() }}
                 @endif
@@ -570,6 +578,42 @@
             }
         });
     }
+
+    // Fetches the table/pagination fragment in the background and splices it in, so switching
+    // pages (or the initial shell-to-real-data load) only refreshes the table, not the whole page.
+    function loadOfficeAllotmentClasses(url, pushHistory = true) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                ['officeAllotmentBody', 'totalRecordsCount', 'paginationContainer'].forEach(id => {
+                    const newEl = doc.getElementById(id);
+                    const currentEl = document.getElementById(id);
+                    if (newEl && currentEl) currentEl.innerHTML = newEl.innerHTML;
+                });
+                if (pushHistory) history.pushState(null, '', url);
+                calculateVisibleTotalAppropriation();
+            })
+            .catch(error => {
+                console.error('Failed to load office allotment classes, falling back to full page navigation:', error);
+                window.location.href = url;
+            });
+    }
+
+    @if($officeAllotmentClassesLoading ?? false)
+        // Shell rendered without data; fetch the real table now so the skeleton gets replaced.
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOfficeAllotmentClasses(window.location.href, false);
+        });
+    @endif
+
+    // Delegated click handler for pagination links (they get replaced on every load).
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#paginationContainer a');
+        if (!link) return;
+        e.preventDefault();
+        loadOfficeAllotmentClasses(link.href);
+    });
 
     // Attach search listener
     document.addEventListener('DOMContentLoaded', function() {

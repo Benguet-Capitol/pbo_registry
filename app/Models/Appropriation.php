@@ -72,5 +72,18 @@ class Appropriation extends Model
         return $this->hasManyThrough(Disbursement::class, ObligationAmount::class, 'appropriation_id', 'obligation_amounts_id');
     }
 
+    protected static function booted()
+    {
+        // ObligationAmount stores a denormalized copy of account_code. Keep it in
+        // sync so obligations created before an account code edit don't fail the
+        // "account code valid for this Office/Allotment Class" check on later edits.
+        static::updated(function (Appropriation $appropriation) {
+            if ($appropriation->wasChanged('account_code')) {
+                $appropriation->obligationAmounts()->update([
+                    'account_code' => $appropriation->account_code,
+                ]);
+            }
+        });
+    }
 
 }

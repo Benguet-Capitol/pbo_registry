@@ -339,6 +339,10 @@ class DashboardController extends Controller
         // Defer the heavy dashboard aggregation on first load; the page's own AJAX fetch re-requests it with a loading state.
         $dashboardLoading = ! $request->ajax();
 
+        // Needed unconditionally for the create-obligation modal (see below), which must be
+        // populated even on the deferred/shell load so it works before the AJAX swap completes.
+        $currentQuarter = $this->currentQuarter($toDate);
+
         if (! $dashboardLoading) {
 
         // --- Base query ---
@@ -419,8 +423,6 @@ class DashboardController extends Controller
             ->unique()
             ->values()
             ->toArray();
-
-        $currentQuarter = $this->currentQuarter($toDate);
 
         // --- Batch aggregations ---
         $supplementalRows = Supplemental::where('type', 'Supplemental')
@@ -592,39 +594,6 @@ class DashboardController extends Controller
         $obligationRanges    = $this->buildObligationRanges($obligationAmounts);
         $obligationsByQuarter = $this->buildObligationsByQuarter($appropriationIds, $currentYear, $fromDate, $toDate);
 
-        // --- Appropriations for create modal ---
-        $appropriations = Appropriation::with([
-            'obligationAmounts.obligationAdjustments',
-            'realignments',
-            'supplementals',
-        ])->whereIn('id', $appropriationIds)->get();
-
-        $appropriations->each(function ($appropriation) use ($currentQuarter) {
-            $totalAppropriation = collect([
-                $appropriation->quarter1, $appropriation->quarter2,
-                $appropriation->quarter3, $appropriation->quarter4,
-            ])->take($currentQuarter)->sum();
-
-            $totalObrAmount = $appropriation->obligationAmounts->sum(
-                fn($oa) => $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount')
-            );
-
-            $realignmentTotal = $appropriation->realignments->sum(
-                fn($r) => $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0)
-            );
-
-            $supplementalTotal = $appropriation->supplementals->sum(
-                fn($s) => $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0)
-            );
-
-            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
-        });
-
-        // Broad unfiltered set used only for the obligation/create modals
-        $office_allotment_classes = OfficeAllotmentClass::with([
-            'offices', 'allotmentClass', 'fundSourceRelation', 'fund',
-        ])->where('year', $currentYear)->get();
-
         } else {
             $officeAllotmentClasses = new \Illuminate\Pagination\LengthAwarePaginator(
                 collect(),
@@ -633,8 +602,6 @@ class DashboardController extends Controller
                 1,
                 ['path' => $request->url(), 'query' => $request->query()]
             );
-            $office_allotment_classes = collect();
-            $appropriations = collect();
             $totalAppropriations = 0;
             $totalAllotments = 0;
             $totalObligations = 0;
@@ -664,6 +631,41 @@ class DashboardController extends Controller
                 ['quarter' => 'Q4', 'count' => 0],
             ];
         }
+
+        // --- Data for the create-obligation modal (Office/Allotment Class + Accounts) ---
+        // Computed unconditionally (even on the deferred/shell load) so the modal can
+        // auto-fill the office/allotment class and appropriations right away, rather than
+        // waiting for the heavy filtered dashboard aggregation above.
+        $office_allotment_classes = OfficeAllotmentClass::with([
+            'offices', 'allotmentClass', 'fundSourceRelation', 'fund',
+        ])->where('year', $currentYear)->get();
+
+        $appropriations = Appropriation::with([
+            'obligationAmounts.obligationAdjustments',
+            'realignments',
+            'supplementals',
+        ])->whereIn('office_allotment_class_id', $office_allotment_classes->pluck('id'))->get();
+
+        $appropriations->each(function ($appropriation) use ($currentQuarter) {
+            $totalAppropriation = collect([
+                $appropriation->quarter1, $appropriation->quarter2,
+                $appropriation->quarter3, $appropriation->quarter4,
+            ])->take($currentQuarter)->sum();
+
+            $totalObrAmount = $appropriation->obligationAmounts->sum(
+                fn($oa) => $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount')
+            );
+
+            $realignmentTotal = $appropriation->realignments->sum(
+                fn($r) => $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0)
+            );
+
+            $supplementalTotal = $appropriation->supplementals->sum(
+                fn($s) => $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0)
+            );
+
+            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+        });
 
         return view('dashboard', compact(
             'officeAllotmentClasses',
@@ -765,12 +767,15 @@ class DashboardController extends Controller
         // Defer the heavy per-account aggregation on first load; the page's own AJAX fetch re-requests it with a loading state.
         $accountsLoading = ! $request->ajax();
 
+        // Needed unconditionally for the create-obligation modal (see below), which must be
+        // populated even on the deferred/shell load so it works before the AJAX swap completes.
+        $currentQuarter = $this->currentQuarter($toDate);
+        $appropriationIds = $officeAllotmentClasses->appropriations->pluck('id')->toArray();
+
         if (! $accountsLoading) {
 
         // Sort appropriations
         $officeAllotmentClasses->appropriations = $this->sortAppropriations($officeAllotmentClasses->appropriations);
-
-        $currentQuarter = $this->currentQuarter($toDate);
 
         // --- Class-level aggregates ---
         $officeAllotmentClasses->appropriations_sum = $officeAllotmentClasses->appropriations->sum('appropriation');
@@ -970,36 +975,6 @@ class DashboardController extends Controller
             $appropriation->disbursement_balance = $appropriation->obligations_sum - $appropriation->disbursements;
         }
 
-        // --- Modal appropriations ---
-        $appropriationIds = $officeAllotmentClasses->appropriations->pluck('id')->toArray();
-
-        $appropriations = Appropriation::with([
-            'obligationAmounts.obligationAdjustments',
-            'realignments',
-            'supplementals',
-        ])->whereIn('id', $appropriationIds)->get();
-
-        $appropriations->each(function ($appropriation) use ($currentQuarter) {
-            $totalAppropriation = collect([
-                $appropriation->quarter1, $appropriation->quarter2,
-                $appropriation->quarter3, $appropriation->quarter4,
-            ])->take($currentQuarter)->sum();
-
-            $totalObrAmount = $appropriation->obligationAmounts->sum(
-                fn($oa) => $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount')
-            );
-
-            $realignmentTotal = $appropriation->realignments->sum(
-                fn($r) => $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0)
-            );
-
-            $supplementalTotal = $appropriation->supplementals->sum(
-                fn($s) => $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0)
-            );
-
-            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
-        });
-
         // --- Volume metrics for accounts page ---
         $oblAmountIds = ObligationAmount::whereIn('appropriation_id', $appropriationIds)->pluck('id');
 
@@ -1053,10 +1028,6 @@ class DashboardController extends Controller
         $obligationRanges    = $this->buildObligationRanges($obligationAmountsData);
         $obligationsByQuarter = $this->buildObligationsByQuarter($appropriationIds, $selectedYear, $fromDate, $toDate);
 
-        $office_allotment_classes = OfficeAllotmentClass::with([
-            'offices', 'allotmentClass', 'fundSourceRelation', 'fund',
-        ])->where('year', $selectedYear)->get();
-
         } else {
             $officeAllotmentClasses->appropriations_sum = 0;
             $officeAllotmentClasses->supplemental_sum = 0;
@@ -1095,7 +1066,6 @@ class DashboardController extends Controller
             }
 
             $obrSum = 0;
-            $appropriations = collect();
             $totalObligationCount = 0;
             $totalPurchaseOrderCount = 0;
             $totalDisbursementCount = 0;
@@ -1108,8 +1078,41 @@ class DashboardController extends Controller
                 ['quarter' => 'Q3', 'count' => 0],
                 ['quarter' => 'Q4', 'count' => 0],
             ];
-            $office_allotment_classes = collect();
         }
+
+        // --- Data for the create-obligation modal (Office/Allotment Class + Accounts) ---
+        // Computed unconditionally (even on the deferred/shell load) so the modal can
+        // auto-fill the office/allotment class and appropriations right away.
+        $appropriations = Appropriation::with([
+            'obligationAmounts.obligationAdjustments',
+            'realignments',
+            'supplementals',
+        ])->whereIn('id', $appropriationIds)->get();
+
+        $appropriations->each(function ($appropriation) use ($currentQuarter) {
+            $totalAppropriation = collect([
+                $appropriation->quarter1, $appropriation->quarter2,
+                $appropriation->quarter3, $appropriation->quarter4,
+            ])->take($currentQuarter)->sum();
+
+            $totalObrAmount = $appropriation->obligationAmounts->sum(
+                fn($oa) => $oa->obr_amount + $oa->obligationAdjustments->sum('adjustment_amount')
+            );
+
+            $realignmentTotal = $appropriation->realignments->sum(
+                fn($r) => $r->type === 'Recipient' ? $r->amount : ($r->type === 'Source' ? -$r->amount : 0)
+            );
+
+            $supplementalTotal = $appropriation->supplementals->sum(
+                fn($s) => $s->type === 'Supplemental' ? $s->amount : ($s->type === 'Reversion' ? -$s->amount : 0)
+            );
+
+            $appropriation->balance = ($totalAppropriation + $realignmentTotal + $supplementalTotal) - $totalObrAmount;
+        });
+
+        $office_allotment_classes = OfficeAllotmentClass::with([
+            'offices', 'allotmentClass', 'fundSourceRelation', 'fund',
+        ])->where('year', $selectedYear)->get();
 
         return view('dashboard.accounts', compact(
             'officeAllotmentClasses',

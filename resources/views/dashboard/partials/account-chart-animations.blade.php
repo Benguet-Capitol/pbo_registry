@@ -1233,32 +1233,28 @@ if (typeof originalFilterTable === 'function') {
     /**
      * Initialize charts for Account Analytics Panel
      */
+    let accountAnalyticsChartsInitialized = false;
     function initializeAccountAnalyticsCharts() {
+        if (accountAnalyticsChartsInitialized) return;
+        accountAnalyticsChartsInitialized = true;
+
         const isDarkMode = document.documentElement.classList.contains('dark');
         const textColor = isDarkMode ? '#d1d5db' : '#6b7280';
         const gridColor = isDarkMode ? '#4b5563' : '#e5e7eb';
         const bgColor = isDarkMode ? '#111827' : '#ffffff';
-        
-        // Prepare data from server-side collections
-        @php
-        $histogramCountData = isset($obligationRanges) ? array_map(function($r) { return $r['count']; }, $obligationRanges) : array_fill(0, 6, 0);
-        $quarterCategories = isset($obligationsByQuarter) ? array_map(function($q) { return $q['quarter']; }, $obligationsByQuarter) : array_fill(0, 4, 'Q0');
-        $quarterCountData = isset($obligationsByQuarter) ? array_map(function($q) { return $q['count']; }, $obligationsByQuarter) : array_fill(0, 4, 0);
-        @endphp
+
+        // Read data from the panel's data attributes (not a value baked in at initial render) so that
+        // when the shell/loading page swaps in the real accountInsightsPanel HTML via AJAX,
+        // this picks up the fresh values instead of the initial zeroed placeholders.
+        const accountHistogramEl = document.querySelector('#accountObligationHistogram');
+        const domObligationRanges = accountHistogramEl && accountHistogramEl.dataset.ranges ? JSON.parse(accountHistogramEl.dataset.ranges) : @json($obligationRanges ?? []);
 
         // Obligation Distribution Histogram
         const histogramData = {
-            categories: [
-                '< 10K',
-                '10K - 50K',
-                '50K - 100K',
-                '100K - 500K',
-                '500K - 1M',
-                '> 1M'
-            ],
+            categories: domObligationRanges.map(r => r.label),
             series: [{
                 name: 'Count',
-                data: @json($histogramCountData)
+                data: domObligationRanges.map(r => r.count)
             }]
         };
 
@@ -1319,7 +1315,8 @@ if (typeof originalFilterTable === 'function') {
         }
 
         // Obligations by Quarter Line Chart
-        const obligationsByQuarter = @json($obligationsByQuarter);
+        const accountQuarterEl = document.querySelector('#accountObligationsByQuarter');
+        const obligationsByQuarter = accountQuarterEl && accountQuarterEl.dataset.quarters ? JSON.parse(accountQuarterEl.dataset.quarters) : @json($obligationsByQuarter ?? []);
         const categories = obligationsByQuarter.map(q => q.quarter);
         const counts = obligationsByQuarter.map(q => q.count);
         

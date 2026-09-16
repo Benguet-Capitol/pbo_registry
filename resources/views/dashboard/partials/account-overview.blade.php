@@ -256,13 +256,13 @@
                     <!-- Obligation Distribution by Amount Range (Histogram) -->
                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Obligation Distribution by Amount Range</h4>
-                        <div id="accountObligationHistogram" class="h-64"></div>
+                        <div id="accountObligationHistogram" class="h-64" data-ranges="@json($obligationRanges)"></div>
                     </div>
 
                     <!-- Obligations by Quarter (Line Chart) -->
                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Obligations Created by Quarter</h4>
-                        <div id="accountObligationsByQuarter" class="h-64"></div>
+                        <div id="accountObligationsByQuarter" class="h-64" data-quarters="@json($obligationsByQuarter)"></div>
                     </div>
                 </div>
             </div>

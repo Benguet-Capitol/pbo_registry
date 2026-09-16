@@ -837,10 +837,13 @@
             content.style.display = isHidden ? 'block' : 'none';
             toggle.className = isHidden ? 'fas fa-circle-chevron-up' : 'fas fa-circle-chevron-down';
             
-            // If opening the analytics panel, trigger animation
+            // If opening the analytics panel, trigger animation and (first time) render the charts
             if (isHidden && widgetId === 'analyticsPanel') {
                 setTimeout(() => {
                     animateStackedBar();
+                    if (typeof initializeVolumeMetricsCharts === 'function') {
+                        initializeVolumeMetricsCharts();
+                    }
                 }, 100);
             }
         }

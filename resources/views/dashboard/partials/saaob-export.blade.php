@@ -22,9 +22,6 @@
                 closeSuccessAlert();
             }, 5000);
         }
-
-        // Initialize Volume Metrics Charts
-        initializeVolumeMetricsCharts();
     });
 
     /**
@@ -121,14 +118,22 @@
         }
 
     // Function to initialize volume metrics charts
+    let volumeMetricsChartsInitialized = false;
     function initializeVolumeMetricsCharts() {
+        if (volumeMetricsChartsInitialized) return;
+        volumeMetricsChartsInitialized = true;
+
         const isDarkMode = document.documentElement.classList.contains('dark');
         const textColor = isDarkMode ? '#d1d5db' : '#6b7280';
         const gridColor = isDarkMode ? '#4b5563' : '#e5e7eb';
         const bgColor = isDarkMode ? '#111827' : '#ffffff';
         
         // Obligation Distribution Histogram
-        const obligationRanges = @json($obligationRanges);
+        // Read from the panel's data attributes (not a value baked in at initial render) so that when
+        // the shell/loading page swaps in the real dashboardInsightsPanel HTML via AJAX,
+        // this picks up the fresh values instead of the initial zeroed placeholders.
+        const histogramEl = document.querySelector('#obligationHistogram');
+        const obligationRanges = histogramEl && histogramEl.dataset.ranges ? JSON.parse(histogramEl.dataset.ranges) : @json($obligationRanges);
         const ranges = obligationRanges.map(r => r.label);
         const counts = obligationRanges.map(r => r.count);
 
@@ -189,7 +194,8 @@
         }).render();
 
         // Obligations by Quarter Chart
-        const obligationsByQuarter = @json($obligationsByQuarter);
+        const quarterEl = document.querySelector('#obligationsByQuarter');
+        const obligationsByQuarter = quarterEl && quarterEl.dataset.quarters ? JSON.parse(quarterEl.dataset.quarters) : @json($obligationsByQuarter);
         const quarters = obligationsByQuarter.map(q => q.quarter);
         const quarterCounts = obligationsByQuarter.map(q => q.count);
 

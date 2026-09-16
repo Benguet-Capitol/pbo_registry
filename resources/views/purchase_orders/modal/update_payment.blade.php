@@ -212,10 +212,10 @@
             document.getElementById('supplierError').innerText = '';
         }
 
-        // Ensure at least one po_amount is filled
+        // Ensure at least one po_amount is filled (0 is a valid amount)
         poInputs.forEach(input => {
             const val = parseFloat(input.value);
-            if (!isNaN(val) && val > 0) {
+            if (!isNaN(val) && val >= 0) {
                 atLeastOnePOFilled = true;
             }
         });

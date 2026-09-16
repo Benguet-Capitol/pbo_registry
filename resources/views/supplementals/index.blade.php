@@ -188,7 +188,7 @@
                         @endif
                     </span>
                 @endforeach
-                <a href="{{ route('supplementals.index') }}" class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 underline ml-1">
+                <a id="clearAllFiltersLink" href="{{ route('supplementals.index') }}" class="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 underline ml-1">
                     Clear all
                 </a>
             </div>
@@ -1383,6 +1383,10 @@
         const link = e.target.closest('#sortPillsContainer a, #activeFilterChipsContainer a, #supplementalsPagination a');
         if (!link) return;
         e.preventDefault();
+        if (link.id === 'clearAllFiltersLink') {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = '';
+        }
         loadSupplementalsSorted(link.href);
     });
 
